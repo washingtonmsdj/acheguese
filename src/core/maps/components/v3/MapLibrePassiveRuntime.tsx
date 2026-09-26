@@ -65,6 +65,7 @@ export const MapLibrePassiveRuntime = forwardRef<
     territoryFitPadding,
     territoryFitMaxZoom,
     attribution = true,
+    customAttribution = '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
     hideNavigationControl = false,
     navigationControlPosition = "bottom-right",
     onLoad,
@@ -132,8 +133,7 @@ export const MapLibrePassiveRuntime = forwardRef<
         map.addControl(
           new maplibregl.AttributionControl({
             compact: true,
-            customAttribution:
-              '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+            customAttribution: customAttribution || undefined,
           }),
           "bottom-left",
         );

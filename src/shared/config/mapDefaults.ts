@@ -63,6 +63,18 @@ export const MAP_TILE_STYLES = {
 
 export const DEFAULT_TILE_STYLE = MAP_TILE_STYLES.streets;
 
+/**
+ * Read limits shared by the map-backed listing services. Keeping these in
+ * the map configuration prevents each layer from silently inventing a new
+ * operational ceiling.
+ */
+export const MAP_QUERY_LIMITS = {
+  classifieds: { defaultLimit: 100, maxLimit: 200 },
+  business: { defaultLimit: 100, maxLimit: 200 },
+  gastronomy: { defaultLimit: 100, maxLimit: 200 },
+  services: { defaultLimit: 100, maxLimit: 200 },
+} as const;
+
 export const MAP_DEFAULT_COORDINATES: SharedCoordinates = {
   latitude,
   longitude,

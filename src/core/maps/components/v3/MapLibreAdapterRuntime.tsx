@@ -115,6 +115,8 @@ export interface MapLibreAdapterProps {
   };
   /** Exibir attribution do mapa. Padrão: true */
   attribution?: boolean;
+  /** Crédito adicional. Use false quando o estilo já declara a atribuição completa. */
+  customAttribution?: string | false;
   /** Ocultar controles de navegação. Padrão: false */
   hideNavigationControl?: boolean;
   /** Canto dos controles de zoom quando visíveis. */
@@ -184,6 +186,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       markerPresentation = 'default',
       radiusControl,
       attribution = true,
+      customAttribution = '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
       hideNavigationControl = false,
       navigationControlPosition = 'bottom-right',
       interactive = true,
@@ -283,7 +286,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         map.addControl(
           new maplibregl.AttributionControl({
             compact: true,
-            customAttribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+            customAttribution: customAttribution || undefined,
           }),
           'bottom-left'
         );

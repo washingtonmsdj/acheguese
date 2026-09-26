@@ -1,33 +1,33 @@
 import { useEffect, useState } from "react";
-import { Building2, Map, MapPin, Navigation, Search } from "lucide-react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
-import {
-  AUTH_PATHS,
-  buildLoginPath,
-} from "@/core/auth/constants/authFlow";
-import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
   getPublicTerritoryGroupPresentation,
   getPublicTerritoryLocationLabel,
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
-import {
-  MODULE_SLUGS,
-  buildModuleTerritoryUrl,
-} from "@/core/routing/utils/territoryUrls";
-import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
-import {
-  APP_MODULE_SLUGS,
-  buildAppModulePath,
-} from "@/shared/config/moduleSlugs";
 import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 
 const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
 const LAUNCH_CITY = TERRITORY_CONFIG.launch.city;
-const LAUNCH_TERRITORY_SLUG = TERRITORY_CONFIG.launch.community.slug;
-const LAUNCH_TERRITORY_NAME = TERRITORY_CONFIG.launch.community.name;
+const LAUNCH_COMMUNITY_SLUG = TERRITORY_CONFIG.launch.community.slug;
+const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
+const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUpperCase();
+const LAUNCH_PLACE_LABEL = [
+  TERRITORY_CONFIG.launch.name,
+  LAUNCH_STATE_LABEL,
+]
+  .filter(Boolean)
+  .join(" · ");
 const ACCOUNT_PATH = "/conta";
 
+/**
+ * A entrada pública não depende do banco para descobrir o território inicial.
+ * O fallback versionado é o contrato oficial de lançamento e já contém os
+ * quatro membros do Complexo com metadados da fonte municipal GeoSalvador.
+ * O contexto de launch, porém, pertence exclusivamente a TERRITORY_CONFIG.
+ */
 const launchCityResolved = resolvePublicTerritoryFallback({
   state: LAUNCH_STATE,
   city: LAUNCH_CITY,
@@ -35,58 +35,22 @@ const launchCityResolved = resolvePublicTerritoryFallback({
 const launchTerritory = resolvePublicTerritoryFallback({
   state: LAUNCH_STATE,
   city: LAUNCH_CITY,
-  territorySlug: LAUNCH_TERRITORY_SLUG,
+  territorySlug: LAUNCH_COMMUNITY_SLUG,
 });
 const launchCity =
   launchCityResolved?.kind === "location" ? launchCityResolved.location : null;
-const launchMembers =
+const launchCommunityMembers =
   launchTerritory?.kind === "group" ? launchTerritory.group.members : [];
-const launchPresentation =
+const launchCommunityPresentation =
   launchTerritory?.kind === "group"
     ? getPublicTerritoryGroupPresentation(launchTerritory.group)
-    : { label: LAUNCH_TERRITORY_NAME, article: null };
-
-const launchTerritoryBase = TERRITORY_CONFIG.launch.community.path;
-const launchBusinessUrl = buildModuleTerritoryUrl(
-  MODULE_SLUGS.business,
-  launchTerritoryBase,
-);
-const launchMapUrl = buildModuleTerritoryUrl(
-  MODULE_SLUGS.map,
-  launchTerritoryBase,
-);
-const launchNearbyUrl = buildAppModulePath(APP_MODULE_SLUGS.nearby);
-const launchSearchUrl = buildModuleTerritoryUrl(
-  MODULE_SLUGS.search,
-  launchTerritoryBase,
-);
-
-const MODULE_LINKS = [
-  {
-    label: "Empresas",
-    description: "Conheça empresas e estabelecimentos deste território.",
-    href: launchBusinessUrl,
-    icon: Building2,
-  },
-  {
-    label: "Mapa",
-    description: "Veja as empresas disponíveis diretamente no mapa.",
-    href: launchMapUrl,
-    icon: Map,
-  },
-  {
-    label: "Perto de mim",
-    description: "Use sua localização para encontrar empresas próximas.",
-    href: launchNearbyUrl,
-    icon: Navigation,
-  },
-  {
-    label: "Busca",
-    description: "Procure empresas e o que está disponível neste território.",
-    href: launchSearchUrl,
-    icon: Search,
-  },
-] as const;
+    : { label: LAUNCH_COMMUNITY_NAME, article: null };
+const launchCommunityGenitiveLabel =
+  launchCommunityPresentation.article === "o"
+    ? `do ${LAUNCH_COMMUNITY_NAME}`
+    : launchCommunityPresentation.article === "a"
+      ? `da ${LAUNCH_COMMUNITY_NAME}`
+      : `de ${LAUNCH_COMMUNITY_NAME}`;
 
 export default function TerritoryEntryPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -96,13 +60,17 @@ export default function TerritoryEntryPage() {
     let authRevision = 0;
     let unsubscribe = () => undefined;
 
+    // A home usa um runtime público leve e não monta SessionProvider. Carregamos
+    // o SSOT de sessão sob demanda para refletir login sem duplicar autoridade.
     void import("@/core/session/services/SessionService").then(
       ({ SessionService }) => {
         if (disposed) return;
 
         unsubscribe = SessionService.onAuthStateChange((_event, session) => {
           authRevision += 1;
-          if (!disposed) setIsAuthenticated(Boolean(session?.user));
+          if (!disposed) {
+            setIsAuthenticated(Boolean(session?.user));
+          }
         });
 
         const readRevision = authRevision;
@@ -112,7 +80,9 @@ export default function TerritoryEntryPage() {
           }
         });
       },
-      () => undefined,
+      () => {
+        // A home continua pública mesmo se a leitura local da sessão falhar.
+      },
     );
 
     return () => {
@@ -121,127 +91,151 @@ export default function TerritoryEntryPage() {
     };
   }, []);
 
-  const territoryLabel = launchPresentation.article
-    ? `${launchPresentation.article} ${launchPresentation.label}`
-    : launchPresentation.label;
-
   const accountHref = isAuthenticated
-    ? ACCOUNT_PATH
-    : buildLoginPath(ACCOUNT_PATH);
+    ? buildLoginPath(ACCOUNT_PATH)
+    : AUTH_PATHS.login;
   const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
 
-  const rememberTerritory = () => {
-    lastTerritoryStore.set({
-      name: LAUNCH_TERRITORY_NAME,
-      baseUrl: launchTerritoryBase,
-    });
-  };
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[200] focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:shadow"
-      >
+    <div className="territory-vivo territory-entry-page">
+      <a href="#main-content" className="skip-link">
         Pular para o conteúdo principal
       </a>
 
-      <header className="border-b border-border/70 bg-background/95 backdrop-blur">
-        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <a href="/" className="text-xl font-semibold tracking-tight">
-            achegue-se<span className="text-primary">.</span>
+      <header className="territory-entry-header max-md:min-h-[calc(3.5rem+env(safe-area-inset-top))]">
+        <div className="territory-entry-header-inner">
+          <a href="/" className="entry-wordmark" aria-label="Achegue-se — início">
+            achegue-se<span aria-hidden="true">.</span>
           </a>
-          <nav className="flex items-center gap-2" aria-label="Navegação pública">
-            <a
-              href="/como-funciona"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
+          <p className="mvp-entry-tagline">
+            <span aria-hidden="true">/</span> Encontre o que está perto
+          </p>
+          <nav className="entry-desktop-nav" aria-label="Navegação pública">
+            <a className="hover:bg-territory-raised" href="/como-funciona">
               Como funciona
             </a>
-            <a
-              href={accountHref}
-              className="rounded-lg border border-border px-3 py-2 text-sm font-semibold hover:bg-muted"
-            >
+            <a className="hover:bg-territory-raised" href={accountHref}>
               {accountLabel}
             </a>
           </nav>
         </div>
       </header>
 
-      <main id="main-content" tabIndex={-1}>
-        <section className="mx-auto grid max-w-7xl gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:py-12">
-          <div className="flex flex-col justify-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary">
-              Primeiro território
-            </p>
-            <h1 className="mt-3 max-w-xl text-4xl font-semibold tracking-tight sm:text-5xl">
-              Seu lugar, mais perto.
-            </h1>
-            <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Encontre empresas, pesquise o que precisa, visualize o território no mapa e
-              descubra o que está perto de você.
-            </p>
+      <main id="main-content" tabIndex={-1} className="territory-entry-main">
+        <div
+          className="mvp-entry-content max-md:overflow-y-visible"
+          data-entry-mobile-scroll-owner
+        >
+          <section className="mvp-entry-panel" aria-labelledby="territory-entry-title">
+            <div className="mvp-entry-hero">
+              <p className="mvp-entry-eyebrow">COMEÇAMOS PELO COMPLEXO</p>
+              <h1 id="territory-entry-title">Tudo perto de você.</h1>
+              <p className="mvp-entry-hero-subtitle">
+                Encontre empresas e estabelecimentos {launchCommunityGenitiveLabel}.
+              </p>
+              <p className="mvp-entry-location">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 10.2c0 5.3-8 11.3-8 11.3S4 15.5 4 10.2a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.4" />
+                </svg>
+                {LAUNCH_PLACE_LABEL}
+              </p>
+            </div>
 
-            <div className="mt-6 rounded-2xl border border-border bg-card p-4">
-              <div className="flex items-center gap-2 font-semibold">
-                <MapPin className="h-4 w-4 text-primary" aria-hidden="true" />
-                {territoryLabel}
+            <form className="mvp-business-search" action={LAUNCH_URLS.search} method="get">
+              <label htmlFor="entry-business-query">Buscar empresas</label>
+              <div className="mvp-business-search-row">
+                <span className="mvp-business-search-field">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="6.5" />
+                    <path d="m16 16 4.5 4.5" />
+                  </svg>
+                  <input
+                    id="entry-business-query"
+                    name="q"
+                    type="search"
+                    placeholder="Qual empresa você procura?"
+                    aria-label="Qual empresa você procura?"
+                  />
+                </span>
+                <button type="submit" aria-label="Buscar">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M5 12h13" />
+                    <path d="m13 6 6 6-6 6" />
+                  </svg>
+                </button>
               </div>
-              {launchMembers.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {launchMembers.map((member) => (
-                    <span
-                      key={member.id}
-                      className="rounded-full bg-muted px-3 py-1 text-xs text-muted-foreground"
-                    >
-                      {getPublicTerritoryLocationLabel(member)}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
+            </form>
+
+            <a href={LAUNCH_URLS.business} className="entry-explore-link">
+              Explorar empresas
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h13" />
+                <path d="m13 6 6 6-6 6" />
+              </svg>
+            </a>
+
+            <div className="mvp-entry-actions">
+              <a href={LAUNCH_URLS.map}>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
+                  <path d="M9 3v15M15 6v15" />
+                </svg>
+                Ver no mapa
+              </a>
+              <a href="/perto-de-mim">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 10.2c0 5.3-8 11.3-8 11.3S4 15.5 4 10.2a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.4" />
+                </svg>
+                Perto de mim
+              </a>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {MODULE_LINKS.map(({ label, description, href, icon: Icon }) => (
-                <a
-                  key={label}
-                  href={href}
-                  onClick={rememberTerritory}
-                  className="rounded-2xl border border-border bg-card p-4 transition-colors hover:border-primary/30 hover:bg-muted/30"
-                >
-                  <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
-                  <strong className="mt-3 block text-sm">{label}</strong>
-                  <span className="mt-1 block text-xs leading-5 text-muted-foreground">
-                    {description}
-                  </span>
-                </a>
-              ))}
-            </div>
-          </div>
+            <p className="mvp-entry-no-account">Sem cadastro para explorar.</p>
 
-          <div className="min-h-[24rem] overflow-hidden rounded-3xl border border-border bg-muted/20 lg:min-h-[36rem]">
+            <section className="mvp-neighborhood-card" aria-labelledby="entry-neighborhoods-title">
+              <h2 id="entry-neighborhoods-title">Quatro bairros, um lugar para descobrir</h2>
+              <div className="entry-neighborhoods" aria-label={`Bairros de ${LAUNCH_COMMUNITY_NAME}`}>
+                {launchCommunityMembers.map((member) => (
+                  <span key={member.id}>{getPublicTerritoryLocationLabel(member)}</span>
+                ))}
+              </div>
+              <p>Você pode explorar mesmo morando em outro lugar.</p>
+              <p className="mvp-entry-mobile-location">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 10.2c0 5.3-8 11.3-8 11.3S4 15.5 4 10.2a8 8 0 1 1 16 0Z" />
+                  <circle cx="12" cy="10" r="2.4" />
+                </svg>
+                {LAUNCH_PLACE_LABEL}
+              </p>
+            </section>
+          </section>
+
+          <section className="mvp-entry-map-shell" aria-labelledby="entry-map-heading">
+            <div className="mvp-entry-map-heading" id="entry-map-heading">
+              <span className="mvp-map-title-desktop">Empresas no território</span>
+              <span className="mvp-map-title-mobile">{LAUNCH_COMMUNITY_NAME}</span>
+            </div>
             <TerritoryEntryMap
               city={launchCity}
               resolvedTerritory={launchTerritory}
-              label={LAUNCH_TERRITORY_NAME}
-              className="h-full min-h-[24rem] w-full lg:min-h-[36rem]"
+              label={LAUNCH_COMMUNITY_NAME}
+              className="entry-map"
             />
-          </div>
-        </section>
+            <span className="mvp-map-note mvp-map-note-left">Mapa demonstrativo</span>
+            <span className="mvp-map-note mvp-map-note-right">Dados territoriais oficiais</span>
+          </section>
+        </div>
       </main>
 
-      <footer className="border-t border-border/70">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-muted-foreground sm:px-6">
-          <span>O Achegue-se está começando por este território.</span>
-          <nav className="flex gap-4" aria-label="Links institucionais">
-            <a href={PRIVACY_POLICY_PATH} className="hover:text-foreground">
-              Privacidade
-            </a>
-            <a href="/como-funciona" className="hover:text-foreground">
-              Como funciona
-            </a>
-          </nav>
-        </div>
+      <footer className="entry-footer">
+        <span>Disponível inicialmente no {LAUNCH_COMMUNITY_NAME}.</span>
+        <nav aria-label="Links institucionais">
+          <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
+          <i aria-hidden="true" />
+          <a href="/conta/preferencias#acessibilidade">Acessibilidade</a>
+        </nav>
       </footer>
     </div>
   );

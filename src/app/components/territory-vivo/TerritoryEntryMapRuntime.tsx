@@ -36,17 +36,6 @@ function readLocationCenter(location: Location | null | undefined) {
   return { latitude, longitude };
 }
 
-function formatCityContext(city: Location | null): string | null {
-  if (!city) return null;
-  const stateCode = city.metadata?.state_code;
-  const normalizedStateCode =
-    typeof stateCode === "string" && stateCode.trim().length > 0
-      ? stateCode.trim().toUpperCase()
-      : null;
-
-  return [city.name, normalizedStateCode].filter(Boolean).join(" · ");
-}
-
 function resolveInitialViewport(
   resolved: ResolvedTerritory,
   city: Location | null,
@@ -124,9 +113,9 @@ export default function TerritoryEntryMapRuntime({
       return NEIGHBORHOOD_COLORS[1];
     }
     const root = getComputedStyle(document.documentElement);
-    const sun = root.getPropertyValue("--territory-sun").trim();
     const brand = root.getPropertyValue("--territory-brand").trim();
-    return sun ? `hsl(${sun})` : brand ? `hsl(${brand})` : NEIGHBORHOOD_COLORS[1];
+    const sun = root.getPropertyValue("--territory-sun").trim();
+    return brand ? `hsl(${brand})` : sun ? `hsl(${sun})` : NEIGHBORHOOD_COLORS[1];
   }, [boundaryStarted]);
 
   const hasCompleteGroupBoundary = useMemo(() => {
@@ -154,7 +143,6 @@ export default function TerritoryEntryMapRuntime({
       ? resolved.location.name
       : city?.name ?? label ?? "Território";
   const territoryLabel = label ?? territoryName;
-  const cityContext = formatCityContext(city);
   const boundaryUnavailable =
     boundaryStarted &&
     resolved?.kind === "group" &&
@@ -238,20 +226,21 @@ export default function TerritoryEntryMapRuntime({
         territoryPolygons={entryPolygons}
         resolved={resolved}
         fitTerritoryBounds={entryPolygons.length > 0}
-        territoryFitPadding={24}
+        territoryFitPadding={20}
         territoryFitMaxZoom={isCity ? 10.5 : 14}
         markers={[]}
         userLocationMarker={{ enabled: false, autoAdd: false }}
         enableClustering={false}
-        attribution={false}
-        hideNavigationControl
-        interactive={false}
+        attribution
+        customAttribution={false}
+        navigationControlPosition="bottom-right"
+        interactive
         onLoad={() => {
           markPublicRootMapReady();
           setMapReady(true);
           setMapUnavailable(false);
         }}
-        className="pointer-events-none h-full min-h-[12rem] w-full md:min-h-[18rem] lg:min-h-[24rem]"
+        className="h-full min-h-[12rem] w-full md:min-h-[18rem] lg:min-h-[24rem]"
       />
 
       {showArrival && !mapUnavailable ? (
@@ -289,15 +278,6 @@ export default function TerritoryEntryMapRuntime({
 
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--territory-canvas)/0.04)_0%,transparent_85%)]" />
       <h2 id="territory-entry-map-title" className="sr-only">{isCity ? `${territoryLabel} disponível por inteiro` : `Perímetro de ${territoryLabel}`}</h2>
-      {!isCity && mapReady ? (
-        <div className="entry-map-label" aria-hidden="true">
-          <span className="grid h-5 w-5 place-items-center rounded-full border-2 border-current text-[0.55rem] font-black leading-none">•</span>
-          <span>
-            <strong>{territoryLabel}</strong>
-            {cityContext ? <small>{cityContext}</small> : null}
-          </span>
-        </div>
-      ) : null}
     </section>
   );
 }

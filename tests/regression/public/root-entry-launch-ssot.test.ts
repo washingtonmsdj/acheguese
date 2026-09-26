@@ -18,10 +18,13 @@ describe("public root launch territory SSOT", () => {
       "const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;",
     );
     expect(entry).toContain("TERRITORY_CONFIG.launch.name");
-    expect(entry).toContain("TERRITORY_CONFIG.launch.state.toUpperCase()");
-    expect(entry).toContain("href={LAUNCH_URLS.community}");
-    expect(entry).toContain("baseUrl: TERRITORY_CONFIG.launch.community.path");
-    expect(entry).toContain("<em>{LAUNCH_PLACE_LABEL}</em>");
+    expect(entry).toContain(
+      'const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUpperCase();',
+    );
+    expect(entry).toContain("action={LAUNCH_URLS.search}");
+    expect(entry).toContain("href={LAUNCH_URLS.business}");
+    expect(entry).toContain("href={LAUNCH_URLS.map}");
+    expect(entry).toContain("{LAUNCH_PLACE_LABEL}");
 
     expect(entry).not.toContain('TERRITORY_CONFIG.launch.state || "ba"');
     expect(entry).not.toContain('TERRITORY_CONFIG.launch.city || "salvador"');
@@ -62,13 +65,13 @@ describe("public root launch territory SSOT", () => {
       "export function getPublicTerritoryGroupPresentation",
     );
     expect(entry).toContain("getPublicTerritoryGroupPresentation(launchTerritory.group)");
-    expect(entry).toContain("Explorar {launchCommunityDefiniteLabel}");
-    expect(entry).toContain("{launchCommunitySentenceLabel} é só o começo.");
-    expect(entry).toContain("Começamos {launchCommunityOriginLabel}.");
+    expect(entry).toContain("const launchCommunityGenitiveLabel =");
+    expect(entry).toContain("Encontre empresas e estabelecimentos {launchCommunityGenitiveLabel}.");
+    expect(entry).toContain("`do ${LAUNCH_COMMUNITY_NAME}`");
 
-    expect(entry).not.toContain("Explorar o Complexo");
-    expect(entry).not.toContain("O Complexo é só o começo");
-    expect(entry).not.toContain("Começamos pelo Complexo");
+    expect(entry).not.toContain("launchCommunityDefiniteLabel");
+    expect(entry).not.toContain("launchCommunitySentenceLabel");
+    expect(entry).not.toContain("launchCommunityOriginLabel");
   });
 
   it("uses the canonical raised surface token on active root navigation", () => {
@@ -78,7 +81,7 @@ describe("public root launch territory SSOT", () => {
     expect(tailwind).toContain(
       'raised: "hsl(var(--territory-surface-raised))"',
     );
-    expect(entry.match(/hover:bg-territory-raised/g)?.length ?? 0).toBeGreaterThanOrEqual(5);
+    expect(entry.match(/hover:bg-territory-raised/g)?.length ?? 0).toBe(2);
   });
 
   it("keeps the root map fallback on canonical map defaults", () => {
@@ -95,7 +98,7 @@ describe("public root launch territory SSOT", () => {
     expect(runtime).not.toContain("longitude: -38.48");
   });
 
-  it("renders map context and fallback messaging from resolved territory data", () => {
+  it("keeps territory context in the map heading and fallback messaging", () => {
     const runtime = read(
       "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
     );
@@ -103,8 +106,8 @@ describe("public root launch territory SSOT", () => {
       "src/app/components/territory-vivo/TerritoryEntryMap.tsx",
     );
 
-    expect(runtime).toContain("const cityContext = formatCityContext(city);");
-    expect(runtime).toContain("{cityContext ? <small>{cityContext}</small> : null}");
+    expect(runtime).not.toContain("entry-map-label");
+    expect(runtime).not.toContain("formatCityContext");
     expect(runtime).toContain("entrando em {territoryLabel} normalmente");
     expect(runtime).toContain("contorno aproximado ou incompleto de {territoryLabel}");
     expect(runtime).not.toContain("<small>Salvador · BA</small>");
