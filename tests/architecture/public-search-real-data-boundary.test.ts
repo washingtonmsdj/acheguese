@@ -14,7 +14,8 @@ describe("public search real-data boundary", () => {
   });
 
   it("keeps global search enabled only by real territory readiness", () => {
-    expect(page).toContain("{ enabled: searchEnabled }");
+    expect(page).toContain("enabled: searchEnabled");
+    expect(page).toContain("providerBuckets: activeSearchProviderBuckets");
     expect(page).toContain("documents: results.documents");
     expect(page).toContain("professionals: results.professionals.map");
     expect(page).toContain('"professional",');
