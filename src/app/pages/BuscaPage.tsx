@@ -540,7 +540,7 @@ export default function BuscaPage() {
               Busca
             </h1>
             <p className="mt-2 hidden text-[0.9375rem] leading-6 text-territory-muted sm:block sm:text-base">
-              Encontre empresas e resultados dos módulos ativos neste território.
+              Encontre empresas no seu território.
             </p>
           </div>
           <button
@@ -817,7 +817,7 @@ function ExploreStart({
         <TerritorySectionHeading
           id="explore-collections-title"
           title="Explorar por intenção"
-          description="Entre pelo que você precisa resolver, não por uma lista técnica de módulos."
+          description="Escolha o que você precisa resolver por aqui."
         />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {collections.map((collection) => {
