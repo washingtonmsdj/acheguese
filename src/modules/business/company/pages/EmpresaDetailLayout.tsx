@@ -9,7 +9,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { ArrowLeft, Bell, Building2, Compass, Heart, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
+import { ArrowLeft, Bell, Building2, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 
@@ -60,10 +60,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
               className="inline-flex min-h-11 min-w-0 max-w-[34rem] flex-1 items-center gap-3 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 text-sm text-white/48 transition-colors hover:border-white/20 hover:bg-white/[0.05] hover:text-white/72"
             >
               <Search className="h-4 w-4 shrink-0 text-white/46" />
-              <span className="truncate">Buscar empresas, servicos, eventos...</span>
-              <span className="ml-auto hidden rounded-lg border border-white/10 bg-black/18 px-2 py-1 text-[11px] font-semibold text-white/42 xl:inline-flex">
-                Ctrl K
-              </span>
+              <span className="truncate">Procurar empresas no bairro</span>
             </Link>
           </div>
 
@@ -77,23 +74,9 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
 
           <div className="hidden items-center gap-2.5 lg:flex">
             <Link
-              to="/explorar"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-              aria-label="Explorar"
-            >
-              <Compass className="h-[18px] w-[18px]" />
-            </Link>
-            <Link
-              to="/favoritos"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-              aria-label="Favoritos"
-            >
-              <Heart className="h-[18px] w-[18px]" />
-            </Link>
-            <Link
               to="/notificacoes"
               className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
-              aria-label="Notificacoes"
+              aria-label="Notificações"
             >
               <Bell className="h-[18px] w-[18px]" />
             </Link>
