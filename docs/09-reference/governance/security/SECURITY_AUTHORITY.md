@@ -1,13 +1,13 @@
 # Security Authority
 
 Status: ativo
-Data: 2026-08-11
+Data: 2026-09-26
 
 Security Authority e o ponto de entrada operacional para mudancas que afetam
 seguranca, privacidade, autorizacao, Supabase, secrets, migrations, storage,
 rotas protegidas, dados pessoais e fluxos transacionais.
 
-Ela nao substitui `SECURITY.md`, `docs/SUPABASE_SECRETS.md`, migrations ou
+Ela nao substitui `SECURITY.md`, `docs/09-reference/SUPABASE_SECRETS.md`, migrations ou
 scripts. Ela define quando cada fonte deve ser usada e qual evidencia e
 obrigatoria antes de considerar uma alteracao pronta.
 
@@ -46,13 +46,13 @@ Riscos prioritarios:
 
 ## Fontes Canonicas
 
-- [Security Policy raiz](../../../SECURITY.md)
+- [Security Policy raiz](../../../../SECURITY.md)
 - [Seguranca do projeto](../../SECURITY.md)
 - [Workflow de secrets Supabase](../../SUPABASE_SECRETS.md)
 - [Migrations](../../MIGRATIONS.md)
-- [Status atual](../../STATUS_ATUAL.md)
-- [Advisor remoto Supabase](../../audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md)
-- [Drift remoto Supabase](../../audits/SUPABASE_REMOTE_MIGRATION_DRIFT_2026-07-06.md)
+- [Execucao operacional atual](../../../08-roadmap/EXECUCAO_MAIN_ONLY.md)
+- [Advisor remoto Supabase — evidencia historica](../../../10-archive/audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md)
+- [Drift remoto Supabase — evidencia historica](../../../10-archive/audits/SUPABASE_REMOTE_MIGRATION_DRIFT_2026-07-06.md)
 - [Excecoes ativas](./EXCEPTIONS.md)
 - [Governanca de release controlado no Free](./FREE_RELEASE_GOVERNANCE.md)
 - [SSOT executavel do release Free](./FREE_RELEASE_GOVERNANCE.json)
@@ -60,10 +60,14 @@ Riscos prioritarios:
 - [Policy de fronteira service_role](./SERVICE_ROLE_BOUNDARY_POLICY.json)
 - `tools/security/validate-security.mjs`
 - `tools/supabase/validate-supabase-advisor-residuals.ts`
-- `scripts/validate-supabase-migrations.ts`
+- `tools/migrations/validate-supabase-migrations.ts`
 - `tools/supabase/validate-supabase-remote-migration-drift.ts`
 - `tools/release/verify-deploy-ready.mjs`
 - `supabase/migrations/`
+
+Relatorios datados em `docs/10-archive/` sao evidencia historica. Eles nao substituem
+o estado operacional atual, os SSOTs executaveis nem a revalidacao remota exigida
+pelos gates de release.
 
 ## Docs Da Authority
 
@@ -234,9 +238,9 @@ A cobertura de regressao dessas regras fica em:
 
 - `tests/security/security-authority-migrations.test.ts`
 
-Evidencia do piloto:
+Evidencia historica do piloto:
 
-- [Security Authority Pilot - 2026-07-07](../../audits/SECURITY_AUTHORITY_PILOT_2026-07-07.md)
+- [Security Authority Pilot - 2026-07-07](../../../10-archive/audits/SECURITY_AUTHORITY_PILOT_2026-07-07.md)
 
 ## Regra De Pronto
 
