@@ -10,6 +10,9 @@ describe("active Central runtime boundary", () => {
   const navigation = read(
     "src/modules/central/components/centralNavigation.config.ts",
   );
+  const businessModules = read(
+    "src/core/profiles/components/hub/BusinessModulesSection.tsx",
+  );
   const shell = read(
     "src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx",
   );
@@ -118,7 +121,7 @@ describe("active Central runtime boundary", () => {
     expect(header).toContain("billingEnabled");
   });
 
-  it("keeps the active Business dashboard independent from paused extensions", () => {
+  it("keeps active Business management independent from paused extensions", () => {
     for (const pausedDependency of [
       "useBusinessSubscription",
       "useGastronomyStatus",
@@ -127,11 +130,11 @@ describe("active Central runtime boundary", () => {
       "buildBusinessPremiumUrl",
       "businessManagementRoutes.gastronomia",
       "businessManagementRoutes.education",
-      "businessManagementRoutes.planos",
       "businessManagementRoutes.anuncios",
       "businessManagementRoutes.linkPremium",
       "businessManagementRoutes.analytics",
     ]) {
+      expect(businessModules).not.toContain(pausedDependency);
       expect(shell).not.toContain(pausedDependency);
       expect(overview).not.toContain(pausedDependency);
     }
