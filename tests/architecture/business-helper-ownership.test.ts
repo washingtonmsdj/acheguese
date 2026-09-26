@@ -48,13 +48,24 @@ describe("Business helper ownership", () => {
     expect(addressCard).not.toContain("business.helpers");
   });
 
-  it("persists edited coordinates through Address and not business_data", () => {
+  it("persists physical coordinates through canonical Address resolution and never business_data", () => {
     const mutations = read("src/core/business/services/business.mutations.ts");
+    const resolution = read(
+      "src/core/business/services/business.address-resolution.ts",
+    );
     const queries = read("src/core/business/services/business.queries.ts");
 
-    expect(mutations).toContain("hasAddressCoordinatePatch");
-    expect(mutations).toContain("{ latitude: input.latitude }");
-    expect(mutations).toContain("{ longitude: input.longitude }");
+    expect(mutations).toContain("resolveBusinessAddressForPersistence");
+    expect(mutations).toContain("geocoding_source");
+    expect(mutations).toContain("geocoding_confidence");
+    expect(resolution).toContain("locationGeocodingService.geocode");
+    expect(resolution).toContain(
+      "BUSINESS_ADDRESS_MIN_GEOCODING_CONFIDENCE = 0.7",
+    );
+    expect(resolution).toContain("selectedTerritoryMatches");
+    expect(resolution).not.toContain("canonical_lat");
+    expect(resolution).not.toContain("canonical_lng");
+    expect(resolution).not.toContain("location_center_fallback");
     expect(queries).not.toContain(
       "address_id,\n  latitude,\n  longitude,\n  status",
     );

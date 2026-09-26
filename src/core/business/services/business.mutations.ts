@@ -28,6 +28,10 @@ import { isValidBusinessId } from "./validators";
 import { toBusinessData } from "./business.mappers";
 import { BusinessUrlService } from "./BusinessUrlService";
 import { getBusinessById } from "./business.queries";
+import {
+  resolveBusinessAddressForPersistence,
+  type BusinessAddressResolution,
+} from "./business.address-resolution";
 import { normalizeMediaAssetReference } from "@/core/media/references/mediaAssetReference";
 import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
@@ -168,23 +172,6 @@ function sanitizeAndValidateInput(
   return validation.data;
 }
 
-function hasStructuredAddress(
-  input: CreateBusinessInput | UpdateBusinessInput,
-): boolean {
-  return Boolean(
-    input.address_street ||
-      input.address_number ||
-      input.address_complement ||
-      input.postal_code,
-  );
-}
-
-function hasAddressCoordinatePatch(
-  input: CreateBusinessInput | UpdateBusinessInput,
-): boolean {
-  return input.latitude !== undefined || input.longitude !== undefined;
-}
-
 function assertGeneralLifecycleStructure(
   input: CreateBusinessInput | UpdateBusinessInput,
   isUpdate: boolean,
@@ -217,35 +204,43 @@ function assertGeneralLifecycleStructure(
 async function syncAddress(
   input: CreateBusinessInput | UpdateBusinessInput,
   actorUserId: string,
-  existingAddressId?: string | null,
+  existingAddressId: string | null | undefined,
+  resolution: BusinessAddressResolution | null,
 ): Promise<{ addressId?: string; created: boolean }> {
   if (input.address_id !== undefined) {
     return { addressId: input.address_id ?? undefined, created: false };
   }
 
-  const shouldSyncAddress =
-    hasStructuredAddress(input) ||
-    Boolean(existingAddressId && hasAddressCoordinatePatch(input));
-
-  if (!shouldSyncAddress) {
+  if (!resolution) {
     return { addressId: existingAddressId ?? undefined, created: false };
-  }
-
-  if (!input.location_id) {
-    throw new Error("Selecione o territorio antes de salvar o endereco fisico");
   }
 
   const addressService = new AddressService();
   const payload = {
-    location_id: input.location_id,
-    postal_code: input.postal_code ?? input.cep ?? null,
-    street: input.address_street ?? null,
-    number: input.address_number ?? null,
-    complement: input.address_complement ?? null,
-    ...(input.latitude !== undefined ? { latitude: input.latitude } : {}),
-    ...(input.longitude !== undefined ? { longitude: input.longitude } : {}),
+    location_id: resolution.locationId,
+    postal_code: resolution.postalCode,
+    street: resolution.street,
+    number: resolution.number,
+    complement: resolution.complement,
     address_type: "exact" as const,
-    precision: "exact" as const,
+    ...(resolution.latitude !== undefined
+      ? { latitude: resolution.latitude }
+      : {}),
+    ...(resolution.longitude !== undefined
+      ? { longitude: resolution.longitude }
+      : {}),
+    ...(resolution.precision !== undefined
+      ? { precision: resolution.precision }
+      : {}),
+    ...(resolution.geocodingSource !== undefined
+      ? { geocoding_source: resolution.geocodingSource }
+      : {}),
+    ...(resolution.geocodingConfidence !== undefined
+      ? { geocoding_confidence: resolution.geocodingConfidence }
+      : {}),
+    ...(resolution.geocodedAt !== undefined
+      ? { geocoded_at: resolution.geocodedAt }
+      : {}),
   };
 
   if (existingAddressId) {
@@ -395,7 +390,14 @@ export async function createBusiness(
       slug = await BusinessUrlService.generateUniqueSlug(validatedInput.name);
     }
 
-    const address = await syncAddress(validatedInput, user.id);
+    const addressResolution =
+      await resolveBusinessAddressForPersistence(validatedInput);
+    const address = await syncAddress(
+      validatedInput,
+      user.id,
+      undefined,
+      addressResolution,
+    );
     if (address.created) createdAddressId = address.addressId;
 
     const businessPatch = buildBusinessBrokerPatch(
@@ -497,27 +499,22 @@ export async function updateBusiness(
       }
     }
 
-    const updateAddressInput: UpdateBusinessInput = {
-      ...validatedInput,
-      location_id:
-        validatedInput.location_id ??
-        currentBusiness.location_id ??
-        undefined,
-    };
+    const addressResolution =
+      await resolveBusinessAddressForPersistence(
+        validatedInput,
+        currentBusiness,
+      );
     const address = await syncAddress(
-      updateAddressInput,
+      validatedInput,
       user.id,
       currentBusiness.address_id,
+      addressResolution,
     );
     if (address.created) createdAddressId = address.addressId;
 
     const addressTouched =
       validatedInput.address_id !== undefined ||
-      hasStructuredAddress(validatedInput) ||
-      Boolean(
-        currentBusiness.address_id &&
-          hasAddressCoordinatePatch(validatedInput),
-      );
+      addressResolution !== null;
     const businessPatch = buildBusinessBrokerPatch(
       validatedInput,
       addressTouched ? address.addressId : undefined,

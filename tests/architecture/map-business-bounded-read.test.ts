@@ -22,6 +22,12 @@ describe('business map bounded read', () => {
   const migration = readProjectFile(
     'supabase/migrations/20260920094738_index_public_business_map_bounds_g154.sql',
   );
+  const addressProjectionMigration = readProjectFile(
+    'supabase/migrations/20260921224500_project_business_search_coordinates_from_address.sql',
+  );
+  const addressResolution = readProjectFile(
+    'src/core/business/services/business.address-resolution.ts',
+  );
 
   it('filters viewport and territory in the database-backed public read model', () => {
     expect(businessService).toContain('.from<BusinessMapRow>("public_business_search")');
@@ -62,5 +68,36 @@ describe('business map bounded read', () => {
     expect(migration).toContain('public_business_search_geography_idx');
     expect(migration).toContain('USING gist');
     expect(migration).not.toContain('ON public.businesses');
+  });
+
+  it('projects physical map coordinates only from canonical Address', () => {
+    expect(addressProjectionMigration).toContain(
+      'SELECT a.latitude, a.longitude',
+    );
+    expect(addressProjectionMigration).toContain(
+      'FROM public.addresses AS a',
+    );
+    expect(addressProjectionMigration).toContain(
+      'sync_public_business_search_address_coordinates',
+    );
+    expect(addressProjectionMigration).toContain(
+      'AFTER INSERT OR UPDATE ON public.addresses',
+    );
+    expect(addressProjectionMigration).toContain(
+      'BEFORE DELETE ON public.addresses',
+    );
+    expect(addressProjectionMigration).not.toContain(
+      'NEW.latitude,\n    NEW.longitude',
+    );
+
+    expect(addressResolution).toContain(
+      'locationGeocodingService.geocode',
+    );
+    expect(addressResolution).toContain(
+      'BUSINESS_ADDRESS_MIN_GEOCODING_CONFIDENCE = 0.7',
+    );
+    expect(addressResolution).not.toContain('canonical_lat');
+    expect(addressResolution).not.toContain('canonical_lng');
+    expect(addressResolution).not.toContain('location_center_fallback');
   });
 });

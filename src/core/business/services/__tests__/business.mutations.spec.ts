@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   updateBusinessRpc: vi.fn(),
   deactivateBusinessRpc: vi.fn(),
   getBusinessById: vi.fn(),
+  resolveAddress: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase", () => ({
@@ -71,6 +72,10 @@ vi.mock("@/core/profiles/services/ProfileRpcService", () => ({
 
 vi.mock("../business.queries", () => ({
   getBusinessById: mocks.getBusinessById,
+}));
+
+vi.mock("../business.address-resolution", () => ({
+  resolveBusinessAddressForPersistence: mocks.resolveAddress,
 }));
 
 import {
@@ -154,6 +159,24 @@ describe("business lifecycle broker", () => {
     });
     mocks.getBusinessById.mockResolvedValue(currentBusiness);
     mocks.deleteAddress.mockResolvedValue(undefined);
+    mocks.resolveAddress.mockImplementation(
+      async (input: CreateBusinessInput | UpdateBusinessInput) =>
+        input.address_street
+          ? {
+              locationId: input.location_id ?? businessInput.location_id,
+              postalCode: input.postal_code ?? null,
+              street: input.address_street,
+              number: input.address_number ?? null,
+              complement: input.address_complement ?? null,
+              latitude: -12.982,
+              longitude: -38.455,
+              precision: "exact",
+              geocodingSource: "nominatim_osm",
+              geocodingConfidence: 0.9,
+              geocodedAt: "2026-09-21T12:00:00.000Z",
+            }
+          : null,
+    );
   });
 
   it("creates Profile, Business, stats, hours and contact through one broker command", async () => {
@@ -213,9 +236,67 @@ describe("business lifecycle broker", () => {
         street: "Rua Teste",
         number: "10",
         owner_user_id: "user-1",
+        latitude: -12.982,
+        longitude: -38.455,
+        precision: "exact",
+        geocoding_source: "nominatim_osm",
+        geocoding_confidence: 0.9,
       }),
     );
     expect(mocks.deleteAddress).toHaveBeenCalledWith("address-1");
+  });
+
+  it("does not persist a physical Address until canonical resolution succeeds", async () => {
+    mocks.resolveAddress.mockRejectedValue(
+      new Error(
+        "Nao foi possivel localizar o endereco com precisao de rua dentro do territorio selecionado.",
+      ),
+    );
+
+    await expect(
+      createBusiness({
+        ...businessInput,
+        address_street: "Rua inexistente",
+        address_number: "9999",
+        postal_code: "40000-000",
+      }),
+    ).rejects.toThrow(
+      "Erro ao criar empresa: Nao foi possivel localizar o endereco com precisao de rua dentro do territorio selecionado.",
+    );
+
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+    expect(mocks.createBusinessRpc).not.toHaveBeenCalled();
+  });
+
+  it("keeps non-address updates free from geocoding and Address writes", async () => {
+    await updateBusiness("profile-1", {
+      description: "Descricao atualizada com conteudo suficiente",
+    });
+
+    expect(mocks.resolveAddress).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "Descricao atualizada com conteudo suficiente",
+      }),
+      currentBusiness,
+    );
+    expect(mocks.updateAddress).not.toHaveBeenCalled();
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+  });
+
+  it("rejects incomplete coordinate pairs before geocoding or persistence", async () => {
+    await expect(
+      createBusiness({
+        ...businessInput,
+        address_street: "Rua Teste",
+        latitude: -12.99,
+      }),
+    ).rejects.toThrow(
+      "Erro ao criar empresa: Dados invalidos: longitude: Latitude e longitude devem ser informadas juntas",
+    );
+
+    expect(mocks.resolveAddress).not.toHaveBeenCalled();
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+    expect(mocks.createBusinessRpc).not.toHaveBeenCalled();
   });
 
   it("routes network creation to NetworkService instead of creating a competing structure", async () => {

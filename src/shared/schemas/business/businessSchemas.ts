@@ -231,6 +231,17 @@ function applyBusinessRules<T extends z.AnyZodObject>(
       data.address_street || data.address_number || data.address_complement || data.postal_code,
     );
 
+    const hasLatitude = data.latitude !== undefined;
+    const hasLongitude = data.longitude !== undefined;
+
+    if (hasLatitude !== hasLongitude) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: hasLatitude ? ["longitude"] : ["latitude"],
+        message: "Latitude e longitude devem ser informadas juntas",
+      });
+    }
+
     if (options.requireLocation && businessRole !== "brand_hub" && !data.location_id) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

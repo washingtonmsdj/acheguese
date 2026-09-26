@@ -10,7 +10,7 @@ export type AddressPrecision = 'exact' | 'interpolated' | 'street' | 'neighborho
 
 export type AddressVerificationStatus = 'pending' | 'verified' | 'rejected';
 
-export type GeocodingSource = 'viacep' | 'google' | 'manual' | 'gps' | 'migration_import';
+export type GeocodingSource = 'viacep' | 'nominatim_osm' | 'google' | 'manual' | 'gps' | 'migration_import';
 
 export interface Address {
   id: string;
