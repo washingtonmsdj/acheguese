@@ -121,6 +121,18 @@ describe("live documentation hygiene", () => {
     );
   });
 
+  it("keeps obsolete UX sprint 1 planning out of live UX docs", () => {
+    expect(existsSync("docs/05-ux/UX-AUDIT.md")).toBe(false);
+    expect(existsSync("docs/05-ux/UX-IMPROVEMENTS.md")).toBe(false);
+    expect(
+      existsSync("docs/10-archive/post-mvp/ux-sprint-1/README.md"),
+    ).toBe(true);
+
+    const docsIndex = readFileSync("docs/README.md", "utf8");
+    expect(docsIndex).not.toContain("05-ux/UX-AUDIT.md");
+    expect(docsIndex).not.toContain("05-ux/UX-IMPROVEMENTS.md");
+  });
+
   it("keeps duplicate concept roots retired in favor of the design catalog", () => {
     expect(existsSync("docs/concepts")).toBe(false);
     for (const retired of [
