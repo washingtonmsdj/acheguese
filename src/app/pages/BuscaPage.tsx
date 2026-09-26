@@ -333,12 +333,16 @@ export default function BuscaPage() {
           total_reviews: professional.total_reviews,
         }))
       : [];
+    const genericDocumentCount = documents.filter(
+      (document) =>
+        document.type !== "business" && document.type !== "professional",
+    ).length;
 
     return {
       documents,
       businesses,
       professionals,
-      total: documents.length + businesses.length + professionals.length,
+      total: genericDocumentCount + businesses.length + professionals.length,
     };
   }, [activeSearchBucketSet, results]);
 
@@ -446,7 +450,6 @@ export default function BuscaPage() {
       }
     }
   };
-
 
   const collections = useMemo(() => {
     const items: Array<{
@@ -682,10 +685,10 @@ export default function BuscaPage() {
               <TerritoryState
                 icon={<Search className="h-5 w-5" aria-hidden="true" />}
                 title={`Nenhum resultado para “${query}”.`}
-                description="Tente outro termo, ajuste a categoria ou continue pelo mapa e pelas coleções territoriais."
+                description="Tente outro termo, ajuste a categoria ou continue pelo mapa."
                 primaryAction={{ label: "Ver mapa", href: moduleUrls.map }}
                 secondaryAction={{
-                  label: "Voltar para Hoje",
+                  label: "Voltar ao território",
                   href: moduleUrls.home,
                 }}
               />
@@ -854,7 +857,7 @@ function ExploreStart({
         <TerritorySectionHeading
           id="explore-suggestions-title"
           title="Começar com uma busca"
-          description="Sugestões são termos de busca, não resultados inventados."
+          description="Escolha uma sugestão para começar."
         />
         <TerritorySurface className="p-5 sm:p-6">
           {history.length > 0 ? (
@@ -974,6 +977,12 @@ function ResultsView({
       ? left.name.localeCompare(right.name, "pt-BR")
       : (right.rating ?? 0) - (left.rating ?? 0),
   );
+  const businesses =
+    sortOrder === "name"
+      ? [...results.businesses].sort((left, right) =>
+          left.name.localeCompare(right.name, "pt-BR"),
+        )
+      : results.businesses;
   const resultHeading =
     activeFilter === "professionals"
       ? `${pluralizeSearchTerm(query)} na comunidade`
@@ -1034,7 +1043,7 @@ function ResultsView({
             onClick={() => onProfessionalClick(professional)}
           />
         ))}
-        {results.businesses.map((business) => (
+        {businesses.map((business) => (
           <BusinessResultCard
             key={business.id}
             business={business}
@@ -1043,9 +1052,9 @@ function ResultsView({
         ))}
       </div>
 
-      {professionals.length > 0 || results.businesses.length > 0 ? (
+      {professionals.length > 0 || businesses.length > 0 ? (
         <p className="mt-5 text-sm text-territory-muted">
-          {results.total} resultado{results.total !== 1 ? "s" : ""} neste contexto
+          {results.total} resultado{results.total !== 1 ? "s" : ""} neste território
         </p>
       ) : null}
 
