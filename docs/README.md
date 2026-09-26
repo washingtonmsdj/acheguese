@@ -1,6 +1,6 @@
 # Achegue-se — documentação canônica
 
-> **Porta de entrada única da documentação viva.** Se um documento não estiver classificado aqui como autoridade vigente, ele não substitui os contratos executáveis nem o SSOT atual.
+> **Porta de entrada única.** Este índice organiza a documentação viva. Se um documento não estiver classificado aqui como autoridade vigente, ele não substitui os contratos executáveis nem o SSOT atual.
 
 ## Estado do produto
 
@@ -95,7 +95,7 @@ As pastas `docs/architecture/` e `docs/audits/` existem porque contêm artefatos
 - [`03-architecture/PRODUCT_MODULE_LIFECYCLE.md`](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md)
 - [`architecture/SSOT_REGISTRY.md`](./architecture/SSOT_REGISTRY.md) — registry técnico de owners
 
-`03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md` preserva a arquitetura de Community para evolução futura, mas **não** autoriza sua ativação no MVP.
+[`03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) preserva a arquitetura de Community para evolução futura, mas **não** autoriza sua ativação no MVP.
 
 ### Segurança e governance
 
