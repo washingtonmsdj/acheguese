@@ -42,7 +42,7 @@ jobs:
             exit 1
           fi
 
-      - name: Read Auth config field names safely
+      - name: Audit non-secret Auth security settings
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -67,11 +67,38 @@ jobs:
             exit 1
           fi
 
-          # Never print the full config. It can contain SMTP/CAPTCHA/provider secrets.
-          # Output key names only so the follow-up validator can be built against the
-          # actual Management API schema returned to this project.
           jq -e 'type == "object"' "$tmp_body" >/dev/null
-          echo "Auth security-related fields exposed by Management API:"
-          jq -r 'keys[]' "$tmp_body" \
-            | grep -E '^(mailer_|password_|security_|rate_limit_|external_|disable_|refresh_token_|jwt_|site_url$|uri_allow_list$)' \
-            | sort
+
+          # Strict allowlist of values that are safe to disclose in CI logs.
+          # Never add provider secrets, SMTP credentials, CAPTCHA secret, templates,
+          # client secrets, or arbitrary config fields here.
+          jq '{
+            disable_signup,
+            external_anonymous_users_enabled,
+            external_email_enabled,
+            external_phone_enabled,
+            mailer_allow_unverified_email_sign_ins,
+            mailer_autoconfirm,
+            mailer_otp_exp,
+            mailer_otp_length,
+            mailer_secure_email_change_enabled,
+            password_hibp_enabled,
+            password_min_length,
+            password_required_characters,
+            rate_limit_anonymous_users,
+            rate_limit_email_sent,
+            rate_limit_otp,
+            rate_limit_sms_sent,
+            rate_limit_token_refresh,
+            rate_limit_verify,
+            rate_limit_web3,
+            refresh_token_rotation_enabled,
+            security_captcha_enabled,
+            security_captcha_provider,
+            security_manual_linking_enabled,
+            security_refresh_token_reuse_interval,
+            security_sb_forwarded_for_enabled,
+            security_update_password_require_current_password,
+            security_update_password_require_reauthentication,
+            jwt_exp
+          }' "$tmp_body"
