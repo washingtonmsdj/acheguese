@@ -257,7 +257,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     const openMapButton = page.getByRole("button", { name: "Abrir mapa" });
     await expect(openMapButton).toBeVisible();
     await expect(
-      page.getByText("Resultados públicos válidos do módulo Empresas"),
+      page.getByText("Empresas próximas com localização real"),
     ).toBeVisible();
 
     await expectNoHorizontalOverflow(page);

@@ -123,10 +123,10 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
     return (
       <>
         <Helmet>
-          <title>{territoryLabels.nearbyLabel} — sem fontes ativas</title>
+          <title>{territoryLabels.nearbyLabel} — indisponível agora</title>
           <meta
             name="description"
-            content="Perto de mim está disponível, mas nenhum domínio de produto ativo fornece resultados de proximidade neste momento."
+            content="Ainda não há resultados de proximidade disponíveis neste território."
           />
         </Helmet>
         <div className="min-h-screen bg-background">
@@ -134,11 +134,20 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
             moduleName={territoryLabels.nearbyLabel}
             moduleIcon={Compass}
             title="Perto de mim"
-            titleHighlight="sem fontes ativas"
-            subtitle="A capability continua disponível, mas nenhum provider de domínio está habilitado pelo lifecycle."
+            titleHighlight="indisponível agora"
+            subtitle="Ainda não há resultados de proximidade disponíveis neste território."
           />
-          <div className="mx-auto max-w-3xl px-4 py-16 text-center text-muted-foreground sm:px-6">
-            Nenhum módulo ativo registrou um provider de proximidade. Ativar ou pausar um domínio não altera o owner de Perto de mim.
+          <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6">
+            <p className="text-muted-foreground">
+              Você ainda pode explorar as empresas disponíveis por aqui.
+            </p>
+            <Button
+              className="mt-6"
+              onClick={() => navigate(businessUrl)}
+              variant="outline"
+            >
+              Ver empresas
+            </Button>
           </div>
         </div>
       </>
@@ -158,7 +167,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
           content={
             hasPreciseProximity
               ? `Encontre empresas perto de você em um raio de ${radiusKm}km e visualize-as no mapa.`
-              : `Encontre empresas ${territoryLabels.inTerritory}. O recorte usa o centro do território como referência; ative o GPS para ver distâncias pessoais.`
+              : `Encontre empresas ${territoryLabels.inTerritory}. Ative o GPS para saber o que está realmente perto de você.`
           }
         />
       </Helmet>
@@ -172,7 +181,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
           subtitle={
             hasPreciseProximity
               ? "Descubra empresas próximas e veja cada resultado no mapa."
-              : `Descubra empresas ${territoryLabels.inTerritory}, com referência territorial sem fabricar distância pessoal.`
+              : `Veja empresas ${territoryLabels.inTerritory}. Ative sua localização para saber o que está realmente perto de você.`
           }
           stats={[
             hasPreciseProximity
@@ -243,7 +252,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
             <p className="text-muted-foreground">
               {locationLoading
                 ? "Obtendo sua localização..."
-                : "Buscando empresas deste recorte..."}
+                : "Buscando empresas por aqui..."}
             </p>
           </div>
         ) : null}
@@ -257,10 +266,10 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
               Não foi possível carregar as empresas
             </h2>
             <p className="mb-6 text-muted-foreground">
-              Tente novamente ou abra o módulo Empresas.
+              Tente novamente ou veja as empresas do território.
             </p>
             <Button onClick={() => navigate(businessUrl)} variant="outline">
-              Abrir Empresas
+              Ver empresas
             </Button>
           </div>
         ) : null}
@@ -272,7 +281,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
               subtitle={
                 hasPreciseProximity
                   ? `Empresas em até ${radiusKm}km`
-                  : `Mapa ${territoryLabels.inTerritory} — referência territorial`
+                  : `Empresas no mapa ${territoryLabels.inTerritory}`
               }
               icon={Map}
               iconColorClass="bg-accent/10 text-accent-foreground"
@@ -289,15 +298,19 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
 
             <NearbySection
               title={`Empresas ${proximityLabel}`}
-              subtitle="Resultados públicos válidos do módulo Empresas"
+              subtitle={
+                hasPreciseProximity
+                  ? "Empresas próximas com localização real"
+                  : `Empresas disponíveis ${territoryLabels.inTerritory}`
+              }
               icon={Store}
               iconColorClass="bg-blue-500/10 text-blue-500"
               count={businesses.length}
               isEmpty={businesses.length === 0}
               emptyMessage={
                 hasPreciseProximity
-                  ? `Nenhuma empresa encontrada em até ${radiusKm}km. Amplie o raio ou abra Empresas.`
-                  : `Nenhuma empresa encontrada ${territoryLabels.inTerritory}. Abra Empresas para explorar o catálogo disponível.`
+                  ? `Nenhuma empresa encontrada em até ${radiusKm}km. Amplie o raio ou veja todas as empresas.`
+                  : `Nenhuma empresa encontrada ${territoryLabels.inTerritory}. Veja todas as empresas disponíveis.`
               }
               isLoading={isLoading}
               onSeeAll={() => navigate(businessUrl)}
