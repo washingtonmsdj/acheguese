@@ -20,14 +20,14 @@ export default function BusinessDetailsPage() {
           <Field label="Nome" value={business.name} />
           <Field label="Categoria" value={business.category} />
           <Field label="Status" value={business.status} />
-          <Field label="Telefone" value={business.phone || "Nao informado"} />
-          <Field label="WhatsApp" value={business.whatsapp || "Nao informado"} />
-          <Field label="Email" value={business.email || "Nao informado"} />
-          <Field label="Site" value={business.website || "Nao informado"} />
-          <Field label="Cidade" value={business.business_city || "Nao informado"} />
-          <Field label="Estado" value={business.business_state || "Nao informado"} />
-          <Field label="Endereco" value={business.business_address || "Nao informado"} />
-          <Field label="Slug" value={business.slug || "Nao configurado"} />
+          <Field label="Telefone" value={business.phone || "Não informado"} />
+          <Field label="WhatsApp" value={business.whatsapp || "Não informado"} />
+          <Field label="E-mail" value={business.email || "Não informado"} />
+          <Field label="Site" value={business.website || "Não informado"} />
+          <Field label="Cidade" value={business.business_city || "Não informado"} />
+          <Field label="Estado" value={business.business_state || "Não informado"} />
+          <Field label="Endereço" value={business.business_address || "Não informado"} />
+          <Field label="Endereço da página" value={business.slug || "Não configurado"} />
         </CardContent>
       </Card>
     </div>
