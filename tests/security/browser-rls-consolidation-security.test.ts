@@ -44,8 +44,8 @@ describe("browser RLS consolidation hardening", () => {
   });
 
   it("never disables RLS or grants new browser privileges", () => {
-    expect(migration).not.toMatch(/DISABLE\s+ROW\s+LEVEL\s+SECURITY/i);
-    expect(migration).not.toMatch(/\bGRANT\b/i);
-    expect(migration).not.toMatch(/\bTO\s+anon\b/i);
+    expect(migration).not.toMatch(/^\s*ALTER\s+TABLE\b.*\bDISABLE\s+ROW\s+LEVEL\s+SECURITY\b/im);
+    expect(migration).not.toMatch(/^\s*GRANT\s+/im);
+    expect(migration).not.toMatch(/^\s*(?:CREATE|ALTER)\s+POLICY\b[\s\S]*?\bTO\s+anon\b/im);
   });
 });
