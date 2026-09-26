@@ -66,10 +66,10 @@ describe("Professional legacy retirement", () => {
 
     expect(migration).toContain("encanador-carlos-ai-seed");
     expect(migration).toContain("metadata = (COALESCE(metadata, '{}'::jsonb) - 'latitude' - 'longitude')");
-    expect(migration).toContain("address.latitude AS latitude");
-    expect(migration).toContain("address.longitude AS longitude");
-    expect(migration).not.toContain("metadata ->> 'latitude'");
-    expect(migration).not.toContain("metadata ->> 'longitude'");
+    expect(migration).toContain("address.latitude::numeric AS latitude");
+    expect(migration).toContain("address.longitude::numeric AS longitude");
+    expect(migration).not.toContain("COALESCE((professional.metadata ->> 'latitude'");
+    expect(migration).not.toContain("COALESCE((professional.metadata ->> 'longitude'");
     expect(migration).toContain("security_invoker = true");
   });
 

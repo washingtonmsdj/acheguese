@@ -73,8 +73,8 @@ SELECT
   professional.metadata,
   professional.created_at,
   professional.updated_at,
-  address.latitude AS latitude,
-  address.longitude AS longitude,
+  address.latitude::numeric AS latitude,
+  address.longitude::numeric AS longitude,
   location.geographic_path
 FROM public.professional_data AS professional
 LEFT JOIN public.addresses AS address
