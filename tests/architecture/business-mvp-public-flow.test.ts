@@ -82,9 +82,18 @@ describe("MVP Business public flow", () => {
 
   it("does not offer route or contact actions without a real target", () => {
     expect(addressCard).toContain("const hasRouteTarget = Boolean(");
+    expect(addressCard).toContain("addressText?.trim()");
+    expect(addressCard).toContain("business.business_address?.trim()");
+    expect(addressCard).toContain("business.address?.street?.trim()");
     expect(addressCard).toContain("'Endereço não informado'");
+    expect(addressCard).not.toContain("coordinates || addressText");
+    expect(addressCard).not.toContain("addressText?.trim() || locationText?.trim()");
     expect(addressCard).not.toContain("addressText || locationText || business.name");
-    expect(ctasSection).toContain("getPhysicalBusinessCoordinates(business)");
+    expect(ctasSection).toContain("business.business_address?.trim()");
+    expect(ctasSection).toContain("business.address?.street?.trim()");
+    expect(ctasSection).not.toContain("business.location?.full_name?.trim()");
+    expect(ctasSection).not.toContain("business.location?.name?.trim()");
+    expect(ctasSection).not.toContain("getPhysicalBusinessCoordinates(business)");
     expect(ctasSection).toContain(
       "<RouteOptions show={hasRouteTarget && showRouteOptions}",
     );
