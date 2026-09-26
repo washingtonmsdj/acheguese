@@ -81,13 +81,13 @@ function MvpMapHeader({
             {mapLabel}
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Visualize informações públicas disponíveis no território e abra as fontes canônicas dos providers ativos.
+            Veja as empresas disponíveis no território e abra cada resultado para saber mais.
           </p>
         </div>
         {(providerLinks.length > 0 || nearbyHref) && (
           <nav
             className="flex shrink-0 flex-wrap gap-2"
-            aria-label="Módulos relacionados ao mapa"
+            aria-label="Atalhos relacionados ao mapa"
           >
             {providerLinks.map((link) => (
               <Link
