@@ -11,9 +11,11 @@ export function AddressCard({
 }: AddressCardProps) {
   const coordinates = getPhysicalBusinessCoordinates(business);
   const hasRouteTarget = Boolean(
-    coordinates || addressText?.trim() || locationText?.trim(),
+    addressText?.trim() ||
+      business.business_address?.trim() ||
+      business.address?.street?.trim(),
   );
-  const addressLine = addressText || locationText || 'Endereço não informado';
+  const addressLine = addressText || 'Endereço não informado';
   const locationLine =
     locationText ||
     (typeof business.address === 'object' && business.address?.postal_code
@@ -52,12 +54,14 @@ export function AddressCard({
                 interactive={false}
                 fallbackClassName="bg-[#0f1d26]"
               />
-              <button
-                type="button"
-                onClick={onRoute}
-                className="absolute inset-0 z-10"
-                aria-label="Abrir localizacao no mapa"
-              />
+              {hasRouteTarget ? (
+                <button
+                  type="button"
+                  onClick={onRoute}
+                  className="absolute inset-0 z-10"
+                  aria-label="Abrir localizacao no mapa"
+                />
+              ) : null}
             </>
           ) : (
             <div className="group relative flex h-full w-full items-center justify-center">
