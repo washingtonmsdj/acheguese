@@ -12,17 +12,6 @@ const BUSINESS_PREFIX = "G6 E2E Empresa Canonica";
 
 test.setTimeout(180_000);
 
-async function territoryComboboxByLabel(
-  page: Page,
-  labelPattern: RegExp,
-  fallbackIndex: number,
-): Promise<Locator> {
-  const byLabel = page.getByRole("combobox", { name: labelPattern }).first();
-  return (await byLabel.count()) > 0
-    ? byLabel
-    : page.getByRole("combobox").nth(fallbackIndex);
-}
-
 async function chooseEnabledOption(
   page: Page,
   trigger: Locator,
@@ -61,19 +50,27 @@ async function chooseEnabledOption(
 }
 
 async function fillBusinessTerritory(page: Page) {
-  const state = await territoryComboboxByLabel(page, /^Estado/i, 0);
-  const city = await territoryComboboxByLabel(page, /^Cidade/i, 1);
-  const district = await territoryComboboxByLabel(
-    page,
-    /^(Bairro|Distrito)/i,
-    2,
-  );
-
+  // Use the TerritorialSelector's stable public trigger IDs instead of role
+  // ordering. Each cascade stage may temporarily swap the trigger for a loader.
+  const state = page.locator("#territorial-state");
   await chooseEnabledOption(page, state, [/bahia/i, /^ba$/i]);
+  await expect(state).not.toContainText(/selecione o estado/i);
+
+  const city = page.locator("#territorial-city");
   await chooseEnabledOption(page, city, [/salvador/i]);
-  if ((await district.count()) > 0) {
-    await chooseEnabledOption(page, district);
-  }
+  await expect(city).not.toContainText(/selecione a cidade/i);
+
+  const district = page.locator("#territorial-neighborhood");
+  await chooseEnabledOption(page, district);
+  await expect(district).not.toContainText(/selecione (o bairro|o distrito)/i);
+
+  // TerritorialSelector propagates location_id through a React effect after the
+  // visible selection changes. The summary is rendered only after that callback
+  // has supplied locationData to the form owner, so it is the deterministic
+  // readiness signal before submitting step 2.
+  await expect(page.getByText(/Exibição pública principal em/i)).toBeVisible({
+    timeout: 20_000,
+  });
 }
 
 async function assertDedicatedFixture(client: Awaited<ReturnType<typeof bootstrapFixtureSession>>) {
