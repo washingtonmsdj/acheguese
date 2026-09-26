@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Building2, Mail, MapPin, Phone, Pencil, Store, Globe2 } from "lucide-react";
 
@@ -102,7 +103,7 @@ function SectionCard({
   title: string;
   description: string;
   icon: typeof Building2;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="rounded-[24px] border border-border bg-card p-5 sm:p-6">
