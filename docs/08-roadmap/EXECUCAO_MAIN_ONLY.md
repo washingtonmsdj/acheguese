@@ -96,13 +96,11 @@ A documentação viva está sendo reduzida ao que representa o produto atual:
 
 Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentais correspondentes.
 
-## Blocker externo atual
+## Blockers externos atuais
 
 ### #305 — Supabase data plane / sessão autenticada
 
-O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto o smoke autenticado falha no bootstrap de sessão com `auth_upstream_unavailable`.
-
-O painel da organização também mostrou a cota gratuita de egress excedida no período. Isso é consistente com o blocker observado, mas a certificação só considera o problema resolvido quando o data plane e o fluxo autenticado real voltarem a responder.
+O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto Auth e REST/PostgREST retornam 504 em probes independentes do frontend.
 
 Não corrigir isso no frontend com:
 
@@ -123,6 +121,25 @@ A sequência de prova quando o upstream voltar é:
 6. Mensagens;
 7. smoke autenticado exact-SHA.
 
+### #445 — Vercel build/deployment rate limit
+
+O provider pode rejeitar a criação de um novo deployment antes de executar build da aplicação. Nesse estado, um status Vercel vermelho por `Deployment rate limited` não prova regressão de código e também não autoriza tratar um SHA anterior já `READY` como se fosse o candidato atual.
+
+Não contornar esse blocker com:
+
+- promoção manual de SHA diferente do candidato;
+- alteração de `vercel.json` ou gates para reduzir a exigência de identidade exact-SHA;
+- spam de commits/redeploys enquanto a janela do provider continua limitada;
+- declaração de produção validada sem deployment `READY` do mesmo candidato.
+
+Quando a janela do provider normalizar, a prova é:
+
+1. reler o HEAD candidato;
+2. obter deployment Vercel `READY` desse exact-SHA;
+3. validar identidade/release metadata aplicável;
+4. executar smoke público do mesmo SHA;
+5. cruzar a certificação autenticada com #305 antes de declarar MVP READY.
+
 ## Ordem de execução até MVP READY
 
 1. **Fechar Frontend Finish e higiene final**
@@ -131,8 +148,9 @@ A sequência de prova quando o upstream voltar é:
    - manter histórico somente em checkpoints/archive/Git;
    - não apagar base pós-MVP com owner legítimo.
 
-2. **Fechar o blocker de infraestrutura restante**
-   - resolver #305 sem compensações no frontend, Auth, RLS ou timeouts.
+2. **Fechar os blockers externos de certificação**
+   - #305: restaurar prova real do data plane/Auth/REST sem compensações no frontend, Auth, RLS ou timeouts;
+   - #445: obter deployment Vercel `READY` do mesmo SHA candidato quando o rate limit permitir.
 
 3. **Certificar um único candidato**
    - obter o SHA diretamente do Git no momento da execução;
@@ -166,7 +184,7 @@ O MVP só recebe **READY** quando o mesmo candidato comprovar:
 - zero dependência ativa em módulo pausado;
 - zero redirect/alias/fallback legado usado como mecanismo de lifecycle;
 - security/lint/typecheck/test/build executados de verdade;
-- deploy e smoke do mesmo SHA;
+- deployment `READY` e smoke do mesmo SHA;
 - nenhum erro crítico recorrente.
 
 ## Onde fica o histórico

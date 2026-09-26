@@ -35,11 +35,11 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - preservar manifests, baselines e documentos consumidos por tooling;
    - manter histórico em checkpoints/archive/Git;
 
-3. fechar o blocker externo restante:
-   - **#305:** indisponibilidade/timeout do data plane Supabase e sessão autenticada real;
-   - não compensar com fallback de login, retry artificial, timeout maior, bypass OIDC ou mudança de RLS sem evidência;
+3. fechar os blockers externos de certificação:
+   - **#305 — Supabase:** data plane/Auth/REST seguem apresentando timeout/504 apesar de control plane `ACTIVE_HEALTHY`; não compensar com fallback de login, retry artificial, timeout maior, bypass OIDC ou mudança de RLS sem evidência;
+   - **#445 — Vercel:** build/deployment exact-main está bloqueado por rate limit do provider; não promover SHA diferente, enfraquecer configuração de deploy ou empilhar mudança de runtime apenas para forçar novo build;
 
-4. executar um único candidato da `main`:
+4. executar um único candidato da `main` quando os providers permitirem prova real:
    - security;
    - arquitetura/SSOT;
    - lint/typecheck;
@@ -50,7 +50,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - deploy exact-SHA;
    - smoke exact-SHA;
 
-5. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth passarem no mesmo candidato.
+5. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth passarem no mesmo candidato e esse candidato tiver deployment `READY` exact-SHA.
 
 ## Proibições
 
@@ -61,6 +61,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - sem consulta a domínio pausado para montar UI oculta;
 - sem novo owner para responsabilidade já existente;
 - sem documento vivo com snapshot antigo de PR/SHA tratado como estado atual;
-- sem apagar histórico necessário para auditoria ou proveniência.
+- sem apagar histórico necessário para auditoria ou proveniência;
+- sem tratar falha de quota/rate limit do provider como falha de build da aplicação sem evidência de build executado.
 
-Detalhes, critérios completos e blocker: `EXECUCAO_MAIN_ONLY.md`.
+Detalhes, critérios completos e blockers: `EXECUCAO_MAIN_ONLY.md`.
