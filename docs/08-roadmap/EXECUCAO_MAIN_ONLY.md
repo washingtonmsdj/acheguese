@@ -50,7 +50,7 @@ Regra permanente: **vertical de produto não é capability horizontal**. Pausar 
 - preservar código pós-MVP somente quando ele estiver isolado do runtime ativo;
 - remover código órfão, facade sem caller, barrel artificial e documento supersedido assim que o censo provar que não existe dependência viva;
 - migrations históricas permanecem imutáveis quando necessárias ao ledger/proveniência;
-- merge não equivale a produção validada.
+- merge/commit não equivale a produção validada.
 
 ## Estado técnico do núcleo
 
@@ -67,13 +67,39 @@ O corte estrutural do MVP está consolidado:
 - URLs sem owner ativo chegam ao 404 canônico, sem redirect de compatibilidade;
 - o deploy automático exact-main de Edge Functions está operacional e volta a ser tratado como gate normal da certificação do candidato.
 
-Qualquer regressão nessas regras deve falhar nos gates arquiteturais.
+### Frontend Finish do MVP
+
+A convergência visual das superfícies ativas está em fase final:
+
+- catálogo de Empresas alinhado à identidade petróleo/teal;
+- detalhe público com shell responsivo alinhado ao catálogo;
+- Central da empresa com visão geral, dados e configurações repaginados;
+- Perto de mim repaginado e sem o hero legado;
+- Busca com copy pública humanizada;
+- criação e edição de empresa alinhadas em três etapas: Identidade → Contato e local → Apresentação;
+- horário noturno que atravessa meia-noite já é tratado no helper do catálogo;
+- ainda deve ser removido o cálculo duplicado de aberto/fechado que permanece no container do detalhe público, fazendo-o consumir o SSOT de Business Hours.
+
+### Higiene documental/repositório
+
+A documentação viva está sendo reduzida ao que representa o produto atual:
+
+- `docs/README.md` é o único índice canônico;
+- `docs/08-roadmap/README.md` separa execução atual de planos futuros;
+- handoff CP-016 concluído foi movido para `docs/10-archive/`;
+- `RECOVERY-ROADMAP.md` supersedido saiu da árvore viva;
+- sprints antigas de Feed/Post saíram de `docs/05-ux/` porque Community está pausado;
+- histórico permanece em `10-archive/` ou no Git, sem competir com SSOT vivo.
+
+Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentais correspondentes.
 
 ## Blocker externo atual
 
 ### #305 — Supabase data plane / sessão autenticada
 
 O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto o smoke autenticado falha no bootstrap de sessão com `auth_upstream_unavailable`.
+
+O painel da organização também mostrou a cota gratuita de egress excedida no período. Isso é consistente com o blocker observado, mas a certificação só considera o problema resolvido quando o data plane e o fluxo autenticado real voltarem a responder.
 
 Não corrigir isso no frontend com:
 
@@ -96,10 +122,12 @@ A sequência de prova quando o upstream voltar é:
 
 ## Ordem de execução até MVP READY
 
-1. **Higiene final do repositório**
-   - remover código e documentos comprovadamente obsoletos;
+1. **Fechar Frontend Finish e higiene final**
+   - remover a duplicação de status aberto/fechado no detalhe público;
+   - terminar revisão visual das superfícies ativas sem reabrir módulo pausado;
+   - remover código/documento comprovadamente obsoleto;
    - manter histórico somente em checkpoints/archive/Git;
-   - não apagar implementação pós-MVP que ainda possui owner legítimo.
+   - não apagar base pós-MVP com owner legítimo.
 
 2. **Fechar o blocker de infraestrutura restante**
    - resolver #305 sem compensações no frontend, Auth, RLS ou timeouts.
@@ -144,6 +172,7 @@ O MVP só recebe **READY** quando o mesmo candidato comprovar:
 - decisões vigentes: `docs/DECISIONS.md`;
 - arquitetura vigente: `docs/03-architecture/`;
 - estado funcional: `docs/FEATURE-MAP.md` e `docs/SCREEN-MAP.md`;
+- estado dos roadmaps: `docs/08-roadmap/README.md`;
 - evidências datadas: `docs/08-roadmap/checkpoints/`;
 - material superado: `docs/10-archive/`;
 - sequência completa de mudanças: histórico do Git.
