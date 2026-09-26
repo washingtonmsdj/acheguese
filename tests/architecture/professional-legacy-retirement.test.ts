@@ -40,25 +40,47 @@ describe("Professional legacy retirement", () => {
     expect(mapper).toContain("location?.geographic_path");
   });
 
-  it("keeps the last live coordinate residue read-only and explicit", () => {
+  it("keeps professional coordinates address-owned and rejects metadata fallback", () => {
     const mapper = read("src/core/professional/services/professional.mappers.ts");
+    const lifecycle = read(
+      "src/core/professional/services/professional.profile-lifecycle.ts",
+    );
     const readme = read("src/core/professional/README.md");
 
-    expect(mapper).toContain("optionalNumber(metadata.latitude)");
-    expect(mapper).toContain("optionalNumber(metadata.longitude)");
-    expect(mapper).toContain("Temporary read-only compatibility");
-    expect(readme).toContain("Compatibilidade residual de coordenadas");
-    expect(readme).toContain("somente de");
-    expect(readme).toContain("leitura");
-    expect(readme).toContain("não autoriza novas escritas");
+    expect(mapper).toContain("latitude: optionalNumber(address?.latitude)");
+    expect(mapper).toContain("longitude: optionalNumber(address?.longitude)");
+    expect(mapper).not.toContain("optionalNumber(metadata.latitude)");
+    expect(mapper).not.toContain("optionalNumber(metadata.longitude)");
+    expect(lifecycle).toContain("delete metadata.latitude");
+    expect(lifecycle).toContain("delete metadata.longitude");
+    expect(readme).not.toContain("Compatibilidade residual de coordenadas");
+    expect(readme).toContain("metadata.latitude");
+    expect(readme).toContain("metadata.longitude");
+    expect(readme).toContain("só vêm do `Address` canônico");
   });
 
-  it("keeps new writes stripping retired nested location metadata", () => {
+  it("locks the one-shot cleanup and public view away from coordinate metadata", () => {
+    const migration = read(
+      "supabase/migrations/20260926095000_retire_professional_coordinate_metadata.sql",
+    );
+
+    expect(migration).toContain("encanador-carlos-ai-seed");
+    expect(migration).toContain("metadata = (COALESCE(metadata, '{}'::jsonb) - 'latitude' - 'longitude')");
+    expect(migration).toContain("address.latitude AS latitude");
+    expect(migration).toContain("address.longitude AS longitude");
+    expect(migration).not.toContain("metadata ->> 'latitude'");
+    expect(migration).not.toContain("metadata ->> 'longitude'");
+    expect(migration).toContain("security_invoker = true");
+  });
+
+  it("keeps new writes stripping retired metadata projections", () => {
     const lifecycle = read(
       "src/core/professional/services/professional.profile-lifecycle.ts",
     );
 
     expect(lifecycle).toContain("delete metadata.location");
+    expect(lifecycle).toContain("delete metadata.latitude");
+    expect(lifecycle).toContain("delete metadata.longitude");
     expect(lifecycle).toContain("delete metadata.portfolio_images");
   });
 

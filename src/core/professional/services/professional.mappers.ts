@@ -133,10 +133,8 @@ export function mapProfessionalRow(row: ProfessionalRow): Professional {
     neighborhood: territory.neighborhood,
     city: territory.city,
     state: territory.state,
-    // Temporary read-only compatibility: one live professional row still stores
-    // coordinates at metadata root. Do not create new writes that depend on it.
-    latitude: optionalNumber(address?.latitude) ?? optionalNumber(metadata.latitude),
-    longitude: optionalNumber(address?.longitude) ?? optionalNumber(metadata.longitude),
+    latitude: optionalNumber(address?.latitude),
+    longitude: optionalNumber(address?.longitude),
     certifications: asStringArray(row.certifications),
     experience_years: row.experience_years ?? undefined,
     education: optionalString(row.education),

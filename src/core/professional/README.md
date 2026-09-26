@@ -16,20 +16,9 @@ Owner canônico dos dados e fluxos de profissionais/serviços.
 1. `location_id` nunca é substituído por `service_areas`.
 2. `service_areas` nunca é inferido apenas de `location_id`.
 3. Endereço físico é opcional; não inventar `address_id` para profissional remoto ou sem consultório.
-4. `metadata.location` não é fonte de território e não participa mais do read model.
+4. `metadata.location`, `metadata.latitude` e `metadata.longitude` não são fontes canônicas e não participam do read model.
 5. Migrações one-shot históricas não são API runtime do módulo.
-6. Novas escritas não devem criar coordenadas em metadata.
-
-## Compatibilidade residual de coordenadas
-
-O banco atual ainda possui um registro profissional com `metadata.latitude` e
-`metadata.longitude`, sem `address_id`. Para evitar perda de informação,
-`professional.mappers.ts` mantém temporariamente um fallback **somente de
-leitura** para essas duas chaves quando não existe coordenada em Address.
-
-Esse fallback não autoriza novas escritas nem reintroduz `metadata.location`.
-Ele deve ser removido quando o último registro for reconciliado para uma fonte
-canônica de coordenadas.
+6. Coordenadas físicas só vêm do `Address` canônico; cobertura territorial pertence a `service_areas` e não deve ser usada como endereço implícito.
 
 ## Owners
 
