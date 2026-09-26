@@ -168,6 +168,8 @@ function toProfessionalData(
 
   const metadata: ProfessionalMetadata = { ...(options.currentMetadata ?? {}) };
   delete metadata.location;
+  delete metadata.latitude;
+  delete metadata.longitude;
   delete metadata.portfolio_images;
 
   if (input.logo_url !== undefined) metadata.logo_url = input.logo_url;
