@@ -17,7 +17,8 @@ describe("public territorial surface audit", () => {
     const accountSource = readProjectFile("src/modules/profile/pages/ContaHubPage.tsx");
 
     expect(pageSource).toContain("territoryFilter: moduleTerritory.territoryFilter");
-    expect(pageSource).toContain("useSpatialSearchHybrid");
+    expect(pageSource).not.toContain("useSpatialSearchHybrid");
+    expect(pageSource).not.toContain("useRobustGeolocation");
     expect(pageSource).toContain("locationIds: moduleTerritory.resolvedLocationIds");
     expect(pageSource).toContain("normalizeRealBusinessEntry");
     expect(pageSource).not.toContain("isLaunchBusinessCategoryEnabled");
