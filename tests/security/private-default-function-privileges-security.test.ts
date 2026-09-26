@@ -1,24 +1,31 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const migration = readFileSync(
-  "supabase/migrations/20260926024500_fail_closed_future_private_function_grants.sql",
+const repair = readFileSync(
+  "supabase/migrations/20260926025000_repair_postgres_function_default_privileges.sql",
   "utf8",
 );
 
 describe("future private function privileges", () => {
-  it("makes future postgres-owned private functions fail closed", () => {
-    expect(migration).toMatch(
-      /ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA private\s+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;/,
+  it("fails closed through the required global PUBLIC execute revoke", () => {
+    expect(repair).toMatch(
+      /ALTER DEFAULT PRIVILEGES FOR ROLE postgres\s+REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;/,
+    );
+    expect(repair).not.toMatch(
+      /IN SCHEMA private\s+GRANT EXECUTE ON FUNCTIONS/i,
+    );
+  });
+
+  it("preserves PUBLIC execute only for future extension functions", () => {
+    expect(repair).toMatch(
+      /ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA extensions\s+GRANT EXECUTE ON FUNCTIONS TO PUBLIC;/,
     );
   });
 
   it("changes default privileges only", () => {
-    expect(migration.match(/ALTER DEFAULT PRIVILEGES/g)).toHaveLength(1);
-    expect(migration).not.toMatch(/^\s*ALTER\s+FUNCTION\b/im);
-    expect(migration).not.toMatch(/^\s*(?:GRANT|REVOKE)\s+.*\bON\s+FUNCTION\b/im);
-    expect(migration).not.toMatch(/^\s*(?:GRANT|REVOKE)\s+.*\bON\s+SCHEMA\b/im);
-    expect(migration).not.toMatch(/^\s*CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b/im);
-    expect(migration).not.toMatch(/^\s*(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM|TRUNCATE)\b/im);
+    expect(repair.match(/ALTER DEFAULT PRIVILEGES/g)).toHaveLength(2);
+    expect(repair).not.toMatch(/^\s*ALTER\s+FUNCTION\b/im);
+    expect(repair).not.toMatch(/^\s*CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\b/im);
+    expect(repair).not.toMatch(/^\s*(?:INSERT\s+INTO|UPDATE|DELETE\s+FROM|TRUNCATE)\b/im);
   });
 });
