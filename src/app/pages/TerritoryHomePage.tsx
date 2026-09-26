@@ -71,7 +71,7 @@ export default function TerritoryHomePage() {
         <title>{territoryName} | Achegue-se</title>
         <meta
           name="description"
-          content={`Encontre empresas em ${territoryName}, pesquise o que precisa, explore o mapa e descubra o que está perto de você.`}
+          content={`Encontre empresas em ${territoryName}, procure o que precisa, veja no mapa e descubra o que está perto de você.`}
         />
       </Helmet>
 
@@ -86,33 +86,64 @@ export default function TerritoryHomePage() {
               Descubra empresas e lugares ao seu redor.
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
-              O Achegue-se conecta Empresas, Busca, Mapa e Perto de mim usando o
-              mesmo contexto territorial e as mesmas identidades públicas.
+              Empresas, mapa e lugares perto de você, sempre dentro de
+              {` ${territoryName}`}.
+            </p>
+
+            <Link
+              to={searchUrl}
+              aria-label={`Procurar algo em ${territoryName}`}
+              className="group mt-7 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-border bg-background px-4 py-4 text-left shadow-sm transition-colors hover:border-primary/35 hover:bg-muted/30 sm:px-5"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Search className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">
+                  Procurar no bairro
+                </span>
+                <span className="mt-0.5 block truncate text-sm text-muted-foreground">
+                  mercado, farmácia, oficina, empresa...
+                </span>
+              </span>
+              <ArrowRight
+                className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
+
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              O que você quer fazer agora?
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Escolha um caminho e continue em {territoryName}.
             </p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MvpModuleCard
               title="Empresas"
-              description="Veja empresas públicas do território e abra seus detalhes canônicos."
+              description={`Veja empresas de ${territoryName}, contatos e informações para decidir onde ir.`}
               href={businessUrl}
               icon={Building2}
             />
             <MvpModuleCard
               title="Mapa"
-              description="Visualize as empresas disponíveis diretamente no mapa do território."
+              description={`Veja onde ficam as empresas disponíveis em ${territoryName}.`}
               href={mapUrl}
               icon={Map}
             />
             <MvpModuleCard
               title="Perto de mim"
-              description="Use sua localização quando disponível para encontrar empresas próximas sem fabricar distâncias."
+              description="Use sua localização, quando disponível, para descobrir empresas próximas."
               href={nearbyUrl}
               icon={Navigation}
             />
             <MvpModuleCard
-              title="Busca"
-              description="Pesquise empresas e resultados apenas dos módulos atualmente ativos."
+              title="Procurar"
+              description={`Digite o que precisa e procure entre as empresas disponíveis em ${territoryName}.`}
               href={searchUrl}
               icon={Search}
             />
