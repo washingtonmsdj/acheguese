@@ -18,6 +18,14 @@ const relatedSection = readFileSync(
   "src/modules/business/company/sections/EmpresaProximasSection.tsx",
   "utf8",
 );
+const ctasSection = readFileSync(
+  "src/modules/business/company/sections/EmpresaCTAsSection.tsx",
+  "utf8",
+);
+const addressCard = readFileSync(
+  "src/modules/business/company/components/info/AddressCard.tsx",
+  "utf8",
+);
 const constants = readFileSync(
   "src/app/features/business-landing/utils/landing.constants.ts",
   "utf8",
@@ -70,6 +78,16 @@ describe("MVP Business public flow", () => {
     expect(detailPage).toContain(">Relacionadas</TabsTrigger>");
     expect(relatedSection).toContain("Empresas relacionadas");
     expect(relatedSection).not.toContain("Empresas proximas");
+  });
+
+  it("does not offer route actions without a real location target", () => {
+    expect(addressCard).toContain("const hasRouteTarget = Boolean(");
+    expect(addressCard).toContain("'Endereço não informado'");
+    expect(addressCard).not.toContain("addressText || locationText || business.name");
+    expect(ctasSection).toContain("getPhysicalBusinessCoordinates(business)");
+    expect(ctasSection).toContain(
+      "<RouteOptions show={hasRouteTarget && showRouteOptions}",
+    );
   });
 
   it("keeps Business CTAs inside the active MVP module set", () => {
