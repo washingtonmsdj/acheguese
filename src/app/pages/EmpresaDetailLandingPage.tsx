@@ -21,7 +21,6 @@ import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
-import { getRecordValue } from "@/shared/utils/recordLookup";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import {
   EmpresaCTAsSection,
@@ -40,7 +39,10 @@ import type {
   NearbyBusiness,
   Product as CompanyProduct,
 } from "@/modules/business/company/sections/types";
-import type { BusinessOperationConfig } from "@/core/business/BusinessHoursService";
+import type {
+  BusinessOperationConfig,
+  BusinessStatus,
+} from "@/core/business/BusinessHoursService";
 
 interface EmpresaDetailLandingPageProps {
   businessId?: string;
@@ -81,6 +83,7 @@ export default function EmpresaDetailLandingPage(
   const [selectedProductCategory, setSelectedProductCategory] = useState("todos");
   const [nearbyBusinesses, setNearbyBusinesses] = useState<NearbyBusiness[]>([]);
   const [operationConfig, setOperationConfig] = useState<BusinessOperationConfig | null>(null);
+  const [businessHoursStatus, setBusinessHoursStatus] = useState<BusinessStatus | null>(null);
   const [messageLoading, setMessageLoading] = useState(false);
 
   const { data: snapshot, isLoading } = usePublicBusinessSnapshot({
@@ -120,26 +123,24 @@ export default function EmpresaDetailLandingPage(
   useEffect(() => {
     let cancelled = false;
 
-    const loadOperationConfig = async () => {
+    const loadBusinessHoursState = async () => {
       if (!institutionalBusinessDataId) {
         setOperationConfig(null);
+        setBusinessHoursStatus(null);
         return;
       }
 
-      const { data, error } = await BusinessHoursService.getOperationConfig(
-        institutionalBusinessDataId,
-      );
+      const [operationResult, statusResult] = await Promise.all([
+        BusinessHoursService.getOperationConfig(institutionalBusinessDataId),
+        BusinessHoursService.getStatus(institutionalBusinessDataId),
+      ]);
       if (cancelled) return;
 
-      if (error) {
-        setOperationConfig(null);
-        return;
-      }
-
-      setOperationConfig(data);
+      setOperationConfig(operationResult.error ? null : operationResult.data);
+      setBusinessHoursStatus(statusResult.error ? null : statusResult.data);
     };
 
-    void loadOperationConfig();
+    void loadBusinessHoursState();
 
     return () => {
       cancelled = true;
@@ -148,7 +149,6 @@ export default function EmpresaDetailLandingPage(
 
   const resolvedOpenStatus = useMemo(() => {
     const base = snapshot?.institutional.openStatus ?? { open: null, todayHours: null };
-    const openingHours = snapshot?.institutional.openingHours ?? snapshotBusiness?.horario_funcionamento;
 
     const temporaryClosureActive = Boolean(
       operationConfig?.is_temporarily_closed &&
@@ -163,54 +163,20 @@ export default function EmpresaDetailLandingPage(
       };
     }
 
-    if (!openingHours || typeof openingHours !== "object") {
-      return { open: null, todayHours: null };
-    }
-
-    const days = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-    const dayKey = days.at(new Date().getDay());
-    if (!dayKey) {
-      return { open: null, todayHours: null };
-    }
-    const today = getRecordValue(
-      openingHours as Record<string, { open?: string; close?: string; closed?: boolean }>,
-      dayKey,
-    );
-
-    if (!today) {
-      return { open: null, todayHours: null };
-    }
-
-    if (today.closed) {
-      return { open: false, todayHours: "Fechado hoje" };
-    }
-
-    if (!today.open || !today.close) {
-      return { open: null, todayHours: null };
-    }
-
-    const [openH, openM] = today.open.split(":").map(Number);
-    const [closeH, closeM] = today.close.split(":").map(Number);
-
-    if (
-      Number.isNaN(openH) ||
-      Number.isNaN(openM) ||
-      Number.isNaN(closeH) ||
-      Number.isNaN(closeM)
-    ) {
+    if (!businessHoursStatus) {
       return base;
     }
 
-    const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
-    const openMinutes = openH * 60 + openM;
-    const closeMinutes = closeH * 60 + closeM;
-    const isOpenNow = currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
+    const nextOpeningLabel =
+      !businessHoursStatus.isOpen && businessHoursStatus.nextOpening?.opens_at
+        ? `Próxima abertura às ${businessHoursStatus.nextOpening.opens_at.slice(0, 5)}`
+        : null;
 
     return {
-      open: isOpenNow,
-      todayHours: `${today.open} - ${today.close}`,
+      open: businessHoursStatus.isOpen,
+      todayHours: base.todayHours || nextOpeningLabel,
     };
-  }, [snapshotBusiness?.horario_funcionamento, operationConfig, snapshot]);
+  }, [businessHoursStatus, operationConfig, snapshot]);
 
   useEffect(() => {
     let cancelled = false;
