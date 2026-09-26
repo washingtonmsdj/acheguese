@@ -16,11 +16,14 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { classifiedUrlService } from "@/core/classifieds/services";
 import { PassivePageFallback } from '@/shared/components/loading/PassivePageFallback';
+import { getActiveMessagingProviderIds } from '@/app/config/messagingProviderScope';
 
 const ClassificadoDetailPage = lazy(() => import('@/modules/classifieds/pages/ClassificadoDetailPage'));
 
 export default function ClassifiedShortRoute() {
   const { publicId } = useParams<{ publicId: string }>();
+  const internalMessagingEnabled =
+    getActiveMessagingProviderIds().includes("classifieds");
 
   const [resolution, setResolution] = useState<{
     status: 'loading' | 'found' | 'not-found';
@@ -80,7 +83,10 @@ export default function ClassifiedShortRoute() {
 
   return (
     <Suspense fallback={<PassivePageFallback />}>
-      <ClassificadoDetailPage classifiedId={resolution.classifiedId} />
+      <ClassificadoDetailPage
+        classifiedId={resolution.classifiedId}
+        internalMessagingEnabled={internalMessagingEnabled}
+      />
     </Suspense>
   );
 }

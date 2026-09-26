@@ -15,6 +15,25 @@ const service = read(
   "src/core/messaging/services/ClassifiedMessagingService.ts",
 );
 const publicApi = read("src/core/messaging/index.ts");
+const providerScope = read("src/app/config/messagingProviderScope.ts");
+const providerRegistry = read(
+  "src/core/messaging/providers/messagingProviderRegistry.ts",
+);
+const detailPage = read(
+  "src/modules/classifieds/pages/ClassificadoDetailPage.tsx",
+);
+const sellerContactBar = read(
+  "src/modules/classifieds/components/profile/VendedorContactBar.tsx",
+);
+const sellerPage = read(
+  "src/modules/classifieds/pages/VendedorPerfilPage.tsx",
+);
+const shortRoute = read(
+  "src/app/routes/classifieds/ClassifiedShortRoute.tsx",
+);
+const canonicalRoute = read(
+  "src/app/routes/classifieds/ClassifiedCanonicalRoute.tsx",
+);
 
 describe("Classified Messaging SSOT", () => {
   it("names the aggregate owner explicitly and exposes no generic legacy alias", () => {
@@ -63,5 +82,50 @@ describe("Classified Messaging SSOT", () => {
     expect(service).not.toContain("getUnreadCount");
     expect(service).not.toContain("getClassifiedsByIds");
     expect(service).not.toContain("getTotalUnreadCount");
+  });
+
+  it("keeps classified messaging lifecycle in the app composition root", () => {
+    for (const source of [detailPage, sellerContactBar, sellerPage]) {
+      expect(source).not.toContain("@/app/config/launchScope");
+      expect(source).not.toContain("communityCommunication");
+    }
+
+    expect(detailPage).toContain("internalMessagingEnabled = false");
+    expect(detailPage).toContain("const showInternalChat = internalMessagingEnabled");
+    expect(sellerContactBar).toContain("internalMessagingEnabled = false");
+    expect(sellerContactBar).toContain("const showInternalChat = internalMessagingEnabled");
+    expect(sellerPage).toContain(
+      "internalMessagingEnabled={internalMessagingEnabled}",
+    );
+
+    for (const route of [shortRoute, canonicalRoute]) {
+      expect(route).toContain("getActiveMessagingProviderIds");
+      expect(route).toContain('.includes("classifieds")');
+      expect(route).toContain(
+        "internalMessagingEnabled={internalMessagingEnabled}",
+      );
+    }
+
+    expect(providerScope).toContain("classifieds: \"classifieds\"");
+    expect(providerScope).toContain("getMessagingProvider(providerId) !== null");
+    expect(providerRegistry).not.toContain("classifiedsMessagingProvider");
+  });
+
+  it("uses the canonical provider-scoped thread route with no legacy chat path", () => {
+    expect(detailPage).toContain(
+      'messagingRoutes.thread("classifieds", conversation.id)',
+    );
+    expect(detailPage).not.toContain('/chat/${conversation.id}');
+    expect(sellerContactBar).toContain(
+      'messagingRoutes.thread("classifieds", conversation.id)',
+    );
+  });
+
+  it("does not keep the callerless fake classified stats component", () => {
+    expect(
+      existsSync(
+        resolve(root, "src/modules/classifieds/components/detail/AdStats.tsx"),
+      ),
+    ).toBe(false);
   });
 });

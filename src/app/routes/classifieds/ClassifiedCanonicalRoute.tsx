@@ -16,10 +16,13 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { classifiedUrlService } from "@/core/classifieds/services";
 import { PassivePageFallback } from '@/shared/components/loading/PassivePageFallback';
+import { getActiveMessagingProviderIds } from '@/app/config/messagingProviderScope';
 
 const ClassificadoDetailPage = lazy(() => import('@/modules/classifieds/pages/ClassificadoDetailPage'));
 
 export default function ClassifiedCanonicalRoute() {
+  const internalMessagingEnabled =
+    getActiveMessagingProviderIds().includes("classifieds");
   const { uf, cidade, bairro, categoria, subcategoria, slug, publicId } = useParams<{
     uf: string;
     cidade: string;
@@ -96,7 +99,10 @@ export default function ClassifiedCanonicalRoute() {
   // Renderiza página de detalhe com ID resolvido
   return (
     <Suspense fallback={<PassivePageFallback />}>
-      <ClassificadoDetailPage classifiedId={resolution.classifiedId} />
+      <ClassificadoDetailPage
+        classifiedId={resolution.classifiedId}
+        internalMessagingEnabled={internalMessagingEnabled}
+      />
     </Suspense>
   );
 }
