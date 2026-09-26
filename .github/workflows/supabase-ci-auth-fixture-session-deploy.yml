@@ -87,7 +87,7 @@ jobs:
           }
           Write-Host "Exact checkout provenance confirmed: $actual"
 
-      - name: Validate Supabase credential
+      - name: Validate Supabase credential presence
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -112,6 +112,37 @@ jobs:
             throw "Unexpected Supabase CLI version: $version"
           }
           Write-Host "Supabase CLI pinned: $version"
+
+      - name: Validate Supabase project visibility
+        shell: pwsh
+        working-directory: ci-auth-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $probeOutput = @(
+            & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list `
+              --project-ref $env:SUPABASE_PROJECT_REF `
+              --output json 2>&1
+          )
+          $probeExit = $LASTEXITCODE
+          $probeText = ($probeOutput | ForEach-Object { [string]$_ }) -join "`n"
+
+          if (-not [string]::IsNullOrWhiteSpace($probeText)) {
+            Write-Host $probeText
+          }
+
+          if ($probeExit -ne 0) {
+            if ($probeText -match '(?i)(401|403|unauthorized|forbidden|permission|access denied|not authorized)') {
+              throw "SUPABASE_ACCESS_TOKEN cannot access Edge Functions for project $env:SUPABASE_PROJECT_REF. Rotate the GitHub Actions secret. For a scoped Supabase token, grant this project Edge Functions access; deployment requires Read/Write (edge_functions_write)."
+            }
+            throw "Supabase project visibility probe failed with exit code $probeExit."
+          }
+
+          try {
+            $functions = $probeText | ConvertFrom-Json
+          } catch {
+            throw "Supabase project visibility probe returned non-JSON output."
+          }
+          Write-Host "Supabase credential can read the target Edge Functions inventory. remote_count=$(@($functions).Count)"
 
       - name: Validate CI auth broker source contracts
         shell: pwsh
@@ -190,8 +221,24 @@ jobs:
         working-directory: ci-auth-edge-gate
         run: |
           $ErrorActionPreference = "Stop"
-          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy ci-auth-fixture-session --project-ref $env:SUPABASE_PROJECT_REF --use-api
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $deployOutput = @(
+            & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy ci-auth-fixture-session `
+              --project-ref $env:SUPABASE_PROJECT_REF `
+              --use-api 2>&1
+          )
+          $deployExit = $LASTEXITCODE
+          $deployText = ($deployOutput | ForEach-Object { [string]$_ }) -join "`n"
+
+          if (-not [string]::IsNullOrWhiteSpace($deployText)) {
+            Write-Host $deployText
+          }
+
+          if ($deployExit -ne 0) {
+            if ($deployText -match '(?i)(401|403|unauthorized|forbidden|permission|access denied|not authorized)') {
+              throw "Supabase rejected SUPABASE_ACCESS_TOKEN for Edge Function deployment. Rotate the GitHub Actions secret. A scoped token must target project $env:SUPABASE_PROJECT_REF and grant Edge Functions Read/Write (edge_functions_write)."
+            }
+            throw "Supabase Edge Function deployment failed with exit code $deployExit."
+          }
 
       - name: Verify remote function inventory
         shell: pwsh
@@ -230,5 +277,6 @@ jobs:
             "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
             "- verify_jwt must remain false only because GitHub Actions OIDC is verified cryptographically inside the handler.",
             "- OIDC rejection remains generic; post-OIDC fixture stages may expose only bounded diagnostic codes.",
-            "- Deployment source is the isolated exact-SHA checkout, never a reconstructed bundle."
+            "- Deployment source is the isolated exact-SHA checkout, never a reconstructed bundle.",
+            "- Scoped deployment credentials must include Edge Functions Read/Write (edge_functions_write)."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
