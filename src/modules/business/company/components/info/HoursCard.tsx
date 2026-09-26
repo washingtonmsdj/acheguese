@@ -14,8 +14,8 @@ export function HoursCard({
     openStatus.open === true
       ? 'Aberto agora'
       : openStatus.open === false
-        ? 'Fechado'
-        : 'Horario nao informado';
+        ? 'Fechado agora'
+        : 'Horário não informado';
   const openStatusContainerClass =
     openStatus.open === true
       ? 'border-emerald-400/20 bg-emerald-400/10'
@@ -48,7 +48,7 @@ export function HoursCard({
         ? 'Fechado'
         : period?.open && period?.close
           ? `${period.open} - ${period.close}`
-          : 'Nao informado';
+          : 'Não informado';
       const signature = `${period?.closed ? 'closed' : 'open'}-${period?.open ?? ''}-${period?.close ?? ''}`;
 
       const last = acc.at(-1);
@@ -70,7 +70,7 @@ export function HoursCard({
       <div className="mb-2.5 flex w-full items-center justify-between">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-teal-300" />
-          <h2 className="text-base font-semibold text-white">Horario de funcionamento</h2>
+          <h2 className="text-base font-semibold text-white">Horário de funcionamento</h2>
         </div>
         {hasDetailedHours ? (
           <button
@@ -95,7 +95,7 @@ export function HoursCard({
         <div className={cn('h-2 w-2 rounded-full', openStatusDotClass)} />
         <span className={cn('text-sm font-semibold', openStatusTextClass)}>{openStatusLabel}</span>
         {openStatus.todayHours ? (
-          <span className="text-xs text-white/48 sm:text-sm">Hoje: {openStatus.todayHours}</span>
+          <span className="text-xs text-white/48 sm:text-sm">{openStatus.todayHours}</span>
         ) : null}
       </div>
 
@@ -133,7 +133,7 @@ export function HoursCard({
         </>
       ) : (
         <p className="mt-3 text-sm leading-6 text-white/44">
-          Horarios publicos ainda nao informados.
+          Horários públicos ainda não informados.
         </p>
       )}
     </div>
