@@ -2,6 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const page = readFileSync("src/app/pages/EmpresasLandingPage.tsx", "utf8");
+const detailPage = readFileSync(
+  "src/app/pages/EmpresaDetailLandingPage.tsx",
+  "utf8",
+);
 const constants = readFileSync(
   "src/app/features/business-landing/utils/landing.constants.ts",
   "utf8",
@@ -34,6 +38,22 @@ describe("MVP Business public flow", () => {
     expect(page).toContain('secondaryLabel="Perto de mim"');
     expect(page).not.toContain('"/recomendacoes/nova"');
     expect(page).not.toContain('secondaryLabel="Indicar negocio"');
+  });
+
+  it("keeps the public detail on the Business Hours authority", () => {
+    expect(detailPage).toContain("BusinessHoursService.getStatus(");
+    expect(detailPage).toContain("BusinessHoursService.getOperationConfig(");
+    expect(detailPage).not.toContain("currentMinutes");
+    expect(detailPage).not.toContain("openMinutes");
+    expect(detailPage).not.toContain("closeMinutes");
+    expect(detailPage).not.toContain('today.open.split(\":\")');
+    expect(detailPage).not.toContain('today.close.split(\":\")');
+  });
+
+  it("uses the public snapshot only as a status presentation fallback", () => {
+    expect(detailPage).toContain("snapshot?.institutional.openStatus");
+    expect(detailPage).toContain("if (!businessHoursStatus)");
+    expect(detailPage).toContain("return base;");
   });
 
   it("keeps a rollback-only real-data proof for list to canonical detail", () => {
