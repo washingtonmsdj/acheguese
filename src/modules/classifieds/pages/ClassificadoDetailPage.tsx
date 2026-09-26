@@ -58,16 +58,17 @@ import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { formatBrlNoCents } from "@/shared/utils/currency";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
-import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { classifiedMessagingService, messagingRoutes } from "@/core/messaging";
 import { useVisibleProfileContact } from "@/core/profiles";
 
 interface ClassificadoDetailPageProps {
   classifiedId?: string;
+  internalMessagingEnabled?: boolean;
 }
 
 export default function ClassificadoDetailPage({
   classifiedId: propId,
+  internalMessagingEnabled = false,
 }: ClassificadoDetailPageProps = {}) {
   const { id: paramId } = useParams<{ id: string }>();
   const id = propId || paramId;
@@ -106,7 +107,7 @@ export default function ClassificadoDetailPage({
   const isOwner = Boolean(
     activeProfile?.id && classificado?.vendedor?.id === activeProfile.id,
   );
-  const showInternalChat = isLaunchSurfaceEnabled("communityCommunication");
+  const showInternalChat = internalMessagingEnabled;
   const statusMutation = useMutation({
     mutationFn: async (nextStatus: ClassifiedStatusValue) => {
       if (!id || !activeProfile?.id) throw new Error("Perfil ativo ausente");
@@ -200,7 +201,7 @@ export default function ClassificadoDetailPage({
       const conversation =
         await classifiedMessagingService.findOrCreateConversation(id);
       if (!conversation) throw new Error("Conversation was not created");
-      navigate(`/chat/${conversation.id}`);
+      navigate(messagingRoutes.thread("classifieds", conversation.id));
     } catch (error) {
       toast({
         title: "Não foi possível abrir o chat",

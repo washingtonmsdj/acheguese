@@ -23,7 +23,13 @@ import { classifiedUrlService } from "@/core/classifieds/services";
 import { formatBrlNoCents } from "@/shared/utils/currency";
 import { SafeImage } from "@/shared/components/security/SafeImage";
 
-export default function VendedorPerfilPage() {
+interface VendedorPerfilPageProps {
+  internalMessagingEnabled?: boolean;
+}
+
+export default function VendedorPerfilPage({
+  internalMessagingEnabled = false,
+}: VendedorPerfilPageProps = {}) {
   const { sellerId } = useParams<{ sellerId: string }>();
   const navigate = useNavigate();
   const { vendedor, isLoading } = useVendedorPerfil(sellerId);
@@ -147,6 +153,7 @@ export default function VendedorPerfilPage() {
           vendedorId={vendedor.id}
           vendedorName={vendedor.name}
           initialClassifiedId={vendedor.all_ads[0]?.id ?? null}
+          internalMessagingEnabled={internalMessagingEnabled}
         />
       </motion.div>
 
