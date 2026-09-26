@@ -27,6 +27,8 @@ export function EmpresaCTAsSection({
   messageLoading = false,
   onShare,
 }: EmpresaCTAsSectionProps) {
+  const whatsAppUrl = buildWhatsAppUrl(business.whatsapp);
+  const phoneUrl = buildTelUrl(business.phone);
   const hasRouteTarget = Boolean(
     getPhysicalBusinessCoordinates(business) ||
       business.business_address?.trim() ||
@@ -51,11 +53,11 @@ export function EmpresaCTAsSection({
               : "hidden xl:grid xl:grid-cols-5 xl:gap-3 [@media(max-height:1080px)]:gap-2.5"
           }
         >
-          {business.whatsapp ? (
+          {whatsAppUrl ? (
             <ActionButton
               icon={MessageCircle}
               label="WhatsApp"
-              href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
+              href={whatsAppUrl}
               color="emerald-400"
               appearance="solid"
               layout="inline"
@@ -74,11 +76,11 @@ export function EmpresaCTAsSection({
               disabled={messageLoading}
             />
           ) : null}
-          {business.phone ? (
+          {phoneUrl ? (
             <ActionButton
               icon={Phone}
               label="Ligar"
-              href={buildTelUrl(business.phone) ?? undefined}
+              href={phoneUrl}
               color="primary"
               appearance="solid"
               layout="inline"
@@ -130,20 +132,20 @@ export function EmpresaCTAsSection({
               disabled={messageLoading}
             />
           ) : null}
-          {business.whatsapp ? (
+          {whatsAppUrl ? (
             <ActionButton
               icon={MessageCircle}
               label="WhatsApp"
-              href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
+              href={whatsAppUrl}
               color="emerald-400"
               appearance="solid"
             />
           ) : null}
-          {business.phone ? (
+          {phoneUrl ? (
             <ActionButton
               icon={Phone}
               label="Ligar"
-              href={buildTelUrl(business.phone) ?? undefined}
+              href={phoneUrl}
               color="primary"
               appearance="solid"
             />
