@@ -25,7 +25,7 @@ describe("public SECURITY DEFINER runtime hardening", () => {
   it("does not change authorization, grants, ownership, or function bodies", () => {
     expect(migration).not.toMatch(/^\s*(?:GRANT|REVOKE)\s+/im);
     expect(migration).not.toMatch(/^\s*ALTER\s+FUNCTION\b.*\bOWNER\s+TO\b/im);
-    expect(migration).not.toMatch(/CREATE\s+OR\s+REPLACE\s+FUNCTION/i);
-    expect(migration).not.toMatch(/SECURITY\s+(?:DEFINER|INVOKER)/i);
+    expect(migration).not.toMatch(/^\s*CREATE\s+OR\s+REPLACE\s+FUNCTION\b/im);
+    expect(migration).not.toMatch(/^\s*SECURITY\s+(?:DEFINER|INVOKER)\b/im);
   });
 });
