@@ -128,8 +128,8 @@ describe("CI Auth fixture session boundary", () => {
     expect(deployWorkflow).toContain('ref: ${{ steps.target.outputs.sha }}');
     expect(deployWorkflow).toContain("persist-credentials: false");
     expect(deployWorkflow).toContain('SUPABASE_CLI_VERSION: "2.115.0"');
-    expect(deployWorkflow).toContain(
-      "functions deploy ci-auth-fixture-session --project-ref $env:SUPABASE_PROJECT_REF --use-api",
+    expect(deployWorkflow).toMatch(
+      /functions deploy ci-auth-fixture-session\s+`?\s*\n?\s*--project-ref \$env:SUPABASE_PROJECT_REF\s+`?\s*\n?\s*--use-api/,
     );
     expect(deployWorkflow).toContain(
       "Remote ci-auth-fixture-session verify_jwt is not false.",
