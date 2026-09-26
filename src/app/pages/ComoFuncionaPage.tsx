@@ -27,28 +27,28 @@ const MODULES: readonly ModuleCardProps[] = [
   {
     title: "Empresas",
     description:
-      "Encontre empresas públicas do território e consulte informações institucionais e de contato.",
+      "Encontre empresas do território e veja informações, contatos e localização.",
     href: LAUNCH_URLS.business,
     icon: Building2,
   },
   {
     title: "Mapa",
     description:
-      "Veja as empresas disponíveis no território usando a mesma identidade e os mesmos dados do catálogo.",
+      "Veja onde ficam as empresas disponíveis e explore o território pelo mapa.",
     href: LAUNCH_URLS.map,
     icon: Map,
   },
   {
     title: "Perto de mim",
     description:
-      "Com sua permissão de localização, encontre empresas próximas usando distância real.",
+      "Com sua permissão, use a localização do aparelho para encontrar empresas próximas.",
     href: buildAppModulePath(APP_MODULE_SLUGS.nearby),
     icon: Navigation,
   },
   {
     title: "Busca",
     description:
-      "Pesquise nos módulos ativos sem misturar resultados de capacidades pausadas.",
+      "Procure empresas e resultados disponíveis no território.",
     href: LAUNCH_URLS.search,
     icon: Search,
   },
@@ -92,7 +92,7 @@ export default function ComoFuncionaPage() {
         <title>Como funciona | Achegue-se</title>
         <meta
           name="description"
-          content="Entenda como Empresas, Busca, Mapa e Perto de mim funcionam juntos no Achegue-se."
+          content="Entenda como Empresas, Busca, Mapa e Perto de mim ajudam você a encontrar o que precisa no seu território."
         />
       </Helmet>
 
@@ -127,13 +127,12 @@ export default function ComoFuncionaPage() {
                 {launchName}
               </div>
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-                Quatro módulos, uma experiência territorial.
+                Quatro caminhos para encontrar o que importa por perto.
               </h1>
               <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-                O MVP do Achegue-se foi reduzido ao essencial: descobrir e
-                pesquisar empresas, visualizá-las no mapa e encontrar as mais
-                próximas. Os quatro módulos compartilham território e identidade,
-                sem duplicar dados nem regras.
+                Nesta primeira versão, o Achegue-se ajuda você a encontrar empresas,
+                procurar o que precisa, ver no mapa e descobrir o que está próximo.
+                Tudo parte do mesmo território.
               </p>
             </div>
 
@@ -150,25 +149,24 @@ export default function ComoFuncionaPage() {
                 <span className="text-sm font-semibold text-primary">1</span>
                 <h2 className="mt-2 font-semibold">Escolha o território</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  A navegação mantém o contexto territorial para que Empresas e
-                  Mapa consultem o mesmo recorte.
+                  Escolha o bairro ou território onde você quer procurar e mantenha esse
+                  contexto enquanto navega.
                 </p>
               </div>
               <div>
                 <span className="text-sm font-semibold text-primary">2</span>
                 <h2 className="mt-2 font-semibold">Explore empresas</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Cada empresa possui uma identidade pública única e um detalhe
-                  canônico, sem redirects usados para esconder registros
-                  inválidos.
+                  Veja informações, contatos e localização de cada empresa antes de
+                  decidir onde ir.
                 </p>
               </div>
               <div>
                 <span className="text-sm font-semibold text-primary">3</span>
-                <h2 className="mt-2 font-semibold">Use a proximidade</h2>
+                <h2 className="mt-2 font-semibold">Descubra o que está perto</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Perto de mim usa localização somente com permissão e não
-                  fabrica distância quando ela não pode ser determinada.
+                  Com sua permissão, usamos a localização do aparelho para mostrar o que
+                  está realmente próximo de você.
                 </p>
               </div>
             </div>
@@ -180,11 +178,11 @@ export default function ComoFuncionaPage() {
                 <ShieldCheck className="h-5 w-5" aria-hidden="true" />
               </span>
               <div>
-                <h2 className="font-semibold">Escopo pequeno de propósito</h2>
+                <h2 className="font-semibold">Começando pelo essencial</h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Outros módulos permanecem fora do lançamento até serem
-                  trabalhados e reintegrados individualmente. Pausar um módulo
-                  não deve exigir remendos nos módulos que continuam ativos.
+                  Nesta primeira versão, o Achegue-se foca em empresas e descoberta local.
+                  Novas áreas entram aos poucos, quando estiverem prontas para oferecer uma
+                  experiência útil e confiável.
                 </p>
               </div>
             </div>
