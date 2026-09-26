@@ -1,12 +1,22 @@
 # Achegue-se
 
-Plataforma hiperlocal com arquitetura modular orientada a território.
+Plataforma hiperlocal, territory-first e modular, construída para conectar moradores às empresas e serviços do próprio território.
 
-> **MVP atual (2026-09-21):** **Business/Empresas** é o domínio de produto ativo.
+> **MVP atual — 2026-09-26**
 >
-> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens (provider Business), Auth, Perfis/Conta, Território, Localização, Notificações e Central.
+> **Domínio de produto ativo:** Business / Empresas.
 >
-> Community, Classificados, Serviços, Gastronomia, Eventos, Educação, Mobilidade e demais domínios permanecem pausados até certificação individual.
+> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens com provider Business, Auth, Perfis/Conta, Território, Localização, Notificações e Central.
+>
+> Community, Classificados, Serviços/Profissionais, Gastronomia, Eventos, Educação, Mobilidade, Billing e demais domínios permanecem pausados até certificação individual.
+
+## Estado de entrega
+
+O núcleo público do MVP está funcional e passa pelos gates determinísticos de arquitetura, segurança e E2E público. O bloqueio externo conhecido para a certificação final autenticada é o data plane/Auth do Supabase, acompanhado pelo issue `#305`.
+
+Não há workaround no frontend para mascarar indisponibilidade de infraestrutura. O MVP só recebe `READY` quando o mesmo SHA comprovar Auth/Conta/Business/Mensagens reais, deploy e smoke autenticado.
+
+O frontend ativo está em fase final de convergência visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
 
 ## Stack
 
@@ -19,16 +29,16 @@ Plataforma hiperlocal com arquitetura modular orientada a território.
 
 ```text
 src/
-  app/            shell da aplicação (rotas, providers e fluxos de aplicação)
+  app/            shell da aplicação, rotas, providers e lifecycle
   core/           contratos e capacidades transversais (SSOT)
   modules/        bounded contexts de produto
-  shared/         UI e utilitários compartilhados
+  shared/         UI, design system e utilitários compartilhados
   integrations/   adaptadores externos
 ```
 
-`src/features` foi aposentado e não deve ser recriado. Código novo deve entrar diretamente no owner canônico em `app`, `core`, `modules`, `shared` ou `integrations`.
+`src/features` foi aposentado e não deve ser recriado. Código novo entra diretamente no owner canônico em `app`, `core`, `modules`, `shared` ou `integrations`.
 
-## Lifecycle de módulos
+## Lifecycle
 
 As autoridades executáveis são:
 
@@ -38,15 +48,14 @@ As autoridades executáveis são:
 
 Estado do MVP:
 
-- domínio: `business: active`;
-- capabilities: `map`, `nearby`, `search`, `messaging`, Auth, Perfis/Conta, Território, Localização, Notificações e Central ativas;
-- `nearby` depende estruturalmente de Map + Location; Business é o provider de proximidade ativo no MVP e é filtrado separadamente pelo lifecycle;
-- `messaging` e `nearby` são capabilities horizontais; no MVP, Business é o provider de domínio ativo em ambas;
+- `business: active`;
+- `map`, `nearby`, `search` e `messaging` são capabilities horizontais ativas;
+- Business é o provider de domínio ativo em Mapa/Nearby/Busca/Mensagens conforme seus scopes;
 - demais domínios de produto: `paused`.
 
-Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider de Busca/Mensagens/Perto de mim, evento acionável de Notificações ou layer do Mapa.
+Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider ativo, evento acionável de Notificações nem layer do Mapa.
 
-A política completa está em [docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
+Contrato completo: [`docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md`](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
 
 ## Setup rápido
 
@@ -68,34 +77,34 @@ npm run typecheck
 npm run build
 ```
 
-## Fontes de verdade
+Os workflows pesados adicionam contratos de Auth/session, regressão do MVP, boundaries territoriais e Playwright público.
 
-A documentação possui **uma porta de entrada canônica**:
+## Leitura para inspeção
 
-- [docs/README.md](./docs/README.md) — índice e autoridade documental;
-- [docs/03-architecture/CURRENT_RULES.md](./docs/03-architecture/CURRENT_RULES.md) — regras arquiteturais vigentes;
-- [docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — contrato de ativação/pausa/remoção/adição de módulos;
-- [docs/08-roadmap/EXECUCAO_MAIN_ONLY.md](./docs/08-roadmap/EXECUCAO_MAIN_ONLY.md) — execução operacional corrente e critérios de MVP;
-- [docs/08-roadmap/NEXT-STEPS.md](./docs/08-roadmap/NEXT-STEPS.md) — sequência curta do lançamento;
-- [SECURITY.md](./SECURITY.md) — regras de segurança e gates de release.
+A documentação possui uma única porta de entrada canônica:
 
-Documentos em `docs/10-archive/` são históricos e **nunca** substituem uma fonte ativa. Checkpoints antigos também não representam o escopo atual sem revalidação.
+- [`docs/README.md`](./docs/README.md) — índice, precedência e trilha de inspeção;
+- [`docs/FEATURE-MAP.md`](./docs/FEATURE-MAP.md) — escopo funcional vigente;
+- [`docs/SCREEN-MAP.md`](./docs/SCREEN-MAP.md) — rotas e superfícies;
+- [`docs/03-architecture/CURRENT_RULES.md`](./docs/03-architecture/CURRENT_RULES.md) — regras arquiteturais;
+- [`docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`](./docs/08-roadmap/EXECUCAO_MAIN_ONLY.md) — execução corrente e Definition of Done;
+- [`SECURITY.md`](./SECURITY.md) — segurança e gates.
+
+`docs/10-archive/` contém somente histórico, checkpoints e material supersedido. Nada no archive substitui uma fonte viva.
 
 ## Política da `main`
 
 - `main` é a linha canônica de integração.
+- Durante a certificação final, mudanças operacionais são aplicadas diretamente em `main`.
 - Não duplicar funcionalidades já implementadas em branches paralelas.
-- Mudança persistente de schema precisa de migration versionada.
-- Merge/commit não equivale a produção validada.
+- Mudança persistente de schema exige migration versionada.
+- Commit/merge não equivale a produção validada.
 - Não reduzir gates para obter verde.
 - Código, documentação, testes e runtime devem apontar para o mesmo owner/SSOT.
-- Correções devem atacar a causa raiz; paliativos e redirects sem justificativa funcional não são aceitos.
+- Correções devem atacar a causa raiz; paliativos e redirects de compatibilidade não são mecanismo de lifecycle.
 
-## Política documental da raiz
+## Higiene de repositório
 
-A raiz mantém somente documentos de entrada e governança transversal:
+A raiz mantém somente documentação de entrada/governança transversal. Planos concluídos, handoffs encerrados, auditorias históricas e especificações de módulos pausados não permanecem misturados com documentação viva.
 
-- `README.md`;
-- `SECURITY.md`.
-
-Planos, arquitetura, status e histórico pertencem a `docs/` e devem estar referenciados pelo índice canônico. Ponteiros temporários e planos substituídos não permanecem na raiz.
+A regra para manutenção é simples: **owner claro, uma autoridade por assunto, histórico no archive/Git e nenhuma documentação antiga apresentada como estado atual.**
