@@ -114,7 +114,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
 
     await expect(
       page.getByRole("heading", {
-        name: "Descubra empresas e lugares ao seu redor.",
+        name: /Encontre empresas em .+\./,
       }),
     ).toBeVisible({ timeout: 30_000 });
 
@@ -220,7 +220,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     });
 
     const relatedModules = page.getByRole("navigation", {
-      name: "Módulos relacionados ao mapa",
+      name: "Atalhos relacionados ao mapa",
     });
     await expect(
       relatedModules.getByRole("link", { name: "Empresas" }),
