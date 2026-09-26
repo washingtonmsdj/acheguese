@@ -92,6 +92,10 @@ describe("CI Auth fixture session boundary", () => {
     expect(job).toContain("id-token: write");
     expect(job).toContain("contents: read");
     expect(job).toContain("E2E_AUTH_TRANSPORT: github-oidc-broker");
+    expect(job).toContain("authenticated-account-e2e-test-results");
+    expect(job).toContain("path: test-results/");
+    expect(job).toContain("if: always()");
+    expect(job).toContain("continue-on-error: true");
     expect(authHelper).toContain('authTransport === "github-oidc-broker"');
     expect(authHelper).toContain("direct Auth fallback is forbidden");
     expect(oidcBroker).toContain("ACTIONS_ID_TOKEN_REQUEST_URL");
