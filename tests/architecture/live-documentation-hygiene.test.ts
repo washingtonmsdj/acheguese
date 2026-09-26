@@ -56,6 +56,21 @@ describe("live documentation hygiene", () => {
     expect(nextSteps).toContain("Business / Empresas");
   });
 
+  it("keeps completed handoffs and superseded roadmaps out of the live roadmap", () => {
+    expect(
+      existsSync("docs/08-roadmap/handoff/CP-016_MEDIA_ASSET_CONTINUATION.md"),
+    ).toBe(false);
+    expect(existsSync("docs/08-roadmap/handoff/README.md")).toBe(false);
+    expect(existsSync("docs/08-roadmap/RECOVERY-ROADMAP.md")).toBe(false);
+
+    expect(
+      existsSync("docs/10-archive/handoffs/CP-016_MEDIA_ASSET_CUTOVER.md"),
+    ).toBe(true);
+    expect(
+      existsSync("docs/10-archive/roadmaps/RECOVERY-ROADMAP.md"),
+    ).toBe(true);
+  });
+
   it("keeps Business validation as a living domain contract", () => {
     const validation = readFileSync(
       "src/modules/business/VALIDATION.md",
@@ -80,10 +95,23 @@ describe("live documentation hygiene", () => {
     );
   });
 
-  it("keeps retired Feed delivery planning out of live documentation", () => {
+  it("keeps retired Feed and Post delivery planning out of live documentation", () => {
     expect(existsSync("docs/feed")).toBe(false);
     expect(existsSync("docs/10-archive/feed/FEED-GOVERNANCE.md")).toBe(true);
     expect(existsSync("docs/10-archive/feed/FEED-P1.C-REVIEW.md")).toBe(true);
+
+    for (const retired of [
+      "docs/05-ux/FEED-REVIEW.md",
+      "docs/05-ux/FEED-CONTENT.md",
+      "docs/05-ux/POST-REVIEW.md",
+      "docs/05-ux/POST-CONTENT.md",
+    ]) {
+      expect(existsSync(retired), retired).toBe(false);
+    }
+
+    expect(
+      existsSync("docs/10-archive/post-mvp/community-ux/README.md"),
+    ).toBe(true);
   });
 
   it("keeps duplicate concept roots retired in favor of the design catalog", () => {
