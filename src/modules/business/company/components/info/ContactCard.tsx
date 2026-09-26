@@ -14,6 +14,8 @@ export function ContactCard({
   copiedPhone,
   onCopyPhone,
 }: ContactCardProps) {
+  const emailUrl = buildMailtoUrl(business.email);
+  const phoneUrl = buildTelUrl(business.phone);
   const websiteUrl = buildWebsiteUrl(business.website);
   const instagramUrl = buildInstagramUrl(business.instagram);
   const facebookUrl = buildFacebookUrl(business.facebook);
@@ -26,9 +28,9 @@ export function ContactCard({
           Canais publicos e formas complementares de contato.
         </p>
         <div className="space-y-2.5">
-          {business.email ? (
+          {emailUrl ? (
             <a
-              href={buildMailtoUrl(business.email) ?? undefined}
+              href={emailUrl}
               className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/20 px-3 py-2.5 text-sm font-medium text-white transition-colors hover:border-teal-400/24 hover:text-teal-200"
             >
               <Mail className="h-4 w-4 shrink-0 text-teal-300" />
@@ -84,12 +86,12 @@ export function ContactCard({
           </div>
         ) : null}
 
-        {business.phone ? (
+        {phoneUrl ? (
           <div className="mt-3 border-t border-white/8 pt-3">
             <div className="flex items-center gap-3 rounded-2xl border border-white/8 bg-black/18 px-3 py-2.5">
               <Phone className="h-4 w-4 shrink-0 text-teal-300" />
               <a
-                href={buildTelUrl(business.phone) ?? undefined}
+                href={phoneUrl}
                 className="min-w-0 flex-1 text-sm font-medium text-white transition-colors hover:text-teal-200"
               >
                 {business.phone}
