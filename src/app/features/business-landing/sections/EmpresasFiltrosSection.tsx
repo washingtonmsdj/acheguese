@@ -44,15 +44,17 @@ export function EmpresasFiltrosSection({
               </SelectValue>
             </SelectTrigger>
             <SelectContent className="border-white/10 bg-[#0c141b] text-white">
-              {Object.entries(SORT_LABELS).map(([value, label]) => (
-                <SelectItem
-                  key={value}
-                  value={value}
-                  className="focus:bg-white/[0.06] focus:text-white"
-                >
-                  {label}
-                </SelectItem>
-              ))}
+              {Object.entries(SORT_LABELS)
+                .filter(([value]) => value !== "distance")
+                .map(([value, label]) => (
+                  <SelectItem
+                    key={value}
+                    value={value}
+                    className="focus:bg-white/[0.06] focus:text-white"
+                  >
+                    {label}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
