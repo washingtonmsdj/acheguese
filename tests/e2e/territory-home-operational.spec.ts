@@ -259,7 +259,9 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
       }),
     ).toBeVisible();
 
-    const openMapButton = page.getByRole("button", { name: "Abrir mapa" });
+    const openMapButton = page
+      .getByRole("button", { name: "Abrir mapa" })
+      .first();
     await expect(openMapButton).toBeVisible();
     await expect(
       page.getByText("Empresas próximas com localização real"),
