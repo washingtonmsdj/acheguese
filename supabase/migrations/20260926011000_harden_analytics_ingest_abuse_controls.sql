@@ -194,6 +194,7 @@ $function$;
 REVOKE ALL ON FUNCTION private.prune_analytics_ingest_rate_limits(integer)
   FROM PUBLIC, anon, authenticated, service_role;
 
+-- security-authority: public-rpc public.track_analytics_event
 CREATE OR REPLACE FUNCTION public.track_analytics_event(
   p_entity_type text,
   p_entity_id uuid,
