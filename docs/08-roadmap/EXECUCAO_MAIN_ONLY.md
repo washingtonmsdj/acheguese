@@ -40,6 +40,7 @@ Regra permanente: **vertical de produto não é capability horizontal**. Pausar 
 
 ## Regras de implementação
 
+- durante a fase final de certificação do MVP, alterações operacionais são aplicadas diretamente em `main`; não criar branch ou PR intermediário sem exigência explícita de proteção da plataforma;
 - corrigir causa raiz; não introduzir paliativo;
 - não criar redirect/alias/fallback para preservar arquitetura antiga;
 - não manter duas autoridades para a mesma responsabilidade;
