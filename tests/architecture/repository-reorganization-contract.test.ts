@@ -90,8 +90,7 @@ const CANONICAL_E2E_TARGETS = [
 ] as const;
 
 const ARCHIVED_ROOT_ARTIFACT_TARGETS = [
-  "docs/08-roadmap/handoff/CP-016_MEDIA_ASSET_CONTINUATION.md",
-  "docs/08-roadmap/handoff/README.md",
+  "docs/10-archive/handoffs/CP-016_MEDIA_ASSET_CUTOVER.md",
   "docs/10-archive/root-legacy/PRODUCT-QA.md",
   "docs/10-archive/root-legacy/product-qa-screenshots",
 ] as const;
