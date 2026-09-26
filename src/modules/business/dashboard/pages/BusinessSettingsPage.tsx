@@ -13,7 +13,6 @@ export default function BusinessSettingsPage() {
   return (
     <div className="space-y-5">
       <SettingsTab
-        businessId={businessId}
         onEditBusiness={() => navigate(businessManagementRoutes.edit(businessId))}
       />
 
