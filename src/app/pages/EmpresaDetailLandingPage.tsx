@@ -474,7 +474,7 @@ export default function EmpresaDetailLandingPage(
                 <Tabs defaultValue={hasDesktopProducts ? "products" : "nearby"} className="space-y-2 [@media(max-height:860px)]:space-y-1.5">
                   <TabsList className="grid h-auto w-full grid-cols-2 rounded-[18px] border border-white/10 bg-[#0c151c]/96 p-1 [@media(max-height:1080px)]:p-[0.1875rem] [@media(max-height:860px)]:rounded-[16px] [@media(max-height:860px)]:p-0.5">
                     <TabsTrigger value="products" className="rounded-[14px] text-xs [@media(max-height:1080px)]:h-8 [@media(max-height:1080px)]:text-[11px] [@media(max-height:860px)]:h-[1.875rem] [@media(max-height:860px)]:rounded-[12px]">Produtos</TabsTrigger>
-                    <TabsTrigger value="nearby" className="rounded-[14px] text-xs [@media(max-height:1080px)]:h-8 [@media(max-height:1080px)]:text-[11px] [@media(max-height:860px)]:h-[1.875rem] [@media(max-height:860px)]:rounded-[12px]">Proximas</TabsTrigger>
+                    <TabsTrigger value="nearby" className="rounded-[14px] text-xs [@media(max-height:1080px)]:h-8 [@media(max-height:1080px)]:text-[11px] [@media(max-height:860px)]:h-[1.875rem] [@media(max-height:860px)]:rounded-[12px]">Relacionadas</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="products" className="mt-0">
