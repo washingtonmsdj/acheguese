@@ -33,7 +33,7 @@ export function BusinessAdminGuard() {
     if (loadingBusiness) return;
 
     if (!businessId || !business) {
-      toast.error("Empresa nao encontrada.");
+      toast.error("Empresa não encontrada.");
       navigate(businessManagementRoutes.list(), { replace: true });
       return;
     }
@@ -41,7 +41,7 @@ export function BusinessAdminGuard() {
     if (!accessReady) return;
 
     if (!permissions.hasAccess) {
-      toast.error("Voce nao tem permissao para gerenciar esta empresa.");
+      toast.error("Você não tem permissão para gerenciar esta empresa.");
       navigate(businessManagementRoutes.list(), { replace: true });
     }
   }, [
@@ -58,7 +58,7 @@ export function BusinessAdminGuard() {
       <div className="flex min-h-[60vh] items-center justify-center px-4">
         <div className="space-y-3 text-center">
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Verificando permissoes...</p>
+          <p className="text-sm text-muted-foreground">Verificando permissões...</p>
         </div>
       </div>
     );
