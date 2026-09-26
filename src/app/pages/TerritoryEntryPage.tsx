@@ -7,6 +7,10 @@ import {
   getPublicTerritoryLocationLabel,
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
+import {
+  APP_MODULE_SLUGS,
+  buildAppModulePath,
+} from "@/shared/config/moduleSlugs";
 import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 
 const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
@@ -21,6 +25,10 @@ const LAUNCH_PLACE_LABEL = [
   .filter(Boolean)
   .join(" · ");
 const ACCOUNT_PATH = "/conta";
+const launchBusinessUrl = LAUNCH_URLS.business;
+const launchMapUrl = LAUNCH_URLS.map;
+const launchNearbyUrl = buildAppModulePath(APP_MODULE_SLUGS.nearby);
+const launchSearchUrl = LAUNCH_URLS.search;
 
 /**
  * A entrada pública não depende do banco para descobrir o território inicial.
@@ -142,7 +150,7 @@ export default function TerritoryEntryPage() {
               </p>
             </div>
 
-            <form className="mvp-business-search" action={LAUNCH_URLS.search} method="get">
+            <form className="mvp-business-search" action={launchSearchUrl} method="get">
               <label htmlFor="entry-business-query">Buscar empresas</label>
               <div className="mvp-business-search-row">
                 <span className="mvp-business-search-field">
@@ -167,7 +175,7 @@ export default function TerritoryEntryPage() {
               </div>
             </form>
 
-            <a href={LAUNCH_URLS.business} className="entry-explore-link">
+            <a href={launchBusinessUrl} className="entry-explore-link">
               Explorar empresas
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 12h13" />
@@ -176,14 +184,14 @@ export default function TerritoryEntryPage() {
             </a>
 
             <div className="mvp-entry-actions">
-              <a href={LAUNCH_URLS.map}>
+              <a href={launchMapUrl}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z" />
                   <path d="M9 3v15M15 6v15" />
                 </svg>
                 Ver no mapa
               </a>
-              <a href="/perto-de-mim">
+              <a href={launchNearbyUrl}>
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M20 10.2c0 5.3-8 11.3-8 11.3S4 15.5 4 10.2a8 8 0 1 1 16 0Z" />
                   <circle cx="12" cy="10" r="2.4" />
