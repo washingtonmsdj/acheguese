@@ -1,6 +1,6 @@
 /**
  * Opening Hours Helpers
- * 
+ *
  * Utilitários para trabalhar com horários de funcionamento
  */
 
@@ -20,10 +20,8 @@ type DayOfWeek = (typeof DAYS_OF_WEEK)[number];
 type DaySchedule = BusinessHours[string];
 
 function getDayByIndex(dayIndex: number): DayOfWeek {
-  if (dayIndex < 0 || dayIndex > 6) {
-    return "domingo";
-  }
-  return DAYS_OF_WEEK.at(dayIndex) ?? "domingo";
+  const normalizedIndex = ((dayIndex % 7) + 7) % 7;
+  return DAYS_OF_WEEK.at(normalizedIndex) ?? "domingo";
 }
 
 function toScheduleMap(openingHours: BusinessHours | undefined): Map<string, DaySchedule> {
@@ -31,6 +29,69 @@ function toScheduleMap(openingHours: BusinessHours | undefined): Map<string, Day
     return new Map();
   }
   return new Map(Object.entries(openingHours));
+}
+
+function timeToMinutes(value: string): number | null {
+  const [hours, minutes] = value.split(':').map(Number);
+  if (
+    !Number.isInteger(hours) ||
+    !Number.isInteger(minutes) ||
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+}
+
+function isOvernightSchedule(schedule: DaySchedule): boolean {
+  const opensAt = timeToMinutes(schedule.open);
+  const closesAt = timeToMinutes(schedule.close);
+  return opensAt !== null && closesAt !== null && closesAt < opensAt;
+}
+
+function getCurrentMinutes(now: Date): number {
+  return now.getHours() * 60 + now.getMinutes();
+}
+
+function getActiveSchedule(
+  openingHours: BusinessHours | undefined,
+  now = new Date(),
+): DaySchedule | null {
+  if (!openingHours) return null;
+
+  const scheduleMap = toScheduleMap(openingHours);
+  const currentMinutes = getCurrentMinutes(now);
+  const currentDayIndex = now.getDay();
+  const todaySchedule = scheduleMap.get(getDayByIndex(currentDayIndex));
+
+  if (todaySchedule && !todaySchedule.closed) {
+    const opensAt = timeToMinutes(todaySchedule.open);
+    const closesAt = timeToMinutes(todaySchedule.close);
+
+    if (opensAt !== null && closesAt !== null) {
+      if (closesAt >= opensAt && currentMinutes >= opensAt && currentMinutes <= closesAt) {
+        return todaySchedule;
+      }
+
+      if (closesAt < opensAt && currentMinutes >= opensAt) {
+        return todaySchedule;
+      }
+    }
+  }
+
+  const previousSchedule = scheduleMap.get(getDayByIndex(currentDayIndex - 1));
+  if (previousSchedule && !previousSchedule.closed && isOvernightSchedule(previousSchedule)) {
+    const closesAt = timeToMinutes(previousSchedule.close);
+    if (closesAt !== null && currentMinutes <= closesAt) {
+      return previousSchedule;
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -42,25 +103,10 @@ export function getCurrentDayOfWeek(): string {
 }
 
 /**
- * Verifica se está aberto agora
+ * Verifica se está aberto agora, incluindo expedientes que atravessam meia-noite.
  */
 export function isOpenNow(openingHours: BusinessHours | undefined): boolean {
-  if (!openingHours) {
-    return false;
-  }
-
-  const currentDay = getCurrentDayOfWeek();
-  const scheduleMap = toScheduleMap(openingHours);
-  const daySchedule = scheduleMap.get(currentDay);
-
-  if (!daySchedule || daySchedule.closed) {
-    return false;
-  }
-
-  const now = new Date();
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-  return currentTime >= daySchedule.open && currentTime <= daySchedule.close;
+  return getActiveSchedule(openingHours) !== null;
 }
 
 /**
@@ -112,8 +158,16 @@ export function getOpeningStatus(openingHours: BusinessHours | undefined): {
     };
   }
 
-  const todaySchedule = getTodaySchedule(openingHours);
+  const activeSchedule = getActiveSchedule(openingHours);
+  if (activeSchedule) {
+    return {
+      isOpen: true,
+      message: 'Aberto agora',
+      nextChange: `Fecha às ${activeSchedule.close}`,
+    };
+  }
 
+  const todaySchedule = getTodaySchedule(openingHours);
   if (!todaySchedule) {
     return {
       isOpen: false,
@@ -125,23 +179,14 @@ export function getOpeningStatus(openingHours: BusinessHours | undefined): {
     return {
       isOpen: false,
       message: 'Fechado hoje',
-    };
-  }
-
-  const isOpen = isOpenNow(openingHours);
-
-  if (isOpen) {
-    return {
-      isOpen: true,
-      message: 'Aberto agora',
-      nextChange: `Fecha às ${todaySchedule.close}`,
+      nextChange: getNextOpeningTime(openingHours) ?? undefined,
     };
   }
 
   return {
     isOpen: false,
     message: 'Fechado agora',
-    nextChange: `Abre às ${todaySchedule.open}`,
+    nextChange: getNextOpeningTime(openingHours) ?? undefined,
   };
 }
 
@@ -158,34 +203,39 @@ export function isClosedToday(openingHours: BusinessHours | undefined): boolean 
 }
 
 /**
- * Obtém próximo horário de abertura
+ * Obtém próximo horário de abertura sem anunciar novamente um horário de hoje
+ * que já ficou no passado.
  */
 export function getNextOpeningTime(openingHours: BusinessHours | undefined): string | null {
   if (!openingHours) {
     return null;
   }
 
-  const currentDayIndex = new Date().getDay();
+  const now = new Date();
+  const currentDayIndex = now.getDay();
+  const currentMinutes = getCurrentMinutes(now);
   const scheduleMap = toScheduleMap(openingHours);
 
-  // Procurar nos próximos 7 dias
-  for (let i = 0; i < 7; i++) {
-    const dayIndex = (currentDayIndex + i) % 7;
+  for (let offset = 0; offset < 7; offset++) {
+    const dayIndex = (currentDayIndex + offset) % 7;
     const dayName = getDayByIndex(dayIndex);
     const daySchedule = scheduleMap.get(dayName);
 
-    if (daySchedule && !daySchedule.closed) {
-      if (i === 0) {
-        // Hoje
-        return `Abre às ${daySchedule.open}`;
-      } else if (i === 1) {
-        // Amanhã
-        return `Abre amanhã às ${daySchedule.open}`;
-      } else {
-        // Outro dia
-        return `Abre ${dayName} às ${daySchedule.open}`;
+    if (!daySchedule || daySchedule.closed) continue;
+
+    if (offset === 0) {
+      const opensAt = timeToMinutes(daySchedule.open);
+      if (opensAt === null || currentMinutes >= opensAt) {
+        continue;
       }
+      return `Abre às ${daySchedule.open}`;
     }
+
+    if (offset === 1) {
+      return `Abre amanhã às ${daySchedule.open}`;
+    }
+
+    return `Abre ${dayName} às ${daySchedule.open}`;
   }
 
   return null;
@@ -226,7 +276,7 @@ export function isOpen24Hours(openingHours: BusinessHours | undefined): boolean 
   }
 
   const todaySchedule = getTodaySchedule(openingHours);
-  
+
   if (!todaySchedule || todaySchedule.closed) {
     return false;
   }
@@ -269,7 +319,7 @@ export function getOpeningHoursSummary(openingHours: BusinessHours | undefined):
   }
 
   const scheduledDays = getScheduledDays(openingHours);
-  
+
   if (scheduledDays.length === 0) {
     return 'Fechado';
   }
