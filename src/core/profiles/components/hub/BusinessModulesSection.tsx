@@ -138,7 +138,7 @@ function BusinessModuleCard({
     business.subscription.canUseShortPremiumLink && Boolean(business.shareUrl);
 
   const featureBadges = [
-    hasPremiumLink ? "Link premium" : null,
+    hasPremiumLink ? "Mini-site" : null,
     business.qrCode.hasActive ? "QR pronto" : null,
   ].filter(Boolean) as string[];
 
@@ -205,16 +205,6 @@ function BusinessModuleCard({
               onClick={() => onNavigate(businessManagementRoutes.planos(business.businessId))}
             >
               Planos
-            </Button>
-          ) : null}
-          {billingEnabled || hasPremiumLink ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => onNavigate(businessManagementRoutes.linkPremium(business.businessId))}
-            >
-              Link premium
             </Button>
           ) : null}
           <Button
