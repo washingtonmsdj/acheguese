@@ -58,6 +58,7 @@ describe("MVP Business public flow", () => {
     expect(filtersSection).toContain(
       '.filter(([value]) => value !== "distance")',
     );
+    expect(page).not.toContain('["distance", "Mais proximas"]');
     expect(page).toContain("const nearbyHref = moduleUrls.nearby");
     expect(page).toContain('secondaryLabel="Perto de mim"');
   });
