@@ -14,8 +14,6 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { ModuleLocationDialog } from "@/core/location/components/ModuleLocationDialog";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
-import { useSpatialSearchHybrid } from "@/core/geospatial/hooks/useSpatialSearch";
-import { useRobustGeolocation } from "@/shared/hooks";
 import { Input } from "@/shared/components/ui/input";
 import {
   Sheet,
@@ -246,20 +244,7 @@ export default function EmpresasLandingPage({
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  const { coords: userLocation } = useRobustGeolocation({ useCache: true });
   const { polygons: territoryPolygons, isLoading: isLoadingBounds } = useTerritoryPolygon(resolved ?? null);
-
-  // A proximidade usa o mesmo filtro territorial da lista. O RPC espacial
-  // devolve apenas identidade, coordenadas e distância; os cards continuam
-  // vindo do BusinessService para não fabricarmos categoria, horário ou nome.
-  const { data: nearbyBusinesses } = useSpatialSearchHybrid({
-    center: userLocation ?? { latitude: 0, longitude: 0 },
-    entityType: "business",
-    radiusKm: 5,
-    locationIds: moduleTerritory.resolvedLocationIds,
-    limit: 50,
-    enabled: userLocation !== null && moduleTerritory.resolvedLocationIds.length > 0,
-  });
 
   const {
     businesses: realBusinesses,
@@ -274,26 +259,10 @@ export default function EmpresasLandingPage({
     territoryFilter: moduleTerritory.territoryFilter,
   });
 
-  const businessesToShow = useMemo(() => {
-    const normalizedBusinesses = realBusinesses.map(normalizeRealBusinessEntry);
-
-    if (sortBy === "distance" && nearbyBusinesses?.length) {
-      const distanceByBusinessId = new Map(
-        nearbyBusinesses.map((result) => [result.id, result.distance_meters]),
-      );
-
-      return normalizedBusinesses.map((business) => ({
-        ...business,
-        distanceMeters:
-          distanceByBusinessId.get(business.id) ??
-          (business.business_data_id
-            ? distanceByBusinessId.get(business.business_data_id)
-            : undefined),
-      }));
-    }
-
-    return normalizedBusinesses;
-  }, [nearbyBusinesses, realBusinesses, sortBy]);
+  const businessesToShow = useMemo(
+    () => realBusinesses.map(normalizeRealBusinessEntry),
+    [realBusinesses],
+  );
 
   const favoriteCandidateIds = useMemo(
     () =>
