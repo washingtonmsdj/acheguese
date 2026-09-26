@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const migrationPath =
-  "supabase/migrations/20260926024500_remove_dead_territory_history_admin_policies.sql";
+  "supabase/migrations/20260926025137_remove_dead_territory_history_admin_policies.sql";
 const migration = readFileSync(migrationPath, "utf8");
 
 const removedPolicies = [
