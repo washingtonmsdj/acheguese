@@ -44,6 +44,9 @@ export function EmpresaHeroSection({
         : 'bg-white/36';
 
   const locationText = business.location?.full_name || business.location?.name || null;
+  const hasRouteTarget = Boolean(
+    business.business_address?.trim() || business.address?.street?.trim(),
+  );
   const categoryText = business.subcategoria || business.category;
 
   const paymentHighlights = (() => {
@@ -169,7 +172,7 @@ export function EmpresaHeroSection({
                             <MapPin className="h-4 w-4 shrink-0" />
                             {locationText}
                           </span>
-                          {onRoute ? (
+                          {onRoute && hasRouteTarget ? (
                             <button
                               type="button"
                               onClick={onRoute}
