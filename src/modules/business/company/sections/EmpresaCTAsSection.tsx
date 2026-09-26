@@ -8,7 +8,6 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import { buildTelUrl, buildWhatsAppUrl } from '@/shared/utils/contactLinks';
-import { getPhysicalBusinessCoordinates } from '@/core/business/utils/physicalBusinessCoordinates';
 import { ActionButton, RouteOptions } from '../components/ctas';
 import type { EmpresaCTAsSectionProps } from './types';
 
@@ -30,11 +29,7 @@ export function EmpresaCTAsSection({
   const whatsAppUrl = buildWhatsAppUrl(business.whatsapp);
   const phoneUrl = buildTelUrl(business.phone);
   const hasRouteTarget = Boolean(
-    getPhysicalBusinessCoordinates(business) ||
-      business.business_address?.trim() ||
-      business.address?.street?.trim() ||
-      business.location?.full_name?.trim() ||
-      business.location?.name?.trim(),
+    business.business_address?.trim() || business.address?.street?.trim(),
   );
 
   return (
