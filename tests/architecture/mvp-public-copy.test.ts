@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 const PUBLIC_COPY_FILES = [
   "src/app/pages/TerritoryEntryPage.tsx",
   "src/app/pages/ComoFuncionaPage.tsx",
+  "src/app/pages/BuscaPage.tsx",
   "src/core/navigation/territoryNavigationModes.ts",
   "src/core/nearby/pages/NearbyPage.tsx",
 ] as const;
@@ -15,6 +16,8 @@ describe("MVP public copy", () => {
     for (const internalPhrase of [
       "conteúdo dos módulos ativos",
       "nos módulos ativos",
+      "resultados dos módulos ativos",
+      "lista técnica de módulos",
       "capacidades pausadas",
       "detalhe canônico",
       "redirects usados",
