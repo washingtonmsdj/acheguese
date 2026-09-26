@@ -8,6 +8,7 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import { buildTelUrl, buildWhatsAppUrl } from '@/shared/utils/contactLinks';
+import { getPhysicalBusinessCoordinates } from '@/core/business/utils/physicalBusinessCoordinates';
 import { ActionButton, RouteOptions } from '../components/ctas';
 import type { EmpresaCTAsSectionProps } from './types';
 
@@ -26,6 +27,14 @@ export function EmpresaCTAsSection({
   messageLoading = false,
   onShare,
 }: EmpresaCTAsSectionProps) {
+  const hasRouteTarget = Boolean(
+    getPhysicalBusinessCoordinates(business) ||
+      business.business_address?.trim() ||
+      business.address?.street?.trim() ||
+      business.location?.full_name?.trim() ||
+      business.location?.name?.trim(),
+  );
+
   return (
     <section
       className={
@@ -77,14 +86,18 @@ export function EmpresaCTAsSection({
           ) : (
             <div />
           )}
-          <ActionButton
-            icon={Navigation}
-            label="Rota"
-            onClick={onToggleRouteOptions}
-            color="sky-400"
-            appearance="solid"
-            layout="inline"
-          />
+          {hasRouteTarget ? (
+            <ActionButton
+              icon={Navigation}
+              label="Rota"
+              onClick={onToggleRouteOptions}
+              color="sky-400"
+              appearance="solid"
+              layout="inline"
+            />
+          ) : (
+            <div />
+          )}
           <ActionButton
             icon={Bookmark}
             label={isFavorite ? 'Salvo' : 'Salvar'}
@@ -135,13 +148,15 @@ export function EmpresaCTAsSection({
               appearance="solid"
             />
           ) : null}
-          <ActionButton
-            icon={Navigation}
-            label="Rota"
-            onClick={onToggleRouteOptions}
-            color="sky-400"
-            appearance="solid"
-          />
+          {hasRouteTarget ? (
+            <ActionButton
+              icon={Navigation}
+              label="Rota"
+              onClick={onToggleRouteOptions}
+              color="sky-400"
+              appearance="solid"
+            />
+          ) : null}
         </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-3 xl:hidden">
@@ -170,7 +185,7 @@ export function EmpresaCTAsSection({
           />
         </div>
 
-        <RouteOptions show={showRouteOptions} onRoute={onRoute} />
+        <RouteOptions show={hasRouteTarget && showRouteOptions} onRoute={onRoute} />
       </div>
 
     </section>
