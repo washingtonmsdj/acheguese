@@ -1,127 +1,154 @@
-# Achegue-se — Documentação (SSOT)
+# Achegue-se — documentação canônica
 
-> **Porta de entrada única.** Este índice define quais documentos são autoridades vivas. Conteúdo fora daqui pode ser referência histórica, mas não substitui o SSOT atual.
+> **Porta de entrada única da documentação viva.** Se um documento não estiver classificado aqui como autoridade vigente, ele não substitui os contratos executáveis nem o SSOT atual.
 
-## Visão do produto
+## Estado do produto
 
-Achegue-se é uma plataforma **hiperlocal, territory-first e modular**, cuja unidade fundamental é o **Território** (país → estado → cidade → bairro).
+Achegue-se é uma plataforma hiperlocal, territory-first e modular. A unidade territorial segue país → estado → cidade → bairro.
 
-A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **No MVP, Business/Empresas é o domínio de produto ativo; Mapa, Perto de mim, Busca e Mensagens são capabilities horizontais da plataforma, junto de Auth, Perfis/Conta, Território, Localização, Notificações e Central.** O lifecycle executável é dividido entre `productModuleRegistry.ts`, `platformCapabilityRegistry.ts` e o avaliador `lifecycleRegistry.ts`; documentação não pode contornar esses owners.
+No corte atual do MVP:
 
-## Autoridade e precedência
+- **domínio de produto ativo:** Business / Empresas;
+- **capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens com provider Business, Notificações, Auth, Perfis/Conta, Território, Localização e Central;
+- Community, Gastronomia, Serviços/Profissionais, Classificados, Pontos Turísticos, Educação, Vagas, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Safety familiar, Billing e demais domínios permanecem `paused`.
 
-Quando houver conflito, aplicar esta ordem:
+A ativação real é executável e pertence a:
+
+- `src/app/config/productModuleRegistry.ts`;
+- `src/app/config/platformCapabilityRegistry.ts`;
+- `src/app/config/lifecycleRegistry.ts`.
+
+Documentação não pode reativar domínio pausado nem criar uma autoridade paralela.
+
+## Leitura recomendada para inspeção técnica ou societária
+
+Para entender o projeto sem depender do histórico de conversas, leia nesta ordem:
+
+1. [`../README.md`](../README.md) — visão rápida, stack e estrutura;
+2. [`FEATURE-MAP.md`](./FEATURE-MAP.md) — o que está ativo e o que está pausado;
+3. [`SCREEN-MAP.md`](./SCREEN-MAP.md) — superfícies e rotas públicas/privadas;
+4. [`03-architecture/CURRENT_RULES.md`](./03-architecture/CURRENT_RULES.md) — regras arquiteturais vigentes;
+5. [`03-architecture/PRODUCT_MODULE_LIFECYCLE.md`](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — lifecycle de produto e plataforma;
+6. [`09-reference/governance/AUTHORITIES.md`](./09-reference/governance/AUTHORITIES.md) — mapa de autoridades;
+7. [`../SECURITY.md`](../SECURITY.md) e [`09-reference/SECURITY.md`](./09-reference/SECURITY.md) — postura de segurança;
+8. [`08-roadmap/EXECUCAO_MAIN_ONLY.md`](./08-roadmap/EXECUCAO_MAIN_ONLY.md) — estado operacional e Definition of Done do MVP.
+
+Histórico, auditorias encerradas e planos supersedidos ficam em `10-archive/` ou no histórico Git e não devem ser confundidos com backlog vivo.
+
+## Precedência
+
+Quando houver conflito, vale esta ordem:
 
 1. contrato executável/versionado (`src/`, migrations, manifests e validators);
 2. documento SSOT vivo listado neste índice;
-3. plano operacional atual em `08-roadmap`;
+3. plano operacional vigente em `08-roadmap`;
 4. referência técnica;
-5. histórico em `10-archive`.
-
-Nenhum snapshot antigo pode sobrescrever um contrato executável atual.
+5. histórico em `10-archive` e Git.
 
 ## Estrutura documental
 
 ```text
 docs/
-├── README.md            ← índice canônico
-├── FEATURE-MAP.md       ← funcionalidades e acesso do usuário
-├── SCREEN-MAP.md        ← telas/rotas e propósito
-├── DECISIONS.md         ← decisões válidas hoje
+├── README.md            índice canônico
+├── FEATURE-MAP.md       escopo funcional atual
+├── SCREEN-MAP.md        rotas e superfícies atuais
+├── DECISIONS.md         decisões vigentes
 ├── 02-domain/           território, taxonomia e geografia
-├── 03-architecture/     regras e owners arquiteturais
-├── 04-design/           design system
-├── 05-ux/               UX e conteúdo
-├── 06-navigation/       navegação e IA
+├── 03-architecture/     arquitetura viva e lifecycle
+├── 04-design/           design system e tokens
+├── 05-ux/               UX do produto ativo e auditorias vigentes
+├── 06-navigation/       navegação e arquitetura da informação
 ├── 07-modules/          contratos por domínio
-├── 08-roadmap/          execução e próximos passos
+├── 08-roadmap/          somente execução/plano ainda vigente
 ├── 09-reference/        segurança, migrations e governance
-└── 10-archive/          histórico — não normativo
+├── architecture/        registries/manifests técnicos consumidos por tooling
+├── audits/              baselines/allowlists consumidos por validadores
+└── 10-archive/          histórico não normativo
 ```
 
-Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilidade. Eles só são considerados ativos quando aparecem explicitamente neste índice; a consolidação física restante é backlog estrutural e não cria uma segunda autoridade.
+As pastas `docs/architecture/` e `docs/audits/` existem porque contêm artefatos técnicos lidos por tooling/testes. Elas não formam um segundo índice documental.
 
-## Documentos SSOT vivos
+## SSOT vivos
 
-### Produto
+### Produto e release
 
-- [Marco zero do MVP — 2026-09-21](./08-roadmap/checkpoints/2026-09-21-milestone-zero.md) — marco atual de escopo/branch;
-- [Execução main-only e prontidão MVP](./08-roadmap/EXECUCAO_MAIN_ONLY.md) — status operacional e gates de release;
-- [Feature map](./FEATURE-MAP.md) — funcionalidades públicas ativas/pausadas;
-- [Screen map](./SCREEN-MAP.md) — rotas e superfícies vigentes.
-
-`10-archive/architecture-checkpoints/PROJECT-MILESTONE-1.md` preserva o marco arquitetural histórico de julho e não representa o status atual. O antigo `PROJECT-SCORE.md` foi arquivado em `10-archive/product/`.
+- [`FEATURE-MAP.md`](./FEATURE-MAP.md)
+- [`SCREEN-MAP.md`](./SCREEN-MAP.md)
+- [`DECISIONS.md`](./DECISIONS.md)
+- [`08-roadmap/EXECUCAO_MAIN_ONLY.md`](./08-roadmap/EXECUCAO_MAIN_ONLY.md) — **SSOT operacional atual**
+- [`08-roadmap/NEXT-STEPS.md`](./08-roadmap/NEXT-STEPS.md) — resumo curto, sem substituir o plano operacional
 
 ### Domínio
 
-- [Territory domain](./02-domain/TERRITORY-DOMAIN.md)
-- [Domain mapping](./02-domain/DOMAIN-MAPPING.md)
-- [Taxonomia SSOT](./02-domain/TAXONOMY_SSOT.md)
-- [Geographic foundation](./02-domain/GEOGRAPHIC_FOUNDATION.md)
-- Taxonomia vertical executável: [`../src/core/verticals/config.ts`](../src/core/verticals/config.ts)
+- [`02-domain/TERRITORY-DOMAIN.md`](./02-domain/TERRITORY-DOMAIN.md)
+- [`02-domain/DOMAIN-MAPPING.md`](./02-domain/DOMAIN-MAPPING.md)
+- [`02-domain/TAXONOMY_SSOT.md`](./02-domain/TAXONOMY_SSOT.md)
+- [`02-domain/GEOGRAPHIC_FOUNDATION.md`](./02-domain/GEOGRAPHIC_FOUNDATION.md)
+- taxonomia vertical executável: [`../src/core/verticals/config.ts`](../src/core/verticals/config.ts)
 
 ### Arquitetura
 
-- [Regras vigentes](./03-architecture/CURRENT_RULES.md)
-- [Arquitetura global](./03-architecture/ARCHITECTURE.md)
-- [Registry técnico de SSOT](./architecture/SSOT_REGISTRY.md) — catálogo técnico de owners; não é um segundo índice documental.
-- [Core Layer SSOT](./03-architecture/CORE_LAYER_SSOT.md)
-- [Community architecture — contrato pós-MVP](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — preserva internals da capability; não é autoridade de ativação pública.
-- [Core Platform architecture SSOT](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
-- [Product & platform lifecycle](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — regras para domínios e capabilities; owners executáveis em `productModuleRegistry.ts`, `platformCapabilityRegistry.ts` e `lifecycleRegistry.ts`.
+- [`03-architecture/CURRENT_RULES.md`](./03-architecture/CURRENT_RULES.md)
+- [`03-architecture/ARCHITECTURE.md`](./03-architecture/ARCHITECTURE.md)
+- [`03-architecture/CORE_LAYER_SSOT.md`](./03-architecture/CORE_LAYER_SSOT.md)
+- [`03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md`](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
+- [`03-architecture/PRODUCT_MODULE_LIFECYCLE.md`](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md)
+- [`architecture/SSOT_REGISTRY.md`](./architecture/SSOT_REGISTRY.md) — registry técnico de owners
+
+`03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md` preserva a arquitetura de Community para evolução futura, mas **não** autoriza sua ativação no MVP.
 
 ### Segurança e governance
 
-- [Política raiz](../SECURITY.md)
-- [Diretrizes de desenvolvimento seguro](./09-reference/SECURITY.md)
-- [Security Authority](./09-reference/governance/security/SECURITY_AUTHORITY.md)
-- [Authorities](./09-reference/governance/AUTHORITIES.md)
-- [Migrations](./09-reference/MIGRATIONS.md)
-- [Migrations pendentes](./09-reference/migrations-pending/README.md)
-- [Edge Function secrets](./09-reference/EDGE_FUNCTION_SECRETS.md)
-- [Supabase secrets](./09-reference/SUPABASE_SECRETS.md)
-- [E-mail de autenticação em produção](./09-reference/AUTH_EMAIL_PRODUCTION.md)
+- [`../SECURITY.md`](../SECURITY.md)
+- [`09-reference/SECURITY.md`](./09-reference/SECURITY.md)
+- [`09-reference/governance/security/SECURITY_AUTHORITY.md`](./09-reference/governance/security/SECURITY_AUTHORITY.md)
+- [`09-reference/governance/AUTHORITIES.md`](./09-reference/governance/AUTHORITIES.md)
+- [`09-reference/MIGRATIONS.md`](./09-reference/MIGRATIONS.md)
+- [`09-reference/migrations-pending/README.md`](./09-reference/migrations-pending/README.md)
+- [`09-reference/EDGE_FUNCTION_SECRETS.md`](./09-reference/EDGE_FUNCTION_SECRETS.md)
+- [`09-reference/SUPABASE_SECRETS.md`](./09-reference/SUPABASE_SECRETS.md)
+- [`09-reference/AUTH_EMAIL_PRODUCTION.md`](./09-reference/AUTH_EMAIL_PRODUCTION.md)
 
-### Design e UX
+### Design e UX ativa
 
-- [Design tokens](./04-design/DESIGN-TOKENS.md)
-- [UI concept](./04-design/UI-CONCEPT.md)
-- [Home review](./05-ux/HOME-REVIEW.md) · [Home content](./05-ux/HOME-CONTENT.md)
-- [Feed review](./05-ux/FEED-REVIEW.md) · [Feed content](./05-ux/FEED-CONTENT.md)
-- [Post review](./05-ux/POST-REVIEW.md) · [Post content](./05-ux/POST-CONTENT.md)
-- [Jornadas](./05-ux/USER-JOURNEY-REVIEW.md) · [Friction map](./05-ux/FRICTION-MAP.md)
+- [`04-design/DESIGN-TOKENS.md`](./04-design/DESIGN-TOKENS.md)
+- [`04-design/UI-CONCEPT.md`](./04-design/UI-CONCEPT.md)
+- [`05-ux/HOME-REVIEW.md`](./05-ux/HOME-REVIEW.md)
+- [`05-ux/HOME-CONTENT.md`](./05-ux/HOME-CONTENT.md)
+- [`05-ux/HOME-SPEC.md`](./05-ux/HOME-SPEC.md)
+- [`05-ux/USER-JOURNEY-REVIEW.md`](./05-ux/USER-JOURNEY-REVIEW.md)
+- [`05-ux/FRICTION-MAP.md`](./05-ux/FRICTION-MAP.md)
+- [`05-ux/AUTH-CONCEPT-PARITY-AUDIT.md`](./05-ux/AUTH-CONCEPT-PARITY-AUDIT.md)
+
+Antigas sprints de Feed/Post foram retiradas da árvore viva porque Community está pausado; a decisão está registrada em `10-archive/post-mvp/community-ux/`.
 
 ### Navegação
 
-- [Navigation mapping](./06-navigation/NAVIGATION-MAPPING.md)
-- [Navigation system](./06-navigation/NAVIGATION-SYSTEM.md)
-- [Information architecture](./06-navigation/INFORMATION-ARCHITECTURE.md)
+- [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md)
+- [`06-navigation/NAVIGATION-SYSTEM.md`](./06-navigation/NAVIGATION-SYSTEM.md)
+- [`06-navigation/INFORMATION-ARCHITECTURE.md`](./06-navigation/INFORMATION-ARCHITECTURE.md)
 
 ### Módulos
 
-- Bounded contexts de código: [`../src/modules/README.md`](../src/modules/README.md)
-- Contratos transversais e de módulo em [`07-modules/`](./07-modules/)
-- [Community First / Posts e Feed](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — `core/posts` é o owner de posts; `core/community-feed` compõe a experiência territorial preservada para pós-MVP.
-- Verticais empresariais oficiais são declaradas **somente** em [`src/core/verticals/config.ts`](../src/core/verticals/config.ts). No estado atual: `gastronomy` e `education`.
-
-### Roadmap / execução
-
-- [Execução main-only e prontidão MVP](./08-roadmap/EXECUCAO_MAIN_ONLY.md) — **SSOT operacional atual**
-- [Próximos passos](./08-roadmap/NEXT-STEPS.md) — resumo de navegação; não substitui o plano de execução
-- [Recovery roadmap](./08-roadmap/RECOVERY-ROADMAP.md)
-- [Migração mobile](./08-roadmap/MONOREPO_MIGRATION_PLAN.md)
+- bounded contexts: [`../src/modules/README.md`](../src/modules/README.md)
+- contratos por domínio: [`07-modules/`](./07-modules/)
+- verticais empresariais declaradas somente em [`../src/core/verticals/config.ts`](../src/core/verticals/config.ts)
 
 ## Arquivo histórico
 
-Tudo em [`10-archive/`](./10-archive/) foi consolidado, superado ou é snapshot. Se conflitar com uma fonte viva acima, **a fonte viva vence**.
+Tudo em [`10-archive/`](./10-archive/) é histórico, checkpoint ou material supersedido. O conteúdo pode explicar decisões passadas, mas não representa automaticamente o produto atual.
+
+Documentos concluídos não permanecem em `08-roadmap/` como se fossem trabalho pendente. Handoffs encerrados e roadmaps substituídos devem ser arquivados ou removidos da árvore viva.
 
 ## Regras documentais
 
 1. Não criar documento novo sem verificar se já existe owner equivalente.
-2. Uma única fonte de verdade por assunto; este índice registra a autoridade. Não criar nem manter um segundo índice documental paralelo.
-3. A raiz do repositório mantém apenas `README.md` e `SECURITY.md`.
-4. Toda funcionalidade de usuário deve estar no `FEATURE-MAP.md`.
-5. Toda rota deve estar no `SCREEN-MAP.md`.
-6. Toda decisão viva deve estar em `DECISIONS.md` ou no SSOT técnico explicitamente responsável.
-7. Documentos substituídos devem sair dos links canônicos e, quando possível, ser movidos para `10-archive` após prova de que não há dependência viva.
-8. Alteração de taxonomia deve atualizar o contrato executável e passar pelos validators/testes de SSOT.
+2. Uma única fonte de verdade por assunto.
+3. A raiz do repositório mantém apenas documentos de entrada/governança transversal.
+4. Toda funcionalidade de usuário pertence ao `FEATURE-MAP.md`.
+5. Toda rota/superfície pertence ao `SCREEN-MAP.md`.
+6. Decisão viva pertence a `DECISIONS.md` ou ao SSOT técnico responsável.
+7. Plano concluído ou supersedido sai da árvore viva.
+8. Histórico relevante vai para `10-archive/` ou permanece no Git, mas nunca compete com documentação ativa.
+9. Mudança de taxonomia/lifecycle atualiza contrato executável e passa pelos validators correspondentes.
+10. Documentação deve permitir que um novo desenvolvedor, auditor ou sócio entenda o estado atual sem reconstruir contexto de chats antigos.
