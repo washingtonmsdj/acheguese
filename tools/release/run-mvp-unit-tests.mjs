@@ -52,6 +52,7 @@ const EXPLICIT_MVP_CONTRACTS = [
   "tests/security/business-data-grants-security.test.ts",
   "tests/security/business-claims-owner-security.test.ts",
   "tests/security/maplibre-runtime-security.test.ts",
+  "tests/security/tracked-public-env-safety.test.ts",
 ];
 
 function normalize(path) {
