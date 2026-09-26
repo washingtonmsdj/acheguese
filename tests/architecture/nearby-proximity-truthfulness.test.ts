@@ -35,7 +35,7 @@ describe("nearby MVP boundary", () => {
     expect(page).toContain("locationIds: spatialLocationIds");
     expect(page).toContain("showProximity={hasPreciseProximity}");
     expect(page).toContain(
-      "O recorte usa o centro do território como referência; ative o GPS para ver distâncias pessoais.",
+      "Ative sua localização para saber o que está realmente perto de você.",
     );
     expect(page).toContain("Não foi possível determinar o centro deste território; ative o GPS.");
   });
