@@ -9,19 +9,29 @@ function read(relativePath: string): string {
 }
 
 describe("Território Vivo navigation SSOT", () => {
-  it("keeps one registry for the five global modes", () => {
+  it("keeps one registry for the active territorial modes", () => {
     const registry = read(
       "src/core/navigation/territoryNavigationModes.ts",
     );
 
     for (const id of [
+      '"home"',
+      '"map"',
+      '"business"',
+      '"nearby"',
+      '"search"',
+      '"account"',
+    ]) {
+      expect(registry).toContain(id);
+    }
+
+    for (const retiredId of [
       '"today"',
       '"explore"',
       '"community"',
       '"activity"',
-      '"account"',
     ]) {
-      expect(registry).toContain(id);
+      expect(registry).not.toContain(retiredId);
     }
 
     expect(registry).toContain("buildTerritoryNavigationModes");
