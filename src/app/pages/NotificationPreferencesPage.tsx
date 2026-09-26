@@ -14,7 +14,7 @@ import {
   MonitorSmartphone,
   RefreshCw,
   Settings2,
-  ShoppingCart,
+  ShieldCheck,
   Smartphone,
   Tag,
   UsersRound,
@@ -358,17 +358,17 @@ export default function NotificationPreferencesPage() {
             <div className="mt-1 lg:mt-2">
               <PreferenceRow
                 id="transactional"
-                icon={<ShoppingCart className="h-5 w-5" aria-hidden="true" />}
-                label="Pedidos e atendimentos"
-                description="Pedidos, pagamentos e confirmações essenciais."
+                icon={<ShieldCheck className="h-5 w-5" aria-hidden="true" />}
+                label="Avisos essenciais"
+                description="Segurança, conta e confirmações essenciais."
                 checked={preferences.transactional_enabled}
                 disabled
               />
               <PreferenceRow
                 id="social"
                 icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
-                label={<><span className="lg:hidden">Interações da comunidade</span><span className="hidden lg:inline">Comunidade</span></>}
-                description="Comentários, menções e interações."
+                label="Interações"
+                description="Mensagens e interações da sua conta."
                 checked={preferences.social_enabled}
                 onCheckedChange={(checked) => setPreferences({ ...preferences, social_enabled: checked })}
               />
@@ -383,8 +383,8 @@ export default function NotificationPreferencesPage() {
               <PreferenceRow
                 id="marketing"
                 icon={<Tag className="h-5 w-5" aria-hidden="true" />}
-                label="Ofertas e novidades"
-                description="Promoções e conteúdos especiais."
+                label="Novidades e comunicações"
+                description="Novidades e comunicações promocionais do Achegue-se."
                 checked={preferences.marketing_enabled}
                 onCheckedChange={(checked) => setPreferences({ ...preferences, marketing_enabled: checked })}
               />

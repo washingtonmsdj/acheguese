@@ -32,8 +32,6 @@ export function useEmail(userId?: string) {
     sendWelcomeEmail: EmailService.sendWelcomeEmail,
     sendMFASetupConfirmationEmail: EmailService.sendMFASetupConfirmationEmail,
     sendNewDeviceLoginEmail: EmailService.sendNewDeviceLoginEmail,
-    sendPaymentConfirmationEmail: EmailService.sendPaymentConfirmationEmail,
-    sendSubscriptionExpiringEmail: EmailService.sendSubscriptionExpiringEmail,
     sendSecurityAlertEmail: EmailService.sendSecurityAlertEmail,
   };
 }
