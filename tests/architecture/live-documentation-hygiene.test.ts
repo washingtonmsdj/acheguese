@@ -112,6 +112,13 @@ describe("live documentation hygiene", () => {
     expect(
       existsSync("docs/10-archive/post-mvp/community-ux/README.md"),
     ).toBe(true);
+
+    const decisions = readFileSync("docs/DECISIONS.md", "utf8");
+    expect(decisions).not.toContain("05-ux/FEED-CONTENT.md");
+    expect(decisions).not.toContain("FEED-CONTENT.md`, `POST-CONTENT.md");
+    expect(decisions).toContain(
+      "10-archive/post-mvp/community-ux/README.md",
+    );
   });
 
   it("keeps duplicate concept roots retired in favor of the design catalog", () => {
