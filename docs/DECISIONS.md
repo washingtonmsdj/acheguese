@@ -22,7 +22,7 @@
 
 ## D-005 — Voz editorial consistente por superfície ativa
 
-**Decisão:** microcopy em pt-BR deve permanecer consistente e sem jargão técnico. Contratos de Feed/Post continuam preservados para o módulo Community pós-MVP, mas não ativam essas superfícies nem obrigam a Home atual a compô-las. **Ref.:** `05-ux/HOME-SPEC.md`, `FEED-CONTENT.md`, `POST-CONTENT.md`.
+**Decisão:** microcopy em pt-BR deve permanecer consistente e sem jargão técnico. Contratos históricos de Feed/Post continuam preservados para o módulo Community pós-MVP, mas não ativam essas superfícies nem obrigam a Home atual a compô-las. **Referências vigentes:** `05-ux/HOME-SPEC.md`; o material histórico de Community UX está catalogado em `10-archive/post-mvp/community-ux/README.md`.
 
 ## D-006 — Design tokens são SSOT visual
 
@@ -74,7 +74,7 @@
 
 ## D-018 — Voz de estados vazios / loading
 
-**Decisão:** nunca "Carregando..." genérico. Sempre neighborly ("Ouvindo o bairro...", "Ainda está quieto por aqui", "Preparando seu território..."). **Ref.:** `05-ux/FEED-CONTENT.md`.
+**Decisão:** evitar `Carregando...` genérico em superfícies de produto. Estados de loading/empty devem explicar o que está acontecendo com linguagem clara, curta e coerente com o contexto territorial, sem ressuscitar copy de módulos pausados. **Ref.:** `05-ux/HOME-SPEC.md`.
 
 ## D-019 — Categorias de conteúdo têm cor semântica dedicada
 
@@ -119,7 +119,6 @@
 ## D-029 — Preservação pública pós-MVP não usa lazy barrel morto
 
 **Decisão:** depois que o shell público passou a importar exclusivamente `activeLazyImports.ts`, o antigo `src/app/routes/lazyImports.ts` perdeu todo caller runtime e não deve ser mantido como inventário de módulos pausados. Preservação pós-MVP ocorre nos owners/contratos dos bounded contexts e no lifecycle canônico; reativação futura conecta explicitamente os owners certificados ao boundary ativo. Ratchets devem provar existência física do owner, status `paused` quando aplicável e ausência em `activeLazyImports.ts`/`AppLayoutRoutes.tsx`, não exigir exports em um barrel morto. **Referências:** D-025, D-027, D-028, `SCREEN-MAP.md`, `src/app/routes/README.md`, `tests/architecture/app-layout-active-route-boundary.test.ts`.
-
 
 ## D-030 — Grafo pausado não preserva placeholders app-level
 
