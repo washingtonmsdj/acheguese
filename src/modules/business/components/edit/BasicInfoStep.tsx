@@ -1,11 +1,4 @@
-import { ArrowRight, Building2, Upload } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
+import { ArrowRight, Building2, ImagePlus, Upload } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -51,25 +44,41 @@ export function BasicInfoStep({
   const copy = getBusinessCreateFieldCopy(category);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-primary" />
-          Identidade da empresa
-        </CardTitle>
-        <CardDescription>Atualize os dados principais que aparecem no perfil público.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label>Logo da empresa</Label>
-          <div className="flex items-center gap-4">
-            <Avatar className="h-20 w-20 rounded-2xl">
-              <AvatarImage src={logoPreview || undefined} />
-              <AvatarFallback className="rounded-2xl">
-                <Building2 className="h-10 w-10" />
+    <section className="overflow-hidden rounded-[26px] border border-border bg-card">
+      <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <Building2 className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+              Etapa 1
+            </p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+              Identidade da empresa
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Atualize as informações que ajudam moradores a reconhecer e entender seu negócio.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-5 sm:p-6">
+        <div className="rounded-[22px] border border-border bg-background/70 p-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <Avatar className="h-20 w-20 shrink-0 rounded-[22px] border border-border bg-card">
+              <AvatarImage src={logoPreview || undefined} className="object-cover" />
+              <AvatarFallback className="rounded-[22px] bg-primary/5 text-primary">
+                {logoPreview ? <Building2 className="h-9 w-9" /> : <ImagePlus className="h-8 w-8" />}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
+
+            <div className="min-w-0 flex-1">
+              <Label className="text-sm font-semibold text-foreground">Logo da empresa</Label>
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                Use uma imagem quadrada e fácil de reconhecer nos cards, busca e página pública.
+              </p>
               <input
                 ref={logoRef}
                 type="file"
@@ -83,83 +92,83 @@ export function BasicInfoStep({
                 size="sm"
                 onClick={() => logoRef.current?.click()}
                 disabled={uploading}
-                className="gap-2"
+                className="mt-3 gap-2 rounded-xl"
               >
                 <Upload className="h-4 w-4" />
                 {uploading ? "Enviando..." : logoPreview ? "Trocar logo" : "Adicionar logo"}
               </Button>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Recomendado: imagem quadrada, máximo 5 MB.
-              </p>
+              <p className="mt-2 text-xs text-muted-foreground">Imagem de até 5 MB.</p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="name">
-            Nome da empresa <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => onNameChange(e.target.value)}
-            placeholder={copy.namePlaceholder}
-            maxLength={100}
-          />
-          {errors.name && (
-            <p className="text-xs text-destructive">{errors.name}</p>
-          )}
-        </div>
+        <div className="grid gap-5">
+          <div className="space-y-2">
+            <Label htmlFor="name">
+              Nome da empresa <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder={copy.namePlaceholder}
+              maxLength={100}
+              className="h-11 rounded-xl"
+            />
+            {errors.name ? <p className="text-xs text-destructive">{errors.name}</p> : null}
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">
-            Descrição <span className="text-destructive">*</span>
-          </Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => onDescriptionChange(e.target.value)}
-            placeholder={copy.descriptionPlaceholder}
-            maxLength={1000}
-            rows={4}
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="description">
+                Descrição <span className="text-destructive">*</span>
+              </Label>
+              <span className="text-xs text-muted-foreground">{description.length}/1000</span>
+            </div>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => onDescriptionChange(e.target.value)}
+              placeholder={copy.descriptionPlaceholder}
+              maxLength={1000}
+              rows={5}
+              className="min-h-32 rounded-xl"
+            />
             {errors.description ? (
-              <span className="text-destructive">{errors.description}</span>
+              <p className="text-xs text-destructive">{errors.description}</p>
             ) : (
-              <span>Mínimo 10 caracteres</span>
+              <p className="text-xs text-muted-foreground">Escreva pelo menos 10 caracteres.</p>
             )}
-            <span>{description.length}/1000</span>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">
+              Categoria <span className="text-destructive">*</span>
+            </Label>
+            <select
+              id="category"
+              value={category}
+              onChange={(e) => onCategoryChange(e.target.value)}
+              className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Selecione uma categoria</option>
+              {categoryOptions.map((option) => (
+                <option key={option.slug} value={option.slug}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {errors.category ? <p className="text-xs text-destructive">{errors.category}</p> : null}
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="category">
-            Categoria <span className="text-destructive">*</span>
-          </Label>
-          <select
-            id="category"
-            value={category}
-            onChange={(e) => onCategoryChange(e.target.value)}
-            className="w-full rounded-md border bg-background px-3 py-2"
-          >
-            <option value="">Selecione uma categoria</option>
-            {categoryOptions.map((option) => (
-              <option key={option.slug} value={option.slug}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          {errors.category && (
-            <p className="text-xs text-destructive">{errors.category}</p>
-          )}
+        <div className="flex justify-end border-t border-border pt-5">
+          <Button type="button" onClick={onNext} className="w-full gap-2 rounded-xl sm:w-auto sm:min-w-36">
+            Próximo
+            <ArrowRight className="h-4 w-4" />
+          </Button>
         </div>
-
-        <Button type="button" onClick={onNext} className="w-full gap-2">
-          Próximo
-          <ArrowRight className="h-4 w-4" />
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
