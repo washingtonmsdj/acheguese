@@ -33,7 +33,7 @@ export default function BusinessOverviewPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Slug público</CardDescription>
+            <CardDescription>Endereço da página</CardDescription>
             <CardTitle>{business.slug || "Não configurado"}</CardTitle>
           </CardHeader>
         </Card>
@@ -43,7 +43,7 @@ export default function BusinessOverviewPage() {
         <CardHeader>
           <CardTitle>Atalhos da empresa</CardTitle>
           <CardDescription>
-            Fluxos ativos de gestão no MVP.
+            Acesse rapidamente as informações e a página pública da sua empresa.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
