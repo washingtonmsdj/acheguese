@@ -115,7 +115,7 @@ export function EmpresasHeroSection({
               Empresas do bairro
             </h1>
             <p className="mt-3 max-w-lg text-[1rem] leading-7 text-white/62 lg:text-[1.08rem]">
-              Negocios locais verificados, recomendados por moradores e proximos de voce.
+              Encontre empresas cadastradas no território e consulte informações públicas, recomendações e sinais de verificação quando disponíveis.
             </p>
 
             <div className="mt-4 flex flex-wrap gap-3">
