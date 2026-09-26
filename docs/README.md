@@ -113,14 +113,11 @@ As pastas `docs/architecture/` e `docs/audits/` existem porque contêm artefatos
 
 - [`04-design/DESIGN-TOKENS.md`](./04-design/DESIGN-TOKENS.md)
 - [`04-design/UI-CONCEPT.md`](./04-design/UI-CONCEPT.md)
-- [`05-ux/HOME-REVIEW.md`](./05-ux/HOME-REVIEW.md)
-- [`05-ux/HOME-CONTENT.md`](./05-ux/HOME-CONTENT.md)
-- [`05-ux/HOME-SPEC.md`](./05-ux/HOME-SPEC.md)
-- [`05-ux/USER-JOURNEY-REVIEW.md`](./05-ux/USER-JOURNEY-REVIEW.md)
-- [`05-ux/FRICTION-MAP.md`](./05-ux/FRICTION-MAP.md)
-- [`05-ux/AUTH-CONCEPT-PARITY-AUDIT.md`](./05-ux/AUTH-CONCEPT-PARITY-AUDIT.md)
+- [`05-ux/HOME-SPEC.md`](./05-ux/HOME-SPEC.md) — contrato canônico da Home do MVP
+- [`05-ux/HOME-INVENTORY.md`](./05-ux/HOME-INVENTORY.md) — conteúdo permitido/proibido derivado do lifecycle
+- [`05-ux/AUTH-CONCEPT-PARITY-AUDIT.md`](./05-ux/AUTH-CONCEPT-PARITY-AUDIT.md) — auditoria viva da família Conta e acesso
 
-Antigas sprints de Feed/Post foram retiradas da árvore viva porque Community está pausado; a decisão está registrada em `10-archive/post-mvp/community-ux/`.
+Sprints antigas de Home, Journey, Feed/Post e planos de UX que não representam o corte atual foram retirados da árvore viva. A proveniência dessas remoções está registrada em `10-archive/post-mvp/` e o conteúdo detalhado permanece no histórico Git.
 
 ### Navegação
 
