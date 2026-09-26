@@ -123,7 +123,7 @@ export function buildTerritoryNavigationModes({
       id: "search",
       href: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryBase),
       label: "Busca",
-      description: "Buscar nos módulos ativos",
+      description: "Procurar no território",
       icon: Search,
     },
     {
