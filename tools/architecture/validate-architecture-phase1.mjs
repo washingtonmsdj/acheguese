@@ -22,6 +22,7 @@ const PHASE1_COMMANDS = [
       "tests/architecture/architecture-validator-coverage.test.ts",
       "tests/architecture/session-ssot-ownership.test.ts",
       "tests/architecture/auth-session-authority.test.ts",
+      "tests/architecture/live-documentation-hygiene.test.ts",
     ],
   ],
   ["npm", ["run", "-s", "validate:architecture:incremental", "--", "--strict", "--json"]],
