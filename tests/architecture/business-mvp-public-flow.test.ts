@@ -6,6 +6,10 @@ const detailPage = readFileSync(
   "src/app/pages/EmpresaDetailLandingPage.tsx",
   "utf8",
 );
+const heroSection = readFileSync(
+  "src/app/features/business-landing/sections/EmpresasHeroSection.tsx",
+  "utf8",
+);
 const constants = readFileSync(
   "src/app/features/business-landing/utils/landing.constants.ts",
   "utf8",
@@ -30,6 +34,15 @@ describe("MVP Business public flow", () => {
     expect(page).toContain("businesses={filteredBusinesses}");
     expect(page).not.toContain(
       "filteredBusinesses.length > 0 ? filteredBusinesses : businessesToShow",
+    );
+  });
+
+  it("keeps the public hero claims conditional instead of universal", () => {
+    expect(heroSection).toContain(
+      "sinais de verificação quando disponíveis",
+    );
+    expect(heroSection).not.toContain(
+      "Negocios locais verificados, recomendados por moradores e proximos de voce.",
     );
   });
 
