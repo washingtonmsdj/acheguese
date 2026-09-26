@@ -555,7 +555,6 @@ export default function EmpresasLandingPage({
                   ["relevance", "Mais uteis no bairro"],
                   ["recommendations", "Mais recomendadas"],
                   ["rating", "Melhor avaliadas"],
-                  ["distance", "Mais proximas"],
                   ["recent", "Mais recentes"],
                 ] as const
               ).map(([value, label]) => (
