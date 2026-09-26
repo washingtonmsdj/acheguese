@@ -1,14 +1,7 @@
-import { ArrowRight, Clock3, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock3, MapPin, Phone, Route } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { TerritorialSelector } from "@/core/location/components/TerritorialSelector";
 import { getRecordValue, setRecordValue } from "@/shared/utils/recordLookup";
@@ -121,42 +114,64 @@ export function ContactLocationStep({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          Território, contato e operação
-        </CardTitle>
-        <CardDescription>
-          Defina como a empresa aparece territorialmente, onde ela opera e como o cliente entra em contato.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4 rounded-xl border p-4">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Território principal</h3>
+    <section className="overflow-hidden rounded-[26px] border border-border bg-card">
+      <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
+        <div className="flex items-start gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <MapPin className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+              Etapa 2
+            </p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+              Contato, endereço e funcionamento
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              Defina onde a empresa aparece, como as pessoas entram em contato e quando ela funciona.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-6 p-5 sm:p-6">
+        <div className="rounded-[22px] border border-border bg-background/70 p-4 sm:p-5">
+          <div className="mb-4 flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Route className="h-4 w-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Território principal</h3>
+              <p className="mt-1 text-sm leading-5 text-muted-foreground">
+                O território orienta a página pública, a busca, o mapa e resultados de proximidade.
+              </p>
+            </div>
           </div>
           <TerritorialSelector
             initialLocationId={locationId}
             onLocationChange={onLocationChange}
           />
-          {errors.location_id && <p className="text-xs text-destructive">{errors.location_id}</p>}
-          {locationData && (
-            <div className="rounded-lg bg-muted/40 p-3 text-sm text-muted-foreground">
-              Exibição pública principal em{" "}
-              <span className="font-medium text-foreground">{locationData.neighborhoodName}</span>,{" "}
-              {locationData.cityName} - {locationData.stateName}.
+          {errors.location_id ? (
+            <p className="mt-2 text-xs text-destructive">{errors.location_id}</p>
+          ) : null}
+          {locationData ? (
+            <div className="mt-3 rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+              Página principal em <span className="font-semibold text-foreground">{locationData.neighborhoodName}</span>, {locationData.cityName} - {locationData.stateName}.
             </div>
-          )}
+          ) : null}
         </div>
 
-        <div className="space-y-4 rounded-xl border p-4">
-          <div className="flex items-center gap-2">
+        <div className="border-t border-border pt-6">
+          <div className="mb-4 flex items-center gap-2">
             <Phone className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Canais de contato</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Canais de contato</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Informe pelo menos um canal que esteja realmente disponível.
+              </p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
               <Input
@@ -164,8 +179,9 @@ export function ContactLocationStep({
                 value={phone}
                 onChange={(event) => onPhoneChange(event.target.value)}
                 placeholder={copy.phonePlaceholder}
+                className="h-11 rounded-xl"
               />
-              {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+              {errors.phone ? <p className="text-xs text-destructive">{errors.phone}</p> : null}
             </div>
 
             <div className="space-y-2">
@@ -175,33 +191,37 @@ export function ContactLocationStep({
                 value={whatsapp}
                 onChange={(event) => onWhatsappChange(event.target.value)}
                 placeholder={copy.whatsappPlaceholder}
+                className="h-11 rounded-xl"
               />
-              {errors.whatsapp && <p className="text-xs text-destructive">{errors.whatsapp}</p>}
+              {errors.whatsapp ? <p className="text-xs text-destructive">{errors.whatsapp}</p> : null}
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email comercial</Label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => onEmailChange(event.target.value)}
-              placeholder={copy.emailPlaceholder}
-            />
-            {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
-            <p className="text-xs text-muted-foreground">
-              Informe pelo menos um canal de contato entre telefone, WhatsApp ou e-mail.
-            </p>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="email">E-mail comercial</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => onEmailChange(event.target.value)}
+                placeholder={copy.emailPlaceholder}
+                className="h-11 rounded-xl"
+              />
+              {errors.email ? <p className="text-xs text-destructive">{errors.email}</p> : null}
+            </div>
           </div>
         </div>
 
-        <div className="space-y-4 rounded-xl border p-4">
-          <div className="flex items-center gap-2">
+        <div className="border-t border-border pt-6">
+          <div className="mb-4 flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Endereço físico</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Endereço físico</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Use um endereço que possa ser reconhecido por clientes e pelos recursos de mapa.
+              </p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="address_street">Rua</Label>
               <Input
@@ -209,8 +229,9 @@ export function ContactLocationStep({
                 value={addressStreet}
                 onChange={(event) => onAddressStreetChange(event.target.value)}
                 placeholder={copy.streetPlaceholder}
+                className="h-11 rounded-xl"
               />
-              {errors.address_street && <p className="text-xs text-destructive">{errors.address_street}</p>}
+              {errors.address_street ? <p className="text-xs text-destructive">{errors.address_street}</p> : null}
             </div>
 
             <div className="space-y-2">
@@ -220,6 +241,7 @@ export function ContactLocationStep({
                 value={addressNumber}
                 onChange={(event) => onAddressNumberChange(event.target.value)}
                 placeholder="123"
+                className="h-11 rounded-xl"
               />
             </div>
 
@@ -230,6 +252,7 @@ export function ContactLocationStep({
                 value={addressComplement}
                 onChange={(event) => onAddressComplementChange(event.target.value)}
                 placeholder={copy.complementPlaceholder}
+                className="h-11 rounded-xl"
               />
             </div>
 
@@ -240,38 +263,53 @@ export function ContactLocationStep({
                 value={postalCode}
                 onChange={(event) => onPostalCodeChange(event.target.value)}
                 placeholder="40000-000"
+                className="h-11 rounded-xl"
               />
-              {errors.postal_code && <p className="text-xs text-destructive">{errors.postal_code}</p>}
+              {errors.postal_code ? <p className="text-xs text-destructive">{errors.postal_code}</p> : null}
             </div>
           </div>
         </div>
 
-        <div className="space-y-4 rounded-xl border p-4">
-          <div className="flex items-center gap-2">
+        <div className="border-t border-border pt-6">
+          <div className="mb-4 flex items-center gap-2">
             <Clock3 className="h-4 w-4 text-primary" />
-            <h3 className="font-medium">Horário de funcionamento</h3>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Horário de funcionamento</h3>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                O horário informado alimenta o status “aberto agora” no catálogo e no perfil público.
+              </p>
+            </div>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {DAY_LABELS.map((day) => {
               const dayValue = hours[day.key];
               const isClosed = Boolean(dayValue?.closed);
 
               return (
-                <div key={day.key} className="grid grid-cols-1 gap-3 rounded-lg border p-3 md:grid-cols-[160px_1fr_1fr_140px] md:items-center">
-                  <div className="text-sm font-medium">{day.label}</div>
+                <div
+                  key={day.key}
+                  className={`grid gap-3 rounded-2xl border px-4 py-3 md:grid-cols-[150px_1fr_1fr_130px] md:items-center ${
+                    isClosed ? "border-border bg-muted/25" : "border-border bg-background/60"
+                  }`}
+                >
+                  <div className="text-sm font-semibold text-foreground">{day.label}</div>
                   <Input
                     type="time"
                     value={dayValue?.open || "09:00"}
                     onChange={(event) => updateDay(day.key, { open: event.target.value })}
                     disabled={isClosed}
+                    className="h-10 rounded-xl"
+                    aria-label={`Abertura ${day.label}`}
                   />
                   <Input
                     type="time"
                     value={dayValue?.close || "18:00"}
                     onChange={(event) => updateDay(day.key, { close: event.target.value })}
                     disabled={isClosed}
+                    className="h-10 rounded-xl"
+                    aria-label={`Fechamento ${day.label}`}
                   />
-                  <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
                     <Checkbox
                       checked={isClosed}
                       onCheckedChange={(checked) => updateDay(day.key, { closed: Boolean(checked) })}
@@ -284,34 +322,50 @@ export function ContactLocationStep({
           </div>
         </div>
 
-        <div className="space-y-4 rounded-xl border p-4">
-          <h3 className="font-medium">Modos de atendimento</h3>
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {MODOS_ATENDIMENTO.map((modo) => (
-              <label key={modo.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm">
-                <Checkbox
-                  checked={selectedModos.includes(modo.id)}
-                  onCheckedChange={(checked) => handleModoToggle(modo.id, Boolean(checked))}
-                />
-                <div>
-                  <div className="font-medium text-foreground">{modo.label}</div>
-                  <div className="text-muted-foreground">{modo.hint}</div>
-                </div>
-              </label>
-            ))}
+        <div className="border-t border-border pt-6">
+          <div className="mb-3">
+            <h3 className="text-sm font-semibold text-foreground">Modos de atendimento</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Marque todas as formas pelas quais a empresa atende hoje.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {MODOS_ATENDIMENTO.map((modo) => {
+              const checked = selectedModos.includes(modo.id);
+              return (
+                <label
+                  key={modo.id}
+                  className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm transition-colors ${
+                    checked
+                      ? "border-primary/30 bg-primary/5"
+                      : "border-border bg-background/50 hover:bg-muted/30"
+                  }`}
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(nextChecked) => handleModoToggle(modo.id, Boolean(nextChecked))}
+                  />
+                  <div>
+                    <div className="font-semibold text-foreground">{modo.label}</div>
+                    <div className="mt-1 leading-5 text-muted-foreground">{modo.hint}</div>
+                  </div>
+                </label>
+              );
+            })}
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <Button type="button" variant="outline" onClick={onBack} className="flex-1">
+        <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row">
+          <Button type="button" variant="outline" onClick={onBack} className="gap-2 sm:flex-1">
+            <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
-          <Button type="button" onClick={onNext} className="flex-1 gap-2">
+          <Button type="button" onClick={onNext} className="gap-2 sm:flex-1">
             Continuar
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }
