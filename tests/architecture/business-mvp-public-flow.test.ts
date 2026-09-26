@@ -30,6 +30,10 @@ const addressCard = readFileSync(
   "src/modules/business/company/components/info/AddressCard.tsx",
   "utf8",
 );
+const contactCard = readFileSync(
+  "src/modules/business/company/components/info/ContactCard.tsx",
+  "utf8",
+);
 const constants = readFileSync(
   "src/app/features/business-landing/utils/landing.constants.ts",
   "utf8",
@@ -109,6 +113,12 @@ describe("MVP Business public flow", () => {
     expect(ctasSection).toContain("const phoneUrl = buildTelUrl(business.phone)");
     expect(ctasSection).toContain("{whatsAppUrl ? (");
     expect(ctasSection).toContain("{phoneUrl ? (");
+    expect(contactCard).toContain("const emailUrl = buildMailtoUrl(business.email)");
+    expect(contactCard).toContain("const phoneUrl = buildTelUrl(business.phone)");
+    expect(contactCard).toContain("{emailUrl ? (");
+    expect(contactCard).toContain("{phoneUrl ? (");
+    expect(contactCard).not.toContain("{business.email ? (");
+    expect(contactCard).not.toContain("{business.phone ? (");
   });
 
   it("keeps Business CTAs inside the active MVP module set", () => {
