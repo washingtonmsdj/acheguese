@@ -18,9 +18,9 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - manter histórico em checkpoints/archive/Git;
    - não apagar base pós-MVP com owner legítimo;
 
-2. fechar os dois blockers externos:
+2. fechar o blocker externo restante:
    - **#305:** indisponibilidade/timeout do data plane Supabase e sessão autenticada real;
-   - **#309:** PAT do GitHub Actions com autoridade para deploy de Edge Functions;
+   - não compensar com fallback de login, retry artificial, timeout maior, bypass OIDC ou mudança de RLS sem evidência;
 
 3. executar um candidato único da `main`:
    - security;
@@ -30,7 +30,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - build;
    - E2E público;
    - E2E autenticado;
-   - deploy exact-SHA;
+   - deploy exact-SHA, incluindo Edge Functions pelo caminho automático já restaurado;
    - smoke exact-SHA;
 
 4. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth passarem no mesmo candidato.
@@ -45,4 +45,4 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - sem novo owner para responsabilidade já existente;
 - sem documento vivo com snapshot antigo de PR/SHA tratado como estado atual.
 
-Detalhes, critérios completos e blockers: `EXECUCAO_MAIN_ONLY.md`.
+Detalhes, critérios completos e blocker: `EXECUCAO_MAIN_ONLY.md`.

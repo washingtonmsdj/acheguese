@@ -1,7 +1,7 @@
 # Achegue-se — Execução main-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Atualizado:** 2026-09-24  
+**Atualizado:** 2026-09-26  
 **Linha de integração:** `main`
 
 Este documento contém somente o estado operacional vigente, a ordem de execução e o Definition of Done do MVP. Histórico de PRs, SHAs e investigações encerradas pertence a `docs/08-roadmap/checkpoints/`, `docs/10-archive/` ou ao histórico do Git.
@@ -63,15 +63,16 @@ O corte estrutural do MVP está consolidado:
 - `CentralRoutes` compõe o lifecycle de Billing e das verticais Business; `CriarEmpresaPage` recebe `enabledVerticalKeys` e não consulta `launchScope`;
 - componentes Business/Profile ativos recebem escopo de lifecycle pela camada `app`, em vez de importar `app/config` para decidir produto;
 - Busca assistida autoriza intents explicitamente na camada `app`;
-- URLs sem owner ativo chegam ao 404 canônico, sem redirect de compatibilidade.
+- URLs sem owner ativo chegam ao 404 canônico, sem redirect de compatibilidade;
+- o deploy automático exact-main de Edge Functions está operacional e volta a ser tratado como gate normal da certificação do candidato.
 
 Qualquer regressão nessas regras deve falhar nos gates arquiteturais.
 
-## Blockers externos atuais
+## Blocker externo atual
 
 ### #305 — Supabase data plane / sessão autenticada
 
-O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. A revalidação de 2026-09-24 reproduziu `Connection terminated due to connection timeout` até em consulta SQL mínima.
+O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto o smoke autenticado falha no bootstrap de sessão com `auth_upstream_unavailable`.
 
 Não corrigir isso no frontend com:
 
@@ -92,10 +93,6 @@ A sequência de prova quando o upstream voltar é:
 6. Mensagens;
 7. smoke autenticado exact-SHA.
 
-### #309 — autoridade de deploy de Edge Functions
-
-O GitHub Actions precisa de `SUPABASE_ACCESS_TOKEN` com autoridade suficiente para publicar Edge Functions. O token deve ser um PAT Supabase scoped adequadamente, com permissão de Edge Functions read-write. Não usar `service_role` como substituto.
-
 ## Ordem de execução até MVP READY
 
 1. **Higiene final do repositório**
@@ -103,9 +100,8 @@ O GitHub Actions precisa de `SUPABASE_ACCESS_TOKEN` com autoridade suficiente pa
    - manter histórico somente em checkpoints/archive/Git;
    - não apagar implementação pós-MVP que ainda possui owner legítimo.
 
-2. **Fechar blockers de infraestrutura**
-   - resolver #305;
-   - restaurar autoridade de deploy de #309.
+2. **Fechar o blocker de infraestrutura restante**
+   - resolver #305 sem compensações no frontend, Auth, RLS ou timeouts.
 
 3. **Certificar um único candidato**
    - obter o SHA diretamente do Git no momento da execução;

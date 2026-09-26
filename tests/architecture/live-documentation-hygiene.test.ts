@@ -47,11 +47,12 @@ describe("live documentation hygiene", () => {
       expect(content).not.toMatch(/\b[0-9a-f]{40}\b/i);
       expect(content).not.toContain("A `main` atual é");
       expect(content).not.toContain("Baseline operacional auditada:");
+      expect(content).not.toContain("#309");
     }
 
     expect(execution).toContain("SSOT OPERACIONAL");
     expect(execution).toContain("#305");
-    expect(execution).toContain("#309");
+    expect(nextSteps).toContain("#305");
     expect(nextSteps).toContain("Business / Empresas");
   });
 
