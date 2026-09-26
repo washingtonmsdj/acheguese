@@ -118,20 +118,32 @@ jobs:
         working-directory: ci-auth-edge-gate
         run: |
           $ErrorActionPreference = "Stop"
-          $probeOutput = @(
-            & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list `
-              --project-ref $env:SUPABASE_PROJECT_REF `
-              --output json 2>&1
-          )
-          $probeExit = $LASTEXITCODE
-          $probeText = ($probeOutput | ForEach-Object { [string]$_ }) -join "`n"
+          $probeStdoutPath = Join-Path $env:RUNNER_TEMP "supabase-functions-list.stdout.json"
+          $probeStderrPath = Join-Path $env:RUNNER_TEMP "supabase-functions-list.stderr.txt"
 
-          if (-not [string]::IsNullOrWhiteSpace($probeText)) {
-            Write-Host $probeText
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list `
+            --project-ref $env:SUPABASE_PROJECT_REF `
+            --output json 1> $probeStdoutPath 2> $probeStderrPath
+          $probeExit = $LASTEXITCODE
+
+          $probeText = if ((Test-Path $probeStdoutPath) -and (Get-Item $probeStdoutPath).Length -gt 0) {
+            Get-Content $probeStdoutPath -Raw
+          } else {
+            ""
+          }
+          $probeErrorText = if ((Test-Path $probeStderrPath) -and (Get-Item $probeStderrPath).Length -gt 0) {
+            Get-Content $probeStderrPath -Raw
+          } else {
+            ""
+          }
+
+          if (-not [string]::IsNullOrWhiteSpace($probeErrorText)) {
+            Write-Host $probeErrorText
           }
 
           if ($probeExit -ne 0) {
-            if ($probeText -match '(?i)(401|403|unauthorized|forbidden|permission|access denied|not authorized)') {
+            $diagnosticText = "$probeText`n$probeErrorText"
+            if ($diagnosticText -match '(?i)(401|403|unauthorized|forbidden|permission|access denied|not authorized)') {
               throw "SUPABASE_ACCESS_TOKEN cannot access Edge Functions for project $env:SUPABASE_PROJECT_REF. Rotate the GitHub Actions secret. For a scoped Supabase token, grant this project Edge Functions access; deployment requires Read/Write (edge_functions_write)."
             }
             throw "Supabase project visibility probe failed with exit code $probeExit."
@@ -140,7 +152,7 @@ jobs:
           try {
             $functions = $probeText | ConvertFrom-Json
           } catch {
-            throw "Supabase project visibility probe returned non-JSON output."
+            throw "Supabase project visibility probe returned invalid JSON on stdout."
           }
           Write-Host "Supabase credential can read the target Edge Functions inventory. remote_count=$(@($functions).Count)"
 
