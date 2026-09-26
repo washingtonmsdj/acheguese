@@ -82,7 +82,7 @@ const MODULE_LINKS = [
   },
   {
     label: "Busca",
-    description: "Pesquise empresas e conteúdo dos módulos ativos neste território.",
+    description: "Procure empresas e o que está disponível neste território.",
     href: launchSearchUrl,
     icon: Search,
   },
