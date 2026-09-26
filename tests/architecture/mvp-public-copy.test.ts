@@ -36,8 +36,27 @@ describe("MVP public copy", () => {
       "Procurar no bairro",
       "fontes canônicas dos providers ativos",
       "Módulos relacionados ao mapa",
+      "Voltar para Hoje",
+      "coleções territoriais",
+      "resultados inventados",
     ]) {
       expect(content).not.toContain(internalPhrase);
     }
+  });
+
+  it("keeps search counts and name ordering aligned with rendered results", () => {
+    const searchPage = readFileSync("src/app/pages/BuscaPage.tsx", "utf8");
+
+    expect(searchPage).toContain("const genericDocumentCount = documents.filter(");
+    expect(searchPage).toContain('document.type !== "business" && document.type !== "professional"');
+    expect(searchPage).toContain(
+      "total: genericDocumentCount + businesses.length + professionals.length",
+    );
+    expect(searchPage).toContain('sortOrder === "name"');
+    expect(searchPage).toContain(
+      'left.name.localeCompare(right.name, "pt-BR")',
+    );
+    expect(searchPage).toContain("{businesses.map((business) => (");
+    expect(searchPage).not.toContain("{results.businesses.map((business) => (");
   });
 });
