@@ -122,7 +122,7 @@ export default function TerritoryHomePage() {
             </p>
           </div>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
             <MvpModuleCard
               title="Empresas"
               description={`Veja empresas de ${territoryName}, contatos e informações para decidir onde ir.`}
@@ -140,12 +140,6 @@ export default function TerritoryHomePage() {
               description="Use sua localização, quando disponível, para descobrir empresas próximas."
               href={nearbyUrl}
               icon={Navigation}
-            />
-            <MvpModuleCard
-              title="Procurar"
-              description={`Digite o que precisa e procure entre as empresas disponíveis em ${territoryName}.`}
-              href={searchUrl}
-              icon={Search}
             />
           </div>
         </section>
