@@ -1,4 +1,4 @@
-import { ChevronRight, Navigation } from 'lucide-react';
+import { ChevronRight, Store } from 'lucide-react';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { buildBusinessPublicListingUrl } from '@/core/business/utils/businessPublicUrls';
 import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
@@ -44,8 +44,8 @@ export function EmpresaProximasSection({
     >
         <div className={layout === "row" ? 'flex min-w-0 flex-col items-start gap-1' : 'mb-2.5 flex items-center justify-between [@media(max-height:1100px)]:mb-1.5'}>
           <div className={layout === "row" ? 'flex min-w-0 items-center gap-2' : 'flex items-center gap-2'}>
-            <Navigation className={layout === "row" ? 'h-[18px] w-[18px] text-teal-300' : 'h-5 w-5 text-teal-300'} />
-            <h2 className={layout === "row" ? 'whitespace-nowrap text-[0.96rem] font-semibold text-white [@media(max-height:1100px)]:text-[0.9rem]' : 'text-lg font-semibold text-white'}>Empresas proximas</h2>
+            <Store className={layout === "row" ? 'h-[18px] w-[18px] text-teal-300' : 'h-5 w-5 text-teal-300'} />
+            <h2 className={layout === "row" ? 'whitespace-nowrap text-[0.96rem] font-semibold text-white [@media(max-height:1100px)]:text-[0.9rem]' : 'text-lg font-semibold text-white'}>Empresas relacionadas</h2>
           </div>
           <button
             type="button"
