@@ -9,25 +9,30 @@ export function AddressCard({
   locationText,
   onRoute,
 }: AddressCardProps) {
-  const addressLine = addressText || locationText || business.name;
+  const coordinates = getPhysicalBusinessCoordinates(business);
+  const hasRouteTarget = Boolean(
+    coordinates || addressText?.trim() || locationText?.trim(),
+  );
+  const addressLine = addressText || locationText || 'Endereço não informado';
   const locationLine =
     locationText ||
     (typeof business.address === 'object' && business.address?.postal_code
       ? `CEP ${business.address.postal_code}`
       : null);
-  const coordinates = getPhysicalBusinessCoordinates(business);
 
   return (
     <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-3.5 sm:p-3.5 xl:p-[0.8125rem] [@media(max-height:1100px)]:rounded-[22px] [@media(max-height:1100px)]:sm:p-2.5 [@media(max-height:860px)]:rounded-[22px] [@media(max-height:860px)]:sm:p-2.5">
       <div className="mb-2 flex items-start justify-between gap-3 [@media(max-height:1100px)]:mb-1.5 [@media(max-height:860px)]:mb-1.5">
         <h2 className="text-[1.05rem] font-semibold text-white [@media(max-height:1100px)]:text-[0.96rem] [@media(max-height:860px)]:text-[0.98rem]">Localizacao</h2>
-        <button
-          type="button"
-          onClick={onRoute}
-          className="inline-flex items-center gap-1 pt-0.5 text-[13px] font-medium text-teal-200 transition-colors hover:text-teal-100 [@media(max-height:860px)]:text-[12px]"
-        >
-          Ver no mapa <ExternalLink className="h-3.5 w-3.5" />
-        </button>
+        {hasRouteTarget ? (
+          <button
+            type="button"
+            onClick={onRoute}
+            className="inline-flex items-center gap-1 pt-0.5 text-[13px] font-medium text-teal-200 transition-colors hover:text-teal-100 [@media(max-height:860px)]:text-[12px]"
+          >
+            Ver no mapa <ExternalLink className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-[120px_minmax(0,1fr)] gap-3 rounded-[20px] border border-white/8 bg-black/20 p-3 sm:grid-cols-[176px_minmax(0,1fr)] sm:gap-3 sm:p-3 xl:grid-cols-[188px_minmax(0,1fr)] xl:p-[0.6875rem] [@media(max-height:1100px)]:sm:grid-cols-[144px_minmax(0,1fr)] [@media(max-height:1100px)]:sm:gap-2 [@media(max-height:1100px)]:sm:p-[0.5625rem] [@media(max-height:860px)]:sm:grid-cols-[150px_minmax(0,1fr)] [@media(max-height:860px)]:sm:gap-[0.5625rem] [@media(max-height:860px)]:sm:p-[0.5625rem]">
@@ -55,18 +60,13 @@ export function AddressCard({
               />
             </>
           ) : (
-            <button
-              type="button"
-              onClick={onRoute}
-              className="group relative flex h-full w-full items-center justify-center"
-              aria-label="Abrir localizacao no mapa"
-            >
+            <div className="group relative flex h-full w-full items-center justify-center">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_40%,rgba(45,212,191,0.18),transparent_25%),linear-gradient(135deg,transparent_0%,transparent_45%,rgba(45,212,191,0.16)_46%,rgba(45,212,191,0.06)_54%,transparent_55%,transparent_100%)]" />
               <div className="relative flex flex-col items-center gap-1 text-center text-white/56">
                 <MapPin className="h-5 w-5 text-teal-300" />
                 <span className="text-[10px] font-medium uppercase tracking-[0.14em]">Mapa indisponivel</span>
               </div>
-            </button>
+            </div>
           )}
         </div>
 
@@ -78,15 +78,17 @@ export function AddressCard({
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={onRoute}
-              className="inline-flex items-center gap-1 rounded-full border border-teal-400/20 bg-teal-400/10 px-3 py-1 text-[11px] font-semibold text-teal-100 transition-colors hover:bg-teal-400/14 xl:px-[0.8125rem] xl:py-[0.3125rem] [@media(max-height:1100px)]:px-2 [@media(max-height:1100px)]:py-[0.1875rem] [@media(max-height:1100px)]:text-[10px] [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:text-[10px]"
-            >
-              <Navigation className="h-3.5 w-3.5" /> Abrir no mapa
-            </button>
-          </div>
+          {hasRouteTarget ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={onRoute}
+                className="inline-flex items-center gap-1 rounded-full border border-teal-400/20 bg-teal-400/10 px-3 py-1 text-[11px] font-semibold text-teal-100 transition-colors hover:bg-teal-400/14 xl:px-[0.8125rem] xl:py-[0.3125rem] [@media(max-height:1100px)]:px-2 [@media(max-height:1100px)]:py-[0.1875rem] [@media(max-height:1100px)]:text-[10px] [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:text-[10px]"
+              >
+                <Navigation className="h-3.5 w-3.5" /> Abrir no mapa
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
