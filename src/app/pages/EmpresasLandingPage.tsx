@@ -379,7 +379,7 @@ export default function EmpresasLandingPage({
           <title>Empresas locais | Achegue-se</title>
           <meta
             name="description"
-            content="Descubra empresas, lojas e negocios locais no Achegue-se. Encontre comercios perto de voce, recomendacoes da comunidade e uma vitrine organizada por territorio."
+            content="Descubra empresas, lojas e negocios locais no Achegue-se. Encontre comercios por territorio, consulte informacoes uteis e explore Busca, Mapa e Perto de mim."
           />
         </Helmet>
       ) : null}

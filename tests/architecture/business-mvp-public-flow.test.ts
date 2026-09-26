@@ -70,6 +70,12 @@ describe("MVP Business public flow", () => {
     );
   });
 
+  it("keeps standalone Business SEO inside active discovery capabilities", () => {
+    expect(page).not.toContain("recomendacoes da comunidade");
+    expect(page).toContain("comercios por territorio");
+    expect(page).toContain("explore Busca, Mapa e Perto de mim");
+  });
+
   it("keeps personal proximity owned by Perto de mim", () => {
     expect(filtersSection).toContain(
       '.filter(([value]) => value !== "distance")',
