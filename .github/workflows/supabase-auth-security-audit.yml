@@ -7,7 +7,6 @@ on:
       - security/auth-runtime-config-audit-20260926
     paths:
       - .github/workflows/supabase-auth-security-audit.yml
-      - tools/security/supabase-auth-security-audit.mjs
       - src/shared/validation/passwordPolicy.ts
   workflow_dispatch:
 
@@ -42,7 +41,7 @@ jobs:
             exit 1
           fi
 
-      - name: Audit non-secret Auth security settings
+      - name: Enforce Auth security baseline
         shell: bash
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -69,36 +68,73 @@ jobs:
 
           jq -e 'type == "object"' "$tmp_body" >/dev/null
 
-          # Strict allowlist of values that are safe to disclose in CI logs.
-          # Never add provider secrets, SMTP credentials, CAPTCHA secret, templates,
-          # client secrets, or arbitrary config fields here.
-          jq '{
-            disable_signup,
-            external_anonymous_users_enabled,
-            external_email_enabled,
-            external_phone_enabled,
-            mailer_allow_unverified_email_sign_ins,
-            mailer_autoconfirm,
-            mailer_otp_exp,
-            mailer_otp_length,
-            mailer_secure_email_change_enabled,
-            password_hibp_enabled,
-            password_min_length,
-            password_required_characters,
-            rate_limit_anonymous_users,
-            rate_limit_email_sent,
-            rate_limit_otp,
-            rate_limit_sms_sent,
-            rate_limit_token_refresh,
-            rate_limit_verify,
-            rate_limit_web3,
-            refresh_token_rotation_enabled,
-            security_captcha_enabled,
-            security_captcha_provider,
-            security_manual_linking_enabled,
-            security_refresh_token_reuse_interval,
-            security_sb_forwarded_for_enabled,
-            security_update_password_require_current_password,
-            security_update_password_require_reauthentication,
-            jwt_exp
-          }' "$tmp_body"
+          # Server-side baseline. These controls cannot be trusted to frontend
+          # validation because callers can invoke Supabase Auth directly.
+          if ! jq -e '
+            .disable_signup == false and
+            .external_anonymous_users_enabled == false and
+            .external_email_enabled == true and
+            .external_phone_enabled == false and
+            .mailer_allow_unverified_email_sign_ins == false and
+            .mailer_autoconfirm == false and
+            .mailer_secure_email_change_enabled == true and
+            (.mailer_otp_length >= 6) and
+            (.mailer_otp_exp > 0 and .mailer_otp_exp <= 3600) and
+            (.password_min_length >= 12) and
+            (.password_required_characters | startswith("abcdefghijklmnopqrstuvwxyz:ABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789:")) and
+            .refresh_token_rotation_enabled == true and
+            (.security_refresh_token_reuse_interval >= 0 and .security_refresh_token_reuse_interval <= 10) and
+            .security_manual_linking_enabled == false and
+            (.security_update_password_require_current_password == true or
+             .security_update_password_require_reauthentication == true) and
+            (.jwt_exp > 0 and .jwt_exp <= 3600) and
+            (.rate_limit_email_sent > 0 and .rate_limit_email_sent <= 30) and
+            (.rate_limit_otp > 0 and .rate_limit_otp <= 30) and
+            (.rate_limit_verify > 0 and .rate_limit_verify <= 30) and
+            (.rate_limit_token_refresh > 0 and .rate_limit_token_refresh <= 150)
+          ' "$tmp_body" >/dev/null; then
+            echo "::error::Hosted Supabase Auth configuration violates the Achegue-se security baseline."
+            # Print only explicitly allowlisted, non-secret values needed for diagnosis.
+            jq '{
+              disable_signup,
+              external_anonymous_users_enabled,
+              external_email_enabled,
+              external_phone_enabled,
+              mailer_allow_unverified_email_sign_ins,
+              mailer_autoconfirm,
+              mailer_otp_exp,
+              mailer_otp_length,
+              mailer_secure_email_change_enabled,
+              password_min_length,
+              password_required_characters,
+              rate_limit_email_sent,
+              rate_limit_otp,
+              rate_limit_token_refresh,
+              rate_limit_verify,
+              refresh_token_rotation_enabled,
+              security_manual_linking_enabled,
+              security_refresh_token_reuse_interval,
+              security_update_password_require_current_password,
+              security_update_password_require_reauthentication,
+              jwt_exp
+            }' "$tmp_body"
+            exit 1
+          fi
+
+          echo "Supabase Auth server-side security baseline: PASS"
+
+          # Native leaked-password rejection is Pro+ and cannot be enabled on the
+          # selected Free plan. Keep this visible without pretending the client-side
+          # HIBP check is an equivalent server-side control.
+          if [ "$(jq -r '.password_hibp_enabled' "$tmp_body")" != "true" ]; then
+            echo "::notice::Native leaked-password protection is disabled (Pro+ feature)."
+          fi
+
+          # CAPTCHA requires a provider secret in Supabase and a captchaToken from
+          # the client flows. Enabling only the backend would break Auth. Keep this
+          # explicit until the end-to-end CAPTCHA integration is provisioned.
+          if [ "$(jq -r '.security_captcha_enabled' "$tmp_body")" != "true" ]; then
+            echo "::warning::CAPTCHA is disabled. End-to-end CAPTCHA remains a production security action item."
+          else
+            echo "CAPTCHA: enabled ($(jq -r '.security_captcha_provider' "$tmp_body"))"
+          fi
