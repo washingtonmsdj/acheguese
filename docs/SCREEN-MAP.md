@@ -1,6 +1,6 @@
 # SCREEN-MAP
 
-> **MVP atual — decisão consolidada em 2026-09-22:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca e Mensagens** são capabilities horizontais ativas.
+> **MVP atual — atualizado em 2026-09-26:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca e Mensagens** são capabilities horizontais ativas.
 >
 > Lifecycle canônico: `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é compatibilidade de superfície.
 >
@@ -10,7 +10,7 @@
 
 | Superfície | Rotas principais | Owner | Estado |
 | --- | --- | --- | --- |
-| Empresas | `/empresas`, `/empresas/:uf/:cidade[/:bairro]`, detalhe canônico por slug | `core/business` + `EmpresasLandingPage` | ativo |
+| Empresas | `/empresas`, `/empresas/:uf/:cidade[/:bairro]`, detalhe canônico por slug | `core/business` + `EmpresasLandingPage` | ativo; catálogo, detalhe, contato, horários e integração territorial |
 | Mapa | `/mapa`, `/mapa/:uf/:cidade[/:bairro]` | `core/maps` | ativo |
 | Perto de mim | `/perto-de-mim`, `/perto-de-mim/:uf/:cidade[/:bairro]` | `core/nearby` | ativo; capability depende de Mapa + Localização; Business é provider MVP lifecycle-scoped; rota territorial é autoridade quando presente |
 | Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; buckets autorizados por `app/config/searchProviderScope.ts`; Business-only no MVP |
@@ -26,7 +26,7 @@
 - Notificações históricas de módulos pausados podem permanecer na Inbox, mas suas ações internas são resolvidas por `notificationActionScope.ts` e caem em `/notificacoes` enquanto o owner estiver inativo.
 - Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, módulo `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.
 
-## Infraestrutura pública
+## Infraestrutura pública e privada ativa
 
 Estas superfícies/capabilities suportam o domínio Business e **não são domínios adicionais**:
 
@@ -37,8 +37,21 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
 | Notificações | Inbox/preferências horizontais; eventos de verticais entram por contracts/adapters; ações internas passam por lifecycle scope e não reabrem vertical pausada |
 | Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status; conteúdo deve refletir somente o lifecycle ativo e pode mencionar módulos pausados apenas como futuros/indisponíveis |
-| Admin/Central | operação interna, RBAC e gestão estritamente necessária; Admin deriva lifecycle por `adminSurfaceScope.ts`; Central ativa contém apenas Business/Empresas (`/central/empresas/*`) + infraestrutura, sem rotas/placeholders/queries de módulos pausados |
+| Central | `/central/empresas`, criação, gestão, dados, configurações e edição de Business; nenhuma vertical pausada é montada |
+| Admin | operação interna/RBAC estritamente necessária; superfícies são derivadas de `adminSurfaceScope.ts` e não reativam módulo pausado |
 
+### Fluxo privado de Business no MVP
+
+A Central usa uma única árvore canônica em `/central/empresas/*`:
+
+- lista/hub de empresas do perfil autorizado;
+- criação de empresa em três etapas: **Identidade → Contato e local → Apresentação**;
+- visão geral da empresa;
+- dados da empresa;
+- configurações;
+- edição canônica pelo `businessId` autorizado.
+
+Criação e edição compartilham a mesma linguagem visual e os mesmos contratos de validação do domínio. Billing/premium pausado não pode introduzir CTA ou rota funcional no shell ativo.
 
 ## Módulos pós-MVP
 
