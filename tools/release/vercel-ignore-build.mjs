@@ -9,6 +9,10 @@ const CRITICAL_DOC_PREFIXES = [
   "docs/09-reference/governance/security/",
 ];
 
+const CRITICAL_DOC_FILES = new Set([
+  "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
+]);
+
 const PRODUCTION_GIT_BRANCH = "main";
 
 function normalizePath(filePath) {
@@ -27,6 +31,7 @@ export function isSkippableVercelPath(filePath) {
   if (normalized.startsWith("e2e/")) return true;
 
   if (normalized.startsWith("docs/")) {
+    if (CRITICAL_DOC_FILES.has(normalized)) return false;
     return !CRITICAL_DOC_PREFIXES.some((prefix) =>
       normalized.startsWith(prefix),
     );
