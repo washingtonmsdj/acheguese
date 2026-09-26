@@ -306,7 +306,7 @@ export class EmailService {
       subject: 'Bem-vindo ao Achegue-se',
       html: renderEmailDocument(
         'Bem-vindo ao Achegue-se',
-        `<p>Olá, <strong>${safeName}</strong>.</p><p>Sua conta está pronta. Complete seu perfil, escolha seu território e explore serviços e oportunidades da sua região.</p>`,
+        `<p>Olá, <strong>${safeName}</strong>.</p><p>Sua conta está pronta. Complete seu perfil, escolha seu território e encontre empresas por Busca, Mapa e Perto de mim.</p>`,
         { label: 'Abrir minha conta', href: accountUrl },
       ),
       text: `Olá, ${name.trim() || 'tudo bem'}?\n\nSua conta no Achegue-se está pronta.\n\nAcesse: ${accountUrl}`,
