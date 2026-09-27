@@ -231,21 +231,6 @@ export async function installBusinessRouteFixtures(page: Page): Promise<void> {
       return;
     }
 
-    if (
-      table === "community_public_aliases" &&
-      (search.includes(E2E_BUSINESS.communityAlias) ||
-        search.includes(IDS.community))
-    ) {
-      await fulfillRows(route, [
-        {
-          alias: E2E_BUSINESS.communityAlias,
-          territory_community_id: IDS.community,
-          status: "active",
-        },
-      ]);
-      return;
-    }
-
     if (table === "territorial_groups" && targets(url, IDS.group)) {
       await fulfillRows(route, [group]);
       return;
