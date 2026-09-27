@@ -124,6 +124,20 @@ describe("territory-first public routing contract", () => {
     expect(layoutRoutes).toContain("buildTerritorialBareRoutePath");
     expect(layoutRoutes).toContain("<TerritoryHomePage />");
 
+    const routePatterns = readFileSync(
+      join(ROOT, "src/core/routing/config/territorialRoutePatterns.ts"),
+      "utf8",
+    );
+    const publicSnapshots = readFileSync(
+      join(ROOT, "src/core/business/types/publicSnapshots.ts"),
+      "utf8",
+    );
+
+    expect(routePatterns).not.toContain('district: ":district"');
+    expect(routePatterns).toContain('territorySlug: ":territorySlug"');
+    expect(publicSnapshots).not.toContain("readonly district:");
+    expect(publicSnapshots).toContain("readonly territorySlug:");
+
     const appShell = readFileSync(
       join(ROOT, "src/app/components/AppLayoutSidebar.tsx"),
       "utf8",
