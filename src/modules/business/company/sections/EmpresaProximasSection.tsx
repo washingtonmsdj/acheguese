@@ -15,12 +15,12 @@ export function EmpresaProximasSection({
   navigate,
 }: EmpresaProximasSectionProps) {
   const buildBusinessesHubUrl = () => {
-    const [state, city, district] = normalizePublicTerritoryPath(
+    const [state, city, territorySlug] = normalizePublicTerritoryPath(
       currentBusinessGeographicPath || '',
     ).split('/').filter(Boolean);
 
     if (state && city) {
-      return buildBusinessPublicListingUrl({ state, city, district });
+      return buildBusinessPublicListingUrl({ state, city, territorySlug });
     }
 
     return LAUNCH_URLS.business;
