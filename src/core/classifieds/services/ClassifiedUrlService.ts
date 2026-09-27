@@ -7,7 +7,7 @@
  *   - Hooks apenas consomem este service
  *
  * PADRÃO OFICIAL DE URLs:
- *   Canônica: /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId
+ *   Canônica: /:uf/:cidade/:bairro/classificados/:categoria/:subcategoria/:slug/:publicId
  *   Curta:    /c/:publicId
  *
  * REGRAS OBRIGATÓRIAS:
@@ -21,6 +21,8 @@
  */
 
 import { logger } from '@/shared/utils/logger';
+import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
+import { buildModuleTerritoryUrl } from '@/core/routing/utils/territoryUrls';
 import { getAllClassifieds } from '@/core/classifieds/services/classifieds.queries';
 import {
   normalizeSafePublicId,
@@ -51,7 +53,7 @@ export interface ClassifiedPublicUrlInput {
 }
 
 export interface ResolvedClassifiedUrl {
-  /** URL canônica: /classificados/ba/salvador/pituba/moveis/guarda-roupas/armario-cozinha/ab12cd34 */
+  /** URL canônica: /ba/salvador/pituba/classificados/moveis/guarda-roupas/armario-cozinha/ab12cd34 */
   canonical: string;
   /** URL curta: /c/ab12cd34 */
   short: string;
@@ -113,6 +115,30 @@ export function slugify(text: string): string {
     .replace(/^-|-$/g, ''); // Remove hífens nas pontas
 }
 
+function buildCanonicalClassifiedUrl(input: {
+  uf: string;
+  cidade: string;
+  bairro: string;
+  categorySlug: string;
+  subcategorySlug: string;
+  classifiedSlug: string;
+  publicId: string;
+}): string {
+  const territoryBase = `/${input.uf}/${input.cidade}/${input.bairro}`;
+  const moduleBase = buildModuleTerritoryUrl(
+    APP_MODULE_SLUGS.classifieds,
+    territoryBase,
+  );
+
+  return [
+    moduleBase,
+    input.categorySlug,
+    input.subcategorySlug,
+    input.classifiedSlug,
+    input.publicId,
+  ].join('/');
+}
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export class ClassifiedUrlService {
@@ -162,7 +188,15 @@ export class ClassifiedUrlService {
     const classifiedSlug = normalizeUrlSegment(slug, 'slug');
     const publicId = normalizePublicId(public_id);
 
-    const canonical = `/classificados/${uf}/${cidade}/${bairro}/${categorySlug}/${subcategorySlug}/${classifiedSlug}/${publicId}`;
+    const canonical = buildCanonicalClassifiedUrl({
+      uf,
+      cidade,
+      bairro,
+      categorySlug,
+      subcategorySlug,
+      classifiedSlug,
+      publicId,
+    });
     const short = this.buildShortUrl(publicId);
     const edit = this.buildEditUrl(id);
 
@@ -255,7 +289,15 @@ export class ClassifiedUrlService {
     slug: string,
     publicId: string
   ): Promise<ClassifiedResolution | null> {
-    const requestedUrl = `/classificados/${uf}/${cidade}/${bairro}/${categoriaSlug}/${subcategoriaSlug}/${slug}/${publicId}`;
+    const requestedUrl = buildCanonicalClassifiedUrl({
+      uf: normalizeUrlSegment(uf, 'UF'),
+      cidade: normalizeUrlSegment(cidade, 'cidade'),
+      bairro: normalizeUrlSegment(bairro, 'bairro'),
+      categorySlug: normalizeUrlSegment(categoriaSlug, 'categoria'),
+      subcategorySlug: normalizeUrlSegment(subcategoriaSlug, 'subcategoria'),
+      classifiedSlug: normalizeUrlSegment(slug, 'slug'),
+      publicId: normalizePublicId(publicId),
+    });
 
     const resolution = await this.resolveByPublicId(publicId);
 
