@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { touristPointPublicRoutes } from "../touristPointPublicRoutes";
 
 describe("touristPointPublicRoutes", () => {
-  it("builds canonical territorial listing and detail URLs", () => {
+  it("builds canonical territory-first listing and detail URLs", () => {
     expect(touristPointPublicRoutes.list({ state: "BA", city: "Salvador" })).toBe(
-      "/pontos-turisticos/ba/salvador",
+      "/ba/salvador/pontos-turisticos",
     );
     expect(
       touristPointPublicRoutes.detail({
@@ -13,30 +13,39 @@ describe("touristPointPublicRoutes", () => {
         district: "Rio Vermelho",
         slug: "Casa de Jorge Amado",
       }),
-    ).toBe("/pontos-turisticos/ba/salvador/rio-vermelho/casa-de-jorge-amado");
+    ).toBe(
+      "/ba/salvador/rio-vermelho/pontos-turisticos/casa-de-jorge-amado",
+    );
   });
 
   it("derives URLs from geographic paths without exposing the country segment", () => {
-    expect(touristPointPublicRoutes.listFromGeographicPath("/br/ba/salvador/pelourinho")).toBe(
-      "/pontos-turisticos/ba/salvador/pelourinho",
-    );
+    expect(
+      touristPointPublicRoutes.listFromGeographicPath(
+        "/br/ba/salvador/pelourinho",
+      ),
+    ).toBe("/ba/salvador/pelourinho/pontos-turisticos");
     expect(
       touristPointPublicRoutes.detailFromGeographicPath(
         "/br/ba/salvador/pelourinho",
         "elevador-lacerda",
       ),
-    ).toBe("/pontos-turisticos/ba/salvador/pelourinho/elevador-lacerda");
+    ).toBe(
+      "/ba/salvador/pelourinho/pontos-turisticos/elevador-lacerda",
+    );
   });
 
-  it("exposes route patterns through the same SSOT", () => {
+  it("exposes explicit city, district and detail route patterns", () => {
     expect(touristPointPublicRoutes.cityRoutePath()).toBe(
-      "/pontos-turisticos/:state/:city",
+      "/:state/:city/pontos-turisticos",
     );
-    expect(touristPointPublicRoutes.districtOrDetailRoutePath()).toBe(
-      "/pontos-turisticos/:state/:city/:groupSlugOrDistrict",
+    expect(touristPointPublicRoutes.districtRoutePath()).toBe(
+      "/:state/:city/:district/pontos-turisticos",
     );
-    expect(touristPointPublicRoutes.detailWithTerritoryRoutePath()).toBe(
-      "/pontos-turisticos/:state/:city/:groupSlugOrDistrict/:slug",
+    expect(touristPointPublicRoutes.cityDetailRoutePath()).toBe(
+      "/:state/:city/pontos-turisticos/:slug",
+    );
+    expect(touristPointPublicRoutes.districtDetailRoutePath()).toBe(
+      "/:state/:city/:district/pontos-turisticos/:slug",
     );
   });
 
