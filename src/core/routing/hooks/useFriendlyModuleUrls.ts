@@ -1,4 +1,4 @@
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
@@ -6,13 +6,10 @@ import { gastronomyPublicRoutes } from "@/core/verticals/gastronomy/routes/gastr
 import { touristPointPublicRoutes } from "@/core/guide/tourist-points/routes/touristPointPublicRoutes";
 import {
   buildCommunityTerritoryUrl,
+  buildModuleTerritoryUrl,
   hasPublicCityTerritoryPath,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
-import {
-  buildContextualModuleUrl,
-  shouldUseCommunityScopedModuleUrls,
-} from "@/core/routing/utils/communityModuleUrls";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 
 interface FriendlyRouteParams {
@@ -42,7 +39,6 @@ export interface FriendlyModuleUrls {
 }
 
 export function useFriendlyModuleUrls(): FriendlyModuleUrls {
-  const { pathname } = useLocation();
   const { cityBasePath } = usePublicBrowsingCity();
   const territorialContext = useTerritorialContextOptional();
   const { state, city, district, groupSlug, groupSlugOrDistrict } =
@@ -58,11 +54,6 @@ export function useFriendlyModuleUrls(): FriendlyModuleUrls {
       territorialContext.baseUrl,
       territoryName,
       territorialContext.communityBaseUrl,
-      shouldUseCommunityScopedModuleUrls({
-        pathname,
-        territoryBaseUrl: territorialContext.baseUrl,
-        communityBaseUrl: territorialContext.communityBaseUrl,
-      }),
     );
   }
 
@@ -90,7 +81,6 @@ function buildTerritorialUrls(
   basePath: string,
   territoryName: string | null,
   communityBaseUrl?: string | null,
-  useCommunityScopedModules = false,
 ): FriendlyModuleUrls {
   const community = communityBaseUrl ??
     (hasPublicCityTerritoryPath(basePath)
@@ -102,62 +92,17 @@ function buildTerritorialUrls(
     landing: basePath,
     territoryName,
     community,
-    business: buildContextualModuleUrl({
-      module: MODULE_SLUGS.business,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
-    services: buildContextualModuleUrl({
-      module: MODULE_SLUGS.services,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
-    classifieds: buildContextualModuleUrl({
-      module: MODULE_SLUGS.classifieds,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
-    gastronomy: buildContextualModuleUrl({
-      module: MODULE_SLUGS.gastronomy,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
+    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, basePath),
+    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, basePath),
+    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, basePath),
+    gastronomy: buildModuleTerritoryUrl(MODULE_SLUGS.gastronomy, basePath),
     gastronomyFavorites: gastronomyPublicRoutes.favorites(),
-    events: buildContextualModuleUrl({
-      module: MODULE_SLUGS.events,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
-    jobs: buildContextualModuleUrl({
-      module: MODULE_SLUGS.jobs,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
+    events: buildModuleTerritoryUrl(MODULE_SLUGS.events, basePath),
+    jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, basePath),
     touristPoints: touristPointPublicRoutes.listFromTerritoryPath(basePath),
-    ranking: buildContextualModuleUrl({
-      module: MODULE_SLUGS.ranking,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
-    map: buildContextualModuleUrl({
-      module: MODULE_SLUGS.map,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
-    nearby: buildContextualModuleUrl({
-      module: MODULE_SLUGS.nearby,
-      territoryBaseUrl: basePath,
-      communityBaseUrl,
-      useCommunityScopedModules,
-    }),
+    ranking: buildModuleTerritoryUrl(MODULE_SLUGS.ranking, basePath),
+    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, basePath),
+    nearby: buildModuleTerritoryUrl(MODULE_SLUGS.nearby, basePath),
   };
 }
 
