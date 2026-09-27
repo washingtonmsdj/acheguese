@@ -20,7 +20,8 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - handoff CP-016 concluído arquivado;
 - `RECOVERY-ROADMAP.md` supersedido removido da árvore viva;
 - especificações antigas de Feed/Post retiradas da UX ativa porque Community permanece pausado;
-- `docs/README.md` e `docs/08-roadmap/README.md` agora separam claramente SSOT vivo, planos futuros e histórico.
+- `docs/README.md` e `docs/08-roadmap/README.md` agora separam claramente SSOT vivo, planos futuros e histórico;
+- **#445 — Vercel** encerrado após normalização do provider, deployment `READY` do runtime deploy-relevante e smoke público HTTP 200; commits posteriores somente de teste/documentação podem ser ignorados pela política canônica de build sem alterar o runtime implantado.
 
 ## Agora
 
@@ -35,22 +36,19 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - preservar manifests, baselines e documentos consumidos por tooling;
    - manter histórico em checkpoints/archive/Git;
 
-3. fechar os blockers externos de certificação:
-   - **#305 — Supabase:** data plane/Auth/REST seguem apresentando timeout/504 apesar de control plane `ACTIVE_HEALTHY`; não compensar com fallback de login, retry artificial, timeout maior, bypass OIDC ou mudança de RLS sem evidência;
-   - **#445 — Vercel:** build/deployment exact-main está bloqueado por rate limit do provider; não promover SHA diferente, enfraquecer configuração de deploy ou empilhar mudança de runtime apenas para forçar novo build;
+3. fechar o blocker externo restante:
+   - **#305 — Supabase:** data plane/Auth/REST seguem apresentando timeout/504 apesar de control plane `ACTIVE_HEALTHY`; o production smoke autenticado continua reproduzindo `auth_upstream_unavailable`; não compensar com fallback de login, retry artificial, timeout maior, bypass OIDC ou mudança de RLS sem evidência;
 
-4. executar um único candidato da `main` quando os providers permitirem prova real:
-   - security;
-   - arquitetura/SSOT;
-   - lint/typecheck;
-   - testes;
-   - build;
-   - E2E público;
+4. concluir a certificação autenticada quando o Supabase voltar:
+   - SQL mínimo e health/advisors aplicáveis;
+   - login real da fixture;
+   - Conta;
+   - Business;
+   - Mensagens Business;
    - E2E autenticado;
-   - deploy exact-SHA;
-   - smoke exact-SHA;
+   - cruzar com o runtime deployado e já comprovado por smoke público;
 
-5. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth passarem no mesmo candidato e esse candidato tiver deployment `READY` exact-SHA.
+5. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth passarem para o mesmo conteúdo de runtime e todo delta deployável tiver deployment `READY` + smoke.
 
 ## Proibições
 
@@ -62,6 +60,6 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - sem novo owner para responsabilidade já existente;
 - sem documento vivo com snapshot antigo de PR/SHA tratado como estado atual;
 - sem apagar histórico necessário para auditoria ou proveniência;
-- sem tratar falha de quota/rate limit do provider como falha de build da aplicação sem evidência de build executado.
+- sem commit artificial de runtime para contornar `Ignored Build Step` quando a política canônica de Vercel comprovar mudança exclusiva de teste/documentação.
 
-Detalhes, critérios completos e blockers: `EXECUCAO_MAIN_ONLY.md`.
+Detalhes e critérios completos: `EXECUCAO_MAIN_ONLY.md`.

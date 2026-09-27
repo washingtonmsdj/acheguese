@@ -96,11 +96,11 @@ A documentação viva está sendo reduzida ao que representa o produto atual:
 
 Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentais correspondentes.
 
-## Blockers externos atuais
+## Blocker externo atual
 
 ### #305 — Supabase data plane / sessão autenticada
 
-O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto Auth e REST/PostgREST retornam 504 em probes independentes do frontend.
+O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto Auth e REST/PostgREST retornam 504 em probes independentes do frontend e no production smoke autenticado.
 
 Não corrigir isso no frontend com:
 
@@ -121,24 +121,13 @@ A sequência de prova quando o upstream voltar é:
 6. Mensagens;
 7. smoke autenticado exact-SHA.
 
-### #445 — Vercel build/deployment rate limit
+### Dependência externa normalizada — Vercel / #445
 
-O provider pode rejeitar a criação de um novo deployment antes de executar build da aplicação. Nesse estado, um status Vercel vermelho por `Deployment rate limited` não prova regressão de código e também não autoriza tratar um SHA anterior já `READY` como se fosse o candidato atual.
+O rate limit de build/deployment foi revalidado como normalizado e #445 está encerrado. O runtime deployável voltou a receber deployment de produção `READY` e smoke público HTTP 200.
 
-Não contornar esse blocker com:
+A política canônica `tools/release/vercel-ignore-build.mjs` continua válida: descendentes que alteram somente testes/documentação podem receber `Ignored Build Step` porque não mudam bytes de runtime. Esse skip intencional não deve ser contornado com commit vazio, mudança artificial de runtime ou relaxamento de `vercel.json` apenas para produzir outro deployment.
 
-- promoção manual de SHA diferente do candidato;
-- alteração de `vercel.json` ou gates para reduzir a exigência de identidade exact-SHA;
-- spam de commits/redeploys enquanto a janela do provider continua limitada;
-- declaração de produção validada sem deployment `READY` do mesmo candidato.
-
-Quando a janela do provider normalizar, a prova é:
-
-1. reler o HEAD candidato;
-2. obter deployment Vercel `READY` desse exact-SHA;
-3. validar identidade/release metadata aplicável;
-4. executar smoke público do mesmo SHA;
-5. cruzar a certificação autenticada com #305 antes de declarar MVP READY.
+Para certificação, a identidade de runtime é o último commit deploy-relevante comprovado pela política canônica de ignore. Qualquer novo delta deployável exige novo deployment `READY` + smoke; commits posteriores exclusivamente de teste/documentação precisam passar seus próprios gates, mas não invalidam o runtime já comprovado.
 
 ## Ordem de execução até MVP READY
 
@@ -148,12 +137,11 @@ Quando a janela do provider normalizar, a prova é:
    - manter histórico somente em checkpoints/archive/Git;
    - não apagar base pós-MVP com owner legítimo.
 
-2. **Fechar os blockers externos de certificação**
-   - #305: restaurar prova real do data plane/Auth/REST sem compensações no frontend, Auth, RLS ou timeouts;
-   - #445: obter deployment Vercel `READY` do mesmo SHA candidato quando o rate limit permitir.
+2. **Fechar o blocker externo restante**
+   - #305: restaurar prova real do data plane/Auth/REST sem compensações no frontend, Auth, RLS ou timeouts.
 
-3. **Certificar um único candidato**
-   - obter o SHA diretamente do Git no momento da execução;
+3. **Certificar o candidato de runtime e seus gates**
+   - obter a identidade deploy-relevante diretamente da `main` e da política canônica de ignore;
    - security;
    - SSOT/arquitetura;
    - lint;
@@ -162,17 +150,17 @@ Quando a janela do provider normalizar, a prova é:
    - build;
    - E2E público;
    - E2E autenticado;
-   - deploy do mesmo SHA;
-   - smoke do mesmo SHA.
+   - deployment `READY` para todo delta deployável;
+   - smoke do mesmo runtime implantado.
 
 4. **Promover**
-   - somente depois de todas as provas do mesmo candidato;
+   - somente depois de todas as provas aplicáveis ao mesmo conteúdo de runtime;
    - regressão crítica reabre o gate;
    - módulos pós-MVP continuam paused após o primeiro release.
 
 ## Definition of Done — MVP READY
 
-O MVP só recebe **READY** quando o mesmo candidato comprovar:
+O MVP só recebe **READY** quando o mesmo conteúdo candidato comprovar:
 
 - Business funcional com dados reais e rotas canônicas;
 - Mapa funcional com provider Business;
@@ -184,7 +172,7 @@ O MVP só recebe **READY** quando o mesmo candidato comprovar:
 - zero dependência ativa em módulo pausado;
 - zero redirect/alias/fallback legado usado como mecanismo de lifecycle;
 - security/lint/typecheck/test/build executados de verdade;
-- deployment `READY` e smoke do mesmo SHA;
+- deployment `READY` + smoke para o último delta deployável; `Ignored Build Step` só é aceitável quando a política canônica comprova mudança exclusiva de teste/documentação;
 - nenhum erro crítico recorrente.
 
 ## Onde fica o histórico
