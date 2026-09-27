@@ -172,7 +172,7 @@ export function AppLayoutRoutes() {
         {territoryEnabled ? (
           <>
             <Route
-              path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.district])}
+              path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.territorySlug])}
               element={<P.ActiveTerritorialLayout />}
             >
               <Route
