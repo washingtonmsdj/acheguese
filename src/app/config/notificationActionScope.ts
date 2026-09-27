@@ -212,6 +212,21 @@ function getCommunityChildSurface(
   return undefined;
 }
 
+function isRetiredCommunityContainerPath(pathname: string): boolean {
+  const segments = pathname
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => segment.toLocaleLowerCase("pt-BR"));
+
+  const communityIndex = segments.indexOf(APP_MODULE_SLUGS.community);
+  if (communityIndex < 0) return false;
+
+  return segments.slice(communityIndex + 1).some((segment) => {
+    const nestedOwner = MODULE_ROUTE_OWNERS[segment as AppModuleSlug];
+    return Boolean(nestedOwner && !COMMUNITY_CHILD_SURFACES[segment]);
+  });
+}
+
 function isNotificationRouteOwnerEnabled(
   owner: NotificationLifecycleOwner,
 ): boolean {
@@ -252,6 +267,7 @@ export function resolveNotificationActionTarget(
 
   if (
     isRetiredModuleFirstTerritorialPath(pathname) ||
+    isRetiredCommunityContainerPath(pathname) ||
     RETIRED_NOTIFICATION_ROUTE_PATTERNS.some((pattern) =>
       pattern.test(pathname),
     )
