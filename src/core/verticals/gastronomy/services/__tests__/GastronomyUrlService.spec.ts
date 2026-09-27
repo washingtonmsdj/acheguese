@@ -23,7 +23,7 @@ describe('GastronomyUrlService', () => {
         slug: 'cafe-central',
         geographic_path: '/br/ba/salvador/rio-vermelho',
       }),
-    ).toBe('/empresas/ba/salvador/rio-vermelho/cafe-central');
+    ).toBe('/ba/salvador/rio-vermelho/empresas/cafe-central');
 
     expect(
       GastronomyUrlService.getCanonicalUrl({
@@ -32,7 +32,7 @@ describe('GastronomyUrlService', () => {
         geographic_path: '/br/ba/salvador/rio-vermelho',
         community_alias: 'rio-vermelho',
       }),
-    ).toBe('/empresas/ba/salvador/rio-vermelho/cafe-central');
+    ).toBe('/ba/salvador/rio-vermelho/empresas/cafe-central');
   });
 
   it('rejeita slugs com separadores para evitar path injection', () => {
