@@ -174,10 +174,10 @@ function titleCase(value: string): string {
 export default function BuscaPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { state, city, district } = useParams<{
+  const { state, city, territorySlug } = useParams<{
     state?: string;
     city?: string;
-    district?: string;
+    territorySlug?: string;
   }>();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
@@ -261,11 +261,11 @@ export default function BuscaPage() {
 
   const stateSlug = state ?? active.state;
   const citySlug = city ?? active.city;
-  const territoryBase = `/${stateSlug}/${citySlug}${district ? `/${district}` : ""}`;
-  const territoryName = district
-    ? titleCase(district)
+  const territoryBase = `/${stateSlug}/${citySlug}${territorySlug ? `/${territorySlug}` : ""}`;
+  const territoryName = territorySlug
+    ? moduleTerritory.displayLabel || titleCase(territorySlug)
     : moduleTerritory.displayLabel || titleCase(citySlug);
-  const contextLabel = district
+  const contextLabel = territorySlug
     ? `${titleCase(citySlug)}, ${stateSlug.toLocaleUpperCase("pt-BR")}`
     : `${stateSlug.toLocaleUpperCase("pt-BR")} · visão ampla da cidade`;
 
