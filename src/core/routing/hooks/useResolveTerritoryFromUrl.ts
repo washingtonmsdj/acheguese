@@ -7,11 +7,12 @@
  *   /:state/:city                         -> Location city
  *   /:state/:city/:district               -> Location district
  *   /:state/:city/:groupSlug              -> TerritorialGroup
- *   /[modulo]/:state/:city/:district?     -> Location city/district
- *   /[modulo]/:state/:city/:groupSlug     -> TerritorialGroup
- *   /comunidade/:state/:city              -> Location city da comunidade
+ *   /:state/:city/[modulo]                -> Location city
+ *   /:state/:city/:district/[modulo]      -> Location district
+ *   /:state/:city/:groupSlug/[modulo]     -> TerritorialGroup
+ *   /:state/:city/comunidade              -> Location city da comunidade
  *
- * Em /comunidade, o slug pode resolver para grupo territorial quando houver
+ * Em /comunidade territorial, o slug pode resolver para grupo quando houver
  * configuração pública da comunidade ou quando o bairro pertencer de forma
  * unívoca a um grupo ativo/navegável.
  */
@@ -160,7 +161,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
           !isCommunityRouteSuffixSegment(communitySlug)
         ) {
           const expectedCanonicalPath = normalizePathForCompare(
-            `/${APP_MODULE_SLUGS.community}/${state}/${city}/${communitySlug}`,
+            `/${state}/${city}/${communitySlug}/${APP_MODULE_SLUGS.community}`,
           );
           try {
             const aliasResolution = await withTimeout(
