@@ -7,7 +7,7 @@
  *    dar scroll até o card correspondente e aplicar um destaque temporário.
  *
  * Também espelha em `sessionStorage` para funcionar quando a publicação
- * acontece em outra rota (ex.: `/novo-post` → volta para `/comunidade/...`).
+ * acontece em outra rota (ex.: `/novo-post` → volta para `/:state/:city/:territory/comunidade/feed`).
  */
 
 const STORAGE_KEY = "community:highlight-post-id";
