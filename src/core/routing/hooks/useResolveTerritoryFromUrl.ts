@@ -12,9 +12,8 @@
  *   /:state/:city/:groupSlug/[modulo]     -> TerritorialGroup
  *   /:state/:city/comunidade              -> Location city da comunidade
  *
- * Em /comunidade territorial, o slug pode resolver para grupo quando houver
- * configuração pública da comunidade ou quando o bairro pertencer de forma
- * unívoca a um grupo ativo/navegável.
+ * O slug territorial resolve diretamente para bairro ou grupo ativo/navegável.
+ * Comunidade usa o mesmo território e não possui namespace alternativo.
  */
 
 import { useEffect, useState } from 'react';
@@ -22,7 +21,6 @@ import { useParams, useLocation } from 'react-router-dom';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { territorialGroupService } from '@/core/territorial';
 import { TerritoryCommunityRouteService } from '@/core/routing/services/TerritoryCommunityRouteService';
-import { resolveCommunityPublicAliasTerritory } from '@/core/routing/services/CommunityPublicAliasTerritoryResolver';
 import { APP_MODULE_SLUGS, isAppModulePath } from '@/shared/config/moduleSlugs';
 import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
 import type { ResolvedTerritory } from '../types/territoryResolution';
@@ -87,9 +85,6 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs = RESOLVE_TIMEOUT_MS): Pr
   });
 }
 
-function normalizePathForCompare(value: string): string {
-  return value.trim().replace(/\/+$/g, "").toLowerCase();
-}
 
 export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   const location = useLocation();
@@ -154,41 +149,6 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
 
     async function resolve() {
       try {
-        const communitySlug = groupSlug || districtSlug;
-        if (
-          isCommunityRoute &&
-          communitySlug &&
-          !isCommunityRouteSuffixSegment(communitySlug)
-        ) {
-          const expectedCanonicalPath = normalizePathForCompare(
-            `/${state}/${city}/${communitySlug}/${APP_MODULE_SLUGS.community}`,
-          );
-          try {
-            const aliasResolution = await withTimeout(
-              resolveCommunityPublicAliasTerritory(communitySlug),
-            );
-
-            if (
-              aliasResolution.status === "resolved" &&
-              normalizePathForCompare(aliasResolution.canonicalPath) === expectedCanonicalPath
-            ) {
-              if (!cancelled) {
-                setResult({
-                  status:
-                    aliasResolution.resolved.kind === "group"
-                      ? TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP
-                      : TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
-                  resolved: aliasResolution.resolved,
-                  error: null,
-                });
-              }
-              return;
-            }
-          } catch {
-            // Fall through to the generic territorial resolver.
-          }
-        }
-
         const locationRepo = createLocationRepository();
         const cityPath = `/${country}/${state}/${city}`;
         const cityLocation = await withTimeout(locationRepo.findByPath(cityPath));
