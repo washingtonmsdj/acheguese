@@ -53,6 +53,12 @@
 @media(max-width:760px){.pt-hero-content{min-height:0}.pt-shortcuts{display:flex;overflow-x:auto;gap:.5rem;padding-bottom:.2rem;scroll-snap-type:x proximity;scrollbar-width:none}.pt-shortcuts::-webkit-scrollbar{display:none}.pt-shortcuts>a,.pt-shortcuts>div{min-height:4.7rem;flex:0 0 10.5rem;scroll-snap-align:start}.pt-shortcuts>a:last-child{grid-column:auto}}
 
 @media(max-width:760px){
+  .pt-header-inner{min-height:3.55rem;gap:.45rem}
+  .pt-brand{gap:.5rem;font-size:1rem}
+  .pt-brand-mark{width:1.5rem;height:1.5rem;gap:.15rem}
+  .pt-login{padding:.5rem .72rem;font-size:.66rem}
+  .pt-mobile-menu summary{min-height:2.2rem;padding:.42rem .55rem}
+  .pt-mobile-menu summary svg{width:1rem;height:1rem}
   .pt-hero--nearby .pt-hero-content{padding-block:1rem .75rem}
   .pt-hero--nearby .pt-breadcrumb{flex-wrap:nowrap;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .pt-hero--nearby .pt-breadcrumb span{flex:0 0 auto}
@@ -62,7 +68,12 @@
   .pt-hero--nearby h1{font-size:clamp(2rem,10vw,2.55rem)}
   .pt-hero--nearby .pt-view-territory{font-size:.94rem}
   .pt-hero--nearby .pt-tagline{max-width:30rem;font-size:.78rem}
-  .pt-hero--nearby .pt-shortcuts{margin-top:1rem;padding-top:0}
+  .pt-hero--nearby .pt-shortcuts{gap:.4rem;margin-top:.85rem;padding-top:0}
+  .pt-hero--nearby .pt-shortcuts>a,.pt-hero--nearby .pt-shortcuts>div{min-height:4.05rem;flex-basis:8.65rem;gap:.48rem;padding:.55rem .6rem;border-radius:.72rem}
+  .pt-hero--nearby .pt-shortcuts svg{width:1.2rem;height:1.2rem}
+  .pt-hero--nearby .pt-shortcuts strong{font-size:.69rem}
+  .pt-hero--nearby .pt-shortcuts small{margin-top:.1rem;font-size:.53rem;line-height:1.15}
+  .pt-hero--nearby .pt-shortcuts b{top:.32rem;right:.32rem;padding:.16rem .35rem;font-size:.43rem}
 }
 
 @media(min-width:981px){
