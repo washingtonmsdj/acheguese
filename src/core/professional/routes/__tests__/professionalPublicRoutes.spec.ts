@@ -7,7 +7,7 @@ describe("professionalPublicRoutes", () => {
     expect(professionalPublicRoutes.home()).toBe("/servicos");
     expect(professionalPublicRoutes.register()).toBe("/servicos/cadastrar");
     expect(professionalPublicRoutes.list({ state: "BA", city: "Salvador" })).toBe(
-      "/servicos/ba/salvador",
+      "/ba/salvador/servicos",
     );
     expect(
       professionalPublicRoutes.detail({
@@ -15,7 +15,7 @@ describe("professionalPublicRoutes", () => {
         city: "Salvador",
         slug: "joao-eletricista",
       }),
-    ).toBe("/servicos/ba/salvador/profissional/joao-eletricista");
+    ).toBe("/ba/salvador/servicos/profissional/joao-eletricista");
   });
 
   it("derives city routes from canonical geographic_path", () => {
@@ -24,15 +24,15 @@ describe("professionalPublicRoutes", () => {
         "/br/ba/salvador/pituba",
         "maria-arquiteta",
       ),
-    ).toBe("/servicos/ba/salvador/profissional/maria-arquiteta");
+    ).toBe("/ba/salvador/servicos/profissional/maria-arquiteta");
   });
 
   it("exposes route patterns and previews from the same SSOT", () => {
     expect(professionalPublicRoutes.detailRoutePath()).toBe(
-      "/servicos/:state/:city/profissional/:slug",
+      "/:state/:city/servicos/profissional/:slug",
     );
     expect(professionalPublicRoutes.detailPreview("ana-designer")).toBe(
-      "/servicos/:state/:city/profissional/ana-designer",
+      "/:state/:city/servicos/profissional/ana-designer",
     );
   });
 
