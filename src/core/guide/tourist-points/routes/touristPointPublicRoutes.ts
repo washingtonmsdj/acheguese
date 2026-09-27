@@ -12,7 +12,7 @@ import {
 export interface TouristPointTerritoryRouteInput {
   state: string;
   city: string;
-  district?: string | null;
+  territorySlug?: string | null;
 }
 
 export interface TouristPointDetailRouteInput
@@ -21,7 +21,7 @@ export interface TouristPointDetailRouteInput
 }
 
 export const TOURIST_POINT_PUBLIC_ROUTE_PARAMS = {
-  district: TERRITORIAL_ROUTE_PARAMS.district,
+  territorySlug: TERRITORIAL_ROUTE_PARAMS.territorySlug,
   slug: TERRITORIAL_ROUTE_PARAMS.slug,
 } as const;
 
@@ -55,14 +55,14 @@ function cleanOptionalRouteSegment(
 }
 
 function buildTerritoryPath(input: TouristPointTerritoryRouteInput): string {
-  const district = cleanOptionalRouteSegment(
-    input.district,
-    "bairro do ponto turistico",
+  const territorySlug = cleanOptionalRouteSegment(
+    input.territorySlug,
+    "territorio do ponto turistico",
   );
   return `/${[
     cleanRouteSegment(input.state, "estado do ponto turistico"),
     cleanRouteSegment(input.city, "cidade do ponto turistico"),
-    ...(district ? [district] : []),
+    ...(territorySlug ? [territorySlug] : []),
   ].join("/")}`;
 }
 
@@ -76,7 +76,7 @@ function parseTerritoryRouteFromGeographicPath(
   const parts = normalizePublicTerritoryPath(geographicPath)
     .split("/")
     .filter(Boolean);
-  const [state, city, district] = parts;
+  const [state, city, territorySlug] = parts;
 
   if (!state || !city) {
     throw new Error(
@@ -84,7 +84,7 @@ function parseTerritoryRouteFromGeographicPath(
     );
   }
 
-  return { state, city, district };
+  return { state, city, territorySlug };
 }
 
 export const touristPointPublicRoutes = {
@@ -92,13 +92,13 @@ export const touristPointPublicRoutes = {
 
   cityRoutePath: () =>
     buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.touristPoints),
-  districtRoutePath: () =>
+  territoryRoutePath: () =>
     buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.touristPoints),
   cityDetailRoutePath: () =>
     buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.touristPoints, [
       TOURIST_POINT_PUBLIC_ROUTE_PARAMS.slug,
     ]),
-  districtDetailRoutePath: () =>
+  territoryDetailRoutePath: () =>
     buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.touristPoints, [
       TOURIST_POINT_PUBLIC_ROUTE_PARAMS.slug,
     ]),
