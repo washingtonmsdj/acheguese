@@ -24,6 +24,18 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1).replace(".", ",")} km`;
 }
 
+function formatCategory(value: string): string {
+  const normalized = value.trim().toLocaleLowerCase("pt-BR");
+  const labels: Record<string, string> = {
+    alimentacao: "Alimentação",
+    educacao: "Educação",
+    saude: "Saúde",
+    servicos: "Serviços",
+    comercio: "Comércio",
+  };
+  return labels[normalized] ?? value.replaceAll("_", " ").replace(/^./, (letter) => letter.toLocaleUpperCase("pt-BR"));
+}
+
 function NearbyBusinessCard({ business, precise }: { business: NearbyBusiness; precise: boolean }) {
   const navigate = useNavigate();
   return (
@@ -33,9 +45,9 @@ function NearbyBusinessCard({ business, precise }: { business: NearbyBusiness; p
         {business.verified ? <b>Verificada</b> : null}
       </span>
       <span className="nb-business-copy">
-        <small>{business.category || "Empresa local"}</small>
+        <small>{business.category ? formatCategory(business.category) : "Empresa local"}</small>
         <strong>{business.name}</strong>
-        <span><MapPin /> {precise ? formatDistance(business.distanceMeters) : business.neighborhood || business.city || "No território"}</span>
+        <span><MapPin /> {precise ? formatDistance(business.distanceMeters) : business.neighborhood || `${formatDistance(business.distanceMeters)} do centro`}</span>
         <em><Star /> {business.rating > 0 ? business.rating.toFixed(1) : "Novo"}</em>
       </span>
     </button>
@@ -96,7 +108,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
 
         <section className="nb-filter-panel" aria-label="Filtros de proximidade">
           <div className="nb-search-row"><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por perto..." /></label><button type="button"><SlidersHorizontal /> Mais próximos <ChevronDown /></button></div>
-          <div className="nb-filter-chips">{categories.map((category, index) => <button className={activeCategory === category ? "is-active" : ""} type="button" key={category} onClick={() => setActiveCategory(category)}>{index === 0 ? <Compass /> : index === 1 ? <Store /> : <Cross />}{category}</button>)}</div>
+          <div className="nb-filter-chips">{categories.map((category, index) => <button className={activeCategory === category ? "is-active" : ""} type="button" key={category} onClick={() => setActiveCategory(category)}>{index === 0 ? <Compass /> : index === 1 ? <Store /> : <Cross />}{formatCategory(category)}</button>)}</div>
         </section>
 
         {isError ? <section className="nb-error"><AlertTriangle /><div><strong>Não foi possível carregar os resultados.</strong><p>Você ainda pode explorar a lista completa de empresas.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas</button></section> : null}
@@ -107,7 +119,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
           </main>
           <aside className="nb-sidebar">
             <section className="nb-map-card"><header className="nb-section-heading"><div><Map /><span><h2>Mapa da região</h2><p>{isGoodForProximity ? `Raio de ${radiusKm} km` : locationName}</p></span></div><button type="button" onClick={() => navigate(mapUrl)}>Mapa completo <ArrowRight /></button></header><NearbyMiniMap userLocation={spatialCenter} businesses={filteredBusinesses} radiusKm={radiusKm} showProximity={isGoodForProximity} /></section>
-            {visibleBusinesses.length ? <section className="nb-routes"><header className="nb-section-heading"><div><Navigation /><span><h2>Rotas rápidas</h2><p>Atalhos para os primeiros resultados.</p></span></div></header><div>{visibleBusinesses.slice(0, 4).map((business) => <button type="button" key={business.id} onClick={() => navigate(business.canonicalUrl)}><span>{business.logo ? <img src={business.logo} alt="" /> : <Store />}</span><strong>{business.name}</strong><small>{formatDistance(business.distanceMeters)}</small></button>)}</div></section> : null}
+            {visibleBusinesses.length ? <section className="nb-routes"><header className="nb-section-heading"><div><Navigation /><span><h2>Rotas rápidas</h2><p>Atalhos para os primeiros resultados.</p></span></div></header><div>{visibleBusinesses.slice(0, 4).map((business) => <button type="button" key={business.id} onClick={() => navigate(business.canonicalUrl)}><span>{business.logo ? <img src={business.logo} alt="" /> : <Store />}</span><strong>{business.name}</strong><small>{formatDistance(business.distanceMeters)}{isGoodForProximity ? "" : " do centro"}</small></button>)}</div></section> : null}
             <section className="nb-business-cta"><Store /><div><strong>Seu negócio aparece aqui?</strong><p>Cadastre sua empresa e seja encontrado por quem está perto.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Saiba mais <ArrowRight /></button></section>
           </aside>
         </div>

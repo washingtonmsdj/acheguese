@@ -155,10 +155,14 @@ export default function TerritoryPortalPage({
 
   useEffect(() => {
     const navigation = shortcutRef.current;
-    const activeShortcut = navigation?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!navigation || !activeShortcut || navigation.scrollWidth <= navigation.clientWidth) return;
-    const left = activeShortcut.offsetLeft - (navigation.clientWidth - activeShortcut.offsetWidth) / 2;
-    navigation.scrollTo({ left: Math.max(0, left), behavior: "auto" });
+    if (!navigation) return;
+    const frame = window.requestAnimationFrame(() => {
+      const activeShortcut = navigation.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!activeShortcut || navigation.scrollWidth <= navigation.clientWidth) return;
+      const left = activeShortcut.offsetLeft - (navigation.clientWidth - activeShortcut.offsetWidth) / 2;
+      navigation.scrollTo({ left: Math.max(0, left), behavior: "auto" });
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [activeView]);
 
   return (
