@@ -47,7 +47,7 @@ No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Map
 | `core/communication-territorial` | `Community` (canal editorial) | 🟨 Legado nomenclatural | Nome longo e ambíguo. | Renomear para `core/community/communication/`. |
 | `core/landing` | `Territory` (queries de descoberta) | 🟨 Legado | "Landing" descreve página, não domínio. | Mover serviços úteis para `core/territory/discovery/`. |
 | `core/territorial` | `Territory` (admin/tree) | 🟦 Alias temporário | Coabita com `core/location`. | Fundir em `core/territory` (Sprint DOMAIN.3). |
-| `core/routing` (`CommunityPublicAliasService`, `communityNavigationContext`, `territoryUrls`) | `Territory` (URL layer) | 🟦 Alias temporário | URL builder é do Territory. | Concentrar em `core/territory/urls/`. |
+| `core/routing` (`communityNavigationContext`, `territoryUrls`) | `Territory` (URL layer) | ✅ Canônico em uso | Routing territorial é único e territory-first; o antigo `CommunityPublicAliasService` foi removido. | Concentrar gradualmente em `core/territory/urls/` sem criar segunda autoridade. |
 
 ---
 
