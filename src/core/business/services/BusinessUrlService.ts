@@ -7,7 +7,7 @@
  *   - Hooks apenas consomem este service.
  *
  * Padrao publico canonico:
- *   /:state/:city/:district/empresas/:slug
+ *   /:state/:city/:territorySlug/empresas/:slug
  *
  * Premium isolado:
  *   /p/:slug
@@ -36,7 +36,7 @@ export interface BusinessUrlContext {
 
 
 export interface ResolvedBusinessUrl {
-  /** URL publica canonica: /:state/:city/:district/empresas/:slug. */
+  /** URL publica canonica: /:state/:city/:territorySlug/empresas/:slug. */
   canonical: string;
   /** URL premium curta (so para is_premium): /p/tonecos-studios */
   premium: string | null;
@@ -298,19 +298,19 @@ export class BusinessUrlService {
   }
 
   /**
-   * Resolve empresa por UF + cidade + bairro + slug.
-   * Valida que a empresa pertence ao território informado.
+   * Resolve empresa por UF + cidade + território da URL + slug.
+   * A empresa continua validada contra sua localização geográfica canônica.
    *
    * Retorna null se não encontrada, inativa, ou território não bate.
    */
   static async resolveByTerritoryAndSlug(
     uf: string,
     cidade: string,
-    bairro: string,
+    territorySlug: string,
     slug: string,
   ): Promise<BusinessUrlContext | null> {
     try {
-      const expectedPathPrefix = `/br/${uf}/${cidade}/${bairro}`;
+      const expectedPathPrefix = `/br/${uf}/${cidade}/${territorySlug}`;
 
       const { data, error } = await supabase
         .from('business_data')
