@@ -40,7 +40,7 @@ describe("BusinessCanonicalRoute", () => {
       >
         <Routes>
           <Route
-            path="/:state/:city/:district/empresas/:slug"
+            path="/:state/:city/:territorySlug/empresas/:slug"
             element={<BusinessCanonicalRoute BusinessDetailComponent={BusinessDetail} />}
           />
         </Routes>
@@ -64,7 +64,7 @@ describe("BusinessCanonicalRoute", () => {
       <MemoryRouter initialEntries={["/ba/salvador/pituba/empresas/padaria-x"]}>
         <Routes>
           <Route
-            path="/:state/:city/:district/empresas/:slug"
+            path="/:state/:city/:territorySlug/empresas/:slug"
             element={<BusinessCanonicalRoute BusinessDetailComponent={BusinessDetail} />}
           />
         </Routes>
