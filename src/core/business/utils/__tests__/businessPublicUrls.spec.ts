@@ -12,13 +12,13 @@ import {
 } from '@/core/business/utils/businessPublicUrls';
 
 describe('businessPublicUrls', () => {
-  it('builds fallback territorial business URLs from internal geographic_path', () => {
+  it('builds canonical territory-first business URLs from internal geographic_path', () => {
     expect(
       buildBusinessPublicUrlFromTerritory('/br/ba/salvador/rio-vermelho', 'cafe-central'),
-    ).toBe('/empresas/ba/salvador/rio-vermelho/cafe-central');
+    ).toBe('/ba/salvador/rio-vermelho/empresas/cafe-central');
   });
 
-  it('builds fallback territorial business URLs from explicit territory segments', () => {
+  it('builds canonical territory-first business URLs from explicit territory segments', () => {
     expect(
       buildBusinessPublicUrlFromSegments({
         state: 'ba',
@@ -26,23 +26,23 @@ describe('businessPublicUrls', () => {
         district: 'pituba',
         slug: 'loja-central',
       }),
-    ).toBe('/empresas/ba/salvador/pituba/loja-central');
+    ).toBe('/ba/salvador/pituba/empresas/loja-central');
   });
 
   it('builds city and district listings through the same module slug SSOT', () => {
-    expect(buildBusinessCityListingUrl('ba', 'salvador')).toBe('/empresas/ba/salvador');
+    expect(buildBusinessCityListingUrl('ba', 'salvador')).toBe('/ba/salvador/empresas');
     expect(
       buildBusinessPublicListingUrl({
         state: 'ba',
         city: 'salvador',
         district: 'barra',
       }),
-    ).toBe('/empresas/ba/salvador/barra');
+    ).toBe('/ba/salvador/barra/empresas');
   });
 
   it('builds business identity preview with centralized placeholders', () => {
     expect(buildBusinessPublicUrlPreview(BUSINESS_PUBLIC_URL_PREVIEW_SLUG)).toBe(
-      '/empresas/:uf/:cidade/:bairro/seu-link',
+      '/:uf/:cidade/:bairro/empresas/seu-link',
     );
   });
 
