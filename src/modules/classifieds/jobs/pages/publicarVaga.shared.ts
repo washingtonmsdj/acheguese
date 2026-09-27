@@ -7,10 +7,10 @@ import {
   Eye,
 } from "lucide-react";
 import {
-  buildCommunityTerritoryUrl,
-  extractCommunityTerritoryBaseUrl,
+  buildModuleTerritoryUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
+import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import { jobPublicRoutes } from "@/core/work-opportunities/routes/jobPublicRoutes";
 import {
   CONTRATO_LABELS,
@@ -61,26 +61,26 @@ export const SUGGESTED_BENEFITS = [
 ];
 
 export function buildVagasListPath(pathname: string): string {
-  const parts = pathname.split("/").filter(Boolean);
-  if (
-    parts.at(0) === MODULE_SLUGS.community &&
-    parts.at(1) &&
-    !/^[a-z]{2}$/i.test(parts.at(1) ?? "") &&
-    parts.at(2) === MODULE_SLUGS.jobs &&
-    parts.at(3) === "publicar"
-  ) {
-    return `/${MODULE_SLUGS.community}/${parts[1]}/${MODULE_SLUGS.jobs}`;
+  const cleanPath = pathname.split(/[?#]/, 1)[0] ?? pathname;
+  const parts = cleanPath.split("/").filter(Boolean);
+
+  if (parts.at(-2) !== MODULE_SLUGS.jobs || parts.at(-1) !== "publicar") {
+    return jobPublicRoutes.home();
   }
 
-  const communityTerritoryBasePath = extractCommunityTerritoryBaseUrl(pathname);
-  if (
-    communityTerritoryBasePath &&
-    parts.at(-2) === MODULE_SLUGS.jobs &&
-    parts.at(-1) === "publicar"
-  ) {
-    return buildCommunityTerritoryUrl(communityTerritoryBasePath, MODULE_SLUGS.jobs);
+  const parsed = parsePublicTerritoryPath(cleanPath);
+  if (!parsed.state || !parsed.city) {
+    return jobPublicRoutes.home();
   }
-  return jobPublicRoutes.home();
+
+  const territoryBase = [
+    "",
+    parsed.state,
+    parsed.city,
+    ...(parsed.territorySlug ? [parsed.territorySlug] : []),
+  ].join("/");
+
+  return buildModuleTerritoryUrl(MODULE_SLUGS.jobs, territoryBase);
 }
 
 export function addUniqueListItem(list: string[], input: string): string[] {
