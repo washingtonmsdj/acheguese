@@ -6,13 +6,12 @@
  * Runtime usa somente dados reais (Supabase/SSOT).
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { Building2, LayoutList, MapPin, Plus, Search, Store, Tag, UtensilsCrossed, Wrench } from 'lucide-react';
+import { MapPin, Search, Store, UtensilsCrossed } from 'lucide-react';
 import { useModuleTerritoryFilter } from '@/core/location';
 import { useAppUrls } from '@/core/routing/hooks';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import { useTerritorialContextOptional } from '@/core/routing/components/TerritorialLayout';
 import { useSessionContext } from '@/core/session';
 import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
@@ -54,193 +53,12 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.45 } },
 };
 
-const COMMUNITY_MODULE_TABS = [
-  { key: 'feed', label: 'Feed', icon: LayoutList },
-  { key: 'business', label: 'Empresas', icon: Building2 },
-  { key: 'services', label: 'Servicos', icon: Wrench },
-  { key: 'classifieds', label: 'Classificados', icon: Tag },
-  { key: 'gastronomy', label: 'Gastronomia', icon: UtensilsCrossed },
-  { key: 'map', label: 'Mapa', icon: MapPin },
-] as const;
-
-function CuisineRail({
-  activeCuisine,
-  onCuisineChange,
-}: {
-  activeCuisine?: string;
-  onCuisineChange: (value: string) => void;
-}) {
-  return (
-    <section className="w-full border-b border-border bg-card/50 py-4">
-      <div className="w-full overflow-x-auto scrollbar-hide">
-        <div className="mx-auto flex min-w-max justify-center gap-3 px-4 pb-1">
-          {GASTRONOMY_CUISINE_FILTERS.map((cat, i) => {
-            const Icon = cat.icon;
-            const isActive = activeCuisine === cat.cuisineFilter;
-            return (
-              <motion.button
-                key={cat.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.03 * i }}
-                whileHover={{ scale: 1.08, y: -4 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => onCuisineChange(isActive ? '' : cat.cuisineFilter)}
-                className={`group flex min-w-[60px] shrink-0 flex-col items-center gap-1.5 rounded-xl border bg-card/80 p-2.5 backdrop-blur-sm transition-colors duration-200 ${cat.bg} ${isActive ? 'ring-2 ring-primary/40' : ''}`}
-              >
-                <motion.div whileHover={{ rotate: [0, -10, 10, 0] }} transition={{ duration: 0.4 }}>
-                  <span className={cat.iconColor}>
-                    <Icon />
-                  </span>
-                </motion.div>
-                <span className="whitespace-nowrap text-center text-[10px] font-semibold leading-tight text-foreground">
-                  {cat.label}
-                </span>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function NeighborhoodGastronomyHero({
-  territoryName,
-  restaurantsCount,
-  catalogCount,
-  moduleUrls,
-  onRegister,
-}: {
-  territoryName: string;
-  restaurantsCount: number;
-  catalogCount: number;
-  moduleUrls: ReturnType<typeof useFriendlyModuleUrls>;
-  onRegister: () => void;
-}) {
-  const moduleLinks = [
-    { ...COMMUNITY_MODULE_TABS[4], href: moduleUrls.gastronomy, isActive: true },
-    { ...COMMUNITY_MODULE_TABS[0], href: moduleUrls.community, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[1], href: moduleUrls.business, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[2], href: moduleUrls.services, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[3], href: moduleUrls.classifieds, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[5], href: moduleUrls.map, isActive: false },
-  ] as const;
-
-  return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 md:py-5">
-      <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(22,20,12,0.98),rgba(7,17,24,0.98))] text-white shadow-xl shadow-black/10">
-        <div className="border-b border-white/10 px-4 py-3 sm:px-5">
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {moduleLinks.map((item) => {
-              const Icon = item.icon;
-              return item.isActive ? (
-                <span
-                  key={item.key}
-                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-amber-300/35 bg-amber-300/12 px-4 text-xs font-semibold text-amber-100"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </span>
-              ) : (
-                <Link
-                  key={item.key}
-                  to={item.href}
-                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 text-xs font-semibold text-white/65 transition-colors hover:border-white/20 hover:text-white"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="grid gap-3 px-4 py-4 sm:gap-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="min-w-0">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-amber-200">
-              {territoryName}
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold leading-tight sm:text-[2rem]">
-              Gastronomia do bairro
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Restaurantes, cardápios e sabores perto de você, organizados pelo território da comunidade.
-            </p>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/30 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                Descoberta publica
-              </span>
-              <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/25 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
-                Cardapios locais
-              </span>
-            </div>
-
-            <div className="mt-4 grid gap-2 sm:max-w-xl sm:grid-cols-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={onRegister}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-amber-400 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-amber-300"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Cadastrar restaurante
-              </button>
-              <Link
-                to={moduleUrls.map}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
-              >
-                <MapPin className="mr-2 h-4 w-4" />
-                Ver mapa do bairro
-              </Link>
-            </div>
-          </div>
-
-          <div className="hidden gap-3 rounded-[20px] border border-white/10 bg-black/20 p-4 sm:grid">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                Mesa local
-              </p>
-              <p className="mt-1 text-sm leading-5 text-white/65">
-                {restaurantsCount} restaurantes e {catalogCount} itens de cardápio no território.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                <p className="text-lg font-semibold text-white">{restaurantsCount}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Locais</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-3">
-                <p className="text-lg font-semibold text-white">{catalogCount}</p>
-                <p className="text-[0.68rem] uppercase tracking-[0.18em] text-white/45">Itens</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-amber-300/15 bg-amber-300/[0.05] px-3 py-3 text-sm text-white/68">
-              A listagem segue o SSOT territorial; destino de entrega passa a ser apoio, nao bloqueio da descoberta publica.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-interface GastronomyLandingPageProps {
-  readonly presentation?: "standalone" | "embedded";
-}
-
-export default function GastronomyLandingPage({
-  presentation = "standalone",
-}: GastronomyLandingPageProps = {}) {
+export default function GastronomyLandingPage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const territorialContext = useTerritorialContextOptional();
   const resolved = territorialContext?.resolved ?? null;
   const activeMemberIds = territorialContext?.activeMemberIds;
   const appUrls = useAppUrls(resolved);
-  const moduleUrls = useFriendlyModuleUrls();
-  const isCommunityScopedSurface = location.pathname.includes('/comunidade/');
-  const isEmbedded = presentation === 'embedded';
   const { user } = useSessionContext();
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
   const territoryFilter = moduleTerritory.territoryFilter;
@@ -296,7 +114,7 @@ export default function GastronomyLandingPage({
         ? resolved.group.name
         : moduleTerritory.displayLabel;
   const hasDeliveryContext = Boolean(deliveryDestination);
-  const shouldShowDestinationGate = !isCommunityScopedSurface && !hasDeliveryContext;
+  const shouldShowDestinationGate = !hasDeliveryContext;
   const canShowCatalog = territoryFilter.scope !== 'none';
   const shouldLoadCatalog = canShowCatalog;
   // Active filters for queries
@@ -430,31 +248,13 @@ export default function GastronomyLandingPage({
         />
       </Helmet>
       <div
-        className={isEmbedded ? "w-full min-w-0 bg-background" : "min-h-screen bg-background"}
-        data-module-presentation={presentation}
+        className="min-h-screen bg-background"
+        data-module-presentation="standalone"
       >
-        {!isCommunityScopedSurface ? (
-          <GastronomyHeader
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-        ) : null}
-        {isCommunityScopedSurface && !isEmbedded ? (
-          <>
-            <NeighborhoodGastronomyHero
-              territoryName={territoryName}
-              restaurantsCount={sortedBusinesses.length}
-              catalogCount={effectiveFoodCatalog.length}
-              moduleUrls={moduleUrls}
-              onRegister={() => navigate('/empresas/cadastrar')}
-            />
-            <CuisineRail
-              activeCuisine={filters.cuisine_type}
-              onCuisineChange={handleCuisineFilter}
-            />
-          </>
-        ) : !isCommunityScopedSurface ? (
-          <>
+        <GastronomyHeader
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
         <section className="w-full bg-card/50 border-b border-border py-4">
           <div className="w-full overflow-x-auto scrollbar-hide">
             <div className="flex justify-center gap-3 pb-1 px-4 min-w-max mx-auto">
@@ -525,13 +325,6 @@ export default function GastronomyLandingPage({
             </div>
           </div>
         </section>
-          </>
-        ) : (
-          <CuisineRail
-            activeCuisine={filters.cuisine_type}
-            onCuisineChange={handleCuisineFilter}
-          />
-        )}
         {shouldShowDestinationGate && (
           <DeliveryDestinationGate
             message={destinationGateMessage}
@@ -651,7 +444,6 @@ export default function GastronomyLandingPage({
                 }
               />
             </section>
-            {!isCommunityScopedSurface ? (
             <section className="border-t border-border/50">
               <div className="container mx-auto px-4 py-12">
                 <motion.div
@@ -682,9 +474,6 @@ export default function GastronomyLandingPage({
                 </motion.div>
               </div>
             </section>
-            ) : null}
-          </>
-        )}
       </div>
     </>
   );
