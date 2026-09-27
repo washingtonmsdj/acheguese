@@ -34,17 +34,7 @@ export const COMMUNITY_CANONICAL_SUFFIX_SEGMENTS = [
 export type CommunityCanonicalSuffixSegment = (typeof COMMUNITY_CANONICAL_SUFFIX_SEGMENTS)[number];
 
 const COMMUNITY_CANONICAL_SUFFIX_SET = new Set<string>(COMMUNITY_CANONICAL_SUFFIX_SEGMENTS);
-const COMMUNITY_EMBEDDED_MODULE_SEGMENTS = new Set<string>([
-  MODULE_SLUGS.business,
-  MODULE_SLUGS.services,
-  MODULE_SLUGS.classifieds,
-  MODULE_SLUGS.gastronomy,
-  MODULE_SLUGS.education,
-  MODULE_SLUGS.jobs,
-  MODULE_SLUGS.events,
-  MODULE_SLUGS.map,
-  MODULE_SLUGS.mobility,
-]);
+
 
 function cleanUrlSegment(value: string, label: string): string {
   const segment = value.trim().replace(/^\/+|\/+$/g, '');
@@ -58,15 +48,8 @@ export function isCommunityCanonicalSuffixSegment(segment: string | undefined): 
   return Boolean(segment && COMMUNITY_CANONICAL_SUFFIX_SET.has(segment));
 }
 
-export function isCommunityEmbeddedModuleSegment(segment: string | undefined): boolean {
-  return Boolean(segment && COMMUNITY_EMBEDDED_MODULE_SEGMENTS.has(segment));
-}
-
 export function isCommunityRouteSuffixSegment(segment: string | undefined): boolean {
-  return (
-    isCommunityCanonicalSuffixSegment(segment) ||
-    isCommunityEmbeddedModuleSegment(segment)
-  );
+  return isCommunityCanonicalSuffixSegment(segment);
 }
 
 export function extractCommunityTerritoryBaseUrl(pathname: string): string | null {
