@@ -151,12 +151,12 @@ describe("active AppLayout route boundary", () => {
     for (const activeId of [
       "business-detail",
       "business-category-city",
-      "business-category-district",
-      "business-district",
+      "business-category-territory",
+      "business-territory",
       "business-city",
-      "map-district",
+      "map-territory",
       "map-city",
-      "nearby-district",
+      "nearby-territory",
       "nearby-city",
     ]) {
       expect(routeRegistry).toContain(`id: "${activeId}"`);
