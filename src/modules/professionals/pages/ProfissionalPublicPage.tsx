@@ -1,6 +1,6 @@
 /**
  * Perfil publico de profissional.
- * Rota: /servicos/:state/:city/profissional/:slug
+ * Rota: /:state/:city/servicos/profissional/:slug
  */
 
 import { useEffect, useState } from "react";
