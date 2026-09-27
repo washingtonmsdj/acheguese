@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import {
-  TERRITORIAL_ROUTE_PARAMS,
+  buildScopedTerritorialModuleRoutePath,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 import { MAP_PRODUCT_SURFACES } from "../runtimeConfig";
@@ -14,11 +14,9 @@ describe("map runtime config", () => {
     expect(routes).toContain(buildAppModulePath(APP_MODULE_SLUGS.map));
     expect(routes).toContain(buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map));
     expect(routes).toContain(
-      buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
-        TERRITORIAL_ROUTE_PARAMS.district,
-      ]),
+      buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
     );
     expect(routes).not.toContain("/mapa/:state/:city/:territorySlug");
-    expect(routes.every((route) => !route.includes(":territorySlug"))).toBe(true);
+    expect(routes).not.toContain("/:state/:city/mapa/:district");
   });
 });
