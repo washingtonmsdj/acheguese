@@ -110,16 +110,6 @@ export const COMMUNITY_ENTITY_LINK_REQUEST_DEFAULTS = {
   PRIORITY: 0,
 } as const;
 
-export type CommunityPublicAliasTerritoryReference =
-  | { kind: "location"; territoryId: string | null | undefined }
-  | { kind: "group"; territoryId: string | null | undefined };
-
-export interface CommunityPublicAliasRecord {
-  alias?: string;
-  territory_community_id?: string;
-  status?: string;
-}
-
 export interface TerritoryCommunityRecord {
   id?: string;
   name?: string;
@@ -166,7 +156,6 @@ export interface CommunitySearchResult {
   description: string | null;
   is_featured: boolean;
   sort_order: number;
-  public_alias: string | null;
 }
 
 export interface CommunityMembershipRecord {
