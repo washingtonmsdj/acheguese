@@ -31,16 +31,16 @@ function Probe() {
 describe("useResolvedBusinessPublicUrl", () => {
   it("uses the public canonical URL without upgrading to community alias", () => {
     vi.mocked(BusinessUrlService.getCanonicalUrl).mockReturnValue(
-      "/empresas/ba/salvador/pituba/padaria-x",
+      "/ba/salvador/pituba/empresas/padaria-x",
     );
 
     render(<Probe />);
 
     expect(screen.getByTestId("fallback")).toHaveTextContent(
-      "/empresas/ba/salvador/pituba/padaria-x",
+      "/ba/salvador/pituba/empresas/padaria-x",
     );
     expect(screen.getByTestId("url")).toHaveTextContent(
-      "/empresas/ba/salvador/pituba/padaria-x",
+      "/ba/salvador/pituba/empresas/padaria-x",
     );
     expect(screen.getByTestId("resolving")).toHaveTextContent("false");
   });
