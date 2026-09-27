@@ -75,6 +75,7 @@ export const ROUTING_MODULE_SLUGS = {
   gastronomy: APP_MODULE_SLUGS.gastronomy,
   events: APP_MODULE_SLUGS.events,
   jobs: APP_MODULE_SLUGS.jobs,
+  touristPoints: APP_MODULE_SLUGS.touristPoints,
   alerts: APP_MODULE_SLUGS.communityAlerts,
   map: APP_MODULE_SLUGS.map,
   nearby: APP_MODULE_SLUGS.nearby,
