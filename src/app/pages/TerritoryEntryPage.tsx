@@ -20,6 +20,11 @@ const LAUNCH_PLACE_LABEL = [TERRITORY_CONFIG.launch.name, LAUNCH_STATE_LABEL]
   .join(" · ");
 const ACCOUNT_PATH = "/conta";
 
+const launchBusinessUrl = LAUNCH_URLS.business;
+const launchMapUrl = LAUNCH_URLS.map;
+const launchNearbyUrl = LAUNCH_URLS.nearby;
+const launchSearchUrl = LAUNCH_URLS.search;
+
 const launchTerritory = resolvePublicTerritoryFallback({
   state: LAUNCH_STATE,
   city: LAUNCH_CITY,
@@ -115,7 +120,7 @@ const modules = [
     eyebrow: "Economia do bairro",
     title: "Compre de quem está por perto.",
     copy: "Descubra lojas, restaurantes e pequenos negócios com endereço e contexto local.",
-    href: LAUNCH_URLS.business,
+    href: launchBusinessUrl,
     link: "Explorar empresas",
     icon: <StoreIcon />,
     number: "01",
@@ -125,7 +130,7 @@ const modules = [
     eyebrow: "Território no mapa",
     title: "Veja o que existe em cada rua.",
     copy: "Explore empresas e pontos úteis dentro do território pelo mapa.",
-    href: LAUNCH_URLS.map,
+    href: launchMapUrl,
     link: "Abrir o mapa",
     icon: <MapIcon />,
     number: "02",
@@ -135,7 +140,7 @@ const modules = [
     eyebrow: "Mais perto de você",
     title: "Encontre o que está próximo agora.",
     copy: "Use sua localização para descobrir empresas disponíveis ao seu redor.",
-    href: LAUNCH_URLS.nearby,
+    href: launchNearbyUrl,
     link: "Ver perto de mim",
     icon: <RouteIcon />,
     number: "03",
@@ -145,7 +150,7 @@ const modules = [
     eyebrow: "Busca territorial",
     title: "Procure sem sair do contexto local.",
     copy: "Busque empresas e lugares dentro do território atual.",
-    href: LAUNCH_URLS.search,
+    href: launchSearchUrl,
     link: "Buscar no território",
     icon: <SearchIcon />,
     number: "04",
@@ -204,13 +209,13 @@ export default function TerritoryEntryPage() {
           <nav className="ag-nav" aria-label="Navegação principal">
             <a href="#descobrir">Por perto</a>
             <a href="/como-funciona">Como funciona</a>
-            <a href={LAUNCH_URLS.business}>Para negócios</a>
+            <a href={launchBusinessUrl}>Para negócios</a>
           </nav>
 
           <div className="ag-header-actions">
             <a
               className="ag-location-pill"
-              href={LAUNCH_URLS.map}
+              href={launchMapUrl}
               aria-label={`Abrir mapa de ${LAUNCH_COMMUNITY_NAME}`}
             >
               <PinIcon />
@@ -265,7 +270,7 @@ export default function TerritoryEntryPage() {
                 </p>
               </div>
 
-              <a className="ag-hero-map-card" href={LAUNCH_URLS.map}>
+              <a className="ag-hero-map-card" href={launchMapUrl}>
                 <span className="ag-map-icon"><MapIcon /></span>
                 <span>
                   <small>Seu território, ao vivo</small>
@@ -290,13 +295,13 @@ export default function TerritoryEntryPage() {
             <p>Agora no Complexo</p>
             <div>
               {launchCommunityMembers.map((member, index) => (
-                <a href={LAUNCH_URLS.map} key={member.id}>
+                <a href={launchMapUrl} key={member.id}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
                   {getPublicTerritoryLocationLabel(member)}
                 </a>
               ))}
             </div>
-            <a className="ag-nearby-link" href={LAUNCH_URLS.nearby}>
+            <a className="ag-nearby-link" href={launchNearbyUrl}>
               Perto de mim <ArrowIcon />
             </a>
           </div>
@@ -342,7 +347,7 @@ export default function TerritoryEntryPage() {
                 Aqui, o território não é um filtro escondido. É o ponto de partida para encontrar
                 informação útil, pessoas próximas e negócios que fazem parte da rotina.
               </p>
-              <a href={LAUNCH_URLS.business} className="ag-text-link">
+              <a href={launchBusinessUrl} className="ag-text-link">
                 Começar a explorar <ArrowIcon />
               </a>
             </div>
