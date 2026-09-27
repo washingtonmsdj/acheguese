@@ -65,7 +65,7 @@ export const eventPublicRoutes = {
 
 export const eventTerritorialRoutePaths = {
   home: () => buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
-  district: () =>
+  territory: () =>
     buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
   favorites: () =>
     buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
