@@ -10,7 +10,7 @@ describe("touristPointPublicRoutes", () => {
       touristPointPublicRoutes.detail({
         state: "BA",
         city: "Salvador",
-        district: "Rio Vermelho",
+        territorySlug: "Rio Vermelho",
         slug: "Casa de Jorge Amado",
       }),
     ).toBe(
@@ -38,14 +38,14 @@ describe("touristPointPublicRoutes", () => {
     expect(touristPointPublicRoutes.cityRoutePath()).toBe(
       "/:state/:city/pontos-turisticos",
     );
-    expect(touristPointPublicRoutes.districtRoutePath()).toBe(
-      "/:state/:city/:district/pontos-turisticos",
+    expect(touristPointPublicRoutes.territoryRoutePath()).toBe(
+      "/:state/:city/:territorySlug/pontos-turisticos",
     );
     expect(touristPointPublicRoutes.cityDetailRoutePath()).toBe(
       "/:state/:city/pontos-turisticos/:slug",
     );
-    expect(touristPointPublicRoutes.districtDetailRoutePath()).toBe(
-      "/:state/:city/:district/pontos-turisticos/:slug",
+    expect(touristPointPublicRoutes.territoryDetailRoutePath()).toBe(
+      "/:state/:city/:territorySlug/pontos-turisticos/:slug",
     );
   });
 
