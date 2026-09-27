@@ -11,7 +11,6 @@ import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/laun
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { getPublicTerritoryLocationLabel, resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
-import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import "./TerritoryPortalPage.css";
 
 const TerritoryMap = lazy(() => import("@/app/components/territory-vivo/TerritoryEntryMap"));
@@ -49,26 +48,35 @@ const news = [
 export default function TerritoryPortalPage() {
   return <div className="pt-page">
     <Helmet><title>{NAME} | Achegue-se</title><meta name="description" content={`Portal local do ${NAME}.`} /></Helmet>
+    <a className="pt-skip-link" href="#pt-content">Pular para o conteúdo</a>
     <header className="pt-header"><div className="pt-container pt-header-inner">
       <Link className="pt-brand" to="/"><BrandMark /><strong>achegue-se</strong></Link>
       <nav><Link to={LAUNCH_URLS.nearby}>Por perto</Link><Link to="/como-funciona">Como funciona</Link><Link to={LAUNCH_URLS.businessTerritory}>Para negócios</Link></nav>
       <form className="pt-search" action={LAUNCH_URLS.search}><Search /><input name="q" aria-label="Buscar no território" placeholder="Buscar empresas, serviços, lugares..." /></form>
       <Link className="pt-location" to={LAUNCH_URLS.mapTerritory}><MapPin /> Salvador, BA <ChevronDown /></Link>
       <Link className="pt-login" to={AUTH_PATHS.login}>Entrar <ArrowRight /></Link>
-      <button className="pt-menu" type="button" aria-label="Abrir menu"><Menu /></button>
+      <details className="pt-mobile-menu">
+        <summary aria-label="Abrir menu"><Menu /><span>Menu</span></summary>
+        <nav aria-label="Navegação mobile">
+          <Link to={LAUNCH_URLS.nearby}>Por perto</Link>
+          <Link to="/como-funciona">Como funciona</Link>
+          <Link to={LAUNCH_URLS.businessTerritory}>Para negócios</Link>
+          <Link to={LAUNCH_URLS.mapTerritory}>Mapa do território</Link>
+        </nav>
+      </details>
     </div></header>
 
-    <main>
-      <section className="pt-hero">
-        <img src="/images/home/achegue-se-community-hero-v1.webp" alt="Vista do Complexo do Nordeste de Amaralina" /><div className="pt-hero-shade" />
-        <div className="pt-container pt-hero-content"><p className="pt-breadcrumb"><Home /> Salvador <span>›</span> {NAME}</p><h1>{NAME}</h1><p className="pt-tagline">Gente, cultura, negócios e tudo que você precisa, em um só lugar.</p>
-          <div className="pt-shortcuts">{shortcuts.map(({ icon: Icon, ...item }) => { const enabled = !item.surface || isLaunchSurfaceEnabled(item.surface); const body = <><Icon /><span><strong>{item.label}</strong><small>{item.description}</small></span>{!enabled && <b>Em breve</b>}</>; return enabled ? <Link className={item.primary ? "is-primary" : ""} to={item.href} key={item.label}>{body}</Link> : <div className="is-disabled" key={item.label}>{body}</div>; })}</div>
+    <main id="pt-content" tabIndex={-1}>
+      <section className="pt-hero" aria-labelledby="pt-title">
+        <img src="/images/home/achegue-se-community-hero-v1.webp" alt={`Moradores reunidos no ${NAME}`} width="1536" height="1024" fetchPriority="high" /><div className="pt-hero-shade" />
+        <div className="pt-container pt-hero-content"><p className="pt-breadcrumb"><Home /> Salvador <span>›</span> {NAME}</p><h1 id="pt-title">{NAME}</h1><p className="pt-tagline">Gente, cultura, negócios e tudo que você precisa, em um só lugar.</p>
+          <div className="pt-shortcuts" aria-label="Atalhos do território">{shortcuts.map(({ icon: Icon, ...item }) => { const enabled = !item.surface || isLaunchSurfaceEnabled(item.surface); const body = <><Icon /><span><strong>{item.label}</strong><small>{item.description}</small></span>{!enabled && <b>Em breve</b>}</>; return enabled ? <Link className={item.primary ? "is-primary" : ""} to={item.href} key={item.label}>{body}</Link> : <div className="is-disabled" aria-disabled="true" key={item.label}>{body}</div>; })}</div>
         </div>
       </section>
 
       <div className="pt-container pt-dashboard">
         <section className="pt-panel pt-map-panel"><PanelHeading icon={Map} title="Mapa do território" description="Explore ruas, comércios, serviços e pontos de interesse." href={LAUNCH_URLS.mapTerritory} label="Abrir mapa" />
-          <div className="pt-map-shell"><Suspense fallback={<div className="pt-map-loading">Carregando mapa…</div>}><TerritoryMap city={cityLocation} resolvedTerritory={resolved as ResolvedTerritory} label={NAME} /></Suspense></div>
+          <div className="pt-map-shell"><Suspense fallback={<div className="pt-map-loading">Carregando mapa…</div>}><TerritoryMap city={cityLocation} resolvedTerritory={resolved} label={NAME} /></Suspense></div>
           <div className="pt-map-legend"><span>Todos</span><span>● Alimentação</span><span>● Comércio</span><span>● Serviços</span><span>● Saúde</span></div>
         </section>
 
@@ -91,6 +99,11 @@ export default function TerritoryPortalPage() {
         </section>
       </div>
     </main>
+    <footer className="pt-footer"><div className="pt-container pt-footer-inner">
+      <Link className="pt-brand" to="/"><BrandMark /><strong>achegue-se</strong></Link>
+      <p>Informação local para quem vive, trabalha e circula pelo território.</p>
+      <nav aria-label="Links institucionais"><Link to="/como-funciona">Como funciona</Link><Link to="/sobre">Sobre</Link></nav>
+    </div></footer>
   </div>;
 }
 
