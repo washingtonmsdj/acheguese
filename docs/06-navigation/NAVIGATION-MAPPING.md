@@ -97,7 +97,7 @@ Regras adicionais:
 | Conceito produto | `Territory Feed`                                                                                           |
 | Owner técnico    | `ComunidadePage`                                                                                           |
 | Responsabilidade | Overview e timeline da Community persistida, com Feed, Grupos e Discussões no mesmo contexto.              |
-| Rotas            | `/comunidade/:alias`, variantes territoriais, `/feed`, `/grupos` e `?view=...`                             |
+| Rotas            | `/:uf/:city/:territory/comunidade`, com filhos `/feed`, `/grupos` e `?view=...`                             |
 | Arquivo canônico | `src/core/community-feed/pages/ComunidadePage.tsx`                                                         |
 | Dependências     | `useCommunityFeed`, `useTerritoryFilter`, componentes de `core/community-feed` e domínios relacionados |
 | Situação         | **Owner preservado / módulo pausado no MVP** — reativação futura passa pelo lifecycle canônico.             |
@@ -112,7 +112,7 @@ Regras adicionais:
 | Nome antigo      | `PostDetailPage` / rotas de post existentes                                                      |
 | Novo nome        | `PostPage`                                                                                       |
 | Responsabilidade | Discussão completa de um post do território.                                                     |
-| Rotas            | `/comunidade/post/:postId` (e variantes territoriais existentes)                                 |
+| Rotas            | `/:uf/:city/:territory/comunidade/feed?post=:postId` (deep-link no território canônico)                                 |
 | Arquivo canônico | (mantido no core — sem alias criado nesta etapa)                                                 |
 | Situação         | **Owner preservado / Community pausada** — o detalhe de post não integra o MVP ativo e só volta após reativação formal do módulo. |
 
@@ -151,7 +151,7 @@ autoridade própria para ativar módulos.
 Regras:
 
 - um destino de módulo só aparece quando seu lifecycle efetivo está ativo;
-- `nearby` depende formalmente de `map + business` e, quando há contexto territorial na URL, usa `/perto-de-mim/:uf/:cidade[/:bairro]` em vez de descartar esse contexto;
+- `nearby` depende formalmente de `map + business` e, quando há contexto territorial na URL, usa `/:uf/:cidade[/:territorio]/perto-de-mim` em vez de descartar esse contexto;
 - rotas não territoriais podem preservar o último território válido apenas como
   contexto, nunca como autorização para reativar módulo pausado;
 - Search aparece como módulo ativo; Community e demais módulos pós-MVP não aparecem na navegação primária;
