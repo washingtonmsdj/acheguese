@@ -124,7 +124,6 @@ export interface EmpresasListaSectionProps {
   readonly businesses: readonly Business[];
   readonly isLoading?: boolean;
   readonly isError?: boolean;
-  readonly mapHref: string;
   readonly savedBusinesses: ReadonlySet<string>;
   readonly onToggleSave: (id: string, event: React.MouseEvent) => void;
   readonly onOpenBusiness: (business: Business) => void;

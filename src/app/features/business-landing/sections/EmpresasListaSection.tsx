@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { MapPin, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { BusinessCard } from "../components/cards";
 import type { EmpresasListaSectionProps } from "./types";
 
@@ -10,7 +9,6 @@ export function EmpresasListaSection({
   businesses,
   isLoading = false,
   isError = false,
-  mapHref,
   savedBusinesses,
   onToggleSave,
   onOpenBusiness,
@@ -27,23 +25,11 @@ export function EmpresasListaSection({
   );
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-xl font-semibold text-territory-ink sm:text-2xl">
-            Todas as empresas ({businesses.length})
-          </h2>
-          <p className="mt-1 text-sm text-territory-muted">
-            Lista pública com negócios ativos, recomendados e próximos do território.
-          </p>
-        </div>
-        <Link
-          to={mapHref}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-territory-brand/25 bg-territory-brand/10 px-4 text-sm font-medium text-territory-brand transition-colors hover:bg-territory-brand/10 sm:w-auto"
-        >
-          <MapPin className="h-4 w-4" />
-          Ver no mapa
-        </Link>
+    <section className="w-full min-w-0 pb-10">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold text-territory-ink">
+          {businesses.length} {businesses.length === 1 ? "empresa encontrada" : "empresas encontradas"}
+        </h2>
       </div>
 
       {isLoading ? (
@@ -60,7 +46,7 @@ export function EmpresasListaSection({
         </div>
       ) : businesses.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {visibleBusinesses.map((business) => (
               <BusinessCard
                 key={business.id}
@@ -76,7 +62,7 @@ export function EmpresasListaSection({
             <button
               type="button"
               onClick={() => setVisibleCount((current) => current + PAGE_SIZE)}
-              className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-territory-border bg-territory-raised px-4 text-sm font-medium text-territory-muted transition-colors hover:border-territory-border hover:bg-territory-raised"
+              className="mx-auto mt-4 flex min-h-11 w-full max-w-60 items-center justify-center rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-brand transition-colors hover:bg-territory-raised"
             >
               Carregar mais empresas
             </button>
