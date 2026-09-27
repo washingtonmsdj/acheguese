@@ -90,7 +90,7 @@ export default function EmpresaDetailLandingPage(
   const { data: snapshot, isLoading } = usePublicBusinessSnapshot({
     state,
     city,
-    district: territorySlug,
+    territorySlug,
     slug,
   });
   const snapshotBusiness = (snapshot?.institutional.business as BusinessExtended | undefined) ?? null;
