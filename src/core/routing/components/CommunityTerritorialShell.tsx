@@ -117,7 +117,6 @@ export function CommunityTerritorialShell() {
     [city, scopedSlug, state],
   );
   const effectiveResolved = resolved ?? publicCommunityFallback;
-  const routeParts = location.pathname.split("/").filter(Boolean);
   const hasInvalidRouteParams = !state || !city;
   const hasInvalidCommunityRoute = hasInvalidRouteParams;
   const territoryBase = scopedSlug
