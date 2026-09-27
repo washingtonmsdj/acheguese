@@ -44,7 +44,7 @@ export default function PremiumBusinessSiteRoute() {
         snapshotParams: {
           state: resolved.territoryRoute.state,
           city: resolved.territoryRoute.city,
-          district: resolved.territoryRoute.district,
+          territorySlug: resolved.territoryRoute.territorySlug,
           slug: resolved.territoryRoute.businessSlug,
         },
       });
