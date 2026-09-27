@@ -78,7 +78,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await gotoApp(page, "/");
 
     await expect(
-      page.getByRole("heading", { name: "Seu lugar, mais perto." }),
+      page.getByRole("heading", { name: "Tudo perto de você." }),
     ).toBeVisible({ timeout: 30_000 });
 
     const main = page.locator("#main-content");
