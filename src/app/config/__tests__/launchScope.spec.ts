@@ -97,17 +97,17 @@ describe("launchScope", () => {
   });
 
   it("exposes territory context only for enabled modules", () => {
-    expect(getContextMessageFromPath("/empresas/ba/salvador")).toBe(
+    expect(getContextMessageFromPath("/ba/salvador/empresas")).toBe(
       "Exibindo empresas de",
     );
-    expect(getContextMessageFromPath("/mapa/ba/salvador")).toBe("Mapa de");
+    expect(getContextMessageFromPath("/ba/salvador/mapa")).toBe("Mapa de");
     expect(getContextMessageFromPath("/perto-de-mim")).toBe("Perto de");
-    expect(getContextMessageFromPath("/busca/ba/salvador")).toBe("Buscar em");
+    expect(getContextMessageFromPath("/ba/salvador/busca")).toBe("Buscar em");
 
-    expect(getContextMessageFromPath("/servicos/ba/salvador")).toBeNull();
-    expect(getContextMessageFromPath("/classificados/ba/salvador")).toBeNull();
-    expect(getContextMessageFromPath("/comunidade/ba/salvador")).toBeNull();
-    expect(getContextMessageFromPath("/gastronomia/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/ba/salvador/servicos")).toBeNull();
+    expect(getContextMessageFromPath("/ba/salvador/classificados")).toBeNull();
+    expect(getContextMessageFromPath("/ba/salvador/comunidade")).toBeNull();
+    expect(getContextMessageFromPath("/ba/salvador/gastronomia")).toBeNull();
   });
 
   it("fails closed for helpers owned by paused parent modules", () => {
