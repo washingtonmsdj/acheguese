@@ -17,12 +17,12 @@ describe("AppLayoutRouteRegistry", () => {
     expect(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES.map((route) => route.id)).toEqual([
       "business-detail",
       "business-category-city",
-      "business-category-district",
-      "business-district",
+      "business-category-territory",
+      "business-territory",
       "business-city",
-      "map-district",
+      "map-territory",
       "map-city",
-      "nearby-district",
+      "nearby-territory",
       "nearby-city",
     ]);
 
@@ -36,20 +36,20 @@ describe("AppLayoutRouteRegistry", () => {
     );
 
     expect(pathsById.get("business-detail")).toBe(
-      "/:state/:city/:district/empresas/:slug",
+      "/:state/:city/:territorySlug/empresas/:slug",
     );
     expect(pathsById.get("business-category-city")).toBe(
       "/:state/:city/empresas/categoria/:category",
     );
-    expect(pathsById.get("business-district")).toBe(
-      "/:state/:city/:district/empresas",
+    expect(pathsById.get("business-territory")).toBe(
+      "/:state/:city/:territorySlug/empresas",
     );
-    expect(pathsById.get("map-district")).toBe(
-      "/:state/:city/:district/mapa",
+    expect(pathsById.get("map-territory")).toBe(
+      "/:state/:city/:territorySlug/mapa",
     );
     expect(pathsById.get("map-city")).toBe("/:state/:city/mapa");
-    expect(pathsById.get("nearby-district")).toBe(
-      "/:state/:city/:district/perto-de-mim",
+    expect(pathsById.get("nearby-territory")).toBe(
+      "/:state/:city/:territorySlug/perto-de-mim",
     );
     expect(pathsById.get("nearby-city")).toBe("/:state/:city/perto-de-mim");
   });
