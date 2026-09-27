@@ -13,8 +13,7 @@ export interface ResolvedBusinessPublicUrlState {
 /**
  * Resolves the public business URL.
  *
- * Public URLs never upgrade to community aliases automatically. Community
- * scoped URLs are generated only from explicit community context.
+ * A URL publica pertence sempre ao territorio canonico da empresa.
  */
 export function useResolvedBusinessPublicUrl(
   ctx: BusinessUrlContext | null | undefined,
@@ -26,11 +25,9 @@ export function useResolvedBusinessPublicUrl(
       id: ctx.id,
       slug: ctx.slug,
       is_premium: ctx.is_premium,
-      community_alias: ctx.community_alias,
       geographic_path: ctx.geographic_path,
     };
   }, [
-    ctx?.community_alias,
     ctx?.geographic_path,
     ctx?.id,
     ctx?.is_premium,
