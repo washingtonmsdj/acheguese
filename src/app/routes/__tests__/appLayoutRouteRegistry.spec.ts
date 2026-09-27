@@ -13,7 +13,7 @@ function readProjectFile(path: string): string {
 }
 
 describe("AppLayoutRouteRegistry", () => {
-  it("keeps only active Business and Map territorial descriptors", () => {
+  it("keeps only active MVP territorial descriptors", () => {
     expect(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES.map((route) => route.id)).toEqual([
       "business-detail",
       "business-category-city",
@@ -22,30 +22,36 @@ describe("AppLayoutRouteRegistry", () => {
       "business-city",
       "map-district",
       "map-city",
+      "nearby-district",
+      "nearby-city",
     ]);
 
     const ids = APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES.map((route) => route.id);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("generates canonical Business and Map territorial paths", () => {
+  it("generates canonical territory-first MVP paths", () => {
     const pathsById = new Map(
       APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES.map((route) => [route.id, route.path]),
     );
 
     expect(pathsById.get("business-detail")).toBe(
-      "/empresas/:state/:city/:district/:slug",
+      "/:state/:city/:district/empresas/:slug",
     );
     expect(pathsById.get("business-category-city")).toBe(
-      "/empresas/:state/:city/categoria/:category",
+      "/:state/:city/empresas/categoria/:category",
     );
     expect(pathsById.get("business-district")).toBe(
-      "/empresas/:state/:city/:district",
+      "/:state/:city/:district/empresas",
     );
     expect(pathsById.get("map-district")).toBe(
-      "/mapa/:state/:city/:district",
+      "/:state/:city/:district/mapa",
     );
-    expect(pathsById.get("map-city")).toBe("/mapa/:state/:city");
+    expect(pathsById.get("map-city")).toBe("/:state/:city/mapa");
+    expect(pathsById.get("nearby-district")).toBe(
+      "/:state/:city/:district/perto-de-mim",
+    );
+    expect(pathsById.get("nearby-city")).toBe("/:state/:city/perto-de-mim");
   });
 
   it("derives route inclusion from the canonical lifecycle without paused fallbacks", () => {
