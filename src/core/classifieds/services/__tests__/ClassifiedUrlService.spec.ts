@@ -13,7 +13,7 @@ const completeContext = {
 describe("ClassifiedUrlService", () => {
   it("builds canonical, short and edit URLs from a complete context", () => {
     expect(classifiedUrlService.buildUrls(completeContext)).toEqual({
-      canonical: "/classificados/ba/salvador/pituba/moveis/cozinha/armario-de-cozinha/ab12cd34",
+      canonical: "/ba/salvador/pituba/classificados/moveis/cozinha/armario-de-cozinha/ab12cd34",
       short: "/c/ab12cd34",
       edit: "/classificados/editar/11111111-1111-1111-1111-111111111111",
     });
@@ -21,7 +21,7 @@ describe("ClassifiedUrlService", () => {
 
   it("builds the canonical public URL when all public URL fields are present", () => {
     expect(classifiedUrlService.buildPublicUrl(completeContext)).toBe(
-      "/classificados/ba/salvador/pituba/moveis/cozinha/armario-de-cozinha/ab12cd34",
+      "/ba/salvador/pituba/classificados/moveis/cozinha/armario-de-cozinha/ab12cd34",
     );
   });
 
