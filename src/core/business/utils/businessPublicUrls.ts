@@ -16,7 +16,7 @@ export const BUSINESS_PREMIUM_ROUTE_CHILD_SEGMENTS = {
 export const BUSINESS_PUBLIC_URL_PREVIEW_TERRITORY = {
   state: ':uf',
   city: ':cidade',
-  district: ':bairro',
+  territorySlug: ':territorio',
 } as const;
 
 export const BUSINESS_PUBLIC_URL_PREVIEW_SLUG = 'seu-link';
@@ -24,7 +24,7 @@ export const BUSINESS_PUBLIC_URL_PREVIEW_SLUG = 'seu-link';
 export interface BusinessPublicTerritorySegments {
   readonly state: string;
   readonly city: string;
-  readonly district?: string;
+  readonly territorySlug?: string;
 }
 
 export interface BusinessPublicUrlSegments extends Required<BusinessPublicTerritorySegments> {
@@ -42,9 +42,9 @@ function cleanPathSegment(value: string, label: string): string {
 function buildTerritoryPathFromSegments({
   state,
   city,
-  district,
+  territorySlug,
 }: BusinessPublicTerritorySegments): string {
-  const segments = [state, city, district]
+  const segments = [state, city, territorySlug]
     .filter((segment): segment is string => Boolean(segment))
     .map((segment) => cleanPathSegment(segment, 'segmento territorial'));
 
