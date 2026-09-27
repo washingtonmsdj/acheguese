@@ -18,7 +18,7 @@ export function usePublicGastronomySnapshot(
       "public-gastronomy-snapshot",
       params.state,
       params.city,
-      params.district,
+      params.territorySlug,
       params.slug,
     ],
     queryFn: () =>
