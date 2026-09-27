@@ -15,6 +15,7 @@ import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCi
 interface FriendlyRouteParams {
   state?: string;
   city?: string;
+  territorySlug?: string;
   district?: string;
   groupSlug?: string;
   groupSlugOrDistrict?: string;
@@ -41,7 +42,7 @@ export interface FriendlyModuleUrls {
 export function useFriendlyModuleUrls(): FriendlyModuleUrls {
   const { cityBasePath } = usePublicBrowsingCity();
   const territorialContext = useTerritorialContextOptional();
-  const { state, city, district, groupSlug, groupSlugOrDistrict } =
+  const { state, city, territorySlug, district, groupSlug, groupSlugOrDistrict } =
     useParams<Record<string, string | undefined>>();
 
   if (territorialContext) {
@@ -70,7 +71,7 @@ export function useFriendlyModuleUrls(): FriendlyModuleUrls {
 
     return buildTerritorialUrls(
       territoryBase,
-      slugToTitle(groupSlug ?? district ?? groupSlugOrDistrict ?? city),
+      slugToTitle(scopedSlug ?? city),
     );
   }
 
