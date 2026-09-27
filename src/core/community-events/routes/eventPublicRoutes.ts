@@ -53,11 +53,6 @@ export const eventPublicRoutes = {
   map: () => buildAppModulePath(APP_MODULE_SLUGS.events, EVENT_PUBLIC_ROUTE_SEGMENTS.map),
   detail: (eventId: string) =>
     buildAppModulePath(APP_MODULE_SLUGS.events, buildDetailSuffix(eventId)),
-  legacyDetail: (eventId: string) =>
-    buildAppModulePath(
-      APP_MODULE_SLUGS.events,
-      cleanRouteSegment(eventId, "id do evento"),
-    ),
   favoritesFromBase: (base: string) => appendToBase(base, [EVENT_PUBLIC_ROUTE_SEGMENTS.favorites]),
   calendarFromBase: (base: string) => appendToBase(base, [EVENT_PUBLIC_ROUTE_SEGMENTS.calendar]),
   mapFromBase: (base: string) => appendToBase(base, [EVENT_PUBLIC_ROUTE_SEGMENTS.map]),
