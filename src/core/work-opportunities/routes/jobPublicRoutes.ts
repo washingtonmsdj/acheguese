@@ -1,6 +1,10 @@
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import { TERRITORIAL_ROUTE_STATIC_SEGMENTS } from "@/core/routing/config/territorialRoutePatterns";
-import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import {
+  buildModuleTerritoryEntityUrl,
+  buildModuleTerritoryUrl,
+  normalizePublicTerritoryPath,
+} from "@/core/routing/utils/territoryUrls";
 
 export interface JobTerritoryRouteInput {
   state: string;
@@ -56,9 +60,17 @@ export const jobPublicRoutes = {
     )}/${cleanRouteSegment(input.slug, "slug da vaga")}`,
   listFromGeographicPath: (geographicPath: string) =>
     jobPublicRoutes.list(parseCityRouteFromGeographicPath(geographicPath)),
+  listFromTerritoryPath: (territoryPath: string) =>
+    buildModuleTerritoryUrl(
+      APP_MODULE_SLUGS.jobs,
+      normalizePublicTerritoryPath(territoryPath),
+    ),
+  detailFromTerritoryPath: (territoryPath: string, slug: string) =>
+    buildModuleTerritoryEntityUrl(
+      APP_MODULE_SLUGS.jobs,
+      normalizePublicTerritoryPath(territoryPath),
+      cleanRouteSegment(slug, "slug da vaga"),
+    ),
   detailFromGeographicPath: (geographicPath: string, slug: string) =>
-    jobPublicRoutes.detail({
-      ...parseCityRouteFromGeographicPath(geographicPath),
-      slug,
-    }),
+    jobPublicRoutes.detailFromTerritoryPath(geographicPath, slug),
 } as const;
