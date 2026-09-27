@@ -22,7 +22,7 @@ describe("PublicGastronomySnapshotService", () => {
         businessId: "business-data-1",
         slug: "restaurante-central",
         displayName: "Restaurante Central",
-        canonicalBusinessUrl: "/empresas/ba/salvador/pituba/restaurante-central",
+        canonicalBusinessUrl: "/ba/salvador/pituba/empresas/restaurante-central",
       },
       institutional: {
         name: "Restaurante Central",
@@ -42,9 +42,9 @@ describe("PublicGastronomySnapshotService", () => {
       verticals: {
         activeVerticals: ["gastronomy"],
         primaryVertical: "gastronomy",
-        canonicalVerticalUrl: "/empresas/ba/salvador/pituba/restaurante-central",
+        canonicalVerticalUrl: "/ba/salvador/pituba/empresas/restaurante-central",
         verticalPublicUrls: {
-          gastronomy: "/empresas/ba/salvador/pituba/restaurante-central",
+          gastronomy: "/ba/salvador/pituba/empresas/restaurante-central",
         },
       },
       gastronomy: {
@@ -66,13 +66,13 @@ describe("PublicGastronomySnapshotService", () => {
       seo: {
         title: "Restaurante Central - Cardapio e pedidos | Achegue-se",
         description: "Comida regional",
-        canonical: "/empresas/ba/salvador/pituba/restaurante-central",
+        canonical: "/ba/salvador/pituba/empresas/restaurante-central",
         robots: "index, follow",
         schemaType: "Restaurant",
         hasLocalBusinessSchema: true,
         hasRestaurantSchema: true,
-        canonicalGastronomyUrl: "/empresas/ba/salvador/pituba/restaurante-central",
-        canonicalBusinessUrl: "/empresas/ba/salvador/pituba/restaurante-central",
+        canonicalGastronomyUrl: "/ba/salvador/pituba/empresas/restaurante-central",
+        canonicalBusinessUrl: "/ba/salvador/pituba/empresas/restaurante-central",
         shouldNoIndex: false,
       },
       routing: {},
@@ -89,10 +89,10 @@ describe("PublicGastronomySnapshotService", () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot?.seo.canonicalBusinessUrl).toBe(
-      "/empresas/ba/salvador/pituba/restaurante-central",
+      "/ba/salvador/pituba/empresas/restaurante-central",
     );
     expect(snapshot?.seo.canonicalGastronomyUrl).toBe(
-      "/empresas/ba/salvador/pituba/restaurante-central",
+      "/ba/salvador/pituba/empresas/restaurante-central",
     );
     expect(snapshot?.seo.canonicalBusinessUrl).toBe(snapshot?.seo.canonicalGastronomyUrl);
     expect(snapshot?.gastronomy.commerce.businessDataId).toBe("business-data-1");
