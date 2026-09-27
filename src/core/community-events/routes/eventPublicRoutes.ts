@@ -2,6 +2,7 @@ import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlug
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
+  buildScopedTerritorialModuleRoutePath,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 
@@ -70,9 +71,7 @@ export const eventPublicRoutes = {
 export const eventTerritorialRoutePaths = {
   home: () => buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
   district: () =>
-    buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
-      TERRITORIAL_ROUTE_PARAMS.district,
-    ]),
+    buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
   favorites: () =>
     buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
       EVENT_PUBLIC_ROUTE_SEGMENTS.favorites,
