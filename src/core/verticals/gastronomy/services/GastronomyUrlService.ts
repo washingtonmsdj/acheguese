@@ -36,10 +36,6 @@ export class GastronomyUrlService {
     );
   }
 
-  static getLegacyDetailUrlFromTerritory(territoryBaseUrl: string, slug: string): string {
-    return this.getPublicDetailUrlFromTerritory(territoryBaseUrl, slug);
-  }
-
   static getCanonicalUrl(ctx: BusinessUrlContext): string {
     return this.buildUrls(ctx).canonical;
   }
