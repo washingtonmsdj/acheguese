@@ -1,4 +1,6 @@
-import TerritoryPortalPage from "@/app/pages/TerritoryPortalPage";
+import TerritoryPortalPage, {
+  type TerritoryPortalView,
+} from "@/app/pages/TerritoryPortalPage";
 import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
 import {
   MODULE_SLUGS,
@@ -13,8 +15,12 @@ function slugToLabel(value: string): string {
     .join(" ");
 }
 
-export default function TerritoryHomePage() {
-  const { resolved, baseUrl } = useTerritorialContext();
+export default function TerritoryHomePage({
+  activeView = "home",
+}: {
+  activeView?: TerritoryPortalView;
+}) {
+  const { resolved, baseUrl, activeMemberIds } = useTerritorialContext();
   const territoryName =
     resolved.kind === "group" ? resolved.group.name : resolved.location.name;
 
@@ -42,7 +48,10 @@ export default function TerritoryHomePage() {
       contextLabel={contextLabel}
       memberLabels={memberLabels}
       resolvedTerritory={resolved}
+      activeMemberIds={activeMemberIds}
+      activeView={activeView}
       urls={{
+        home: baseUrl,
         business: businessUrl,
         map: mapUrl,
         nearby: nearbyUrl,

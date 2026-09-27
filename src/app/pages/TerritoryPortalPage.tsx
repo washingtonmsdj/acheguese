@@ -23,8 +23,12 @@ import "./TerritoryPortalPage.css";
 const TerritoryMap = lazy(
   () => import("@/app/components/territory-vivo/TerritoryEntryMap"),
 );
+const TerritoryMapExperience = lazy(() => import("@/app/pages/MapaPage"));
+
+export type TerritoryPortalView = "home" | "map";
 
 export interface TerritoryPortalUrls {
+  home: string;
   business: string;
   map: string;
   nearby: string;
@@ -36,7 +40,9 @@ export interface TerritoryPortalPageProps {
   contextLabel: string;
   memberLabels: readonly string[];
   resolvedTerritory: ResolvedTerritory;
+  activeMemberIds: string[];
   urls: TerritoryPortalUrls;
+  activeView?: TerritoryPortalView;
 }
 
 function BrandMark() {
@@ -51,11 +57,11 @@ function BrandMark() {
 }
 
 type Shortcut = {
+  view: TerritoryPortalView | "nearby" | "business" | "search";
   label: string;
   description: string;
   href: string;
   icon: ComponentType<{ className?: string }>;
-  primary?: boolean;
 };
 
 export default function TerritoryPortalPage({
@@ -63,29 +69,41 @@ export default function TerritoryPortalPage({
   contextLabel,
   memberLabels,
   resolvedTerritory,
+  activeMemberIds,
   urls,
+  activeView = "home",
 }: TerritoryPortalPageProps) {
   const shortcuts: readonly Shortcut[] = [
     {
+      view: "home",
+      label: "Inicial",
+      description: "Visão geral",
+      href: urls.home,
+      icon: Home,
+    },
+    {
+      view: "nearby",
       label: "Perto de mim",
       description: "Ver o que está perto",
       href: urls.nearby,
       icon: Navigation,
-      primary: true,
     },
     {
+      view: "map",
       label: "Mapa",
       description: "Explorar o território",
       href: urls.map,
       icon: Map,
     },
     {
+      view: "business",
       label: "Empresas",
       description: "Comércio e negócios",
       href: urls.business,
       icon: Store,
     },
     {
+      view: "search",
       label: "Busca",
       description: "Procurar no território",
       href: urls.search,
@@ -96,7 +114,9 @@ export default function TerritoryPortalPage({
   return (
     <div className="pt-page">
       <Helmet>
-        <title>{territoryName} | Achegue-se</title>
+        <title>
+          {activeView === "map" ? `Mapa de ${territoryName}` : territoryName} | Achegue-se
+        </title>
         <meta
           name="description"
           content={`Explore empresas, mapa, busca e o que está perto de você em ${territoryName}.`}
@@ -176,9 +196,10 @@ export default function TerritoryPortalPage({
             <div className="pt-shortcuts" aria-label="Atalhos do território">
               {shortcuts.map(({ icon: Icon, ...item }) => (
                 <Link
-                  className={item.primary ? "is-primary" : ""}
+                  className={item.view === activeView ? "is-primary" : ""}
                   to={item.href}
                   key={item.label}
+                  aria-current={item.view === activeView ? "page" : undefined}
                 >
                   <Icon />
                   <span>
@@ -191,8 +212,23 @@ export default function TerritoryPortalPage({
           </div>
         </section>
 
-        <div className="pt-container pt-dashboard">
-          <section className="pt-panel pt-map-panel">
+        {activeView === "map" ? (
+          <section
+            className="pt-module-view"
+            aria-label={`Mapa de ${territoryName}`}
+          >
+            <Suspense
+              fallback={<div className="pt-module-loading">Carregando mapa…</div>}
+            >
+              <TerritoryMapExperience
+                resolved={resolvedTerritory}
+                activeMemberIds={activeMemberIds}
+              />
+            </Suspense>
+          </section>
+        ) : (
+          <div className="pt-container pt-dashboard">
+            <section className="pt-panel pt-map-panel">
             <PanelHeading
               icon={Map}
               title="Mapa do território"
@@ -286,8 +322,9 @@ export default function TerritoryPortalPage({
                 <small>Procure pelo que precisa</small>
               </Link>
             </div>
-          </section>
-        </div>
+            </section>
+          </div>
+        )}
       </main>
 
       <footer className="pt-footer">

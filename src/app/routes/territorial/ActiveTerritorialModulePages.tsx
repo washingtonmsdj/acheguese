@@ -3,6 +3,7 @@ import { lazy, Suspense } from "react";
 import { StateLandingPage } from "@/core/routing/components/StateLandingPage";
 import { TerritorialLayout, useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
 import NotFound from "@/app/pages/NotFound";
+import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { getActiveNearbyProviderRolloutModuleKeys } from "@/app/config/nearbyProviderScope";
 import { getActiveMapLayerRolloutModuleKeys } from "@/app/config/mapLayerProviderScope";
 import { ModulePageLoader } from "@/shared/components/loading/PageLoader";
@@ -11,7 +12,6 @@ import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 const CategoryBusinessPage = lazy(
   () => import("@/core/business/pages/CategoryBusinessPage"),
 );
-const MapaPage = lazy(() => import("@/app/pages/MapaPage"));
 
 /**
  * Active territorial wrappers only.
@@ -33,16 +33,7 @@ export function TerritorialCategoryBusinessPage() {
 }
 
 export function TerritorialMapPage() {
-  const { resolved, activeMemberIds } = useTerritorialContext();
-
-  return (
-    <Suspense fallback={<ModulePageLoader />}>
-      <MapaPage
-        resolved={resolved}
-        activeMemberIds={activeMemberIds}
-      />
-    </Suspense>
-  );
+  return <TerritoryHomePage activeView="map" />;
 }
 
 
