@@ -10,6 +10,7 @@ import {
   CreditCard,
   ExternalLink,
   Facebook,
+  Globe2,
   Heart,
   Home,
   Info,
@@ -25,7 +26,6 @@ import {
   ShoppingBag,
   Star,
   Store,
-  Tag,
   Utensils,
 } from "lucide-react";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
@@ -87,9 +87,31 @@ function formatPrice(price: number) {
   }).format(price);
 }
 
-function normalizeSocialUrl(value?: string) {
+function normalizeUrl(value?: string) {
   if (!value) return undefined;
   return /^https?:\/\//i.test(value) ? value : `https://${value.replace(/^@/, "")}`;
+}
+
+function socialUrl(network: "instagram" | "facebook", value?: string) {
+  if (!value) return undefined;
+  if (/^https?:\/\//i.test(value)) return value;
+  const cleaned = value.replace(/^@/, "").replace(/^\/+|\/+$/g, "");
+  if (cleaned.includes(`${network}.com`)) return `https://${cleaned}`;
+  const handle = cleaned;
+  return `https://${network}.com/${handle}`;
+}
+
+function whatsappUrl(value?: string) {
+  if (!value) return undefined;
+  const digits = value.replace(/\D/g, "");
+  if (!digits) return undefined;
+  return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
+}
+
+function humanizeLabel(value: string) {
+  return value
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export function TerritoryBusinessDetail({
@@ -107,7 +129,7 @@ export function TerritoryBusinessDetail({
   onRoute,
   onMessage,
 }: TerritoryBusinessDetailProps) {
-  const category = business.subcategoria || business.category || "Empresa local";
+  const category = humanizeLabel(business.subcategoria || business.category || "Empresa local");
   const cover = business.banner_url || institutional.photos[0];
   const gallery = institutional.photos.filter((photo) => photo !== cover).slice(0, 3);
   const visibleProducts = products.filter((product) => product.active !== false).slice(0, 6);
@@ -123,8 +145,21 @@ export function TerritoryBusinessDetail({
     ...(business.aceita_cartao ? ["Cartão"] : []),
     ...(business.formas_pagamento || []),
   ].filter((item, index, array) => array.findIndex((value) => value.toLowerCase() === item.toLowerCase()) === index);
-  const tags = [category, ...(business.especialidades || []), ...(business.facilidades || [])].slice(0, 6);
+  const tags = [category, ...(business.especialidades || []), ...(business.facilidades || [])]
+    .map(humanizeLabel)
+    .slice(0, 6);
   const todayHours = openStatus.todayHours || "Horário sob consulta";
+  const headerLocation = [business.business_city, business.business_state]
+    .filter(Boolean)
+    .join(", ") || "Salvador, BA";
+  const whatsappHref = whatsappUrl(whatsapp);
+  const serviceModes = (business.modos_atendimento || ["Presencial"])
+    .map(humanizeLabel)
+    .join(", ");
+  const shortDescription = business.description?.split(".")[0]?.trim() || "Negócio local";
+  const heroDescription = shortDescription.length > 82
+    ? `${shortDescription.slice(0, 79).trimEnd()}…`
+    : shortDescription;
 
   return (
     <div className="bd-page">
@@ -144,7 +179,7 @@ export function TerritoryBusinessDetail({
             <Search /><span>Buscar empresas, serviços, lugares...</span>
           </Link>
           <Link className="bd-location" to={territoryUrl}>
-            <MapPin /><span>{location.split(",").at(-1)?.trim() || "Salvador, BA"}</span><ChevronDown />
+            <MapPin /><span>{headerLocation}</span><ChevronDown />
           </Link>
           <Link className="bd-login" to={AUTH_PATHS.login}>Entrar <ArrowRight /></Link>
           <details className="bd-mobile-menu">
@@ -172,12 +207,12 @@ export function TerritoryBusinessDetail({
               <div className="bd-logo-card">
                 {business.logo_url ? <img src={business.logo_url} alt={`Logo de ${business.name}`} /> : <Store />}
                 <span className={openStatus.open === false ? "is-closed" : ""}>
-                  {openStatus.open === true ? "Aberto agora" : openStatus.open === false ? "Fechado agora" : "Horário disponível"}
+                  {openStatus.open === true ? "Aberto agora" : openStatus.open === false ? "Fechado agora" : "Horário não informado"}
                 </span>
               </div>
-              <div className="bd-title-block">
-                <h1>{business.name}</h1>
-                <p>{category} <i>•</i> {business.description?.split(".")[0] || "Negócio local"}</p>
+              <div className="bd-title-block min-w-0">
+                <h1 className="break-words">{business.name}</h1>
+                <p>{category} <i>•</i> {heroDescription}</p>
                 <div className="bd-rating-row">
                   <strong><Star /> {rating.toFixed(1)}</strong>
                   <span>({reviewCount} avaliações)</span>
@@ -222,8 +257,8 @@ export function TerritoryBusinessDetail({
                 <div className="bd-fact"><Clock3 /><span><strong>{openStatus.open === true ? "Aberto agora" : openStatus.open === false ? "Fechado agora" : "Funcionamento"}</strong><small>{todayHours}</small></span></div>
                 <div className="bd-fact"><BadgeDollarSign /><span><strong>Faixa de preço</strong><small>{business.price_band_label || "Consulte a empresa"}</small></span></div>
                 <div className="bd-fact"><Accessibility /><span><strong>Acessibilidade</strong><small>{business.facilidades?.some((item) => item.toLowerCase().includes("acess")) ? "Entrada acessível" : "Consulte a empresa"}</small></span></div>
-                <div className="bd-fact"><CreditCard /><span><strong>Formas de pagamento</strong><small>{paymentMethods.slice(0, 4).join(", ") || "Consulte a empresa"}</small></span></div>
-                <div className="bd-fact"><PackageCheck /><span><strong>Atendimento</strong><small>{(business.modos_atendimento || ["Presencial"]).join(", ")}</small></span></div>
+                <div className="bd-fact"><CreditCard /><span><strong>Formas de pagamento</strong><small>{paymentMethods.slice(0, 4).map(humanizeLabel).join(", ") || "Consulte a empresa"}</small></span></div>
+                <div className="bd-fact"><PackageCheck /><span><strong>Atendimento</strong><small>{serviceModes}</small></span></div>
               </article>
             </section>
 
@@ -280,21 +315,23 @@ export function TerritoryBusinessDetail({
               <SectionTitle icon={Phone}>Contato</SectionTitle>
               {phone ? <a className="bd-phone" href={`tel:${phone.replace(/\D/g, "")}`}><Phone /><span><strong>{phone}</strong><small>Toque para ligar</small></span></a> : null}
               <div className="bd-contact-actions">
-                {whatsapp ? <a href={`https://wa.me/55${whatsapp.replace(/\D/g, "").replace(/^55/, "")}`} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a> : null}
+                {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a> : null}
                 {onMessage ? <button type="button" onClick={onMessage}><MessageCircle /> Mensagem</button> : null}
               </div>
-              <button className="bd-order-button" type="button" onClick={whatsapp ? () => window.open(`https://wa.me/55${whatsapp.replace(/\D/g, "").replace(/^55/, "")}`, "_blank", "noopener,noreferrer") : onMessage}>
-                <Utensils /> Falar com a empresa <ArrowRight />
-              </button>
+              {whatsappHref || onMessage ? (
+                <button className="bd-order-button" type="button" onClick={whatsappHref ? () => window.open(whatsappHref, "_blank", "noopener,noreferrer") : onMessage}>
+                  <Utensils /> Falar com a empresa <ArrowRight />
+                </button>
+              ) : null}
             </section>
 
             {(business.instagram || business.facebook || institutional.website) ? (
               <section className="bd-card bd-social-card">
-                <SectionTitle icon={Tag}>Redes e site</SectionTitle>
+                <SectionTitle icon={Globe2}>Redes e site</SectionTitle>
                 <div>
-                  {business.instagram ? <a href={normalizeSocialUrl(business.instagram)} target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram /></a> : null}
-                  {business.facebook ? <a href={normalizeSocialUrl(business.facebook)} target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a> : null}
-                  {institutional.website ? <a href={normalizeSocialUrl(institutional.website)} target="_blank" rel="noreferrer" aria-label="Site"><ExternalLink /></a> : null}
+                  {business.instagram ? <a href={socialUrl("instagram", business.instagram)} target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram /></a> : null}
+                  {business.facebook ? <a href={socialUrl("facebook", business.facebook)} target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a> : null}
+                  {institutional.website ? <a href={normalizeUrl(institutional.website)} target="_blank" rel="noreferrer" aria-label="Site"><ExternalLink /></a> : null}
                 </div>
               </section>
             ) : null}
