@@ -63,7 +63,7 @@ describe("useBusinessNavigation", () => {
 
     expect(
       screen.getByText(
-        "/comunidade/santa-cruz/empresas/padaria-x|/empresas/ba/salvador/pituba/mercado-y",
+        "/ba/salvador/santa-cruz/empresas/padaria-x|/ba/salvador/pituba/empresas/mercado-y",
       ),
       ).toBeInTheDocument();
   });
@@ -89,7 +89,7 @@ describe("useBusinessNavigation", () => {
 
     expect(
       screen.getByText(
-        "/empresas/ba/salvador/santa-cruz/padaria-x|/empresas/ba/salvador/pituba/mercado-y",
+        "/ba/salvador/santa-cruz/empresas/padaria-x|/ba/salvador/pituba/empresas/mercado-y",
       ),
     ).toBeInTheDocument();
   });
