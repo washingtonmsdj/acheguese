@@ -83,7 +83,7 @@ describe("PublicGastronomySnapshotService", () => {
     const snapshot = await PublicGastronomySnapshotService.getByTerritorySlug({
       state: "ba",
       city: "salvador",
-      district: "pituba",
+      territorySlug: "pituba",
       slug: "restaurante-central",
     });
 
@@ -106,7 +106,7 @@ describe("PublicGastronomySnapshotService", () => {
     const snapshot = await PublicGastronomySnapshotService.getByTerritorySlug({
       state: "ba",
       city: "salvador",
-      district: "pituba",
+      territorySlug: "pituba",
       slug: "nao-existe",
     });
 
