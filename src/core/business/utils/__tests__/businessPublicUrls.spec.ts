@@ -23,26 +23,26 @@ describe('businessPublicUrls', () => {
       buildBusinessPublicUrlFromSegments({
         state: 'ba',
         city: 'salvador',
-        district: 'pituba',
+        territorySlug: 'pituba',
         slug: 'loja-central',
       }),
     ).toBe('/ba/salvador/pituba/empresas/loja-central');
   });
 
-  it('builds city and district listings through the same module slug SSOT', () => {
+  it('builds city and scoped territory listings through the same module slug SSOT', () => {
     expect(buildBusinessCityListingUrl('ba', 'salvador')).toBe('/ba/salvador/empresas');
     expect(
       buildBusinessPublicListingUrl({
         state: 'ba',
         city: 'salvador',
-        district: 'barra',
+        territorySlug: 'barra',
       }),
     ).toBe('/ba/salvador/barra/empresas');
   });
 
   it('builds business identity preview with centralized placeholders', () => {
     expect(buildBusinessPublicUrlPreview(BUSINESS_PUBLIC_URL_PREVIEW_SLUG)).toBe(
-      '/:uf/:cidade/:bairro/empresas/seu-link',
+      '/:uf/:cidade/:territorio/empresas/seu-link',
     );
   });
 
