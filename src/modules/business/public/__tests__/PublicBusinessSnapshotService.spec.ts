@@ -22,7 +22,7 @@ describe("PublicBusinessSnapshotService", () => {
         businessId: "business-data-1",
         slug: "restaurante-central",
         displayName: "Restaurante Central",
-        canonicalBusinessUrl: "/empresas/ba/salvador/pituba/restaurante-central",
+        canonicalBusinessUrl: "/ba/salvador/pituba/empresas/restaurante-central",
       },
       institutional: {
         name: "Restaurante Central",
@@ -43,9 +43,9 @@ describe("PublicBusinessSnapshotService", () => {
       verticals: {
         activeVerticals: ["gastronomy"],
         primaryVertical: "gastronomy",
-        canonicalVerticalUrl: "/empresas/ba/salvador/pituba/restaurante-central",
+        canonicalVerticalUrl: "/ba/salvador/pituba/empresas/restaurante-central",
         verticalPublicUrls: {
-          gastronomy: "/empresas/ba/salvador/pituba/restaurante-central",
+          gastronomy: "/ba/salvador/pituba/empresas/restaurante-central",
         },
       },
       gastronomyPreview: [
@@ -55,13 +55,13 @@ describe("PublicBusinessSnapshotService", () => {
           imageUrl: "/m.jpg",
           priceFrom: 42,
           priceLabel: "A partir de R$ 42,00",
-          menuUrl: "/empresas/ba/salvador/pituba/restaurante-central",
+          menuUrl: "/ba/salvador/pituba/empresas/restaurante-central",
         },
       ],
       seo: {
         title: "Restaurante Central | Achegue-se",
         description: "Comida regional",
-        canonical: "/empresas/ba/salvador/pituba/restaurante-central",
+        canonical: "/ba/salvador/pituba/empresas/restaurante-central",
         robots: "index, follow",
         schemaType: "Restaurant",
         hasLocalBusinessSchema: true,
@@ -82,7 +82,7 @@ describe("PublicBusinessSnapshotService", () => {
     expect(snapshot).not.toBeNull();
     expect(snapshot?.gastronomyPreview).toHaveLength(1);
     expect(snapshot?.verticals.canonicalVerticalUrl).toBe(
-      "/empresas/ba/salvador/pituba/restaurante-central",
+      "/ba/salvador/pituba/empresas/restaurante-central",
     );
     expect(snapshot?.institutional.business.id).toBe("profile-1");
     expect(vi.mocked(PublicSnapshotRpcService.getBusinessSnapshotBySlug)).toHaveBeenCalledTimes(1);
