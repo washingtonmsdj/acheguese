@@ -141,12 +141,16 @@ export function AppLayoutRoutes() {
             <Route path="/buscar" element={<P.BuscarPage />} />
             <Route
               path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
-              element={<P.BuscaPage />}
-            />
+              element={<P.ActiveTerritorialLayout />}
+            >
+              <Route index element={<P.TerritorialSearchPortalPage />} />
+            </Route>
             <Route
               path={buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
-              element={<P.BuscaPage />}
-            />
+              element={<P.ActiveTerritorialLayout />}
+            >
+              <Route index element={<P.TerritorialSearchPortalPage />} />
+            </Route>
             <Route
               path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)}
               element={<P.BuscarPage />}

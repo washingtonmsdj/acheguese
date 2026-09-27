@@ -171,7 +171,7 @@ function titleCase(value: string): string {
     .join(" ");
 }
 
-export default function BuscaPage() {
+export default function BuscaPage({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { state, city, territorySlug } = useParams<{
@@ -526,17 +526,19 @@ export default function BuscaPage() {
 
   return (
     <div className="min-h-[100dvh] text-territory-ink">
-      <TerritoryTopbar
-        territoryName={territoryName}
-        contextLabel={contextLabel}
-        isAuthenticated={Boolean(user)}
-        unreadCount={unreadCount}
-        searchHref={moduleUrls.search}
-        searchLabel="O que você procura por aqui?"
-        flushDesktop
-      />
+      {!embedded ? (
+        <TerritoryTopbar
+          territoryName={territoryName}
+          contextLabel={contextLabel}
+          isAuthenticated={Boolean(user)}
+          unreadCount={unreadCount}
+          searchHref={moduleUrls.search}
+          searchLabel="O que você procura por aqui?"
+          flushDesktop
+        />
+      ) : null}
 
-      <main className="w-full max-w-[58rem] px-5 pb-24 pt-4 sm:px-6 sm:pt-5 lg:px-5 lg:pb-10">
+      <main className={`w-full max-w-[58rem] px-5 pb-24 pt-4 sm:px-6 sm:pt-5 lg:px-5 lg:pb-10 ${embedded ? "mx-auto" : ""}`}>
         <header className="relative">
           <div className="pr-0 md:pr-0">
             <h1 className="font-heading text-[2rem] font-bold leading-[1.08] tracking-[-0.04em] text-territory-ink sm:text-4xl">

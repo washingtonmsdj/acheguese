@@ -92,6 +92,27 @@ export const TerritorialMapPage = lazy(() =>
     }),
   ),
 );
+export const TerritorialBusinessPortalPage = lazy(() =>
+  import("@/app/routes/territorial/ActiveTerritorialModulePages").then(
+    (module) => ({
+      default: module.TerritorialBusinessPortalPage,
+    }),
+  ),
+);
+export const TerritorialNearbyPortalPage = lazy(() =>
+  import("@/app/routes/territorial/ActiveTerritorialModulePages").then(
+    (module) => ({
+      default: module.TerritorialNearbyPortalPage,
+    }),
+  ),
+);
+export const TerritorialSearchPortalPage = lazy(() =>
+  import("@/app/routes/territorial/ActiveTerritorialModulePages").then(
+    (module) => ({
+      default: module.TerritorialSearchPortalPage,
+    }),
+  ),
+);
 
 export const ActiveTerritorialLayout = lazy(() =>
   import("@/app/routes/territorial/ActiveTerritorialModulePages").then(

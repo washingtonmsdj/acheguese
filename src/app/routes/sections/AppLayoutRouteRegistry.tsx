@@ -76,14 +76,14 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
     owner: { kind: "product", key: "business" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
     element: <P.ActiveTerritorialLayout />,
-    indexElement: <P.EmpresasLandingPage />,
+    indexElement: <P.TerritorialBusinessPortalPage />,
   },
   {
     id: "business-city",
     owner: { kind: "product", key: "business" },
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
     element: <P.ActiveTerritorialLayout />,
-    indexElement: <P.EmpresasLandingPage />,
+    indexElement: <P.TerritorialBusinessPortalPage />,
   },
 ];
 
@@ -110,14 +110,14 @@ const APP_LAYOUT_NEARBY_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] 
     owner: { kind: "capability", key: "nearby" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby),
     element: <P.ActiveTerritorialLayout />,
-    indexElement: <P.NearbyPage />,
+    indexElement: <P.TerritorialNearbyPortalPage />,
   },
   {
     id: "nearby-city",
     owner: { kind: "capability", key: "nearby" },
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby),
     element: <P.ActiveTerritorialLayout />,
-    indexElement: <P.NearbyPage />,
+    indexElement: <P.TerritorialNearbyPortalPage />,
   },
 ];
 

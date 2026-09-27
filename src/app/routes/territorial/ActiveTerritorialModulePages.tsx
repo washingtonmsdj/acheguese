@@ -36,6 +36,18 @@ export function TerritorialMapPage() {
   return <TerritoryHomePage activeView="map" />;
 }
 
+export function TerritorialBusinessPortalPage() {
+  return <TerritoryHomePage activeView="business" />;
+}
+
+export function TerritorialNearbyPortalPage() {
+  return <TerritoryHomePage activeView="nearby" />;
+}
+
+export function TerritorialSearchPortalPage() {
+  return <TerritoryHomePage activeView="search" />;
+}
+
 
 export function ActiveStateLandingPage() {
   return <StateLandingPage NotFoundComponent={NotFound} />;

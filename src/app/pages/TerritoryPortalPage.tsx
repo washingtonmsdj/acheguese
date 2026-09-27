@@ -24,8 +24,18 @@ const TerritoryMap = lazy(
   () => import("@/app/components/territory-vivo/TerritoryEntryMap"),
 );
 const TerritoryMapExperience = lazy(() => import("@/app/pages/MapaPage"));
+const TerritoryBusinessExperience = lazy(
+  () => import("@/app/pages/EmpresasLandingPage"),
+);
+const TerritoryNearbyExperience = lazy(() => import("@/app/pages/NearbyPage"));
+const TerritorySearchExperience = lazy(() => import("@/app/pages/BuscaPage"));
 
-export type TerritoryPortalView = "home" | "map";
+export type TerritoryPortalView =
+  | "home"
+  | "map"
+  | "business"
+  | "nearby"
+  | "search";
 
 export interface TerritoryPortalUrls {
   home: string;
@@ -57,7 +67,7 @@ function BrandMark() {
 }
 
 type Shortcut = {
-  view: TerritoryPortalView | "nearby" | "business" | "search";
+  view: TerritoryPortalView;
   label: string;
   description: string;
   href: string;
@@ -73,6 +83,14 @@ export default function TerritoryPortalPage({
   urls,
   activeView = "home",
 }: TerritoryPortalPageProps) {
+  const activeViewLabel = {
+    home: territoryName,
+    map: `Mapa de ${territoryName}`,
+    business: `Empresas de ${territoryName}`,
+    nearby: `Perto de mim em ${territoryName}`,
+    search: `Busca em ${territoryName}`,
+  }[activeView];
+
   const shortcuts: readonly Shortcut[] = [
     {
       view: "home",
@@ -114,9 +132,7 @@ export default function TerritoryPortalPage({
   return (
     <div className="pt-page">
       <Helmet>
-        <title>
-          {activeView === "map" ? `Mapa de ${territoryName}` : territoryName} | Achegue-se
-        </title>
+        <title>{activeViewLabel} | Achegue-se</title>
         <meta
           name="description"
           content={`Explore empresas, mapa, busca e o que está perto de você em ${territoryName}.`}
@@ -180,7 +196,6 @@ export default function TerritoryPortalPage({
             alt={`Vista e moradores de ${territoryName}`}
             width="1536"
             height="1024"
-            fetchPriority="high"
           />
           <div className="pt-hero-shade" />
 
@@ -212,18 +227,29 @@ export default function TerritoryPortalPage({
           </div>
         </section>
 
-        {activeView === "map" ? (
+        {activeView !== "home" ? (
           <section
             className="pt-module-view"
-            aria-label={`Mapa de ${territoryName}`}
+            aria-label={activeViewLabel}
           >
             <Suspense
-              fallback={<div className="pt-module-loading">Carregando mapa…</div>}
+              fallback={<div className="pt-module-loading">Carregando conteúdo…</div>}
             >
-              <TerritoryMapExperience
-                resolved={resolvedTerritory}
-                activeMemberIds={activeMemberIds}
-              />
+              {activeView === "map" ? (
+                <TerritoryMapExperience
+                  resolved={resolvedTerritory}
+                  activeMemberIds={activeMemberIds}
+                />
+              ) : null}
+              {activeView === "business" ? (
+                <TerritoryBusinessExperience embedded />
+              ) : null}
+              {activeView === "nearby" ? (
+                <TerritoryNearbyExperience />
+              ) : null}
+              {activeView === "search" ? (
+                <TerritorySearchExperience embedded />
+              ) : null}
             </Suspense>
           </section>
         ) : (

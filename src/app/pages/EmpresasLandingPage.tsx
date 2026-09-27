@@ -49,6 +49,7 @@ import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 interface EmpresasLandingPageProps {
   resolved?: ResolvedTerritory;
   activeMemberIds?: string[];
+  embedded?: boolean;
 }
 
 function parseInitialSlugs(resolved: ResolvedTerritory | null | undefined) {
@@ -215,6 +216,7 @@ function LandingTopBar({
 export default function EmpresasLandingPage({
   resolved: resolvedProp,
   activeMemberIds: activeMemberIdsProp,
+  embedded = false,
 }: EmpresasLandingPageProps = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -371,7 +373,7 @@ export default function EmpresasLandingPage({
   }, [resolved, territoryName]);
 
   return (
-    <EmpresasLandingLayout>
+    <EmpresasLandingLayout embedded={embedded}>
       {!resolved ? (
         <Helmet>
           <title>Empresas locais | Achegue-se</title>
@@ -382,17 +384,19 @@ export default function EmpresasLandingPage({
         </Helmet>
       ) : null}
 
-      <LandingTopBar
-        locationLabel={topLocationLabel}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onOpenLocationDialog={() => setLocationDialogOpen(true)}
-        onOpenFilters={() => setMobileFiltersOpen(true)}
-        primaryHref={topPrimaryHref}
-        primaryLabel={topPrimaryLabel}
-        secondaryHref={topSecondaryHref}
-        secondaryLabel={topSecondaryLabel}
-      />
+      {!embedded ? (
+        <LandingTopBar
+          locationLabel={topLocationLabel}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenLocationDialog={() => setLocationDialogOpen(true)}
+          onOpenFilters={() => setMobileFiltersOpen(true)}
+          primaryHref={topPrimaryHref}
+          primaryLabel={topPrimaryLabel}
+          secondaryHref={topSecondaryHref}
+          secondaryLabel={topSecondaryLabel}
+        />
+      ) : null}
 
       <EmpresasHeroSection
         territoryName={territoryName}
