@@ -457,10 +457,10 @@ describe("MVP core module boundary", () => {
   });
 
   it("keeps release E2E aligned with the active MVP lifecycle instead of the retired community-first contract", () => {
-    expect(publicMvpE2e).toContain("/empresas/ba/salvador/pituba");
-    expect(publicMvpE2e).toContain("/mapa/ba/salvador/pituba");
-    expect(publicMvpE2e).toContain("/perto-de-mim/ba/salvador/pituba");
-    expect(publicMvpE2e).toContain("/busca/ba/salvador/pituba");
+    expect(publicMvpE2e).toContain("/ba/salvador/pituba/empresas");
+    expect(publicMvpE2e).toContain("/ba/salvador/pituba/mapa");
+    expect(publicMvpE2e).toContain("/ba/salvador/pituba/perto-de-mim");
+    expect(publicMvpE2e).toContain("/ba/salvador/pituba/busca");
     expect(publicMvpE2e).toContain("HOME_BUSINESS");
     expect(publicMvpE2e).toContain("430m");
 
