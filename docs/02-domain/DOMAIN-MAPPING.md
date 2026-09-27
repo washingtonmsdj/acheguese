@@ -74,13 +74,12 @@ No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Map
 | `/` | ✅ Canônico | Entrada pública do MVP via `TerritoryEntryPage`. |
 | `/:uf/:city` | ✅ Canônico | Home territorial. |
 | `/:uf/:city/:neighborhood` | ✅ Canônico | Home territorial de bairro/grupo resolvido. |
-| `/empresas/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Business. |
-| `/mapa/:uf/:city[/:neighborhood]` | ✅ Ativo | Capability horizontal Map; consome apenas layers de domínios ativos. |
-| `/perto-de-mim[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Capability horizontal Nearby; entrada global permanece válida e variantes territoriais preservam contexto explícito de URL. Depende de Map + Location + Business. |
-| `/busca[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Search canônica; consulta somente providers habilitados pelo lifecycle. |
-| `/buscar[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Experiência de busca assistida sob o mesmo lifecycle de Search. |
+| `/:uf/:city[/:territory]/empresas` | ✅ Ativo | Módulo Business; território é o contêiner canônico. `/empresas` permanece apenas como entrada geral não territorial. |
+| `/:uf/:city[/:territory]/mapa` | ✅ Ativo | Capability horizontal Map; `/mapa` é somente a entrada geral. |
+| `/:uf/:city[/:territory]/perto-de-mim` | ✅ Ativo | Capability horizontal Nearby; `/perto-de-mim` é entrada geral. Depende de Map + Location + Business. |
+| `/:uf/:city[/:territory]/busca` | ✅ Ativo | Search territorial; `/busca` e `/buscar` permanecem entradas gerais. |
 | `/inicio` | ⛔ Legado | Não é entrada canônica nem deve aparecer no sitemap do MVP. |
-| `/comunidade/*` | ⏸️ Pausado | Owner preservado, mas Community não é superfície pública ativa do MVP. |
+| `/:uf/:city[/:territory]/comunidade` | ⏸️ Pausado | Owner preservado. Ao reativar, Community será módulo irmão dentro do território, nunca contêiner de outros módulos. |
 | `/cidade/*` | 🟨 Legado | Não criar redirect paliativo; compatibilidade só permanece com justificativa externa real. |
 
 ---
@@ -102,5 +101,5 @@ A partir desta sprint, novos módulos, componentes e tipos **não podem** introd
 1. **DOMAIN.2** — Introduzir re-exports `Territory = Location`, `TerritoryType = LocationType` em `core/location/index.ts`.
 2. **DOMAIN.3** — Fundir `core/territorial` em `core/location` sob o namespace `territory/`.
 3. **DOMAIN.4** — Continuar removendo aliases restantes; `AchegueSeHomePage`, `PublicCityLandingPage`, `TerritoryUnavailablePage` e `TerritoryFeedPage` já foram aposentados. `ComunidadePage` permanece owner interno preservado, mas Community continua `paused` no MVP. `TerritorialIndexPage`, `TerritorialLandingPage` e o hook `useLandingFeatured` foram aposentados em 2026-09-24 porque não tinham caller runtime no grafo ativo e mantinham dependências de verticais pausadas.
-4. **DOMAIN.5** — Redirecionar rotas legadas reais (`/cidade/*`) sem inventar aliases de indisponibilidade.
+4. **DOMAIN.5** — Remover rotas legadas reais (`/cidade/*`) quando ainda existirem; não criar redirects ou aliases de compatibilidade sem necessidade externa comprovada.
 5. **DOMAIN.6** — Deprecar `core/city`, `core/landing`, `core/community-*` movendo para subpastas canônicas.
