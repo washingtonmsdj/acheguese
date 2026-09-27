@@ -42,19 +42,19 @@ describe("generateSitemap", () => {
       "https://acheguese.com.br/ba/salvador/chapada-do-rio-vermelho",
     );
     expect(sitemap).toContain(
-      "https://acheguese.com.br/empresas/ba/salvador/chapada-do-rio-vermelho",
+      "https://acheguese.com.br/ba/salvador/chapada-do-rio-vermelho/empresas",
     );
     expect(sitemap).not.toContain(
-      "https://acheguese.com.br/gastronomia/ba/salvador/chapada-do-rio-vermelho",
+      "https://acheguese.com.br/ba/salvador/chapada-do-rio-vermelho/gastronomia",
     );
     expect(sitemap).toContain(
       "https://acheguese.com.br/ba/salvador/complexo-do-nordeste-de-amaralina",
     );
     expect(sitemap).toContain(
-      "https://acheguese.com.br/empresas/ba/salvador/complexo-do-nordeste-de-amaralina",
+      "https://acheguese.com.br/ba/salvador/complexo-do-nordeste-de-amaralina/empresas",
     );
     expect(sitemap).toContain(
-      "https://acheguese.com.br/mapa/ba/salvador/complexo-do-nordeste-de-amaralina",
+      "https://acheguese.com.br/ba/salvador/complexo-do-nordeste-de-amaralina/mapa",
     );
     expect(sitemap).not.toContain("/mobilidade");
     expect(sitemap).not.toContain("/eventos");
