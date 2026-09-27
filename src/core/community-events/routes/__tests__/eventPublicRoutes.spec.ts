@@ -16,8 +16,8 @@ describe("eventPublicRoutes", () => {
 
   it("builds canonical territorial event route patterns", () => {
     expect(eventTerritorialRoutePaths.home()).toBe("/:state/:city/eventos");
-    expect(eventTerritorialRoutePaths.district()).toBe(
-      "/:state/:city/:district/eventos",
+    expect(eventTerritorialRoutePaths.territory()).toBe(
+      "/:state/:city/:territorySlug/eventos",
     );
     expect(eventTerritorialRoutePaths.favorites()).toBe(
       "/:state/:city/eventos/favoritos",
