@@ -11,14 +11,13 @@
  */
 
 import { useState, useCallback, useMemo, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import {
   Search, Wrench, Star, MapPin, ChevronRight, ArrowRight,
   Sparkles, BadgeCheck, MessageCircle, Shield,
-  Clock, Users, Phone, Filter, Trophy, Zap, LayoutList,
-  Building2, Tag, UtensilsCrossed,
+  Clock, Users, Phone, Filter, Trophy, Zap,
 } from "lucide-react";
 import { CanonicalHero } from "@/shared/components/hero/CanonicalHero";
 import { Button } from "@/shared/components/ui/button";
@@ -26,7 +25,6 @@ import { Input } from "@/shared/components/ui/input";
 import { useSessionContext } from "@/core/session";
 import { TerritoryIndicator, useModuleTerritoryFilter, useTerritoryLabels } from "@/core/location";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { useServicos } from "@/modules/professionals/services/hooks/useServicos";
 import { useTopRatedProfessionals } from "@/modules/professionals/services/hooks/useTopRatedProfessionals";
@@ -41,7 +39,6 @@ import {
 } from "@/modules/professionals/services/domain/professionalCategories";
 import type { ProfessionalItem } from "@/modules/professionals/services/domain/professionalViewModels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 
 import heroImg from "@/assets/servicos-hero.jpg";
 
@@ -60,14 +57,7 @@ const BENEFITS = [
   { icon: Zap,        title: "Contato direto",           description: "Quando o profissional informa WhatsApp ou prazo de resposta, esses dados aparecem no perfil.",                  color: "text-warning", bgColor: "bg-warning/10" },
 ];
 
-const COMMUNITY_MODULE_TABS = [
-  { key: "feed", label: "Feed", icon: LayoutList },
-  { key: "business", label: "Empresas", icon: Building2 },
-  { key: "services", label: "Serviços", icon: Wrench },
-  { key: "classifieds", label: "Classificados", icon: Tag },
-  { key: "gastronomy", label: "Gastronomia", icon: UtensilsCrossed },
-  { key: "map", label: "Mapa", icon: MapPin },
-] as const;
+
 
 // ── Componentes auxiliares ────────────────────────────────────────────
 
@@ -283,159 +273,9 @@ function ServiceCategoryRail({
   );
 }
 
-function NeighborhoodServicesHero({
-  territoryName,
-  professionalsCount,
-  averageRating,
-  verifiedCount,
-  selectedCategory,
-  onResetCategory,
-  primaryHref,
-  primaryLabel,
-  secondaryHref,
-  moduleUrls,
-}: {
-  territoryName: string;
-  professionalsCount: string;
-  averageRating: string;
-  verifiedCount: string;
-  selectedCategory: string;
-  onResetCategory: () => void;
-  primaryHref: string;
-  primaryLabel: string;
-  secondaryHref: string;
-  moduleUrls: ReturnType<typeof useFriendlyModuleUrls>;
-}) {
-  const moduleLinks = [
-    { ...COMMUNITY_MODULE_TABS[2], href: moduleUrls.services, isActive: true },
-    { ...COMMUNITY_MODULE_TABS[0], href: moduleUrls.community, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[1], href: moduleUrls.business, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[3], href: moduleUrls.classifieds, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[4], href: moduleUrls.gastronomy, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[5], href: moduleUrls.map, isActive: false },
-  ] as const;
-
-  return (
-    <section className="max-w-7xl mx-auto w-full px-4 py-3 sm:px-6 md:py-5">
-      <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,32,0.98),rgba(7,17,24,0.98))] text-white shadow-xl shadow-black/10">
-        <div className="border-b border-white/10 px-4 py-3 sm:px-5">
-          <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {moduleLinks.map((item) => {
-              const Icon = item.icon;
-              return item.isActive ? (
-                <span
-                  key={item.key}
-                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-teal-300/35 bg-teal-300/12 px-4 text-xs font-semibold text-teal-100"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </span>
-              ) : (
-                <Link
-                  key={item.key}
-                  to={item.href}
-                  className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 text-xs font-semibold text-white/65 transition-colors hover:border-white/20 hover:text-white"
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="grid gap-3 px-4 py-4 sm:gap-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
-          <div className="min-w-0">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-teal-300">
-              {territoryName}
-            </p>
-            <h1 className="mt-2 max-w-[14ch] text-[1.75rem] font-semibold leading-[1.05] sm:max-w-none sm:text-[2rem]">
-              Serviços e profissionais do bairro
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Explore profissionais locais, compare reputação e encontre quem atende dentro do território com contexto comunitário real.
-            </p>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="inline-flex min-h-8 items-center rounded-full border border-teal-300/30 bg-teal-300/10 px-3 text-xs font-semibold text-teal-100">
-                Descoberta pública
-              </span>
-              <span className="inline-flex min-h-8 items-center rounded-full border border-amber-300/25 bg-amber-300/10 px-3 text-xs font-semibold text-amber-100">
-                Recomendações locais
-              </span>
-            </div>
-
-            <div className="mt-4 grid gap-2 sm:max-w-xl sm:grid-cols-2 sm:gap-3">
-              <Link
-                to={primaryHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
-              >
-                <Wrench className="mr-2 h-4 w-4" />
-                {primaryLabel}
-              </Link>
-              <Link
-                to={secondaryHref}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
-              >
-                <MapPin className="mr-2 h-4 w-4" />
-                Ver mapa do bairro
-              </Link>
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={onResetCategory}
-                className={`inline-flex min-h-10 items-center rounded-full px-4 text-xs font-semibold transition-colors ${
-                  selectedCategory === "todos"
-                    ? "border border-teal-300/35 bg-teal-300/12 text-teal-100"
-                    : "border border-white/10 bg-white/[0.03] text-white/70 hover:bg-white/[0.08]"
-                }`}
-              >
-                Todos os serviços
-              </button>
-            </div>
-          </div>
-
-          <div className="grid gap-2 rounded-[18px] border border-white/10 bg-black/20 p-3 sm:gap-3 sm:rounded-[20px] sm:p-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                Panorama local
-              </p>
-              <p className="mt-1 text-[13px] leading-5 text-white/65 sm:text-sm">
-                {professionalsCount} profissionais e média de {averageRating} no território.
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 sm:px-3">
-                <p className="text-base font-semibold text-white sm:text-lg">{professionalsCount}</p>
-                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Perfis</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 sm:px-3">
-                <p className="text-base font-semibold text-white sm:text-lg">{verifiedCount}</p>
-                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Verificados</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-2 py-3 sm:px-3">
-                <p className="text-base font-semibold text-white sm:text-lg">{averageRating}</p>
-                <p className="text-[0.62rem] uppercase tracking-[0.14em] text-white/45 sm:text-[0.68rem] sm:tracking-[0.18em]">Média</p>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-teal-300/15 bg-teal-300/[0.05] px-3 py-3 text-sm text-white/68">
-              Serviços do bairro usam o território como contexto principal. Isso evita páginas genéricas e mantém descoberta, reputação e proximidade na mesma base.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-// ── Props ─────────────────────────────────────────────────────────────
-
 interface ServicosLandingPageProps {
   resolved?: ResolvedTerritory;
   activeMemberIds?: string[];
-  presentation?: "standalone" | "embedded";
 }
 
 // ── Página principal ──────────────────────────────────────────────────
@@ -443,25 +283,20 @@ interface ServicosLandingPageProps {
 export default function ServicosLandingPage({
   resolved,
   activeMemberIds,
-  presentation = "standalone",
 }: ServicosLandingPageProps) {
   const territorialContext = useTerritorialContextOptional();
   const routeResolved = territorialContext?.resolved ?? resolved ?? null;
   const routeActiveMemberIds = territorialContext?.activeMemberIds ?? activeMemberIds;
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useSessionContext();
   const territoryLabels = useTerritoryLabels(routeResolved);
   const moduleTerritory = useModuleTerritoryFilter({
     routeResolved,
     activeMemberIds: routeActiveMemberIds,
   });
-  const moduleUrls = useFriendlyModuleUrls();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
   const resultsSectionRef = useRef<HTMLElement>(null);
-  const isCommunityScopedSurface = location.pathname.includes("/comunidade/");
-  const isEmbedded = presentation === "embedded";
 
   // ✅ SSOT: Nome do território com preposição
   const territoryName = useMemo(() => {
@@ -476,11 +311,7 @@ export default function ServicosLandingPage({
   });
   // ✅ SSOT global para todas as URLs — inclui services, business, classifieds, community
   const appUrls = useAppUrls(routeResolved);
-  const communityPrimaryHref = useMemo(
-    () => (user ? appUrls.services.register : withQueryParams(appUrls.auth.login, { redirect: appUrls.services.register })),
-    [appUrls.auth.login, appUrls.services.register, user],
-  );
-  const communityPrimaryLabel = user ? "Cadastrar serviço" : "Entrar para interagir";
+
 
   // ✅ SSOT: useServicos com filtro territorial — respeita resolved + activeMemberIds
   const { professionals, initialLoading } = useServicos({
@@ -491,22 +322,6 @@ export default function ServicosLandingPage({
     activeMemberIds: routeActiveMemberIds,
     territoryFilter: moduleTerritory.territoryFilter,
   });
-
-  const serviceAggregate = useMemo(() => {
-    const ratings = professionals
-      .map((professional) => professional.rating)
-      .filter((rating) => Number.isFinite(rating) && rating > 0);
-    const averageRating =
-      ratings.length > 0 ? ratings.reduce((sum, rating) => sum + rating, 0) / ratings.length : null;
-    const verifiedCount = professionals.filter((professional) => professional.is_verified).length;
-    const responseTime = professionals.find((professional) => professional.response_time.trim())?.response_time.trim();
-
-    return {
-      averageRating,
-      verifiedCount,
-      responseTime,
-    };
-  }, [professionals]);
 
   const serviceStats = useMemo(() => {
     const ratings = professionals
@@ -545,9 +360,6 @@ export default function ServicosLandingPage({
     ];
   }, [initialLoading, professionals]);
 
-  const communityAverageRating = initialLoading ? "..." : formatAverageRating(serviceAggregate.averageRating);
-  const communityVerifiedCount = initialLoading ? "..." : formatServicesMetric(serviceAggregate.verifiedCount);
-
   const handleHeroSearch = useCallback(() => {
     resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
@@ -572,10 +384,8 @@ export default function ServicosLandingPage({
     <main
       id="main-content"
       tabIndex={-1}
-      className={isEmbedded
-        ? "flex w-full min-w-0 flex-col bg-background text-foreground focus:outline-none"
-        : "flex min-h-screen w-full flex-col bg-background text-foreground focus:outline-none"}
-      data-module-presentation={presentation}
+      className="flex min-h-screen w-full flex-col bg-background text-foreground focus:outline-none"
+      data-module-presentation="standalone"
     >
       {!resolved && (
         <Helmet>
@@ -588,24 +398,18 @@ export default function ServicosLandingPage({
       )}
 
       {/* ── HEADER COM BUSCA ──────────────────────────────────────── */}
-      {!isCommunityScopedSurface ? (
-        <ServicosHeader
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-        />
-      ) : null}
+      <ServicosHeader
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+      />
 
       {/* ── CATEGORIAS (ESTILO GASTRONOMIA - TOPO) ───────────────── */}
-      {!isCommunityScopedSurface ? (
-        <ServiceCategoryRail
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-      ) : null}
+      <ServiceCategoryRail
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       {/* ── BANNER PROMOCIONAL ────────────────────────────────────── */}
-      {!isCommunityScopedSurface ? (
-        <>
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
         className="w-full bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 border-b border-primary/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-center gap-2 text-sm">
@@ -644,32 +448,11 @@ export default function ServicosLandingPage({
           onClick: () => setSelectedCategory(cat.id),
         }))}
       />
-        </>
-      ) : !isEmbedded ? (
-        <NeighborhoodServicesHero
-          territoryName={territoryName}
-          professionalsCount={initialLoading ? "..." : formatServicesMetric(professionals.length)}
-          averageRating={communityAverageRating}
-          verifiedCount={communityVerifiedCount}
-          selectedCategory={selectedCategory}
-          onResetCategory={() => setSelectedCategory("todos")}
-          primaryHref={communityPrimaryHref}
-          primaryLabel={communityPrimaryLabel}
-          secondaryHref={moduleUrls.map}
-          moduleUrls={moduleUrls}
-        />
-      ) : null}
 
-      {isCommunityScopedSurface ? (
-        <ServiceCategoryRail
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-      ) : null}
+
 
       {/* ── ESTATÍSTICAS ──────────────────────────────────────────── */}
-      {!isCommunityScopedSurface ? (
-        <section className="max-w-7xl mx-auto w-full px-4 py-6 sm:px-6 md:py-14">
+      <section className="max-w-7xl mx-auto w-full px-4 py-6 sm:px-6 md:py-14">
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
             {serviceStats.map((stat) => (
               <motion.div key={stat.label} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -685,7 +468,6 @@ export default function ServicosLandingPage({
             ))}
           </div>
         </section>
-      ) : null}
 
       {/* ── TOP RATED ─────────────────────────────────────────────── */}
       {topRated.length > 0 && (
@@ -766,8 +548,6 @@ export default function ServicosLandingPage({
       </section>
 
       {/* ── COMO FUNCIONA ─────────────────────────────────────────── */}
-      {!isCommunityScopedSurface ? (
-        <>
       <section className="w-full bg-gradient-to-br from-primary/8 via-card to-accent/8 border-y border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-16">
           <div className="text-center mb-10">
@@ -868,8 +648,6 @@ export default function ServicosLandingPage({
           <button onClick={() => navigate(appUrls.community.feed)} className="hover:text-primary transition-colors">Comunidade</button>
         </div>
       </footer>
-        </>
-      ) : null}
 
     </main>
   );
