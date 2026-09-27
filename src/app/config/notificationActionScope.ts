@@ -4,6 +4,11 @@ import {
 } from "./lifecycleRegistry";
 import type { PlatformCapabilityKey } from "./platformCapabilityRegistry";
 import type { ProductModuleKey } from "./productModuleRegistry";
+import {
+  APP_MODULE_SLUGS,
+  getAppModuleSlugFromPath,
+  type AppModuleSlug,
+} from "@/shared/config/moduleSlugs";
 
 export const NOTIFICATION_INBOX_PATH = "/notificacoes";
 export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
@@ -68,92 +73,6 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
     kind: "product",
     surface: "business",
   },
-
-  {
-    pattern: /^\/empresas(?:\/|$)/i,
-    kind: "product",
-    surface: "business",
-  },
-  {
-    pattern: /^\/comunidade(?:\/|$)/i,
-    kind: "product",
-    surface: "community",
-  },
-  {
-    pattern: /^\/gastronomia(?:\/|$)/i,
-    kind: "product",
-    surface: "gastronomy",
-  },
-  {
-    pattern: /^\/(?:servicos|services)(?:\/|$)/i,
-    kind: "product",
-    surface: "services",
-  },
-  {
-    pattern: /^\/(?:classificados|classifieds|classificado)(?:\/|$)/i,
-    kind: "product",
-    surface: "classifieds",
-  },
-  {
-    pattern: /^\/(?:pontos-turisticos|tourist-points)(?:\/|$)/i,
-    kind: "product",
-    surface: "touristPoints",
-  },
-  {
-    pattern: /^\/(?:educacao|education)(?:\/|$)/i,
-    kind: "product",
-    surface: "education",
-  },
-  {
-    pattern: /^\/(?:vagas|jobs)(?:\/|$)/i,
-    kind: "product",
-    surface: "jobs",
-  },
-  {
-    pattern: /^\/(?:eventos|events)(?:\/|$)/i,
-    kind: "product",
-    surface: "events",
-  },
-  {
-    pattern: /^\/(?:comunicacao|communication)(?:\/|$)/i,
-    kind: "product",
-    surface: "communication",
-  },
-  {
-    pattern: /^\/(?:mobilidade|mobility|track|historico)(?:\/|$)/i,
-    kind: "product",
-    surface: "mobility",
-  },
-  {
-    pattern: /^\/(?:cupons|coupons)(?:\/|$)/i,
-    kind: "product",
-    surface: "coupons",
-  },
-  {
-    pattern: /^\/(?:ranking|gamificacao|gamification)(?:\/|$)/i,
-    kind: "product",
-    surface: "gamification",
-  },
-  {
-    pattern: /^\/analytics(?:\/|$)/i,
-    kind: "product",
-    surface: "publicAnalytics",
-  },
-  {
-    pattern: /^\/alertas(?:\/|$)/i,
-    kind: "product",
-    surface: "communityAlerts",
-  },
-  {
-    pattern: /^\/problemas(?:\/|$)/i,
-    kind: "product",
-    surface: "communityIssues",
-  },
-  {
-    pattern: /^\/(?:achados-perdidos|achados-e-perdidos)(?:\/|$)/i,
-    kind: "product",
-    surface: "communityLostFound",
-  },
   {
     pattern: /^\/(?:planos|checkout)(?:\/|$)/i,
     kind: "product",
@@ -163,23 +82,6 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
     pattern: /^\/settings\/subscription(?:\/|$)/i,
     kind: "product",
     surface: "billing",
-  },
-
-  // Horizontal/active surfaces are lifecycle-scoped too.
-  {
-    pattern: /^\/mapa(?:\/|$)/i,
-    kind: "capability",
-    surface: "map",
-  },
-  {
-    pattern: /^\/perto-de-mim(?:\/|$)/i,
-    kind: "capability",
-    surface: "nearby",
-  },
-  {
-    pattern: /^\/(?:busca|buscar)(?:\/|$)/i,
-    kind: "capability",
-    surface: "search",
   },
   {
     pattern: /^\/mensagens(?:\/|$)/i,
@@ -192,6 +94,107 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
     surface: "profiles",
   },
 ];
+const MODULE_ROUTE_OWNERS: Readonly<
+  Partial<Record<AppModuleSlug, NotificationActionRouteRule>>
+> = {
+  [APP_MODULE_SLUGS.business]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "business",
+  },
+  [APP_MODULE_SLUGS.community]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "community",
+  },
+  [APP_MODULE_SLUGS.gastronomy]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "gastronomy",
+  },
+  [APP_MODULE_SLUGS.services]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "services",
+  },
+  [APP_MODULE_SLUGS.classifieds]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "classifieds",
+  },
+  [APP_MODULE_SLUGS.touristPoints]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "touristPoints",
+  },
+  [APP_MODULE_SLUGS.education]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "education",
+  },
+  [APP_MODULE_SLUGS.jobs]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "jobs",
+  },
+  [APP_MODULE_SLUGS.events]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "events",
+  },
+  [APP_MODULE_SLUGS.mobility]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "mobility",
+  },
+  [APP_MODULE_SLUGS.ranking]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "gamification",
+  },
+  [APP_MODULE_SLUGS.communityAlerts]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "communityAlerts",
+  },
+  [APP_MODULE_SLUGS.communityIssues]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "communityIssues",
+  },
+  [APP_MODULE_SLUGS.communityLostFound]: {
+    pattern: /$^/,
+    kind: "product",
+    surface: "communityLostFound",
+  },
+  [APP_MODULE_SLUGS.map]: {
+    pattern: /$^/,
+    kind: "capability",
+    surface: "map",
+  },
+  [APP_MODULE_SLUGS.nearby]: {
+    pattern: /$^/,
+    kind: "capability",
+    surface: "nearby",
+  },
+  [APP_MODULE_SLUGS.search]: {
+    pattern: /$^/,
+    kind: "capability",
+    surface: "search",
+  },
+};
+
+function getModuleRouteRule(pathname: string): NotificationActionRouteRule | undefined {
+  const moduleSlug = getAppModuleSlugFromPath(pathname);
+  return moduleSlug ? MODULE_ROUTE_OWNERS[moduleSlug] : undefined;
+}
+
+function isRetiredModuleFirstTerritorialPath(pathname: string): boolean {
+  const segments = pathname.split("/").filter(Boolean);
+  const first = segments[0] as AppModuleSlug | undefined;
+  if (!first || !MODULE_ROUTE_OWNERS[first]) return false;
+  return /^[a-z]{2}$/i.test(segments[1] ?? "") && Boolean(segments[2]);
+}
 
 const COMMUNITY_EMBEDDED_SURFACES: Readonly<
   Partial<Record<string, ProductModuleKey>>
@@ -214,9 +217,10 @@ function getCommunityEmbeddedSurface(
     .filter(Boolean)
     .map((segment) => segment.toLocaleLowerCase("pt-BR"));
 
-  if (segments[0] !== "comunidade") return undefined;
+  const communityIndex = segments.indexOf(APP_MODULE_SLUGS.community);
+  if (communityIndex < 0) return undefined;
 
-  for (const segment of segments.slice(1)) {
+  for (const segment of segments.slice(communityIndex + 1)) {
     const surface = COMMUNITY_EMBEDDED_SURFACES[segment];
     if (surface) return surface;
   }
@@ -263,6 +267,7 @@ export function resolveNotificationActionTarget(
   }
 
   if (
+    isRetiredModuleFirstTerritorialPath(pathname) ||
     RETIRED_NOTIFICATION_ROUTE_PATTERNS.some((pattern) =>
       pattern.test(pathname),
     )
@@ -284,7 +289,9 @@ export function resolveNotificationActionTarget(
     };
   }
 
-  const routeRule = ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
+  const routeRule =
+    getModuleRouteRule(pathname) ??
+    ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
   if (!routeRule || isNotificationRouteRuleEnabled(routeRule)) {
     return {
       href: actionUrl,
