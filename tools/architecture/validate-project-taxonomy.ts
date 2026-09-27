@@ -120,7 +120,6 @@ const COMMUNITY_FIRST_DOC_MARKERS = [
   "`locations`",
   "`territorial_groups`",
   "`territory_communities`",
-  "`community_public_aliases`",
   "`community_memberships`",
   "`community_entity_links`",
   "`src/core/community-experience`",
@@ -128,7 +127,7 @@ const COMMUNITY_FIRST_DOC_MARKERS = [
 ] as const;
 
 const COMMUNITY_EXPERIENCE_TABLE_ACCESS_RE =
-  /\.from\(\s*["'](?:territory_communities|community_public_aliases|community_memberships|community_entity_links)["']/;
+  /\.from\(\s*["'](?:territory_communities|community_memberships|community_entity_links)["']/;
 const COMMUNITY_EXPERIENCE_TABLE_SSOT_PATHS = new Set([
   COMMUNITY_EXPERIENCE_REPOSITORY_PATH,
   COMMUNITY_MEMBERSHIP_REPOSITORY_PATH,
