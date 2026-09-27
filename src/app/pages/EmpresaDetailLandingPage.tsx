@@ -49,7 +49,7 @@ interface EmpresaDetailLandingPageProps {
   routeParams?: {
     state?: string;
     city?: string;
-    district?: string;
+    territorySlug?: string;
     slug?: string;
   };
   canonicalPathOverride?: string;
@@ -64,12 +64,13 @@ export default function EmpresaDetailLandingPage(
   const urlParams = useParams<{
     state: string;
     city: string;
-    district: string;
+    territorySlug: string;
     slug: string;
   }>();
   const state = props.routeParams?.state ?? urlParams.state;
   const city = props.routeParams?.city ?? urlParams.city;
-  const district = props.routeParams?.district ?? urlParams.district;
+  const territorySlug =
+    props.routeParams?.territorySlug ?? urlParams.territorySlug;
   const slug = props.routeParams?.slug ?? urlParams.slug;
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,7 +90,7 @@ export default function EmpresaDetailLandingPage(
   const { data: snapshot, isLoading } = usePublicBusinessSnapshot({
     state,
     city,
-    district,
+    district: territorySlug,
     slug,
   });
   const snapshotBusiness = (snapshot?.institutional.business as BusinessExtended | undefined) ?? null;
