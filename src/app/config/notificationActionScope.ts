@@ -183,7 +183,7 @@ function isRetiredModuleFirstTerritorialPath(pathname: string): boolean {
   return /^[a-z]{2}$/i.test(segments[1] ?? "") && Boolean(segments[2]);
 }
 
-const COMMUNITY_EMBEDDED_SURFACES: Readonly<
+const COMMUNITY_CHILD_SURFACES: Readonly<
   Partial<Record<string, ProductModuleKey>>
 > = {
   alertas: "communityAlerts",
@@ -191,12 +191,9 @@ const COMMUNITY_EMBEDDED_SURFACES: Readonly<
   "achados-perdidos": "communityLostFound",
   "achados-e-perdidos": "communityLostFound",
   comunicacao: "communityCommunication",
-  eventos: "events",
-  oportunidades: "jobs",
-  vagas: "jobs",
 };
 
-function getCommunityEmbeddedSurface(
+function getCommunityChildSurface(
   pathname: string,
 ): ProductModuleKey | undefined {
   const segments = pathname
@@ -208,7 +205,7 @@ function getCommunityEmbeddedSurface(
   if (communityIndex < 0) return undefined;
 
   for (const segment of segments.slice(communityIndex + 1)) {
-    const surface = COMMUNITY_EMBEDDED_SURFACES[segment];
+    const surface = COMMUNITY_CHILD_SURFACES[segment];
     if (surface) return surface;
   }
 
@@ -266,7 +263,7 @@ export function resolveNotificationActionTarget(
     };
   }
 
-  const communitySurface = getCommunityEmbeddedSurface(pathname);
+  const communitySurface = getCommunityChildSurface(pathname);
   if (communitySurface && !isProductModuleEnabled(communitySurface)) {
     return {
       href: NOTIFICATION_INBOX_PATH,
