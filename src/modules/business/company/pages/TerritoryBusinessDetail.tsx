@@ -239,11 +239,14 @@ export function TerritoryBusinessDetail({
                 <p>{category} <i>•</i> {heroDescription}</p>
                 <div className="bd-rating-row">
                   <strong><Star /> {rating.toFixed(1)}</strong>
-                  <span>({reviewCount} avaliações)</span>
+                  <span className="bd-review-count">
+                    <span className="bd-review-count-long">({reviewCount} avaliações)</span>
+                    <span className="bd-review-count-short">({reviewCount})</span>
+                  </span>
                   <button type="button" onClick={onToggleFavorite} aria-pressed={isFavorite}>
-                    <Heart className={isFavorite ? "is-filled" : ""} /> {isFavorite ? "Salvo" : "Salvar"}
+                    <Heart className={isFavorite ? "is-filled" : ""} /><span>{isFavorite ? "Salvo" : "Salvar"}</span>
                   </button>
-                  <button type="button" onClick={onShare}><Share2 /> Compartilhar</button>
+                  <button className="bd-share-button" type="button" onClick={onShare} aria-label="Compartilhar empresa"><Share2 /><span>Compartilhar</span></button>
                 </div>
               </div>
             </div>
