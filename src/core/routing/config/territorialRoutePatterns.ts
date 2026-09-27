@@ -52,9 +52,9 @@ function joinRoutePath(segments: readonly string[]): string {
 /**
  * Canonical territorial hierarchy:
  *   /:state/:city
- *   /:state/:city/:district
+ *   /:state/:city/:territorySlug
  *   /:state/:city/:module
- *   /:state/:city/:district/:module
+ *   /:state/:city/:territorySlug/:module
  */
 export function buildTerritorialBareRoutePath(
   suffixSegments: readonly string[] = [],
@@ -78,7 +78,7 @@ export function buildScopedTerritorialRoutePath(
   suffixSegments: readonly string[] = [],
 ): string {
   return buildTerritorialBareRoutePath([
-    TERRITORIAL_ROUTE_PARAMS.district,
+    TERRITORIAL_ROUTE_PARAMS.territorySlug,
     segment,
     ...suffixSegments,
   ]);
