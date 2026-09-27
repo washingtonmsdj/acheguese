@@ -100,87 +100,70 @@ const MODULE_ROUTE_OWNERS: Readonly<
   Partial<Record<AppModuleSlug, NotificationLifecycleOwner>>
 > = {
   [APP_MODULE_SLUGS.business]: {
-,
     kind: "product",
     surface: "business",
   },
   [APP_MODULE_SLUGS.community]: {
-,
     kind: "product",
     surface: "community",
   },
   [APP_MODULE_SLUGS.gastronomy]: {
-,
     kind: "product",
     surface: "gastronomy",
   },
   [APP_MODULE_SLUGS.services]: {
-,
     kind: "product",
     surface: "services",
   },
   [APP_MODULE_SLUGS.classifieds]: {
-,
     kind: "product",
     surface: "classifieds",
   },
   [APP_MODULE_SLUGS.touristPoints]: {
-,
     kind: "product",
     surface: "touristPoints",
   },
   [APP_MODULE_SLUGS.education]: {
-,
     kind: "product",
     surface: "education",
   },
   [APP_MODULE_SLUGS.jobs]: {
-,
     kind: "product",
     surface: "jobs",
   },
   [APP_MODULE_SLUGS.events]: {
-,
     kind: "product",
     surface: "events",
   },
   [APP_MODULE_SLUGS.mobility]: {
-,
     kind: "product",
     surface: "mobility",
   },
   [APP_MODULE_SLUGS.ranking]: {
-,
     kind: "product",
     surface: "gamification",
   },
   [APP_MODULE_SLUGS.communityAlerts]: {
-,
     kind: "product",
     surface: "communityAlerts",
   },
   [APP_MODULE_SLUGS.communityIssues]: {
-,
     kind: "product",
     surface: "communityIssues",
   },
   [APP_MODULE_SLUGS.communityLostFound]: {
-,
     kind: "product",
     surface: "communityLostFound",
   },
   [APP_MODULE_SLUGS.map]: {
-,
     kind: "capability",
     surface: "map",
   },
   [APP_MODULE_SLUGS.nearby]: {
-,
     kind: "capability",
     surface: "nearby",
   },
   [APP_MODULE_SLUGS.search]: {
-,
     kind: "capability",
     surface: "search",
   },
