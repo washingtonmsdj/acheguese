@@ -280,7 +280,7 @@ function inferDomainFromRoute(route: RouteEntry): string | null {
     ["/services", "professionals-services"],
     ["/servicos", "professionals-services"],
     ["/vagas", "professionals-services"],
-    ["/comunidade/:state/:city", "community-feed"],
+    ["/:state/:city/:territory/comunidade", "community-feed"],
     ["/recomendacoes", "community-recommendations"],
     ["/achados-perdidos", "community-lost-found"],
     ["/eventos", "community-events"],
