@@ -123,7 +123,6 @@ const community = {
   description: null,
   is_featured: true,
   sort_order: 1,
-  public_alias: "pituba",
 };
 
 const business = {
@@ -363,7 +362,7 @@ describe("SearchService", () => {
           id: "community-1",
           type: "community",
           title: "Pituba",
-          url: "/comunidade/pituba",
+          url: null,
         }),
         expect.objectContaining({
           id: "business-1",
@@ -557,7 +556,6 @@ describe("SearchService", () => {
       id: "community-unlinked",
       name: "Outra Comunidade",
       slug: "outra-comunidade",
-      public_alias: "outra-comunidade",
     };
 
     mocks.searchPublicCommunities.mockResolvedValue([community, otherCommunity]);
