@@ -2,7 +2,7 @@
  * ClassifiedCanonicalRoute - Rota canônica de classificado
  *
  * Resolve classificado pela URL canônica completa:
- * /classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId
+ * /:uf/:cidade/:bairro/classificados/:categoria/:subcategoria/:slug/:publicId
  *
  * Comportamento:
  * - Resolve pelo public_id (âncora estável)
