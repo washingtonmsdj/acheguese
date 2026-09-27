@@ -284,7 +284,7 @@ describe("Gastronomy territorial runtime", () => {
     expect(usePublicGastronomySnapshotMock).toHaveBeenCalledWith({
       state: "ba",
       city: "salvador",
-      district: "pituba",
+      territorySlug: "pituba",
       slug: "pasta-lab",
     });
     expect(
