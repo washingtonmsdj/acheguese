@@ -123,5 +123,17 @@ describe("territory-first public routing contract", () => {
     expect(rootRoutes).not.toContain("TerritoryPortalPage");
     expect(layoutRoutes).toContain("buildTerritorialBareRoutePath");
     expect(layoutRoutes).toContain("<TerritoryHomePage />");
+
+    const appShell = readFileSync(
+      join(ROOT, "src/app/components/AppLayoutSidebar.tsx"),
+      "utf8",
+    );
+    expect(appShell).toContain("isCanonicalTerritorialModuleRoute");
+    expect(appShell).toContain("getAppModuleSlugFromPath(pathname)");
+    expect(appShell).toContain("parsePublicTerritoryPath(pathname)");
+    expect(appShell).not.toContain("isTerritoryVivoExploreRoute");
+    expect(appShell).not.toContain(
+      'pathSegments[0] === MODULE_SLUGS.search',
+    );
   });
 });
