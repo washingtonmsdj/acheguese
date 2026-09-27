@@ -12,7 +12,7 @@ vi.mock('@/core/business', () => ({
     getBusinessesByIds: vi.fn(),
   },
   BusinessUrlService: {
-    getCanonicalUrl: vi.fn((ctx) => `/empresas/ba/salvador/pituba/${ctx.slug}`),
+    getCanonicalUrl: vi.fn((ctx) => `/ba/salvador/pituba/empresas/${ctx.slug}`),
   },
 }));
 
@@ -139,7 +139,7 @@ describe('SearchBusinessesActionHandler', () => {
 
     const results = await handler.execute(mockIntent, mockContext);
 
-    expect(results[0].url).toBe('/empresas/ba/salvador/pituba/restaurante-gourmet');
+    expect(results[0].url).toBe('/ba/salvador/pituba/empresas/restaurante-gourmet');
   });
 
   it('deve manter URL publica canonica mesmo quando negocio e premium', async () => {
@@ -157,7 +157,7 @@ describe('SearchBusinessesActionHandler', () => {
 
     const results = await handler.execute(mockIntent, mockContext);
 
-    expect(results[0].url).toBe('/empresas/ba/salvador/pituba/empresa-premium');
+    expect(results[0].url).toBe('/ba/salvador/pituba/empresas/empresa-premium');
   });
 
   it('deve fazer fallback quando busca geoespacial falhar', async () => {
