@@ -173,6 +173,7 @@ export function TerritorialLayout({
   const params = useParams<{
     state?: string;
     city?: string;
+    territorySlug?: string;
     district?: string;
     groupSlug?: string;
     groupSlugOrDistrict?: string;
@@ -180,7 +181,11 @@ export function TerritorialLayout({
 
   const state = params.state;
   const city = params.city;
-  const slug = params.groupSlug ?? params.district ?? params.groupSlugOrDistrict;
+  const slug =
+    params.territorySlug ??
+    params.groupSlug ??
+    params.district ??
+    params.groupSlugOrDistrict;
   const currentModuleSlug = getAppModuleSlugFromPath(pathname) ?? "";
   const currentModuleKeys = resolveModuleKeysFromSlug(
     currentModuleSlug,
