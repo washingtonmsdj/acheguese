@@ -8,16 +8,21 @@ type ParsedPublicTerritoryPath = {
   territorySlug?: string;
 };
 
-const TERRITORIAL_STATIC_SEGMENT_SET = new Set<string>(
-  Object.values(TERRITORIAL_ROUTE_STATIC_SEGMENTS),
+const TERRITORIAL_MODULE_SEGMENT_SET = new Set<string>(
+  Object.values(APP_MODULE_SLUGS),
 );
+
+const CITY_LEVEL_STATIC_SEGMENT_SET = new Set<string>([
+  TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias,
+  TERRITORIAL_ROUTE_STATIC_SEGMENTS.communication,
+]);
 
 export function isCommunityTerritoryStaticSegment(
   segment: string | undefined,
 ): boolean {
   return Boolean(
     segment &&
-      (TERRITORIAL_STATIC_SEGMENT_SET.has(segment) ||
+      (TERRITORIAL_MODULE_SEGMENT_SET.has(segment) ||
         isCommunityRouteSuffixSegment(segment)),
   );
 }
@@ -26,23 +31,23 @@ function isStateSegment(value: string | undefined): boolean {
   return Boolean(value && /^[a-z]{2}$/i.test(value));
 }
 
-export function parsePublicTerritoryPath(pathname: string): ParsedPublicTerritoryPath {
+export function parsePublicTerritoryPath(
+  pathname: string,
+): ParsedPublicTerritoryPath {
   const parts = pathname.split("/").filter(Boolean);
-  if (parts.length < 2) return {};
+  if (!isStateSegment(parts[0]) || !parts[1]) return {};
 
-  const offset = isStateSegment(parts[0]) ? 0 : 1;
-  const state = parts[offset];
-  const city = parts[offset + 1];
-  const rawTerritorySlug = parts[offset + 2];
-  const territorySlug =
-    parts[0] === APP_MODULE_SLUGS.community &&
-    isCommunityTerritoryStaticSegment(rawTerritorySlug)
-      ? undefined
-      : rawTerritorySlug;
+  const state = parts[0];
+  const city = parts[1];
+  const third = parts[2];
 
-  if (!isStateSegment(state) || !city) {
-    return {};
+  if (
+    !third ||
+    TERRITORIAL_MODULE_SEGMENT_SET.has(third) ||
+    CITY_LEVEL_STATIC_SEGMENT_SET.has(third)
+  ) {
+    return { state, city, territorySlug: undefined };
   }
 
-  return { state, city, territorySlug };
+  return { state, city, territorySlug: third };
 }
