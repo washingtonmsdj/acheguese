@@ -172,12 +172,12 @@ export class BusinessUrlService {
   static async resolveBySlug(slug: string): Promise<BusinessUrlContext | null> {
     try {
       const { data, error } = await supabase
-        .from('business_data')
+        .from('public_business_search')
         .select(`
           profile_id,
           slug,
           is_premium,
-          location:locations!location_id(geographic_path)
+          location:locations!public_business_search_location_id_fkey(geographic_path)
         `)
         .eq('slug', slug)
         .eq('status', 'active')
@@ -269,12 +269,12 @@ export class BusinessUrlService {
   static async resolveById(id: string): Promise<BusinessUrlContext | null> {
     try {
       const { data, error } = await supabase
-        .from('business_data')
+        .from('public_business_search')
         .select(`
           profile_id,
           slug,
           is_premium,
-          location:locations!location_id(geographic_path)
+          location:locations!public_business_search_location_id_fkey(geographic_path)
         `)
         .eq('profile_id', id)
         .eq('status', 'active')
@@ -313,12 +313,12 @@ export class BusinessUrlService {
       const expectedPathPrefix = `/br/${uf}/${cidade}/${territorySlug}`;
 
       const { data, error } = await supabase
-        .from('business_data')
+        .from('public_business_search')
         .select(`
           profile_id,
           slug,
           is_premium,
-          location:locations!location_id(geographic_path)
+          location:locations!public_business_search_location_id_fkey(geographic_path)
         `)
         .eq('slug', slug)
         .eq('status', 'active')

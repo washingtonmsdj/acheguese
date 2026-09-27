@@ -835,7 +835,9 @@ export async function getBusinessesByIds(ids: string[]): Promise<
         is_premium,
         is_verified,
         metadata,
-        geographic_path
+        location:locations!public_business_search_location_id_fkey(
+          geographic_path
+        )
       `,
       )
       .in("profile_id", ids);
@@ -859,7 +861,7 @@ export async function getBusinessesByIds(ids: string[]): Promise<
         rating?: number;
         is_verified?: boolean;
         is_premium?: boolean;
-        geographic_path?: string | null;
+        location?: { geographic_path?: string | null } | null;
         description?: string;
       };
 
@@ -874,7 +876,7 @@ export async function getBusinessesByIds(ids: string[]): Promise<
         rating: typeof typed.rating === "number" ? typed.rating : 0,
         verified: Boolean(typed.is_verified),
         is_premium: Boolean(typed.is_premium),
-        geographic_path: typed.geographic_path ?? null,
+        geographic_path: typed.location?.geographic_path ?? null,
         description: typed.description || undefined,
       };
     });
@@ -1021,13 +1023,13 @@ export async function getServices(businessId: string): Promise<unknown[]> {
  * Buscar empresas similares (mesma categoria)
  */
 export async function getSimilarBusinesses(
-  businessId: string,
+  profileId: string,
   category: string,
   limit = 5,
 ): Promise<Partial<Business>[]> {
   try {
     const { data, error } = await supabase
-      .from("business_data")
+      .from("public_business_search")
       .select(
         `
         profile_id,
@@ -1040,7 +1042,7 @@ export async function getSimilarBusinesses(
       )
       .eq("category", category)
       .eq("status", "active")
-      .neq("profile_id", businessId)
+      .neq("profile_id", profileId)
       .limit(limit);
 
     if (error) {

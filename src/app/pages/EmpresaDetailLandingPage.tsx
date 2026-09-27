@@ -136,6 +136,11 @@ export default function EmpresaDetailLandingPage(
       };
     }
 
+    const openingHours = snapshot?.institutional.openingHours;
+    if (!openingHours || Object.keys(openingHours).length === 0) {
+      return base;
+    }
+
     if (!businessHoursStatus) {
       return base;
     }
@@ -144,6 +149,10 @@ export default function EmpresaDetailLandingPage(
       !businessHoursStatus.isOpen && businessHoursStatus.nextOpening?.opens_at
         ? `Próxima abertura às ${businessHoursStatus.nextOpening.opens_at.slice(0, 5)}`
         : null;
+
+    if (!businessHoursStatus.isOpen && !base.todayHours && !nextOpeningLabel) {
+      return base;
+    }
 
     return {
       open: businessHoursStatus.isOpen,
@@ -162,7 +171,7 @@ export default function EmpresaDetailLandingPage(
 
       try {
         const similar = await BusinessService.getSimilarBusinesses(
-          snapshotBusiness.id,
+          snapshotBusiness.profile_id || snapshotBusiness.id,
           snapshotBusiness.category,
           8,
         );

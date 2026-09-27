@@ -149,6 +149,7 @@ export function TerritoryBusinessDetail({
     .map(humanizeLabel)
     .slice(0, 6);
   const todayHours = openStatus.todayHours || "Horário sob consulta";
+  const displayedOpenStatus = openStatus.todayHours ? openStatus.open : null;
   const headerLocation = [business.business_city, business.business_state]
     .filter(Boolean)
     .join(", ") || "Salvador, BA";
@@ -206,8 +207,8 @@ export function TerritoryBusinessDetail({
             <div className="bd-business-intro">
               <div className="bd-logo-card">
                 {business.logo_url ? <img src={business.logo_url} alt={`Logo de ${business.name}`} /> : <Store />}
-                <span className={openStatus.open === false ? "is-closed" : ""}>
-                  {openStatus.open === true ? "Aberto agora" : openStatus.open === false ? "Fechado agora" : "Horário não informado"}
+                <span className={displayedOpenStatus === false ? "is-closed" : ""}>
+                  {displayedOpenStatus === true ? "Aberto agora" : displayedOpenStatus === false ? "Fechado agora" : "Horário não informado"}
                 </span>
               </div>
               <div className="bd-title-block min-w-0">
@@ -254,7 +255,7 @@ export function TerritoryBusinessDetail({
               </article>
 
               <article className="bd-card bd-facts-card" id="informacoes">
-                <div className="bd-fact"><Clock3 /><span><strong>{openStatus.open === true ? "Aberto agora" : openStatus.open === false ? "Fechado agora" : "Funcionamento"}</strong><small>{todayHours}</small></span></div>
+                <div className="bd-fact"><Clock3 /><span><strong>{displayedOpenStatus === true ? "Aberto agora" : displayedOpenStatus === false ? "Fechado agora" : "Funcionamento"}</strong><small>{todayHours}</small></span></div>
                 <div className="bd-fact"><BadgeDollarSign /><span><strong>Faixa de preço</strong><small>{business.price_band_label || "Consulte a empresa"}</small></span></div>
                 <div className="bd-fact"><Accessibility /><span><strong>Acessibilidade</strong><small>{business.facilidades?.some((item) => item.toLowerCase().includes("acess")) ? "Entrada acessível" : "Consulte a empresa"}</small></span></div>
                 <div className="bd-fact"><CreditCard /><span><strong>Formas de pagamento</strong><small>{paymentMethods.slice(0, 4).map(humanizeLabel).join(", ") || "Consulte a empresa"}</small></span></div>
@@ -290,13 +291,18 @@ export function TerritoryBusinessDetail({
 
             <section className="bd-card bd-reviews" id="avaliacoes">
               <SectionTitle icon={Star} action={<button type="button">Avaliar</button>}>Avaliações</SectionTitle>
-              <div className="bd-review-summary">
-                <div><strong>{rating.toFixed(1)}</strong><span>{Array.from({ length: 5 }).map((_, index) => <Star key={index} className={index < Math.round(rating) ? "is-filled" : ""} />)}</span><small>{reviewCount} avaliações</small></div>
-                <div className="bd-rating-bars">
-                  {[5, 4, 3, 2, 1].map((value) => <span key={value}><b>{value}</b><Star /><i><em style={{ width: value === 5 ? "72%" : value === 4 ? "20%" : `${Math.max(2, (5 - value) * 2)}%` }} /></i></span>)}
+              {reviewCount > 0 ? (
+                <div className="bd-review-summary">
+                  <div><strong>{rating.toFixed(1)}</strong><span>{Array.from({ length: 5 }).map((_, index) => <Star key={index} className={index < Math.round(rating) ? "is-filled" : ""} />)}</span><small>{reviewCount} avaliações</small></div>
+                  <div className="flex flex-col gap-1 text-xs text-[#587276]">
+                    <strong className="text-sm text-[#173f43]">Nota média da comunidade</strong>
+                    <span>Calculada a partir de {reviewCount} {reviewCount === 1 ? "avaliação publicada" : "avaliações publicadas"}.</span>
+                  </div>
+                  <p>As avaliações ajudam moradores e visitantes a descobrirem os melhores negócios do território.</p>
                 </div>
-                <p>As avaliações ajudam moradores e visitantes a descobrirem os melhores negócios do território.</p>
-              </div>
+              ) : (
+                <div className="bd-empty"><Star /><span><strong>Ainda não há avaliações</strong><small>Se você conhece este lugar, compartilhe sua experiência.</small></span></div>
+              )}
             </section>
           </div>
 
