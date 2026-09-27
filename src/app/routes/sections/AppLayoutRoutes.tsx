@@ -146,12 +146,6 @@ export function AppLayoutRoutes() {
               <Route index element={<P.TerritorialSearchPortalPage />} />
             </Route>
             <Route
-              path={buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
-              element={<P.ActiveTerritorialLayout />}
-            >
-              <Route index element={<P.TerritorialSearchPortalPage />} />
-            </Route>
-            <Route
               path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)}
               element={<P.BuscarPage />}
             />
@@ -173,10 +167,10 @@ export function AppLayoutRoutes() {
           <>
             <Route
               path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.territorySlug])}
-              element={<P.ActiveTerritorialLayout />}
+              element={<P.ActiveTerritoryPortalLayout />}
             >
               <Route
-                index
+                path={TERRITORIAL_PARAMS.portalView}
                 element={<TerritoryHomePage />}
               />
             </Route>

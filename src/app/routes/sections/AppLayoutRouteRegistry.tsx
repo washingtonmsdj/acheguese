@@ -30,6 +30,7 @@ type AppLayoutRouteDescriptor = {
   readonly element: ReactNode;
   readonly indexElement?: ReactNode;
   readonly owner: RouteOwner;
+  readonly handledByPortal?: boolean;
 };
 
 function isRouteOwnerEnabled(owner: RouteOwner): boolean {
@@ -75,8 +76,9 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
     id: "business-territory",
     owner: { kind: "product", key: "business" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
-    element: <P.ActiveTerritorialLayout />,
+    element: <P.ActiveTerritoryPortalLayout />,
     indexElement: <P.TerritorialBusinessPortalPage />,
+    handledByPortal: true,
   },
   {
     id: "business-city",
@@ -92,8 +94,9 @@ const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
     id: "map-territory",
     owner: { kind: "capability", key: "map" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
-    element: <P.ActiveTerritorialLayout />,
+    element: <P.ActiveTerritoryPortalLayout />,
     indexElement: <P.TerritorialMapPage />,
+    handledByPortal: true,
   },
   {
     id: "map-city",
@@ -109,8 +112,9 @@ const APP_LAYOUT_NEARBY_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] 
     id: "nearby-territory",
     owner: { kind: "capability", key: "nearby" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby),
-    element: <P.ActiveTerritorialLayout />,
+    element: <P.ActiveTerritoryPortalLayout />,
     indexElement: <P.TerritorialNearbyPortalPage />,
+    handledByPortal: true,
   },
   {
     id: "nearby-city",
@@ -132,7 +136,9 @@ export function renderAppLayoutRouteDescriptors(
   routes: readonly AppLayoutRouteDescriptor[],
 ): ReactNode[] {
   return routes
-    .filter((route) => isRouteOwnerEnabled(route.owner))
+    .filter(
+      (route) => isRouteOwnerEnabled(route.owner) && !route.handledByPortal,
+    )
     .map((route) => {
       if (!route.indexElement) {
         return <Route key={route.id} path={route.path} element={route.element} />;

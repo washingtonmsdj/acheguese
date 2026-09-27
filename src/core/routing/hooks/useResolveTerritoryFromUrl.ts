@@ -123,7 +123,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
         fallbackResult ?? {
           status: TERRITORY_RESOLVE_STATUS.NOT_FOUND,
           resolved: null,
-          error: `Território inválido na URL: ${pathname}`,
+          error: "Território inválido na URL informada.",
         },
       );
       return;
@@ -310,7 +310,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
     return () => {
       cancelled = true;
     };
-  }, [city, country, pathname, state, territorySlug]);
+  }, [city, country, state, territorySlug]);
 
   return result;
 }

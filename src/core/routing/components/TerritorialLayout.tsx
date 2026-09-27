@@ -162,11 +162,13 @@ function TerritoryStatusMessage({
 interface TerritorialLayoutProps {
   NotFoundComponent?: ComponentType;
   moduleKeysBySlug?: Readonly<Record<string, readonly ModuleKey[]>>;
+  preserveOutletDuringModuleLoading?: boolean;
 }
 
 export function TerritorialLayout({
   NotFoundComponent,
   moduleKeysBySlug,
+  preserveOutletDuringModuleLoading = false,
 }: TerritorialLayoutProps = {}) {
   const { status, resolved, error } = useResolveTerritoryFromUrl();
   const { pathname } = useLocation();
@@ -242,7 +244,12 @@ export function TerritorialLayout({
     );
   }
 
-  if (resolved.kind === "group" && hasTerritorialRollout && availabilityLoading) {
+  if (
+    resolved.kind === "group" &&
+    hasTerritorialRollout &&
+    availabilityLoading &&
+    !preserveOutletDuringModuleLoading
+  ) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -250,7 +257,14 @@ export function TerritorialLayout({
     );
   }
 
-  const effectiveAvailability: GroupModuleAvailability = resolved.kind === "group" ? availability : "full";
+  const isPreservingModuleOutlet =
+    preserveOutletDuringModuleLoading && availabilityLoading;
+  const effectiveAvailability: GroupModuleAvailability =
+    resolved.kind === "group"
+      ? isPreservingModuleOutlet
+        ? "full"
+        : availability
+      : "full";
 
   if (
     resolved.kind === "group" &&
@@ -270,7 +284,10 @@ export function TerritorialLayout({
     baseUrl,
     communityBaseUrl: buildCommunityTerritoryUrl(baseUrl),
     groupAvailability: effectiveAvailability,
-    activeMemberIds: resolved.kind === "group" ? (active_member_ids ?? []) : [],
+    activeMemberIds:
+      resolved.kind === "group"
+        ? (active_member_ids ?? resolved.group.members.map((member) => member.id))
+        : [],
   };
 
   return (

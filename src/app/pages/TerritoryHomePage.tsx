@@ -1,7 +1,9 @@
 import TerritoryPortalPage, {
   type TerritoryPortalView,
 } from "@/app/pages/TerritoryPortalPage";
+import NotFound from "@/app/pages/NotFound";
 import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
+import { useParams } from "react-router-dom";
 import {
   MODULE_SLUGS,
   buildModuleTerritoryUrl,
@@ -15,12 +17,30 @@ function slugToLabel(value: string): string {
     .join(" ");
 }
 
+function resolvePortalView(value: string | undefined): TerritoryPortalView | null {
+  if (!value) return "home";
+
+  const views: Partial<Record<string, TerritoryPortalView>> = {
+    [MODULE_SLUGS.map]: "map",
+    [MODULE_SLUGS.business]: "business",
+    [MODULE_SLUGS.nearby]: "nearby",
+    [MODULE_SLUGS.search]: "search",
+  };
+
+  return views[value] ?? null;
+}
+
 export default function TerritoryHomePage({
-  activeView = "home",
+  activeView,
 }: {
   activeView?: TerritoryPortalView;
 }) {
   const { resolved, baseUrl, activeMemberIds } = useTerritorialContext();
+  const { portalView } = useParams<{ portalView?: string }>();
+  const resolvedView = activeView ?? resolvePortalView(portalView);
+
+  if (!resolvedView) return <NotFound />;
+
   const territoryName =
     resolved.kind === "group" ? resolved.group.name : resolved.location.name;
 
@@ -49,7 +69,7 @@ export default function TerritoryHomePage({
       memberLabels={memberLabels}
       resolvedTerritory={resolved}
       activeMemberIds={activeMemberIds}
-      activeView={activeView}
+      activeView={resolvedView}
       urls={{
         home: baseUrl,
         business: businessUrl,

@@ -121,6 +121,13 @@ export const ActiveTerritorialLayout = lazy(() =>
     }),
   ),
 );
+export const ActiveTerritoryPortalLayout = lazy(() =>
+  import("@/app/routes/territorial/ActiveTerritorialModulePages").then(
+    (module) => ({
+      default: module.ActiveTerritoryPortalLayout,
+    }),
+  ),
+);
 
 export const TermosPage = lazy(() => import("@/app/pages/TermosPage"));
 export const PrivacidadePage = lazy(

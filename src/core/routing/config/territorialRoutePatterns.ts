@@ -5,6 +5,7 @@ export const TERRITORIAL_ROUTE_PARAMS = {
   state: ":state",
   city: ":city",
   territorySlug: ":territorySlug",
+  portalView: ":portalView?",
   groupSlugOrDistrict: ":groupSlugOrDistrict",
   slug: ":slug",
   eventId: ":eventId",

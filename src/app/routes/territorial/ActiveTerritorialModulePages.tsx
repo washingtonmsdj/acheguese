@@ -64,3 +64,16 @@ export function ActiveTerritorialLayout() {
     />
   );
 }
+
+export function ActiveTerritoryPortalLayout() {
+  return (
+    <TerritorialLayout
+      NotFoundComponent={NotFound}
+      preserveOutletDuringModuleLoading
+      moduleKeysBySlug={{
+        [MODULE_SLUGS.map]: getActiveMapLayerRolloutModuleKeys(),
+        [MODULE_SLUGS.nearby]: getActiveNearbyProviderRolloutModuleKeys(),
+      }}
+    />
+  );
+}

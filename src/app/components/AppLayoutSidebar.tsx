@@ -24,6 +24,13 @@ import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { getAppModuleSlugFromPath } from "@/shared/config/moduleSlugs";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 
+const TERRITORY_PORTAL_MODULES = new Set<string>([
+  MODULE_SLUGS.business,
+  MODULE_SLUGS.map,
+  MODULE_SLUGS.nearby,
+  MODULE_SLUGS.search,
+]);
+
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -44,6 +51,12 @@ export function AppLayoutSidebar() {
     !isReservedSlug(pathSegments[0] ?? "");
   const isCanonicalTerritorialModuleRoute =
     hasCanonicalTerritory && Boolean(territorialModuleSlug);
+  const isTerritoryPortalModuleRoute = Boolean(
+    parsedTerritory.territorySlug &&
+      pathSegments.length === 4 &&
+      territorialModuleSlug &&
+      TERRITORY_PORTAL_MODULES.has(territorialModuleSlug),
+  );
   const isPublicBusinessLandingRoute =
     pathSegments[0] === MODULE_SLUGS.business &&
     pathSegments[1] !== "cadastrar";
@@ -53,7 +66,7 @@ export function AppLayoutSidebar() {
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
   const usesTerritoryVivoShell =
-    isCanonicalTerritorialModuleRoute ||
+    (isCanonicalTerritorialModuleRoute && !isTerritoryPortalModuleRoute) ||
     isAccountRoute ||
     isPublicPersonalProfileRoute;
 
@@ -61,6 +74,7 @@ export function AppLayoutSidebar() {
   const hideGlobalSidebar =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
+    isTerritoryPortalModuleRoute ||
     isPublicBusinessLandingRoute;
 
   const isConversationRoute =
@@ -68,10 +82,12 @@ export function AppLayoutSidebar() {
   const useDocumentScrollPublicShell =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
+    isTerritoryPortalModuleRoute ||
     isPublicBusinessLandingRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
+    isTerritoryPortalModuleRoute ||
     isConversationRoute;
 
   const isMessagingRoute = pathSegments[0] === "mensagens";
