@@ -25,7 +25,6 @@ const TerritoryMap = lazy(
 );
 
 export interface TerritoryPortalUrls {
-  home: string;
   business: string;
   map: string;
   nearby: string;
@@ -229,7 +228,7 @@ export default function TerritoryPortalPage({
                 </div>
                 <strong>Explorar empresas</strong>
                 <small>{territoryName}</small>
-                <p>Dados reais do catálogo</p>
+                <p>Abrir catálogo do território</p>
                 <span>
                   Abrir <ArrowRight />
                 </span>
