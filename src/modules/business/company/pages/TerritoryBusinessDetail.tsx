@@ -18,6 +18,7 @@ import {
   MapPin,
   Menu,
   MessageCircle,
+  MoreHorizontal,
   Navigation,
   PackageCheck,
   Phone,
@@ -196,6 +197,7 @@ export function TerritoryBusinessDetail({
   const isTerritoryReference = !physicalCoordinates && Boolean(territoryCoordinates);
   const navigateToSection = (event: MouseEvent<HTMLAnchorElement>, sectionId: DetailSectionId) => {
     event.preventDefault();
+    document.querySelector<HTMLDetailsElement>(".bd-section-more")?.removeAttribute("open");
     const nextHash = `#${sectionId}`;
     if (window.location.hash !== nextHash) {
       window.history.pushState(null, "", nextHash);
@@ -203,6 +205,9 @@ export function TerritoryBusinessDetail({
     setActiveSection(sectionId);
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  const isSecondarySection = activeSection === "fotos"
+    || activeSection === "localizacao"
+    || activeSection === "informacoes";
 
   useEffect(() => {
     const syncActiveSection = () => setActiveSection(readActiveSection());
@@ -301,11 +306,19 @@ export function TerritoryBusinessDetail({
         <nav className="bd-section-nav" aria-label="Seções da empresa">
           <div className="bd-container">
             <a className={activeSection === "visao-geral" ? "is-active" : undefined} aria-current={activeSection === "visao-geral" ? "page" : undefined} href="#visao-geral" onClick={(event) => navigateToSection(event, "visao-geral")}><Home /> Visão geral</a>
-            <a className={activeSection === "produtos" ? "is-active" : undefined} aria-current={activeSection === "produtos" ? "page" : undefined} href="#produtos" onClick={(event) => navigateToSection(event, "produtos")}><ShoppingBag /> Produtos e serviços</a>
+            <a className={activeSection === "produtos" ? "is-active" : undefined} aria-current={activeSection === "produtos" ? "page" : undefined} href="#produtos" onClick={(event) => navigateToSection(event, "produtos")}><ShoppingBag /><span className="bd-nav-label-long">Produtos e serviços</span><span className="bd-nav-label-short">Produtos</span></a>
             <a className={activeSection === "avaliacoes" ? "is-active" : undefined} aria-current={activeSection === "avaliacoes" ? "page" : undefined} href="#avaliacoes" onClick={(event) => navigateToSection(event, "avaliacoes")}><Star /> Avaliações</a>
-            {institutional.photos.length > 0 ? <a className={activeSection === "fotos" ? "is-active" : undefined} aria-current={activeSection === "fotos" ? "page" : undefined} href="#fotos" onClick={(event) => navigateToSection(event, "fotos")}><Camera /> Fotos</a> : null}
-            <a className={activeSection === "localizacao" ? "is-active" : undefined} aria-current={activeSection === "localizacao" ? "page" : undefined} href="#localizacao" onClick={(event) => navigateToSection(event, "localizacao")}><MapPin /> Localização</a>
-            <a className={activeSection === "informacoes" ? "is-active" : undefined} aria-current={activeSection === "informacoes" ? "page" : undefined} href="#informacoes" onClick={(event) => navigateToSection(event, "informacoes")}><Info /> Informações</a>
+            {institutional.photos.length > 0 ? <a className={`bd-section-secondary ${activeSection === "fotos" ? "is-active" : ""}`.trim()} aria-current={activeSection === "fotos" ? "page" : undefined} href="#fotos" onClick={(event) => navigateToSection(event, "fotos")}><Camera /> Fotos</a> : null}
+            <a className={`bd-section-secondary ${activeSection === "localizacao" ? "is-active" : ""}`.trim()} aria-current={activeSection === "localizacao" ? "page" : undefined} href="#localizacao" onClick={(event) => navigateToSection(event, "localizacao")}><MapPin /> Localização</a>
+            <a className={`bd-section-secondary ${activeSection === "informacoes" ? "is-active" : ""}`.trim()} aria-current={activeSection === "informacoes" ? "page" : undefined} href="#informacoes" onClick={(event) => navigateToSection(event, "informacoes")}><Info /> Informações</a>
+            <details className={`bd-section-more ${isSecondarySection ? "is-active" : ""}`.trim()}>
+              <summary aria-label="Abrir mais seções"><MoreHorizontal /><span>Mais</span><ChevronDown className="bd-more-chevron" /></summary>
+              <nav aria-label="Mais seções da empresa">
+                {institutional.photos.length > 0 ? <a className={activeSection === "fotos" ? "is-active" : undefined} aria-current={activeSection === "fotos" ? "page" : undefined} href="#fotos" onClick={(event) => navigateToSection(event, "fotos")}><Camera /> Fotos</a> : null}
+                <a className={activeSection === "localizacao" ? "is-active" : undefined} aria-current={activeSection === "localizacao" ? "page" : undefined} href="#localizacao" onClick={(event) => navigateToSection(event, "localizacao")}><MapPin /> Localização</a>
+                <a className={activeSection === "informacoes" ? "is-active" : undefined} aria-current={activeSection === "informacoes" ? "page" : undefined} href="#informacoes" onClick={(event) => navigateToSection(event, "informacoes")}><Info /> Informações</a>
+              </nav>
+            </details>
           </div>
         </nav>
 

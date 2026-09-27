@@ -9,6 +9,7 @@
 
 /* Refinos responsivos do detalhe público */
 .bd-mobile-status{display:none}
+.bd-nav-label-short,.bd-section-more{display:none}
 .bd-review-count-short{display:none}
 .bd-map-preview{display:block}
 #visao-geral,#produtos,#avaliacoes,#fotos,#localizacao,#informacoes{scroll-margin-top:20px}
@@ -25,6 +26,26 @@
   .bd-mobile-status.is-closed{background:#d7574d}
   .bd-section-nav>div{scroll-snap-type:x proximity}
   .bd-section-nav a{scroll-snap-align:start}
+}
+
+@media (max-width:820px){
+  .bd-section-nav>.bd-container{width:100%;overflow:visible;scroll-snap-type:none}
+  .bd-section-nav>.bd-container>a:not(.bd-section-secondary){flex:1 1 0;min-width:0;justify-content:center;padding:0 7px;gap:5px;font-size:10.5px;white-space:nowrap;scroll-snap-align:none}
+  .bd-nav-label-long{display:none}
+  .bd-nav-label-short{display:inline}
+  .bd-section-nav .bd-section-secondary{display:none}
+  .bd-section-more{position:relative;display:block;flex:0 0 68px;height:100%}
+  .bd-section-more summary{position:relative;height:100%;display:flex;align-items:center;justify-content:center;gap:4px;padding:0 6px;list-style:none;color:#34585b;font-size:10.5px;font-weight:750;cursor:pointer;user-select:none}
+  .bd-section-more summary::-webkit-details-marker{display:none}
+  .bd-section-more summary>svg{width:16px;height:16px;flex:none}
+  .bd-section-more summary .bd-more-chevron{width:11px;height:11px;transition:transform .2s ease}
+  .bd-section-more[open] .bd-more-chevron{transform:rotate(180deg)}
+  .bd-section-more.is-active summary{background:linear-gradient(135deg,#ffd24d,#ffbf2f);color:#173f42}
+  .bd-section-more.is-active summary:after{content:"";position:absolute;right:12px;bottom:0;left:12px;height:3px;background:#174b4d}
+  .bd-section-more nav{position:absolute;z-index:60;top:calc(100% + 8px);right:0;width:190px;padding:6px;border:1px solid var(--line);border-radius:12px;background:#fff;box-shadow:0 16px 38px #173b3e30}
+  .bd-section-more nav a{min-width:0;height:44px;padding:0 10px;border-radius:8px;gap:8px;font-size:11px;scroll-snap-align:none}
+  .bd-section-more nav a.is-active{background:#fff1bd}
+  .bd-section-more nav a.is-active:after{display:none}
 }
 
 @media (max-width:540px){
