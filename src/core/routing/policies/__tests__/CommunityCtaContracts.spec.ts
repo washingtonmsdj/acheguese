@@ -12,7 +12,10 @@ function readProjectFile(path: string): string {
 
 describe("community CTA contracts on public surfaces", () => {
   it("keeps Community CTAs out of the active territorial home while Community is paused", () => {
-    const territoryHome = readProjectFile("src/app/pages/TerritoryHomePage.tsx");
+    const territoryHome = [
+      readProjectFile("src/app/pages/TerritoryHomePage.tsx"),
+      readProjectFile("src/app/pages/TerritoryPortalPage.tsx"),
+    ].join("\n");
 
     expect(territoryHome).not.toContain("MODULE_SLUGS.community");
     expect(territoryHome).not.toContain("Abrir portal comunitario");
@@ -20,7 +23,10 @@ describe("community CTA contracts on public surfaces", () => {
   });
 
   it("keeps the active home focused on the MVP discovery capabilities", () => {
-    const territoryHome = readProjectFile("src/app/pages/TerritoryHomePage.tsx");
+    const territoryHome = [
+      readProjectFile("src/app/pages/TerritoryHomePage.tsx"),
+      readProjectFile("src/app/pages/TerritoryPortalPage.tsx"),
+    ].join("\n");
 
     expect(territoryHome).toContain("Empresas");
     expect(territoryHome).toContain("Mapa");
