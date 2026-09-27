@@ -4,7 +4,6 @@ import type { ClassifiedData } from "@/core/classifieds/services";
 import type { CommunitySearchResult } from "@/core/community-experience/types";
 import type { Post } from "@/core/posts/types";
 import type { Professional } from "@/core/professional/types";
-import { buildCommunityPortalUrl } from "@/core/routing/policies";
 import type { PublicEvent } from "@/core/community-events";
 import type { SearchDocument } from "./SearchService";
 
@@ -83,7 +82,7 @@ export function communityToSearchDocument(
     title: community.name,
     subtitle: "Comunidade",
     description: community.headline ?? community.description,
-    url: buildCommunityPortalUrl(community.public_alias ?? community.slug),
+    // Community is paused and no alias URL may leak into Search.\n    // Its provider must supply a resolved territory path before reactivation.\n    url: null,
     metadata: {
       status: community.status,
       territory_type: community.territory_type,
