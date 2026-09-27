@@ -2,7 +2,7 @@
  * ProfessionalUrlService - SSOT for public professional URLs.
  *
  * Canonical public URL:
- *   /servicos/:uf/:cidade/profissional/:slug
+ *   /:uf/:cidade/servicos/profissional/:slug
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
@@ -20,7 +20,7 @@ export interface ProfessionalUrlContext {
 }
 
 export interface ResolvedProfessionalUrl {
-  /** Public canonical URL: /servicos/ba/salvador/profissional/joao-silva-dev */
+  /** Public canonical URL: /ba/salvador/servicos/profissional/joao-silva-dev */
   canonical: string;
   /** Internal dashboard URL: /dashboard/professional/:id */
   dashboard: string;
