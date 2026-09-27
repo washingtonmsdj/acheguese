@@ -1,49 +1,47 @@
 /**
  * useResolveTerritoryFromUrl
  *
- * Resolve o território ativo a partir dos params da URL.
+ * Resolves the public territory exclusively from the canonical territory URL.
  *
- * Padrões canônicos:
- *   /:state/:city                         -> Location city
- *   /:state/:city/:district               -> Location district
- *   /:state/:city/:groupSlug              -> TerritorialGroup
- *   /:state/:city/[modulo]                -> Location city
- *   /:state/:city/:district/[modulo]      -> Location district
- *   /:state/:city/:groupSlug/[modulo]     -> TerritorialGroup
- *   /:state/:city/comunidade              -> Location city da comunidade
+ * Canonical patterns:
+ *   /:state/:city
+ *   /:state/:city/:territorySlug
+ *   /:state/:city/:module
+ *   /:state/:city/:territorySlug/:module
  *
- * O slug territorial resolve diretamente para bairro ou grupo ativo/navegável.
- * Comunidade usa o mesmo território e não possui namespace alternativo.
+ * A territorySlug may identify either a public Location below the city or an
+ * active TerritorialGroup anchored in that city. Product modules (including
+ * Community) consume this result; they never participate in territory identity
+ * resolution.
  */
 
-import { useEffect, useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
-import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { territorialGroupService } from '@/core/territorial';
-import { TerritoryCommunityRouteService } from '@/core/routing/services/TerritoryCommunityRouteService';
-import { APP_MODULE_SLUGS, isAppModulePath } from '@/shared/config/moduleSlugs';
-import { TERRITORY_CONFIG } from '@/core/routing/config/territory';
-import type { ResolvedTerritory } from '../types/territoryResolution';
-import { isTerritoryPubliclyNavigable } from '../utils/territoryVisibility';
-import { parsePublicTerritoryPath } from '../utils/publicTerritoryPath';
-import { resolvePublicTerritoryFallback } from '../utils/publicTerritoryFallbacks';
-import { isCommunityRouteSuffixSegment } from '../utils/territoryUrls';
+import { useEffect, useState } from "react";
+import { useLocation, useParams } from "react-router-dom";
+
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { territorialGroupService } from "@/core/territorial";
+
+import type { ResolvedTerritory } from "../types/territoryResolution";
+import { parsePublicTerritoryPath } from "../utils/publicTerritoryPath";
+import { resolvePublicTerritoryFallback } from "../utils/publicTerritoryFallbacks";
+import { isTerritoryPubliclyNavigable } from "../utils/territoryVisibility";
 
 export const TERRITORY_RESOLVE_STATUS = {
-  IDLE: 'idle',
-  LOADING: 'loading',
-  RESOLVED_LOCATION: 'resolved_location',
-  RESOLVED_GROUP: 'resolved_group',
-  NOT_FOUND: 'not_found',
-  INACTIVE: 'inactive',
-  RESTRICTED: 'restricted',
-  ERROR: 'error',
+  IDLE: "idle",
+  LOADING: "loading",
+  RESOLVED_LOCATION: "resolved_location",
+  RESOLVED_GROUP: "resolved_group",
+  NOT_FOUND: "not_found",
+  INACTIVE: "inactive",
+  RESTRICTED: "restricted",
+  ERROR: "error",
 } as const;
 
 export type TerritoryResolveStatus =
   (typeof TERRITORY_RESOLVE_STATUS)[keyof typeof TERRITORY_RESOLVE_STATUS];
 
-export type { ResolvedTerritory } from '../types/territoryResolution';
+export type { ResolvedTerritory } from "../types/territoryResolution";
 
 export interface TerritoryResolveResult {
   status: TerritoryResolveStatus;
@@ -53,12 +51,14 @@ export interface TerritoryResolveResult {
 
 const RESOLVE_TIMEOUT_MS = 6000;
 
-function createResolvedFallbackResult(fallback: ResolvedTerritory): TerritoryResolveResult | null {
+function createResolvedFallbackResult(
+  fallback: ResolvedTerritory,
+): TerritoryResolveResult | null {
   if (!fallback) return null;
 
   return {
     status:
-      fallback.kind === 'group'
+      fallback.kind === "group"
         ? TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP
         : TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
     resolved: fallback,
@@ -66,7 +66,10 @@ function createResolvedFallbackResult(fallback: ResolvedTerritory): TerritoryRes
   };
 }
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs = RESOLVE_TIMEOUT_MS): Promise<T> {
+function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs = RESOLVE_TIMEOUT_MS,
+): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = window.setTimeout(() => {
       reject(new Error(`Territory resolution timeout after ${timeoutMs}ms`));
@@ -85,7 +88,6 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs = RESOLVE_TIMEOUT_MS): Pr
   });
 }
 
-
 export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   const location = useLocation();
   const params = useParams<{
@@ -93,9 +95,6 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
     state?: string;
     city?: string;
     territorySlug?: string;
-    groupSlug?: string;
-    groupSlugOrDistrict?: string;
-    district?: string;
   }>();
 
   const pathname = location.pathname;
@@ -103,19 +102,7 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
   const country = params.country ?? TERRITORY_CONFIG.defaultCountry;
   const state = params.state ?? parsedPath.state;
   const city = params.city ?? parsedPath.city;
-  const groupSlug = params.groupSlug;
-  const isCommunityRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.community);
-  const rawDistrictSlug =
-    params.territorySlug ||
-    params.district ||
-    params.groupSlugOrDistrict ||
-    parsedPath.territorySlug;
-  const districtSlug =
-    isCommunityRoute && isCommunityRouteSuffixSegment(rawDistrictSlug)
-      ? undefined
-      : rawDistrictSlug;
-
-  const isGuideRoute = isAppModulePath(pathname, APP_MODULE_SLUGS.touristPoints);
+  const territorySlug = params.territorySlug ?? parsedPath.territorySlug;
 
   const [result, setResult] = useState<TerritoryResolveResult>({
     status: TERRITORY_RESOLVE_STATUS.IDLE,
@@ -127,265 +114,203 @@ export function useResolveTerritoryFromUrl(): TerritoryResolveResult {
     const fallback = resolvePublicTerritoryFallback({
       state,
       city,
-      territorySlug: groupSlug || districtSlug,
+      territorySlug,
     });
 
     if (!country || !state || !city) {
       const fallbackResult = createResolvedFallbackResult(fallback);
-      if (fallbackResult) {
-        setResult(fallbackResult);
-      } else {
-        setResult({
+      setResult(
+        fallbackResult ?? {
           status: TERRITORY_RESOLVE_STATUS.NOT_FOUND,
           resolved: null,
           error: `Território inválido na URL: ${pathname}`,
-        });
-      }
+        },
+      );
       return;
     }
 
     let cancelled = false;
-    setResult({ status: TERRITORY_RESOLVE_STATUS.LOADING, resolved: null, error: null });
+    setResult({
+      status: TERRITORY_RESOLVE_STATUS.LOADING,
+      resolved: null,
+      error: null,
+    });
 
-    async function resolve() {
+    const commit = (next: TerritoryResolveResult) => {
+      if (!cancelled) setResult(next);
+    };
+
+    async function resolveTerritory() {
       try {
         const locationRepo = createLocationRepository();
         const cityPath = `/${country}/${state}/${city}`;
-        const cityLocation = await withTimeout(locationRepo.findByPath(cityPath));
+        const cityLocation = await withTimeout(
+          locationRepo.findByPath(cityPath),
+        );
 
         if (!cityLocation) {
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Cidade não encontrada: ${cityPath}` });
+          commit({
+            status: TERRITORY_RESOLVE_STATUS.NOT_FOUND,
+            resolved: null,
+            error: `Cidade não encontrada: ${cityPath}`,
+          });
           return;
         }
 
-        if (!groupSlug && !districtSlug) {
-          if (cityLocation.status !== 'active') {
-            if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.INACTIVE, resolved: null, error: `Cidade inativa: ${cityLocation.name}` });
-            return;
-          }
-          if (!isTerritoryPubliclyNavigable(cityLocation.metadata)) {
-            if (!cancelled) {
-              setResult({
-                status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
-                resolved: null,
-                error: `${cityLocation.name} não está disponível para navegação pública no momento.`,
-              });
-            }
-            return;
-          }
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION, resolved: { kind: 'location', location: cityLocation }, error: null });
+        if (cityLocation.status !== "active") {
+          commit({
+            status: TERRITORY_RESOLVE_STATUS.INACTIVE,
+            resolved: null,
+            error: `Cidade inativa: ${cityLocation.name}`,
+          });
           return;
         }
 
-        if (groupSlug) {
-          const group = await withTimeout(
-            territorialGroupService.getGroupBySlugAndCity(groupSlug, cityLocation.id),
-          );
+        if (!isTerritoryPubliclyNavigable(cityLocation.metadata)) {
+          commit({
+            status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
+            resolved: null,
+            error: `${cityLocation.name} não está disponível para navegação pública no momento.`,
+          });
+          return;
+        }
 
-          if (!group) {
-            if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo não encontrado: ${groupSlug}` });
+        if (!territorySlug) {
+          commit({
+            status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
+            resolved: { kind: "location", location: cityLocation },
+            error: null,
+          });
+          return;
+        }
+
+        const scopedPath = `${cityPath}/${territorySlug}`;
+        const [locationCandidate, groupCandidate] = await Promise.all([
+          withTimeout(locationRepo.findByPath(scopedPath)),
+          withTimeout(
+            territorialGroupService.getGroupBySlugAndCity(
+              territorySlug,
+              cityLocation.id,
+            ),
+          ),
+        ]);
+
+        if (locationCandidate && groupCandidate) {
+          commit({
+            status: TERRITORY_RESOLVE_STATUS.ERROR,
+            resolved: null,
+            error:
+              `Slug territorial ambíguo em ${city}: "${territorySlug}". ` +
+              "Locations e grupos territoriais devem compartilhar um namespace único.",
+          });
+          return;
+        }
+
+        if (locationCandidate) {
+          if (locationCandidate.parent_id !== cityLocation.id) {
+            commit({
+              status: TERRITORY_RESOLVE_STATUS.NOT_FOUND,
+              resolved: null,
+              error: `Território ${territorySlug} não pertence a ${city}`,
+            });
             return;
           }
-          if (group.status !== 'active') {
-            if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.INACTIVE, resolved: null, error: `Grupo inativo: ${group.name}` });
+
+          if (locationCandidate.status !== "active") {
+            commit({
+              status: TERRITORY_RESOLVE_STATUS.INACTIVE,
+              resolved: null,
+              error: `Território inativo: ${locationCandidate.name}`,
+            });
             return;
           }
-          if (!isTerritoryPubliclyNavigable(group.metadata)) {
-            if (!cancelled) setResult({
+
+          if (!isTerritoryPubliclyNavigable(locationCandidate.metadata)) {
+            commit({
               status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
               resolved: null,
-              error: `${group.name} não está disponível para navegação pública no momento.`,
+              error: `${locationCandidate.name} não está disponível para navegação pública no momento.`,
+            });
+            return;
+          }
+
+          commit({
+            status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
+            resolved: { kind: "location", location: locationCandidate },
+            error: null,
+          });
+          return;
+        }
+
+        if (groupCandidate) {
+          if (groupCandidate.status !== "active") {
+            commit({
+              status: TERRITORY_RESOLVE_STATUS.INACTIVE,
+              resolved: null,
+              error: `Território inativo: ${groupCandidate.name}`,
+            });
+            return;
+          }
+
+          if (!isTerritoryPubliclyNavigable(groupCandidate.metadata)) {
+            commit({
+              status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
+              resolved: null,
+              error: `${groupCandidate.name} não está disponível para navegação pública no momento.`,
             });
             return;
           }
 
           const withMembers = await withTimeout(
-            territorialGroupService.getGroupWithMembers(group.id),
+            territorialGroupService.getGroupWithMembers(groupCandidate.id),
           );
-          if (!withMembers) {
-            if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Grupo sem membros: ${groupSlug}` });
-            return;
-          }
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP, resolved: { kind: 'group', group: withMembers }, error: null });
-          return;
-        }
 
-        if (!isTerritoryPubliclyNavigable(cityLocation.metadata)) {
-          if (!cancelled) {
-            setResult({
-              status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
+          if (!withMembers || withMembers.members.length === 0) {
+            commit({
+              status: TERRITORY_RESOLVE_STATUS.NOT_FOUND,
               resolved: null,
-              error: `${cityLocation.name} não está disponível para navegação pública no momento.`,
+              error: `Grupo territorial sem membros ativos: ${territorySlug}`,
             });
-          }
-          return;
-        }
-
-        if (districtSlug) {
-          const communityRoute = await withTimeout(
-            TerritoryCommunityRouteService.resolveByCityAndSlug(cityLocation.id, districtSlug),
-          );
-          if (communityRoute) {
-            if (communityRoute.territory_type === 'territorial_group') {
-              const withMembers = await withTimeout(
-                territorialGroupService.getGroupWithMembers(communityRoute.territory_id),
-              );
-              if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
-                if (!cancelled) {
-                  setResult({
-                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
-                    resolved: { kind: 'group', group: withMembers },
-                    error: null,
-                  });
-                }
-                return;
-              }
-            } else {
-              const locationById = await withTimeout(locationRepo.findById(communityRoute.territory_id));
-              if (
-                locationById &&
-                locationById.status === 'active' &&
-                locationById.parent_id === cityLocation.id &&
-                isTerritoryPubliclyNavigable(locationById.metadata)
-              ) {
-                if (!cancelled) {
-                  setResult({
-                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION,
-                    resolved: { kind: 'location', location: locationById },
-                    error: null,
-                  });
-                }
-                return;
-              }
-            }
-          }
-
-          if (isCommunityRoute) {
-            const group = await withTimeout(
-              territorialGroupService.getGroupBySlugAndCity(districtSlug, cityLocation.id),
-            );
-            if (group && group.status === 'active' && isTerritoryPubliclyNavigable(group.metadata)) {
-              const withMembers = await withTimeout(
-                territorialGroupService.getGroupWithMembers(group.id),
-              );
-              if (withMembers) {
-                if (!cancelled) {
-                  setResult({
-                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
-                    resolved: { kind: 'group', group: withMembers },
-                    error: null,
-                  });
-                }
-                return;
-              }
-            }
-          }
-        }
-
-        const districtPath = `${cityPath}/${districtSlug}`;
-        const districtLocation = await withTimeout(locationRepo.findByPath(districtPath));
-
-        if (!districtLocation) {
-          // Em rotas de módulo, aceita slug de grupo no padrão público limpo.
-          if (!isCommunityRoute) {
-            const groupBySlug = await withTimeout(
-              territorialGroupService.getGroupBySlugAndCity(districtSlug!, cityLocation.id),
-            );
-            if (groupBySlug && groupBySlug.status === 'active' && isTerritoryPubliclyNavigable(groupBySlug.metadata)) {
-              const withMembers = await withTimeout(
-                territorialGroupService.getGroupWithMembers(groupBySlug.id),
-              );
-              if (withMembers) {
-                if (!cancelled) {
-                  setResult({
-                    status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
-                    resolved: { kind: 'group', group: withMembers },
-                    error: null,
-                  });
-                }
-                return;
-              }
-            }
-          }
-
-          if (isGuideRoute) {
-            if (cityLocation.status !== 'active') {
-              if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.INACTIVE, resolved: null, error: `Cidade inativa: ${cityLocation.name}` });
-              return;
-            }
-            if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION, resolved: { kind: 'location', location: cityLocation }, error: null });
             return;
           }
 
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Local não encontrado: ${districtPath}` });
-          return;
-        }
-
-        if (districtLocation.status !== 'active') {
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.INACTIVE, resolved: null, error: `Bairro inativo: ${districtLocation.name}` });
-          return;
-        }
-
-        if (districtLocation.parent_id !== cityLocation.id) {
-          if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.NOT_FOUND, resolved: null, error: `Bairro ${districtSlug} não pertence a ${city}` });
-          return;
-        }
-
-        if (!isTerritoryPubliclyNavigable(districtLocation.metadata)) {
-          if (!cancelled) setResult({
-            status: TERRITORY_RESOLVE_STATUS.RESTRICTED,
-            resolved: null,
-            error: `${districtLocation.name} não está disponível para navegação pública no momento.`,
+          commit({
+            status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
+            resolved: { kind: "group", group: withMembers },
+            error: null,
           });
           return;
         }
 
-        if (isCommunityRoute) {
-          const containingGroups = await withTimeout(
-            territorialGroupService.findGroupsContainingLocation(districtLocation.id),
-          );
-          const eligibleGroups = containingGroups.filter(
-            (group) =>
-              group.status === 'active' &&
-              group.anchor_city_id === cityLocation.id &&
-              isTerritoryPubliclyNavigable(group.metadata),
-          );
-
-          // Evita ambiguidade: promove para grupo apenas quando há associação única.
-          if (eligibleGroups.length === 1) {
-            const withMembers = await withTimeout(
-              territorialGroupService.getGroupWithMembers(eligibleGroups[0].id),
-            );
-            if (withMembers && withMembers.status === 'active' && isTerritoryPubliclyNavigable(withMembers.metadata)) {
-              if (!cancelled) {
-                setResult({
-                  status: TERRITORY_RESOLVE_STATUS.RESOLVED_GROUP,
-                  resolved: { kind: 'group', group: withMembers },
-                  error: null,
-                });
-              }
-              return;
-            }
-          }
-        }
-
-        if (!cancelled) setResult({ status: TERRITORY_RESOLVE_STATUS.RESOLVED_LOCATION, resolved: { kind: 'location', location: districtLocation }, error: null });
-      } catch (err) {
+        commit({
+          status: TERRITORY_RESOLVE_STATUS.NOT_FOUND,
+          resolved: null,
+          error: `Território não encontrado: ${scopedPath}`,
+        });
+      } catch (error) {
         const fallbackResult = createResolvedFallbackResult(fallback);
-        if (!cancelled && fallbackResult) {
-          setResult(fallbackResult);
+        if (fallbackResult) {
+          commit(fallbackResult);
           return;
         }
 
-        if (!cancelled) {
-          setResult({ status: TERRITORY_RESOLVE_STATUS.ERROR, resolved: null, error: err instanceof Error ? err.message : 'Erro desconhecido' });
-        }
+        commit({
+          status: TERRITORY_RESOLVE_STATUS.ERROR,
+          resolved: null,
+          error:
+            error instanceof Error
+              ? error.message
+              : "Erro desconhecido ao resolver território",
+        });
       }
     }
 
-    resolve();
-    return () => { cancelled = true; };
-  }, [city, country, districtSlug, groupSlug, isCommunityRoute, isGuideRoute, pathname, state]);
+    void resolveTerritory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [city, country, pathname, state, territorySlug]);
 
   return result;
 }
