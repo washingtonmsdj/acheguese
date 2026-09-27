@@ -20,7 +20,10 @@ import {
   Car,
   GraduationCap,
 } from 'lucide-react';
-import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
+import {
+  APP_MODULE_SLUGS,
+  getAppModuleSlugFromPath,
+} from '@/shared/config/moduleSlugs';
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -311,42 +314,31 @@ export const TERRITORIAL_MODULES = MODULES_ARRAY.filter(m => m.isTerritorial);
  * @returns ModuleConfig ou null
  */
 export function detectModuleFromPath(pathname: string): ModuleConfig | null {
-  // Remove leading slash e pega o primeiro segmento
-  const segments = pathname.split('/').filter(Boolean);
-  if (segments.length === 0) return null;
-  
-  const firstSegment = segments[0];
-  
-  return MODULES_ARRAY.find(m => m.slug === firstSegment) ?? null;
+  const moduleSlug = getAppModuleSlugFromPath(pathname);
+  if (!moduleSlug) return null;
+  return MODULES_ARRAY.find((module) => module.slug === moduleSlug) ?? null;
 }
 
 /**
  * Helper: Obter mensagem contextual pela URL
- * 
+ *
  * @param pathname - Pathname da URL
  * @returns Mensagem contextual ou null
  */
 export function getContextMessageFromPath(pathname: string): string | null {
-  // Página inicial: Feed da comunidade
   if (pathname === '/') {
     return 'Feed de';
   }
-  
-  // Landing pages territoriais: /ba/salvador ou /ba/salvador/bairro
-  // Detecta se é uma rota territorial sem módulo (apenas 2 ou 3 segmentos)
-  const segments = pathname.split('/').filter(Boolean);
-  if (segments.length === 2 || segments.length === 3) {
-    // Verifica se o primeiro segmento NÃO é um módulo conhecido
-    const firstSegment = segments[0];
-    const isModule = MODULES_ARRAY.some(m => m.slug === firstSegment);
-    
-    if (!isModule) {
-      // É uma landing page territorial (ex: /ba/salvador)
-      return 'Início de';
-    }
-  }
-  
-  // Módulos territoriais
+
   const module = detectModuleFromPath(pathname);
-  return module?.isActive ? module.contextMessage || null : null;
+  if (module?.isActive) {
+    return module.contextMessage || null;
+  }
+
+  const segments = pathname.split('/').filter(Boolean);
+  if ((segments.length === 2 || segments.length === 3) && !module) {
+    return 'Início de';
+  }
+
+  return null;
 }
