@@ -252,17 +252,24 @@ export default function TerritoryPortalPage({
               <p className="pt-view-kicker"><Store /> Empresas</p>
             ) : null}
             {activeView === "nearby" ? (
-              <p className="pt-view-kicker"><Navigation /> Perto de mim</p>
-            ) : null}
-            <h1 id="pt-title">{activeView === "nearby" ? "Perto de mim" : territoryName}</h1>
-            {activeView === "nearby" ? <p className="pt-view-territory">{territoryName}</p> : null}
-            <p className="pt-tagline">
-              {activeView === "business"
-                ? "Comércio, serviços e negócios locais, em um só lugar."
-                : activeView === "nearby"
-                  ? "Encontre comércios, serviços e lugares próximos de você."
-                : "Empresas, mapa, busca e o que está perto de você, em um só lugar."}
-            </p>
+              <div className="pt-nearby-heading">
+                <span className="pt-nearby-heading-icon" aria-hidden="true"><Navigation /></span>
+                <div>
+                  <h1 id="pt-title">Perto de mim</h1>
+                  <p className="pt-view-territory">{territoryName}</p>
+                  <p className="pt-tagline">Encontre comércios, serviços e lugares próximos de você.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <h1 id="pt-title">{territoryName}</h1>
+                <p className="pt-tagline">
+                  {activeView === "business"
+                    ? "Comércio, serviços e negócios locais, em um só lugar."
+                    : "Empresas, mapa, busca e o que está perto de você, em um só lugar."}
+                </p>
+              </>
+            )}
 
             <div className="pt-shortcuts" aria-label="Atalhos do território" ref={shortcutRef}>
               {shortcuts.map(({ icon: Icon, ...item }) => {
