@@ -3,27 +3,27 @@ import { describe, expect, it } from "vitest";
 import { buildVagasListPath } from "../publicarVaga.shared";
 
 describe("buildVagasListPath", () => {
-  it("retorna listagem de vagas embutida na comunidade municipal", () => {
-    expect(buildVagasListPath("/comunidade/ba/salvador/vagas/publicar")).toBe(
-      "/comunidade/ba/salvador/vagas",
+  it("returns the canonical city jobs listing", () => {
+    expect(buildVagasListPath("/ba/salvador/vagas/publicar")).toBe(
+      "/ba/salvador/vagas",
     );
   });
 
-  it("preserva bairro ou grupo em vagas embutidas na comunidade", () => {
+  it("preserves a district or territorial group before the Jobs module", () => {
     expect(
       buildVagasListPath(
-        "/comunidade/ba/salvador/chapada-do-rio-vermelho/vagas/publicar",
+        "/ba/salvador/chapada-do-rio-vermelho/vagas/publicar",
       ),
-    ).toBe("/comunidade/ba/salvador/chapada-do-rio-vermelho/vagas");
+    ).toBe("/ba/salvador/chapada-do-rio-vermelho/vagas");
   });
 
-  it("preserva o alias explicito da comunidade ao voltar da publicacao", () => {
-    expect(buildVagasListPath("/comunidade/santa-cruz/vagas/publicar")).toBe(
-      "/comunidade/santa-cruz/vagas",
-    );
+  it("does not preserve retired Community-embedded routes", () => {
+    expect(
+      buildVagasListPath("/comunidade/santa-cruz/vagas/publicar"),
+    ).toBe("/vagas");
   });
 
-  it("volta para a rota publica de vagas fora da comunidade", () => {
+  it("falls back to the global Jobs entry outside a canonical territory", () => {
     expect(buildVagasListPath("/vagas/publicar")).toBe("/vagas");
   });
 });
