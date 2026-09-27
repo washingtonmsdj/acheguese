@@ -195,7 +195,7 @@ export function buildTerritoryModuleUrl(
 }
 
 export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: string): string {
-  const base = normalizePublicTerritoryPath(territoryBaseUrl).replace(/\\/+$/g, '');
+  const base = normalizePublicTerritoryPath(territoryBaseUrl).replace(/\/+$/g, '');
   return `${base}/${module}`;
 }
 
@@ -264,30 +264,22 @@ export function extractRouteContext(pathname: string): {
   suffix: string;
 } {
   const parts = pathname.split('/').filter(Boolean);
-  const firstSegment = parts[0];
-  const moduleValues = Object.values(MODULE_SLUGS);
-  const isModule = moduleValues.includes(firstSegment as ModuleSlug);
+  const moduleValues = new Set<string>(Object.values(MODULE_SLUGS));
 
-  if (!isModule) {
-    return { module: null, suffix: '' };
+  let moduleIndex = -1;
+  if (moduleValues.has(parts[0] ?? '')) {
+    if (!/^[a-z]{2}$/i.test(parts[1] ?? '')) moduleIndex = 0;
+  } else if (/^[a-z]{2}$/i.test(parts[0] ?? '') && parts[1]) {
+    if (moduleValues.has(parts[2] ?? '')) moduleIndex = 2;
+    else if (moduleValues.has(parts[3] ?? '')) moduleIndex = 3;
   }
 
-  const module = firstSegment as ModuleSlug;
-  let suffixStartIndex = -1;
+  if (moduleIndex < 0) return { module: null, suffix: '' };
 
-  for (let i = 1; i < parts.length; i++) {
-    if (parts.at(i) === 'categoria') {
-      suffixStartIndex = i;
-      break;
-    }
-  }
-
-  if (suffixStartIndex === -1) {
-    return { module, suffix: '' };
-  }
-
-  const suffixParts = parts.slice(suffixStartIndex);
-  const suffix = '/' + suffixParts.join('/');
-
-  return { module, suffix };
+  const module = parts[moduleIndex] as ModuleSlug;
+  const suffixParts = parts.slice(moduleIndex + 1);
+  return {
+    module,
+    suffix: suffixParts.length ? `/${suffixParts.join('/')}` : '',
+  };
 }
