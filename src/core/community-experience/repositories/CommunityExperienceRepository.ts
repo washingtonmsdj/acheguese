@@ -2,7 +2,6 @@ import { supabase } from "@/integrations/supabase";
 import { buildSafeOrILikeFilter } from "@/shared/utils/sqlSanitization";
 import type {
   CommunitySearchResult,
-  CommunitySlugLookup,
   CommunityTerritoryType,
   TerritorialCommunityProfile,
   TerritoryCommunityRecord,
@@ -48,25 +47,6 @@ export class CommunityExperienceRepository {
 
     if (error || !data) return null;
     return data as TerritoryCommunityRecord;
-  }
-
-  static async findSingleActiveCommunityBySlug(alias: string): Promise<CommunitySlugLookup> {
-    const { data, error } = await supabase
-      .from("territory_communities" as never)
-      .select(COMMUNITY_SELECT)
-      .eq("slug", alias)
-      .neq("status", "inactive")
-      .limit(2);
-
-    if (error || !data) {
-      return { row: null, ambiguous: false };
-    }
-
-    const rows = data as TerritoryCommunityRecord[];
-    return {
-      row: rows.length === 1 ? rows[0] : null,
-      ambiguous: rows.length > 1,
-    };
   }
 
   static async findCommunityByCityAndSlug(
