@@ -58,7 +58,7 @@ test.describe('public landing routes', () => {
   });
 
   test('territorial business and services module routes use Salvador in SEO titles', async ({ page }) => {
-    await openPublicRoute(page, '/empresas/ba/salvador/complexo-do-nordeste-de-amaralina');
+    await openPublicRoute(page, '/ba/salvador/complexo-do-nordeste-de-amaralina/empresas');
     await expectRouteReady(page, {
       readyPattern: /Complexo do Nordeste de Amaralina|Empresas/i,
     });
@@ -74,9 +74,9 @@ test.describe('public landing routes', () => {
 
   test('businesses and services preserve the selected city or bairro context', async ({ page }) => {
     const routes = [
-      { path: '/empresas/ba/salvador', text: /Empresas|Salvador/i },
-      { path: '/empresas/ba/salvador/pituba', text: /Empresas|Pituba/i },
-      { path: '/empresas/ba/salvador/valeria', text: /Empresas|Val[eé]ria/i },
+      { path: '/ba/salvador/empresas', text: /Empresas|Salvador/i },
+      { path: '/ba/salvador/pituba/empresas', text: /Empresas|Pituba/i },
+      { path: '/ba/salvador/valeria/empresas', text: /Empresas|Val[eé]ria/i },
     ];
 
     for (const route of routes) {
@@ -94,9 +94,9 @@ test.describe('public landing routes', () => {
       { path: '/ba/salvador', text: /Salvador|Achegue-se/i },
       { path: '/ba/salvador/nordeste-de-amaralina', text: /Nordeste de Amaralina|Achegue-se/i },
       { path: '/ba/salvador/complexo-do-nordeste-de-amaralina', text: /Complexo do Nordeste de Amaralina|Empresas Locais/i },
-      { path: '/empresas/ba/salvador', text: /Empresas|Salvador/i },
-      { path: '/empresas/ba/salvador/nordeste-de-amaralina', text: /Empresas|Nordeste de Amaralina/i },
-      { path: '/empresas/ba/salvador/complexo-do-nordeste-de-amaralina', text: /Empresas|Complexo do Nordeste de Amaralina/i },
+      { path: '/ba/salvador/empresas', text: /Empresas|Salvador/i },
+      { path: '/ba/salvador/nordeste-de-amaralina/empresas', text: /Empresas|Nordeste de Amaralina/i },
+      { path: '/ba/salvador/complexo-do-nordeste-de-amaralina/empresas', text: /Empresas|Complexo do Nordeste de Amaralina/i },
     ];
 
     for (const route of routes) {
