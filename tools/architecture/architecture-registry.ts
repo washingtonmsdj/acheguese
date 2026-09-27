@@ -375,7 +375,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Boa para decisao arquitetural. `COMMUNITY_FIRST_ARCHITECTURE_SSOT.md` define Comunidade Local como core domain e aponta para o plano incremental.",
     ssotSummary:
-      "CommunityExperienceRepository e o owner unico de leitura direta de `territory_communities` e `community_public_aliases` no app. CommunityMembershipRepository e o owner unico de `community_memberships`. CommunityEntityLinkRepository e o owner unico de `community_entity_links`. CommunityExperienceService, CommunityMembershipService e CommunityEntityLinkService sao as fachadas canonicas consumidas por routing e modulos. Territorio continua em location/territorial; feed e demais experiencias comunitarias nao devem redefinir a identidade da comunidade.",
+      "CommunityExperienceRepository e o owner unico de leitura direta de `territory_communities` no app. CommunityMembershipRepository e o owner unico de `community_memberships`. CommunityEntityLinkRepository e o owner unico de `community_entity_links`. CommunityExperienceService, CommunityMembershipService e CommunityEntityLinkService sao as fachadas canonicas consumidas por routing e modulos. URLs publicas sao derivadas exclusivamente do Territory canonico; nao existe namespace por alias. Feed e demais experiencias comunitarias nao devem redefinir a identidade territorial.",
   },
   {
     id: "community-feed",
