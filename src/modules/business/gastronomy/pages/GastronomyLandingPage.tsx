@@ -474,6 +474,8 @@ export default function GastronomyLandingPage() {
                 </motion.div>
               </div>
             </section>
+          </>
+        )}
       </div>
     </>
   );
