@@ -1,6 +1,6 @@
-import { lazy, Suspense, type ComponentType } from "react";
+import { lazy, Suspense, type ComponentType, type FormEvent } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   ChevronDown,
@@ -83,6 +83,7 @@ export default function TerritoryPortalPage({
   urls,
   activeView = "home",
 }: TerritoryPortalPageProps) {
+  const navigate = useNavigate();
   const activeViewLabel = {
     home: territoryName,
     map: `Mapa de ${territoryName}`,
@@ -129,6 +130,12 @@ export default function TerritoryPortalPage({
     },
   ];
 
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = String(new FormData(event.currentTarget).get("q") ?? "").trim();
+    navigate(query ? `${urls.search}?q=${encodeURIComponent(query)}` : urls.search);
+  };
+
   return (
     <div className="pt-page">
       <Helmet>
@@ -156,7 +163,11 @@ export default function TerritoryPortalPage({
             <Link to={urls.business}>Para negócios</Link>
           </nav>
 
-          <form className="pt-search" action={urls.search}>
+          <form
+            className="pt-search"
+            action={urls.search}
+            onSubmit={handleSearchSubmit}
+          >
             <Search />
             <input
               name="q"
