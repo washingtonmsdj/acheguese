@@ -8,7 +8,7 @@ describe("parsePublicBrowsingCityFromPathname", () => {
       city: "salvador",
     });
     expect(
-      parsePublicBrowsingCityFromPathname("/empresas/ba/salvador/nordeste-de-amaralina"),
+      parsePublicBrowsingCityFromPathname("/ba/salvador/nordeste-de-amaralina/empresas"),
     ).toEqual({
       state: "ba",
       city: "salvador",
