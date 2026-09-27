@@ -7,10 +7,6 @@ import {
   getPublicTerritoryLocationLabel,
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
-import {
-  APP_MODULE_SLUGS,
-  buildAppModulePath,
-} from "@/shared/config/moduleSlugs";
 import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 
 const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
@@ -25,9 +21,9 @@ const LAUNCH_PLACE_LABEL = [
   .filter(Boolean)
   .join(" · ");
 const ACCOUNT_PATH = "/conta";
-const launchBusinessUrl = LAUNCH_URLS.business;
+const launchExploreUrl = LAUNCH_URLS.territory;
 const launchMapUrl = LAUNCH_URLS.map;
-const launchNearbyUrl = buildAppModulePath(APP_MODULE_SLUGS.nearby);
+const launchNearbyUrl = LAUNCH_URLS.nearby;
 const launchSearchUrl = LAUNCH_URLS.search;
 
 /**
@@ -175,7 +171,7 @@ export default function TerritoryEntryPage() {
               </div>
             </form>
 
-            <a href={launchBusinessUrl} className="entry-explore-link">
+            <a href={launchExploreUrl} className="entry-explore-link">
               Explorar empresas
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M5 12h13" />
