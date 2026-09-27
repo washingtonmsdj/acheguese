@@ -8,7 +8,11 @@ import {
   PopoverTrigger,
 } from "@/shared/components/ui/popover";
 import { Input } from "@/shared/components/ui/input";
-import { APP_MODULE_SLUGS, buildAppModulePath, type AppModuleSlug } from "@/shared/config/moduleSlugs";
+import {
+  APP_MODULE_SLUGS,
+  getAppModuleSlugFromPath,
+} from "@/shared/config/moduleSlugs";
+import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -22,9 +26,15 @@ import { resolveFallbackCityStatus, type CityStatus } from "@/core/city/services
 
 function buildModulePath(module: string, state: string, city: string): string {
   const territoryPath = `/${state}/${city}`;
-  return module === "buscar"
-    ? `/buscar${territoryPath}`
-    : buildAppModulePath(module as AppModuleSlug, territoryPath);
+
+  if (module === "buscar") {
+    return `${territoryPath}/buscar`;
+  }
+
+  return buildModuleTerritoryUrl(
+    module as (typeof APP_MODULE_SLUGS)[keyof typeof APP_MODULE_SLUGS],
+    territoryPath,
+  );
 }
 
 type PublicCityLifecycleSurface =
@@ -64,9 +74,19 @@ function buildPathForCurrentContext(pathname: string, state: string, city: strin
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length === 0) return `/${state}/${city}`;
 
-  const module = parts[0];
-  if (PUBLIC_CITY_MODULE_SET.has(module)) {
+  const module = getAppModuleSlugFromPath(pathname);
+  if (module && PUBLIC_CITY_MODULE_SET.has(module)) {
     return buildModulePath(module, state, city);
+  }
+
+  const searchAliasIndex = parts.findIndex((segment) => segment === "buscar");
+  if (
+    searchAliasIndex >= 2 &&
+    /^[a-z]{2}$/i.test(parts[0] ?? "") &&
+    parts[1] &&
+    PUBLIC_CITY_MODULE_SET.has("buscar")
+  ) {
+    return buildModulePath("buscar", state, city);
   }
 
   return `/${state}/${city}`;
