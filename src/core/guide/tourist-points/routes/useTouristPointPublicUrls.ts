@@ -8,9 +8,9 @@ import { touristPointPublicRoutes } from './touristPointPublicRoutes';
 export const TOURIST_POINTS_SLUG = APP_MODULE_SLUGS.touristPoints;
 
 export interface TouristPointPublicUrls {
-  /** /pontos-turisticos/ba/salvador ou /pontos-turisticos/ba/salvador/barra */
+  /** /ba/salvador/pontos-turisticos ou /ba/salvador/barra/pontos-turisticos */
   touristPoints: string;
-  /** /pontos-turisticos/ba/salvador/:slug */
+  /** /ba/salvador/pontos-turisticos/:slug */
   touristPointDetail: (slug: string) => string;
 }
 
