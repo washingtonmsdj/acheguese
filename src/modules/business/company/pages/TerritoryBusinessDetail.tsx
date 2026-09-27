@@ -131,7 +131,7 @@ export function TerritoryBusinessDetail({
 }: TerritoryBusinessDetailProps) {
   const category = humanizeLabel(business.subcategoria || business.category || "Empresa local");
   const cover = business.banner_url || institutional.photos[0];
-  const gallery = institutional.photos.filter((photo) => photo !== cover).slice(0, 3);
+  const gallery = institutional.photos.slice(0, 3);
   const visibleProducts = products.filter((product) => product.active !== false).slice(0, 6);
   const related = nearbyBusinesses.filter((item) => item.id !== business.id).slice(0, 3);
   const phone = institutional.phone || business.phone;
@@ -194,7 +194,7 @@ export function TerritoryBusinessDetail({
       </header>
 
       <main id="bd-content">
-        <section className="bd-hero">
+        <section className={`bd-hero ${institutional.photos.length === 0 ? "max-md:!min-h-[330px]" : ""}`}>
           {cover ? <img className="bd-hero-cover" src={cover} alt="" /> : <div className="bd-hero-cover bd-hero-fallback" />}
           <div className="bd-hero-overlay" />
           <div className="bd-container bd-hero-inner">
@@ -311,19 +311,21 @@ export function TerritoryBusinessDetail({
               <button className="bd-route-button" type="button" onClick={onRoute}><Navigation /> Como chegar</button>
             </section>
 
-            <section className="bd-card bd-contact-card">
-              <SectionTitle icon={Phone}>Contato</SectionTitle>
-              {phone ? <a className="bd-phone" href={`tel:${phone.replace(/\D/g, "")}`}><Phone /><span><strong>{phone}</strong><small>Toque para ligar</small></span></a> : null}
-              <div className="bd-contact-actions">
-                {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a> : null}
-                {onMessage ? <button type="button" onClick={onMessage}><MessageCircle /> Mensagem</button> : null}
-              </div>
-              {whatsappHref || onMessage ? (
-                <button className="bd-order-button" type="button" onClick={whatsappHref ? () => window.open(whatsappHref, "_blank", "noopener,noreferrer") : onMessage}>
-                  <Utensils /> Falar com a empresa <ArrowRight />
-                </button>
-              ) : null}
-            </section>
+            {phone || whatsappHref || onMessage ? (
+              <section className="bd-card bd-contact-card">
+                <SectionTitle icon={Phone}>Contato</SectionTitle>
+                {phone ? <a className="bd-phone" href={`tel:${phone.replace(/\D/g, "")}`}><Phone /><span><strong>{phone}</strong><small>Toque para ligar</small></span></a> : null}
+                <div className={`bd-contact-actions ${phone ? "" : "!mt-0"}`}>
+                  {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a> : null}
+                  {onMessage ? <button type="button" onClick={onMessage}><MessageCircle /> Mensagem</button> : null}
+                </div>
+                {whatsappHref || onMessage ? (
+                  <button className="bd-order-button" type="button" onClick={whatsappHref ? () => window.open(whatsappHref, "_blank", "noopener,noreferrer") : onMessage}>
+                    <Utensils /> Falar com a empresa <ArrowRight />
+                  </button>
+                ) : null}
+              </section>
+            ) : null}
 
             {(business.instagram || business.facebook || institutional.website) ? (
               <section className="bd-card bd-social-card">
