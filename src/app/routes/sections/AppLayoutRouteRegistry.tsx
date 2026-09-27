@@ -10,6 +10,7 @@ import type { ProductModuleKey } from "@/app/config/productModuleRegistry";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
+  buildScopedTerritorialModuleRoutePath,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
@@ -41,8 +42,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
     id: "business-detail",
     owner: { kind: "product", key: "business" },
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-      TERRITORIAL_PARAMS.district,
+    path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
       TERRITORIAL_PARAMS.slug,
     ]),
     element: (
@@ -64,8 +64,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
     id: "business-category-district",
     owner: { kind: "product", key: "business" },
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-      TERRITORIAL_PARAMS.district,
+    path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
       TERRITORIAL_STATIC.category,
       TERRITORIAL_PARAMS.category,
     ]),
@@ -75,9 +74,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
     id: "business-district",
     owner: { kind: "product", key: "business" },
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-      TERRITORIAL_PARAMS.district,
-    ]),
+    path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
     element: <P.ActiveTerritorialLayout />,
     indexElement: <P.EmpresasLandingPage />,
   },
@@ -94,9 +91,7 @@ const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
     id: "map-district",
     owner: { kind: "capability", key: "map" },
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
-      TERRITORIAL_PARAMS.district,
-    ]),
+    path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
     element: <P.ActiveTerritorialLayout />,
     indexElement: <P.TerritorialMapPage />,
   },
@@ -113,9 +108,7 @@ const APP_LAYOUT_NEARBY_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] 
   {
     id: "nearby-district",
     owner: { kind: "capability", key: "nearby" },
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby, [
-      TERRITORIAL_PARAMS.district,
-    ]),
+    path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby),
     element: <P.ActiveTerritorialLayout />,
     indexElement: <P.NearbyPage />,
   },
