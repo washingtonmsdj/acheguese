@@ -1,5 +1,5 @@
 /**
- * BusinessRouteResolver - entrada única para /:state/:city/:district/empresas/:slug.
+ * BusinessRouteResolver - entrada única para /:state/:city/:territorySlug/empresas/:slug.
  *
  * Essa URL representa uma entidade publica de empresa. Se a empresa nao existir,
  * a rota canonica deve renderizar 404; nao deve cair em layout territorial vazio.
