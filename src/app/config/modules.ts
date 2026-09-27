@@ -48,7 +48,7 @@ export interface ModuleConfig {
   /** Cor de destaque (opcional) */
   color?: string;
   
-  /** Se o módulo é territorial (tem rotas /:state/:city) */
+  /** Se o módulo participa da hierarquia /:state/:city/:territory?/:module */
   isTerritorial: boolean;
   
   /** Se o módulo está ativo/disponível */
@@ -310,7 +310,7 @@ export const TERRITORIAL_MODULES = MODULES_ARRAY.filter(m => m.isTerritorial);
 /**
  * Helper: Detectar módulo pela URL
  * 
- * @param pathname - Pathname da URL (ex: /empresas/ba/salvador)
+ * @param pathname - Pathname da URL (ex: /ba/salvador/empresas)
  * @returns ModuleConfig ou null
  */
 export function detectModuleFromPath(pathname: string): ModuleConfig | null {
