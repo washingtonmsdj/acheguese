@@ -33,7 +33,6 @@ describe("notification action lifecycle scope", () => {
     ["/central/motoboy/entregas", "mobility"],
     ["/classificados/item-1", "classifieds"],
     ["/eventos/event-1", "events"],
-    ["/ba/salvador/comunidade/eventos/event-1", "events"],
     ["/planos", "billing"],
   ])("fails closed for paused surface destination %s", (href, surface) => {
     expect(resolveNotificationActionTarget(href, "Abrir")).toEqual({
@@ -53,6 +52,8 @@ describe("notification action lifecycle scope", () => {
     "/mapa/ba/salvador",
     "/perto-de-mim/ba/salvador",
     "/busca/ba/salvador",
+    "/ba/salvador/comunidade/eventos/event-1",
+    "/ba/salvador/comunidade/empresas",
   ])("fails closed for retired notification destination %s", (href) => {
     expect(resolveNotificationActionTarget(href, "Abrir")).toEqual({
       href: NOTIFICATION_INBOX_PATH,
