@@ -2,7 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("public home real-data boundary", () => {
-  const page = readFileSync("src/app/pages/TerritoryHomePage.tsx", "utf8");
+  const owner = readFileSync("src/app/pages/TerritoryHomePage.tsx", "utf8");
+  const presentation = readFileSync("src/app/pages/TerritoryPortalPage.tsx", "utf8");
+  const page = `${owner}\n${presentation}`;
 
   it("does not expose a concept-mock runtime path", () => {
     expect(page).not.toContain("concept-mock");
@@ -21,10 +23,11 @@ describe("public home real-data boundary", () => {
     expect(page).not.toContain("classifiedUrlService");
   });
 
-  it("advertises only the three active product modules", () => {
-    expect(page).toContain('title="Empresas"');
-    expect(page).toContain('title="Mapa"');
-    expect(page).toContain('title="Perto de mim"');
+  it("advertises only Business plus active territorial capabilities", () => {
+    expect(page).toContain('label: "Empresas"');
+    expect(page).toContain('label: "Mapa"');
+    expect(page).toContain('label: "Perto de mim"');
+    expect(page).toContain('label: "Busca"');
 
     for (const pausedCopy of [
       "Agenda do bairro",
@@ -35,6 +38,16 @@ describe("public home real-data boundary", () => {
       "Comunidade",
     ]) {
       expect(page).not.toContain(pausedCopy);
+    }
+
+    for (const fabricated of [
+      "Mercadinho Amaralina",
+      "Salão Beleza Negra",
+      "Restaurante da Dona Lúcia",
+      "12 próximos",
+      "há 2 horas",
+    ]) {
+      expect(page).not.toContain(fabricated);
     }
   });
 });
