@@ -3,7 +3,9 @@ import { parsePublicBrowsingCityFromPathname } from "./usePublicBrowsingCity";
 
 describe("parsePublicBrowsingCityFromPathname", () => {
   it("extracts city context from territorial module routes", () => {
-    expect(parsePublicBrowsingCityFromPathname("/gastronomia/ba/salvador")).toEqual({
+    expect(
+      parsePublicBrowsingCityFromPathname("/ba/salvador/gastronomia"),
+    ).toEqual({
       state: "ba",
       city: "salvador",
     });
@@ -22,7 +24,10 @@ describe("parsePublicBrowsingCityFromPathname", () => {
     });
   });
 
-  it("ignores public non-territorial subroutes", () => {
+  it("rejects retired module-first and non-territorial routes", () => {
+    expect(
+      parsePublicBrowsingCityFromPathname("/gastronomia/ba/salvador"),
+    ).toBeNull();
     expect(
       parsePublicBrowsingCityFromPathname("/gastronomia/pedidos/d756058c-c068-4eca-bc0c-f3dba74a27f7"),
     ).toBeNull();
