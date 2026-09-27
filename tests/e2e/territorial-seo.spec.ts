@@ -29,20 +29,21 @@ test.describe('territorial SEO policy', () => {
     expect(robots ?? 'index, follow').not.toMatch(/noindex/i);
   });
 
-  test('duplicated module inside community keeps noindex policy', async ({ page }) => {
-    await openPublicRoute(page, '/comunidade/ba/salvador/classificados', {
+  test('active Business module keeps the territory-first canonical URL', async ({ page }) => {
+    await openPublicRoute(page, '/ba/salvador/empresas', {
       waitUntil: 'domcontentloaded',
       dismissConsent: true,
     });
 
     await expectRouteReady(page, {
-      expectedUrlPart: '/comunidade/ba/salvador/classificados',
-      readyPattern: /Classificados|Comunidade|Salvador/i,
+      expectedUrlPart: '/ba/salvador/empresas',
+      readyPattern: /Empresas|Salvador|Achegue-se/i,
     });
 
-    await expect.poll(() => readRobots(page), { timeout: 60_000 }).toMatch(/noindex/i);
+    const robots = await readRobots(page);
+    expect(robots ?? 'index, follow').not.toMatch(/noindex/i);
 
     const canonical = await readCanonical(page);
-    expect(canonical ?? '').toContain('/classificados/ba/salvador');
+    expect(canonical ?? '').toContain('/ba/salvador/empresas');
   });
 });
