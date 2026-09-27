@@ -1,208 +1,278 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  Building2,
-  Map,
-  MapPin,
-  Navigation,
-  Search,
-  ShieldCheck,
-  type LucideIcon,
-} from "lucide-react";
+import type { ReactNode } from "react";
+
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
-import {
-  APP_MODULE_SLUGS,
-  buildAppModulePath,
-} from "@/shared/config/moduleSlugs";
+import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
+import "./ComoFuncionaPage.css";
 
-interface ModuleCardProps {
-  title: string;
-  description: string;
-  href: string;
-  icon: LucideIcon;
-}
+const COMMUNITY_NAME =
+  TERRITORY_CONFIG.launch.community.name || "Complexo do Nordeste de Amaralina";
+const COMMUNITY_SHORT_NAME = COMMUNITY_NAME.replace(/^Complexo do /, "");
+const CITY_NAME = TERRITORY_CONFIG.launch.name || "Salvador";
 
-const MODULES: readonly ModuleCardProps[] = [
-  {
-    title: "Empresas",
-    description:
-      "Encontre empresas do território e veja informações, contatos e localização.",
-    href: LAUNCH_URLS.business,
-    icon: Building2,
-  },
-  {
-    title: "Mapa",
-    description:
-      "Veja onde ficam as empresas disponíveis e explore o território pelo mapa.",
-    href: LAUNCH_URLS.map,
-    icon: Map,
-  },
-  {
-    title: "Perto de mim",
-    description:
-      "Com sua permissão, use a localização do aparelho para encontrar empresas próximas.",
-    href: buildAppModulePath(APP_MODULE_SLUGS.nearby),
-    icon: Navigation,
-  },
-  {
-    title: "Busca",
-    description:
-      "Procure empresas e resultados disponíveis no território.",
-    href: LAUNCH_URLS.search,
-    icon: Search,
-  },
-] as const;
-
-function ModuleCard({
-  title,
-  description,
-  href,
-  icon: Icon,
-}: ModuleCardProps) {
+function Icon({ children }: { children: ReactNode }) {
   return (
-    <Link
-      to={href}
-      className="group rounded-3xl border border-border bg-card p-5 shadow-sm transition-colors hover:border-primary/35 hover:bg-muted/30 sm:p-6"
-    >
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-        <Icon className="h-6 w-6" aria-hidden="true" />
-      </span>
-      <h2 className="mt-6 text-xl font-semibold">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        {description}
-      </p>
-      <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-        Abrir
-        <ArrowRight
-          className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
-          aria-hidden="true"
-        />
-      </span>
-    </Link>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      {children}
+    </svg>
   );
 }
 
-export default function ComoFuncionaPage() {
-  const launchName = TERRITORY_CONFIG.launch.community.name;
-
+function BrandMark() {
   return (
-    <>
+    <svg className="ag-guide-brand-mark" viewBox="0 0 42 42" aria-hidden="true">
+      <path d="M5 7.5C5 5.6 6.6 4 8.5 4h10v14.5H5v-11Z" />
+      <path d="M23.5 4h10C35.4 4 37 5.6 37 7.5v11H23.5V4Z" />
+      <path d="M5 23.5h13.5V38h-10A3.5 3.5 0 0 1 5 34.5v-11Z" />
+      <path d="M23.5 23.5H37v11a3.5 3.5 0 0 1-3.5 3.5h-10V23.5Z" />
+      <circle cx="21" cy="21" r="6.2" />
+    </svg>
+  );
+}
+
+const ArrowIcon = () => (
+  <Icon><path d="M5 12h13.5M13.5 6.5 19 12l-5.5 5.5" /></Icon>
+);
+
+const MapIcon = () => (
+  <Icon>
+    <path d="m3.5 6 5.5-3 6 3 5.5-3v15L15 21l-6-3-5.5 3V6Z" />
+    <path d="M9 3v15M15 6v15" />
+  </Icon>
+);
+
+const SearchIcon = () => (
+  <Icon><circle cx="10.5" cy="10.5" r="6.25" /><path d="m15.4 15.4 4.4 4.4" /></Icon>
+);
+
+const PeopleIcon = () => (
+  <Icon>
+    <circle cx="9" cy="8" r="3" />
+    <path d="M3.7 19c.35-4 2.15-6 5.3-6s4.95 2 5.3 6" />
+    <circle cx="17.2" cy="9" r="2.2" />
+    <path d="M15 14.2c3.25-.6 5.1 1 5.3 4.3" />
+  </Icon>
+);
+
+const StoreIcon = () => (
+  <Icon>
+    <path d="M4 9.5v10h16v-10M3 9.5l2-5h14l2 5" />
+    <path d="M3 9.5c0 1.7 2.8 2.2 4.5 0 1.6 2.2 4.8 2.2 6.4 0 1.7 2.2 4.5 1.7 4.5 0M9 19.5v-5h6v5" />
+  </Icon>
+);
+
+const ShieldIcon = () => (
+  <Icon>
+    <path d="M12 3 20 6v5c0 5-3.2 8.4-8 10-4.8-1.6-8-5-8-10V6l8-3Z" />
+    <path d="m8.5 12 2.2 2.2 4.8-5" />
+  </Icon>
+);
+
+const steps = [
+  {
+    number: "01",
+    title: "Comece pelo território",
+    copy: `Conheça o ${COMMUNITY_NAME} e veja os bairros que fazem parte dessa rede local.`,
+    icon: <MapIcon />,
+  },
+  {
+    number: "02",
+    title: "Descubra o que está perto",
+    copy: "Encontre negócios, serviços, eventos e conversas com endereço e contexto de verdade.",
+    icon: <SearchIcon />,
+  },
+  {
+    number: "03",
+    title: "Participe quando quiser",
+    copy: "Explore sem cadastro. Crie uma conta apenas quando quiser conversar, publicar ou divulgar.",
+    icon: <PeopleIcon />,
+  },
+] as const;
+
+const possibilities = [
+  {
+    eyebrow: "Vida local",
+    title: "Comunidade",
+    copy: "Avisos, perguntas, encontros e histórias de quem vive o território.",
+    href: LAUNCH_URLS.community,
+    className: "ag-guide-card-community",
+  },
+  {
+    eyebrow: "Economia do bairro",
+    title: "Negócios",
+    copy: "Comércio, alimentação e iniciativas que movimentam a região.",
+    href: LAUNCH_URLS.business,
+    className: "ag-guide-card-business",
+  },
+  {
+    eyebrow: "Soluções próximas",
+    title: "Serviços",
+    copy: "Profissionais e oportunidades encontrados a partir do território.",
+    href: LAUNCH_URLS.services,
+    className: "ag-guide-card-services",
+  },
+] as const;
+
+export default function ComoFuncionaPage() {
+  return (
+    <div className="ag-guide">
       <Helmet>
         <title>Como funciona | Achegue-se</title>
         <meta
           name="description"
-          content="Entenda como Empresas, Busca, Mapa e Perto de mim ajudam você a encontrar o que precisa no seu território."
+          content={`Entenda como o Achegue-se conecta pessoas, lugares e oportunidades do ${COMMUNITY_NAME}.`}
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background text-foreground">
-        <header className="border-b border-border/70 bg-background/95 backdrop-blur">
-          <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-            <Link to="/" className="text-xl font-semibold tracking-tight">
-              achegue-se<span className="text-primary">.</span>
-            </Link>
-            <nav className="flex items-center gap-2" aria-label="Navegação institucional">
-              <Link
-                to="/login"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastro"
-                className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                Criar conta
-              </Link>
-            </nav>
-          </div>
-        </header>
+      <header className="ag-guide-header">
+        <div className="ag-guide-container ag-guide-header-inner">
+          <Link className="ag-guide-brand" to="/" aria-label="Achegue-se — início">
+            <BrandMark /><span>achegue-se</span>
+          </Link>
 
-        <main>
-          <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
-            <div className="max-w-3xl">
-              <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                <MapPin className="h-4 w-4" aria-hidden="true" />
-                {launchName}
-              </div>
-              <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-                Quatro caminhos para encontrar o que importa por perto.
-              </h1>
-              <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-                Nesta primeira versão, o Achegue-se ajuda você a encontrar empresas,
-                procurar o que precisa, ver no mapa e descobrir o que está próximo.
-                Tudo parte do mesmo território.
+          <nav className="ag-guide-nav" aria-label="Navegação principal">
+            <Link to="/">Por perto</Link>
+            <a className="is-active" href="#passos" aria-current="page">Como funciona</a>
+            <Link to={LAUNCH_URLS.business}>Para negócios</Link>
+          </nav>
+
+          <Link className="ag-guide-account" to={AUTH_PATHS.login}>Entrar <ArrowIcon /></Link>
+        </div>
+      </header>
+
+      <main id="main-content" tabIndex={-1}>
+        <section className="ag-guide-hero" aria-labelledby="ag-guide-title">
+          <div className="ag-guide-container ag-guide-hero-grid">
+            <div className="ag-guide-hero-copy">
+              <p className="ag-guide-kicker"><span /> Um guia para chegar</p>
+              <h1 id="ag-guide-title">Primeiro você conhece.<br /><em>Depois, encontra.</em></h1>
+              <p className="ag-guide-lead">
+                O Achegue-se organiza a vida local a partir do território. Você entende onde
+                chegou, explora o que já existe e participa no seu tempo.
               </p>
+
             </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {MODULES.map((module) => (
-                <ModuleCard key={module.title} {...module} />
+            <div className="ag-guide-hero-visual">
+              <figure className="ag-guide-photo">
+                <img
+                  src="/images/home/achegue-se-community-hero-v1.webp"
+                  alt={`Moradores conversando no ${COMMUNITY_NAME}`}
+                  width="1536"
+                  height="1024"
+                />
+                <figcaption>
+                  <span>Nosso ponto de partida</span>
+                  <strong>{COMMUNITY_SHORT_NAME}</strong>
+                  <small>{CITY_NAME} · Bahia</small>
+                </figcaption>
+              </figure>
+
+              <div className="ag-guide-route" aria-label="Jornada pelo Achegue-se">
+                <span><i>1</i> Conheça</span><b aria-hidden="true" />
+                <span><i>2</i> Encontre</span><b aria-hidden="true" />
+                <span><i>3</i> Participe</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="ag-guide-steps" id="passos" aria-labelledby="ag-guide-steps-title">
+          <div className="ag-guide-container">
+            <div className="ag-guide-heading">
+              <p>01 — COMO FUNCIONA</p>
+              <div>
+                <h2 id="ag-guide-steps-title">Três passos. Nenhuma complicação.</h2>
+                <p>O território vem antes do cadastro, do algoritmo e da categoria.</p>
+              </div>
+            </div>
+
+            <ol className="ag-guide-step-grid">
+              {steps.map((step) => (
+                <li key={step.number}>
+                  <div className="ag-guide-step-top"><span>{step.icon}</span><small>{step.number}</small></div>
+                  <h3>{step.title}</h3>
+                  <p>{step.copy}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="ag-guide-possibilities" aria-labelledby="ag-guide-possibilities-title">
+          <div className="ag-guide-container">
+            <div className="ag-guide-heading">
+              <p>02 — O QUE TEM POR AQUI</p>
+              <div>
+                <h2 id="ag-guide-possibilities-title">Uma porta de entrada para a vida do bairro.</h2>
+                <p>Comece pelo que faz sentido hoje. O restante continua a poucos passos.</p>
+              </div>
+            </div>
+
+            <div className="ag-guide-card-grid">
+              {possibilities.map((item) => (
+                <Link className={`ag-guide-card ${item.className}`} to={item.href} key={item.title}>
+                  <small>{item.eyebrow}</small><h3>{item.title}</h3><p>{item.copy}</p>
+                  <span>Explorar <ArrowIcon /></span>
+                </Link>
               ))}
             </div>
-          </section>
-
-          <section className="border-y border-border/70 bg-muted/20">
-            <div className="mx-auto grid max-w-7xl gap-6 px-4 py-10 sm:px-6 md:grid-cols-3">
-              <div>
-                <span className="text-sm font-semibold text-primary">1</span>
-                <h2 className="mt-2 font-semibold">Escolha o território</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Escolha o bairro ou território onde você quer procurar e mantenha esse
-                  contexto enquanto navega.
-                </p>
-              </div>
-              <div>
-                <span className="text-sm font-semibold text-primary">2</span>
-                <h2 className="mt-2 font-semibold">Explore empresas</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Veja informações, contatos e localização de cada empresa antes de
-                  decidir onde ir.
-                </p>
-              </div>
-              <div>
-                <span className="text-sm font-semibold text-primary">3</span>
-                <h2 className="mt-2 font-semibold">Descubra o que está perto</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Com sua permissão, usamos a localização do aparelho para mostrar o que
-                  está realmente próximo de você.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
-            <div className="flex max-w-3xl items-start gap-4 rounded-3xl border border-border bg-card p-5 sm:p-6">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div>
-                <h2 className="font-semibold">Começando pelo essencial</h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Nesta primeira versão, o Achegue-se foca em empresas e descoberta local.
-                  Novas áreas entram aos poucos, quando estiverem prontas para oferecer uma
-                  experiência útil e confiável.
-                </p>
-              </div>
-            </div>
-          </section>
-        </main>
-
-        <footer className="border-t border-border/70">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-muted-foreground sm:px-6">
-            <span>Achegue-se</span>
-            <nav className="flex gap-4" aria-label="Links institucionais">
-              <Link to="/privacidade" className="hover:text-foreground">
-                Privacidade
-              </Link>
-              <Link to="/termos" className="hover:text-foreground">
-                Termos
-              </Link>
-            </nav>
           </div>
-        </footer>
-      </div>
-    </>
+        </section>
+
+        <section className="ag-guide-choice" aria-labelledby="ag-guide-choice-title">
+          <div className="ag-guide-container ag-guide-choice-grid">
+            <div className="ag-guide-choice-copy">
+              <p className="ag-guide-dark-index">03 — VOCÊ DECIDE</p>
+              <h2 id="ag-guide-choice-title">Olhar primeiro. Participar depois.</h2>
+              <p>Você não precisa criar uma conta para entender o território. O cadastro só entra quando você quiser fazer parte da conversa.</p>
+            </div>
+
+            <div className="ag-guide-choice-cards">
+              <article>
+                <span className="ag-guide-choice-icon"><MapIcon /></span><small>Sem conta</small>
+                <h3>Explore livremente</h3><p>Conheça lugares, negócios, serviços e conteúdos públicos.</p>
+                <Link to={LAUNCH_URLS.community}>Começar a explorar <ArrowIcon /></Link>
+              </article>
+              <article className="is-warm">
+                <span className="ag-guide-choice-icon"><PeopleIcon /></span><small>Com sua conta</small>
+                <h3>Chegue junto</h3><p>Converse, publique, salve lugares e gerencie seus perfis.</p>
+                <Link to={AUTH_PATHS.signup}>Criar minha conta <ArrowIcon /></Link>
+              </article>
+            </div>
+
+            <div className="ag-guide-trust">
+              <ShieldIcon />
+              <p><strong>Contexto e respeito.</strong> Informação local fica mais útil quando vem acompanhada de território, identidade e cuidado.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="ag-guide-final" aria-labelledby="ag-guide-final-title">
+          <div className="ag-guide-container ag-guide-final-grid">
+            <div>
+              <p className="ag-guide-kicker"><span /> Agora você já sabe</p>
+              <h2 id="ag-guide-final-title">O melhor jeito de entender é chegar.</h2>
+            </div>
+            <div className="ag-guide-final-actions">
+              <Link className="ag-guide-secondary" to="/">Voltar para a página inicial</Link>
+              <Link className="ag-guide-business-link" to={LAUNCH_URLS.business}><StoreIcon /> Tenho um negócio no território</Link>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="ag-guide-footer">
+        <div className="ag-guide-container ag-guide-footer-grid">
+          <Link className="ag-guide-brand" to="/" aria-label="Achegue-se — início"><BrandMark /><span>achegue-se</span></Link>
+          <nav aria-label="Links do rodapé">
+            <Link to="/sobre">Sobre</Link><Link to="/contato">Ajuda</Link><Link to={PRIVACY_POLICY_PATH}>Privacidade</Link>
+          </nav>
+          <p>Começamos pelo<br /><strong>{COMMUNITY_NAME}</strong></p>
+        </div>
+      </footer>
+    </div>
   );
 }

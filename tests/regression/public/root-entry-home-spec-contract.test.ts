@@ -6,25 +6,24 @@ const ROOT = process.cwd();
 const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
-describe("public root MVP 118 contract", () => {
-  it("keeps the first screen focused on nearby business discovery", () => {
+describe("public root home redesign contract", () => {
+  it("keeps the first screen focused on territorial discovery", () => {
     const page = read("src/app/pages/TerritoryEntryPage.tsx");
 
-    expect(page).toContain("COMEÇAMOS PELO COMPLEXO");
-    expect(page).toContain("Tudo perto de você.");
-    expect(page).toContain("Encontre empresas e estabelecimentos");
-    expect(page).toContain("Buscar empresas");
-    expect(page).toContain("Qual empresa você procura?");
-    expect(page).toContain("mvp-business-search");
-    expect(page).toContain("action={LAUNCH_URLS.search}");
-    expect(page).toContain('method="get"');
-    expect(page).toContain("href={LAUNCH_URLS.business}");
-    expect(page).toContain("Explorar empresas");
+    expect(page).toContain("A praça digital do seu bairro");
+    expect(page).toContain("Por perto");
+    expect(page).toContain("Território: {LAUNCH_COMMUNITY_NAME}");
+    expect(page).toContain("Negócios, serviços, eventos e gente");
+    expect(page).toContain("Tudo que importa,");
+    expect(page).toContain("logo ali.");
+    expect(page).toContain("Explorar o {LAUNCH_COMMUNITY_DISCOVERY_LABEL}");
+    expect(page).toContain("ag-explore-cta");
+    expect(page).toContain("href={LAUNCH_URLS.businessTerritory}");
+    expect(page).toContain("Explorar negócios");
     expect(page).toContain("href={LAUNCH_URLS.map}");
     expect(page).toContain('href="/perto-de-mim"');
-    expect(page).toContain("Sem cadastro para explorar.");
-    expect(page).toContain("Quatro bairros, um lugar para descobrir");
-    expect(page).toContain("Você pode explorar mesmo morando em outro lugar.");
+    expect(page).toContain("A comunidade sabe primeiro.");
+    expect(page).toContain("Seu bairro primeiro. O resto vem depois.");
 
     expect(page).not.toContain("entry-search");
     expect(page).not.toContain("entry-location-action");
@@ -49,22 +48,15 @@ describe("public root MVP 118 contract", () => {
     expect(page).not.toContain("launchCommunityOriginLabel");
   });
 
-  it("keeps low mobile viewports reachable without legacy scroll overrides", () => {
+  it("keeps low mobile viewports responsive without horizontal clipping", () => {
     const page = read("src/app/pages/TerritoryEntryPage.tsx");
-    const styles = read("src/index.css");
-    const mapRuntime = read(
-      "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
-    );
+    const styles = read("src/app/pages/TerritoryEntryPage.css");
 
-    expect(page).toContain("data-entry-mobile-scroll-owner");
-    expect(page).toContain("mvp-entry-content max-md:overflow-y-visible");
-    expect(page).toContain("max-md:min-h-[calc(3.5rem+env(safe-area-inset-top))]");
-    expect(page).not.toContain("max-md:!overflow-y-auto");
-    expect(page).not.toContain("max-md:overscroll-contain");
-    expect(styles).toContain("white-space: nowrap;");
-    expect(styles).toContain("min-height: 16.5rem;");
-    expect(styles).toContain("flex: 1 1 16.5rem;");
-    expect(styles).toContain("height: 100%;");
-    expect(mapRuntime).toContain("customAttribution={false}");
+    expect(page).toContain('className="ag-home"');
+    expect(styles).toContain("overflow: hidden;");
+    expect(styles).toContain("@media (max-width: 640px)");
+    expect(styles).toContain("grid-template-columns: 1fr;");
+    expect(styles).toContain("padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));");
+    expect(styles).toContain("@media (prefers-reduced-motion: reduce)");
   });
 });
