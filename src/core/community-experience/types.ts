@@ -120,10 +120,6 @@ export interface TerritoryCommunityRecord {
   status?: string;
 }
 
-export interface CommunitySlugLookup {
-  row: TerritoryCommunityRecord | null;
-  ambiguous: boolean;
-}
 
 export interface TerritorialCommunityProfile {
   id: string;
