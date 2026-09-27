@@ -80,38 +80,45 @@ const steps = [
   {
     number: "02",
     title: "Descubra o que está perto",
-    copy: "Encontre negócios, serviços, eventos e conversas com endereço e contexto de verdade.",
+    copy: "Encontre empresas, lugares e resultados próximos com endereço e contexto de verdade.",
     icon: <SearchIcon />,
   },
   {
     number: "03",
     title: "Participe quando quiser",
-    copy: "Explore sem cadastro. Crie uma conta apenas quando quiser conversar, publicar ou divulgar.",
+    copy: "Explore sem cadastro. Crie uma conta quando quiser salvar preferências, enviar mensagens ou gerenciar um negócio.",
     icon: <PeopleIcon />,
   },
 ] as const;
 
 const possibilities = [
   {
-    eyebrow: "Vida local",
-    title: "Comunidade",
-    copy: "Avisos, perguntas, encontros e histórias de quem vive o território.",
-    href: LAUNCH_URLS.community,
-    className: "ag-guide-card-community",
-  },
-  {
     eyebrow: "Economia do bairro",
-    title: "Negócios",
+    title: "Empresas",
     copy: "Comércio, alimentação e iniciativas que movimentam a região.",
     href: LAUNCH_URLS.business,
     className: "ag-guide-card-business",
   },
   {
-    eyebrow: "Soluções próximas",
-    title: "Serviços",
-    copy: "Profissionais e oportunidades encontrados a partir do território.",
-    href: LAUNCH_URLS.services,
+    eyebrow: "Território visual",
+    title: "Mapa",
+    copy: "Veja onde ficam empresas e pontos úteis dentro do território.",
+    href: LAUNCH_URLS.map,
+    className: "ag-guide-card-community",
+  },
+  {
+    eyebrow: "Mais perto agora",
+    title: "Perto de mim",
+    copy: "Use sua localização para descobrir empresas próximas.",
+    href: LAUNCH_URLS.nearby,
     className: "ag-guide-card-services",
+  },
+  {
+    eyebrow: "Busca territorial",
+    title: "Busca",
+    copy: "Procure empresas e resultados sem perder o contexto do território.",
+    href: LAUNCH_URLS.search,
+    className: "ag-guide-card-community",
   },
 ] as const;
 
@@ -233,12 +240,12 @@ export default function ComoFuncionaPage() {
             <div className="ag-guide-choice-cards">
               <article>
                 <span className="ag-guide-choice-icon"><MapIcon /></span><small>Sem conta</small>
-                <h3>Explore livremente</h3><p>Conheça lugares, negócios, serviços e conteúdos públicos.</p>
-                <Link to={LAUNCH_URLS.community}>Começar a explorar <ArrowIcon /></Link>
+                <h3>Explore livremente</h3><p>Conheça empresas, mapa, busca e o que está perto de você.</p>
+                <Link to={LAUNCH_URLS.portal}>Começar a explorar <ArrowIcon /></Link>
               </article>
               <article className="is-warm">
                 <span className="ag-guide-choice-icon"><PeopleIcon /></span><small>Com sua conta</small>
-                <h3>Chegue junto</h3><p>Converse, publique, salve lugares e gerencie seus perfis.</p>
+                <h3>Chegue junto</h3><p>Envie mensagens, salve preferências e gerencie seus perfis.</p>
                 <Link to={AUTH_PATHS.signup}>Criar minha conta <ArrowIcon /></Link>
               </article>
             </div>
