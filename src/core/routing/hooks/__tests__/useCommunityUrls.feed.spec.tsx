@@ -57,28 +57,28 @@ describe("useCommunityUrls canonical feed URL", () => {
   it("keeps the community base distinct from the explicit full-feed entrypoint", () => {
     const { result } = renderHook(() => useCommunityUrls());
 
-    expect(result.current.feed).toBe("/comunidade/ba/salvador/pituba/feed");
+    expect(result.current.feed).toBe("/ba/salvador/pituba/comunidade/feed");
     expect(result.current.alerts).toBe(
-      "/comunidade/ba/salvador/pituba/feed?tab=alertas",
+      "/ba/salvador/pituba/comunidade/feed?tab=alertas",
     );
     expect(result.current.issues).toBe(
-      "/comunidade/ba/salvador/pituba/problemas",
+      "/ba/salvador/pituba/comunidade/problemas",
     );
-    expect(result.current.groups).toBe("/comunidade/ba/salvador/pituba/grupos");
+    expect(result.current.groups).toBe("/ba/salvador/pituba/comunidade/grupos");
   });
 
   it("builds the Salvador feed from the community root supplied by the shell", () => {
     territorialContextState.current = {
       resolved: cityResolved,
       baseUrl: "/ba/salvador",
-      communityBaseUrl: "/comunidade/ba/salvador",
+      communityBaseUrl: "/ba/salvador/comunidade",
       groupAvailability: "full",
       activeMemberIds: [],
     };
 
     const { result } = renderHook(() => useCommunityUrls(cityResolved));
 
-    expect(result.current.feed).toBe("/comunidade/ba/salvador/feed");
+    expect(result.current.feed).toBe("/ba/salvador/comunidade/feed");
     expect(result.current.feed).not.toContain("/feed/feed");
   });
 
@@ -86,7 +86,7 @@ describe("useCommunityUrls canonical feed URL", () => {
     territorialContextState.current = {
       resolved: cityResolved,
       baseUrl: "/ba/salvador",
-      communityBaseUrl: "/comunidade/ba/salvador/feed",
+      communityBaseUrl: "/ba/salvador/comunidade/feed",
       groupAvailability: "full",
       activeMemberIds: [],
     };
@@ -94,9 +94,9 @@ describe("useCommunityUrls canonical feed URL", () => {
     const { result, rerender } = renderHook(() => useCommunityUrls(cityResolved));
     rerender();
 
-    expect(result.current.feed).toBe("/comunidade/ba/salvador/feed");
+    expect(result.current.feed).toBe("/ba/salvador/comunidade/feed");
     expect(result.current.alerts).toBe(
-      "/comunidade/ba/salvador/feed?tab=alertas",
+      "/ba/salvador/comunidade/feed?tab=alertas",
     );
   });
 });
