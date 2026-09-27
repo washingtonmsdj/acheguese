@@ -47,7 +47,6 @@ e o produto social construido sobre essa base.
 SSOT atual:
 
 - `territory_communities`
-- `community_public_aliases`
 - `community_memberships`
 - `community_entity_links`
 - `src/core/community-experience`
@@ -57,15 +56,16 @@ SSOT atual:
 
 Responsabilidade:
 
-- representar a comunidade local routeavel e exibivel;
-- resolver perfil publico, status de lancamento, copy, alias e metadados de
-  experiencia;
+- representar a comunidade local exibível ancorada no Territory;
+- resolver perfil público, status de lançamento, copy e metadados de
+  experiência;
 - expor a fachada canonica para leitura da comunidade local.
 
 `src/core/community-experience/repositories/CommunityExperienceRepository.ts`
-e o unico owner de leitura direta de `territory_communities` e
-`community_public_aliases` no app. `CommunityExperienceService` e a fachada
-canonica consumida por routing e modulos.
+é o owner de leitura de `territory_communities`. O antigo
+`community_public_aliases` não é autoridade de URL: rotas públicas são derivadas
+exclusivamente do Territory canônico. `CommunityExperienceService` permanece a
+fachada consumida pelos módulos.
 
 `src/core/community-experience/repositories/CommunityMembershipRepository.ts`
 e o unico owner de acesso direto a `community_memberships` no app. Membership
@@ -92,10 +92,9 @@ da comunidade com os dados publicos dos dominios canonicos para blocos de
 empresas, servicos/profissionais e classificados, mantendo fallback territorial
 quando uma comunidade ainda nao tem vinculos ativos.
 
-A superficie publica de overview da comunidade e
-`src/core/community/components/page/CommunityOverviewSurface.tsx`. Ela e a
-composicao de UI para `/comunidade/:alias` e para a landing territorial em modo
-comunidade; nao e SSOT de dados. Essa superficie deve consumir:
+A superfície pública de overview da comunidade é
+`src/core/community/components/page/CommunityOverviewSurface.tsx`. Ela é a
+composição de UI para `/:state/:city/:territory/comunidade`; nao e SSOT de dados. Essa superficie deve consumir:
 
 - identidade/perfil por `community-experience`;
 - territorio por `TerritoryFilter` canonico;
@@ -132,10 +131,10 @@ pausada nem inventar contadores.
 Rotas publicas de comunidade herdam somente a navegacao territorial adaptativa
 do sistema Territorio Vivo: bottom navigation no mobile, rail no tablet e
 sidebar + contexto no desktop. Elas nao devem montar `AppSidebar`, `AppTopbar`,
-`BottomNav` legado, banners de transicao ou um segundo shell interno. O alias
-`/comunidade/:alias` e a superficie publica canonica da Comunidade Local;
-`/feed`, `?view=groups`, `?view=discussions` e `/grupos` permanecem no mesmo
-contexto e preservam query params/deep-links. Links para a Home territorial e
+`BottomNav` legado, banners de transicao ou um segundo shell interno. A rota `/:state/:city/:territory/comunidade` é a superfície pública canônica da
+Comunidade Local. Não existe namespace público por alias. `/feed`,
+`?view=groups`, `?view=discussions` e `/grupos` permanecem no mesmo contexto
+territorial e preservam query params/deep-links. Links para a Home territorial e
 Explorar sao navegacao contextual, nao uma faixa duplicada.
 
 `Publicar` e o composer aparecem somente quando `CommunityAccessPolicy`
@@ -323,7 +322,6 @@ Pode:
 - ler `territory_communities`;
 - ler `community_memberships`;
 - ler `community_entity_links`;
-- ler alias publico quando a fachada for consolidada;
 - compor dados territoriais canonicos para experiencia publica.
 
 Nao deve:
