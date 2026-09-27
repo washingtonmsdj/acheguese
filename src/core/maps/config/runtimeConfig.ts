@@ -1,6 +1,6 @@
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import {
-  TERRITORIAL_ROUTE_PARAMS,
+  buildScopedTerritorialModuleRoutePath,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 import type { MapLayerKey } from "../types/core";
@@ -36,9 +36,7 @@ export const MAP_PRODUCT_SURFACES: MapProductSurface[] = [
     note: "Superficie territorial canonica do mapa.",
   },
   {
-    route: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
-      TERRITORIAL_ROUTE_PARAMS.district,
-    ]),
+    route: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
     owner: "src/app/routes/territorial/ActiveTerritorialModulePages.tsx",
     status: "official",
     note: "Mapa contextual por bairro.",
