@@ -7,7 +7,7 @@ import {
 export interface PremiumBusinessTerritoryRoute {
   readonly state: string;
   readonly city: string;
-  readonly district: string;
+  readonly territorySlug: string;
   readonly businessSlug: string;
 }
 
@@ -35,7 +35,7 @@ function parseTerritoryPath(geographicPath: string): Omit<PremiumBusinessTerrito
   return {
     state: parts[1],
     city: parts[2],
-    district: parts[3],
+    territorySlug: parts[3],
   };
 }
 
