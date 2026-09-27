@@ -120,8 +120,8 @@ describe("CommunityTerritorialShell route identity", () => {
     "keeps the municipal %s route scoped to Salvador",
     (segment) => {
       renderShell(
-        `/comunidade/ba/salvador/${segment}`,
-        `/comunidade/:state/:city/${segment}`,
+        `/ba/salvador/comunidade/${segment}`,
+        `/:state/:city/comunidade/${segment}`,
       );
 
       expect(screen.getByTestId("territory-context")).toHaveAttribute(
@@ -130,7 +130,7 @@ describe("CommunityTerritorialShell route identity", () => {
       );
       expect(screen.getByTestId("territory-context")).toHaveAttribute(
         "data-community-base-url",
-        "/comunidade/ba/salvador",
+        "/ba/salvador/comunidade",
       );
     },
   );
@@ -139,8 +139,8 @@ describe("CommunityTerritorialShell route identity", () => {
     shellState.resolved = pitubaResolved;
 
     renderShell(
-      "/comunidade/ba/salvador/pituba/feed",
-      "/comunidade/:state/:city/:groupSlugOrDistrict/feed",
+      "/ba/salvador/pituba/comunidade/feed",
+      "/:state/:city/:groupSlugOrDistrict/comunidade/feed",
     );
 
     expect(screen.getByTestId("territory-context")).toHaveAttribute(
@@ -149,7 +149,7 @@ describe("CommunityTerritorialShell route identity", () => {
     );
     expect(screen.getByTestId("territory-context")).toHaveAttribute(
       "data-community-base-url",
-      "/comunidade/ba/salvador/pituba",
+      "/ba/salvador/pituba/comunidade",
     );
   });
 });
