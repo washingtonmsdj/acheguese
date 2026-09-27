@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType, type FormEvent } from "react";
+import { lazy, Suspense, useEffect, useRef, type ComponentType, type FormEvent } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -85,6 +85,7 @@ export default function TerritoryPortalPage({
   activeView = "home",
 }: TerritoryPortalPageProps) {
   const navigate = useNavigate();
+  const shortcutRef = useRef<HTMLDivElement>(null);
   const heroSlug =
     resolvedTerritory?.kind === "group"
       ? resolvedTerritory.group.slug
@@ -152,6 +153,14 @@ export default function TerritoryPortalPage({
     navigate(query ? `${urls.search}?q=${encodeURIComponent(query)}` : urls.search);
   };
 
+  useEffect(() => {
+    const navigation = shortcutRef.current;
+    const activeShortcut = navigation?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!navigation || !activeShortcut || navigation.scrollWidth <= navigation.clientWidth) return;
+    const left = activeShortcut.offsetLeft - (navigation.clientWidth - activeShortcut.offsetWidth) / 2;
+    navigation.scrollTo({ left: Math.max(0, left), behavior: "auto" });
+  }, [activeView]);
+
   return (
     <div className="pt-page">
       <Helmet>
@@ -218,7 +227,7 @@ export default function TerritoryPortalPage({
 
       <main id="pt-content" tabIndex={-1}>
         <section
-          className={`pt-hero ${activeView === "business" ? "pt-hero--business" : ""}`}
+          className={`pt-hero ${activeView === "business" ? "pt-hero--business" : ""} ${activeView === "nearby" ? "pt-hero--nearby" : ""}`}
           aria-labelledby="pt-title"
         >
           <img
@@ -233,18 +242,25 @@ export default function TerritoryPortalPage({
             <p className="pt-breadcrumb">
               <Home /> {contextLabel} <span>›</span> {territoryName}
               {activeView === "business" ? <><span>›</span> Empresas</> : null}
+              {activeView === "nearby" ? <><span>›</span> Perto de mim</> : null}
             </p>
             {activeView === "business" ? (
               <p className="pt-view-kicker"><Store /> Empresas</p>
             ) : null}
-            <h1 id="pt-title">{territoryName}</h1>
+            {activeView === "nearby" ? (
+              <p className="pt-view-kicker"><Navigation /> Perto de mim</p>
+            ) : null}
+            <h1 id="pt-title">{activeView === "nearby" ? "Perto de mim" : territoryName}</h1>
+            {activeView === "nearby" ? <p className="pt-view-territory">{territoryName}</p> : null}
             <p className="pt-tagline">
               {activeView === "business"
                 ? "Comércio, serviços e negócios locais, em um só lugar."
+                : activeView === "nearby"
+                  ? "Encontre comércios, serviços e lugares próximos de você."
                 : "Empresas, mapa, busca e o que está perto de você, em um só lugar."}
             </p>
 
-            <div className="pt-shortcuts" aria-label="Atalhos do território">
+            <div className="pt-shortcuts" aria-label="Atalhos do território" ref={shortcutRef}>
               {shortcuts.map(({ icon: Icon, ...item }) => {
                 const content = (
                   <>

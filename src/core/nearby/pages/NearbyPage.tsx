@@ -1,400 +1,117 @@
 import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
+import { AlertTriangle, ArrowRight, ChevronDown, Compass, Cross, LocateFixed, Map, MapPin, Navigation, Search, SlidersHorizontal, Star, Store } from "lucide-react";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
-import {
-  AlertTriangle,
-  ArrowRight,
-  Compass,
-  Loader2,
-  Map,
-  MapPin,
-  Navigation,
-  Store,
-} from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { TerritoryIndicator } from "@/core/location/components/TerritoryIndicator";
 import { useLocationContext } from "@/core/location/hooks/useLocationContext";
 import { useResolvedUserLocation } from "@/core/location/hooks/useResolvedUserLocation";
 import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import {
-  MODULE_SLUGS,
-  buildLocationModuleUrl,
-  buildModuleTerritoryUrl,
-} from "@/core/routing/utils/territoryUrls";
-import {
-  APP_MODULE_SLUGS,
-  buildAppModulePath,
-} from "@/shared/config/moduleSlugs";
-import { NearbyCard, NearbyFilters, NearbyMiniMap, NearbySection } from "../components";
+import { MODULE_SLUGS, buildLocationModuleUrl, buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
+import { NearbyMiniMap } from "../components";
 import { useNearbyBusinesses } from "../hooks/useNearbyBusinesses";
+import type { NearbyBusiness } from "../domain/types";
 import type { NearbyProviderId } from "../providers/registry";
+import "./NearbyPage.css";
 
-interface NearbyPageProps {
-  providerIds: readonly NearbyProviderId[];
+interface NearbyPageProps { providerIds: readonly NearbyProviderId[]; }
+const RADIUS_OPTIONS = [1, 2, 5, 10, 20] as const;
+
+function formatDistance(meters: number): string {
+  if (!meters) return "No território";
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  return `${(meters / 1000).toFixed(1).replace(".", ",")} km`;
+}
+
+function NearbyBusinessCard({ business, precise }: { business: NearbyBusiness; precise: boolean }) {
+  const navigate = useNavigate();
+  return (
+    <button className="nb-business-card" type="button" onClick={() => navigate(business.canonicalUrl)}>
+      <span className="nb-business-media">
+        {business.logo ? <img src={business.logo} alt="" loading="lazy" /> : <Store />}
+        {business.verified ? <b>Verificada</b> : null}
+      </span>
+      <span className="nb-business-copy">
+        <small>{business.category || "Empresa local"}</small>
+        <strong>{business.name}</strong>
+        <span><MapPin /> {precise ? formatDistance(business.distanceMeters) : business.neighborhood || business.city || "No território"}</span>
+        <em><Star /> {business.rating > 0 ? business.rating.toFixed(1) : "Novo"}</em>
+      </span>
+    </button>
+  );
 }
 
 export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const navigate = useNavigate();
   const territorialContext = useTerritorialContextOptional();
   const { activeLocation, activeTerritory } = useLocationContext();
-  const businessProviderEnabled = providerIds.includes("business");
-
-  const resolved: ResolvedTerritory | null =
-    territorialContext?.resolved ??
-    (activeTerritory?.location
-      ? { kind: "location", location: activeTerritory.location }
-      : null);
-  const routeFallbackLocation = territorialContext
-    ? resolved?.kind === "location"
-      ? resolved.location
-      : null
-    : undefined;
-  const businessUrl = territorialContext
-    ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl)
-    : activeLocation
-      ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business)
-      : buildAppModulePath(APP_MODULE_SLUGS.business);
-  const mapUrl = territorialContext
-    ? buildModuleTerritoryUrl(MODULE_SLUGS.map, territorialContext.baseUrl)
-    : activeLocation
-      ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map)
-      : buildAppModulePath(APP_MODULE_SLUGS.map);
-  const territoryLabels = useTerritoryLabels(resolved);
-
-  const {
-    location: resolvedUserLocation,
-    coords: userLocation,
-    status: locationStatus,
-    isGoodForProximity,
-    sourceMessage,
-    resolve: resolveLocation,
-    isLoading: locationLoading,
-  } = useResolvedUserLocation({
-    autoResolve: true,
-    tryGps: true,
-    territoryLocation: routeFallbackLocation,
-  });
-
-  const routeCenterUnavailable =
-    Boolean(territorialContext) &&
-    resolvedUserLocation?.source === "territory_center" &&
-    !resolvedUserLocation.locationId;
-  const spatialCenter = routeCenterUnavailable ? null : userLocation;
-  const spatialLocationId = territorialContext
-    ? resolved?.kind === "location"
-      ? routeFallbackLocation?.id
-      : undefined
-    : activeLocation?.id;
-  const spatialLocationIds =
-    territorialContext && resolved?.kind === "group"
-      ? territorialContext.activeMemberIds
-      : undefined;
-  const effectiveSourceMessage = routeCenterUnavailable
-    ? "Não foi possível determinar o centro deste território; ative o GPS."
-    : sourceMessage;
-
   const [radiusKm, setRadiusKm] = useState(5);
-  const [visibleCount, setVisibleCount] = useState(12);
-
-  const {
-    businesses,
-    isLoading: businessesLoading,
-    isError,
-  } = useNearbyBusinesses({
-    enabled: businessProviderEnabled,
-    radiusKm,
-    center: spatialCenter,
-    locationId: spatialLocationId,
-    locationIds: spatialLocationIds,
-    limit: 100,
-  });
-
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("Todos");
+  const resolved: ResolvedTerritory | null = territorialContext?.resolved ?? (activeTerritory?.location ? { kind: "location", location: activeTerritory.location } : null);
+  const routeFallbackLocation = territorialContext ? resolved?.kind === "location" ? resolved.location : null : undefined;
+  const businessUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business) : buildAppModulePath(APP_MODULE_SLUGS.business);
+  const mapUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.map, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map) : buildAppModulePath(APP_MODULE_SLUGS.map);
+  const territoryLabels = useTerritoryLabels(resolved);
+  const { location: resolvedUserLocation, coords: userLocation, status: locationStatus, isGoodForProximity, sourceMessage, resolve: resolveLocation, isLoading: locationLoading } = useResolvedUserLocation({ autoResolve: true, tryGps: true, territoryLocation: routeFallbackLocation });
+  const territoryCenter = useMemo(() => {
+    const locations = resolved?.kind === "group" ? resolved.group.members : resolved?.kind === "location" ? [resolved.location] : [];
+    const centers = locations.flatMap((location) => {
+      const latitude = Number(location.metadata?.center_latitude);
+      const longitude = Number(location.metadata?.center_longitude);
+      return Number.isFinite(latitude) && Number.isFinite(longitude) ? [{ latitude, longitude }] : [];
+    });
+    if (!centers.length) return null;
+    return {
+      latitude: centers.reduce((sum, center) => sum + center.latitude, 0) / centers.length,
+      longitude: centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length,
+    };
+  }, [resolved]);
+  const spatialCenter = isGoodForProximity ? userLocation : territoryCenter ?? userLocation;
+  const spatialLocationId = territorialContext ? resolved?.kind === "location" ? routeFallbackLocation?.id : undefined : activeLocation?.id;
+  const spatialLocationIds = territorialContext && resolved?.kind === "group" ? territorialContext.activeMemberIds : undefined;
+  const { businesses, isLoading: businessesLoading, isError } = useNearbyBusinesses({ enabled: providerIds.includes("business"), radiusKm, center: spatialCenter, locationId: spatialLocationId, locationIds: spatialLocationIds, limit: 100 });
+  const categories = useMemo(() => ["Todos", ...[...new Set(businesses.map((item) => item.category).filter(Boolean))].slice(0, 5)], [businesses]);
+  const filteredBusinesses = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
+    return businesses.filter((business) => (activeCategory === "Todos" || business.category === activeCategory) && (!normalizedQuery || `${business.name} ${business.category} ${business.neighborhood || ""}`.toLocaleLowerCase("pt-BR").includes(normalizedQuery)));
+  }, [activeCategory, businesses, query]);
+  const visibleBusinesses = filteredBusinesses.slice(0, 8);
+  const locationName = territoryLabels.name || resolvedUserLocation?.locationName || "território selecionado";
   const isLoading = locationLoading || businessesLoading;
-  const visibleBusinesses = useMemo(
-    () => businesses.slice(0, visibleCount),
-    [businesses, visibleCount],
-  );
-  const canLoadMore = visibleCount < businesses.length;
+  const handleRadiusChange = useCallback((value: number) => setRadiusKm(value), []);
 
-  const handleRadiusChange = useCallback((value: number) => {
-    setRadiusKm(value);
-    setVisibleCount(12);
-  }, []);
-
-  const hasPreciseProximity = isGoodForProximity;
-  const proximityLabel = hasPreciseProximity
-    ? "perto de você"
-    : territoryLabels.inTerritory;
-
-  if (providerIds.length === 0) {
-    return (
-      <>
-        <Helmet>
-          <title>{territoryLabels.nearbyLabel} — indisponível agora</title>
-          <meta
-            name="description"
-            content="Ainda não há resultados de proximidade disponíveis neste território."
-          />
-        </Helmet>
-        <div className="min-h-screen bg-[#071017] text-white">
-          <div className="mx-auto flex min-h-screen max-w-4xl items-center px-4 py-16 sm:px-6">
-            <section className="w-full overflow-hidden rounded-[30px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(45,212,191,0.14),transparent_34%),linear-gradient(180deg,#0b1d22,#081118)] p-6 text-center sm:p-10">
-              <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-[20px] bg-teal-400/12 text-teal-200">
-                <Compass className="h-7 w-7" />
-              </span>
-              <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-teal-200/72">
-                {territoryLabels.nearbyLabel}
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-                Perto de mim indisponível agora
-              </h1>
-              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/58 sm:text-base">
-                Ainda não há resultados de proximidade disponíveis neste território. Você pode continuar explorando as empresas por aqui.
-              </p>
-              <Button className="mt-6" onClick={() => navigate(businessUrl)}>
-                Ver empresas
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </section>
-          </div>
-        </div>
-      </>
-    );
-  }
+  if (providerIds.length === 0) return <div className="nb-page"><section className="nb-empty-state"><Compass /><h2>Perto de mim indisponível agora</h2><p>Continue explorando as empresas deste território.</p><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas <ArrowRight /></button></section></div>;
 
   return (
-    <>
-      <Helmet>
-        <title>
-          {hasPreciseProximity
-            ? `${territoryLabels.nearbyLabel} — ${businesses.length} empresas em ${radiusKm}km`
-            : `${territoryLabels.nearbyLabel} — empresas ${territoryLabels.inTerritory}`}
-        </title>
-        <meta
-          name="description"
-          content={
-            hasPreciseProximity
-              ? `Encontre empresas perto de você em um raio de ${radiusKm}km e visualize-as no mapa.`
-              : `Encontre empresas ${territoryLabels.inTerritory}. Ative o GPS para saber o que está realmente perto de você.`
-          }
-        />
-      </Helmet>
+    <div className="nb-page">
+      <Helmet><title>Perto de mim — {locationName}</title><meta name="description" content={`Encontre empresas e serviços perto de você em ${locationName}.`} /></Helmet>
+      <div className="nb-container">
+        <section className="nb-location-strip">
+          <div className="nb-location-summary"><span><MapPin /></span><div><strong>{isGoodForProximity ? "Sua localização atual" : "Referência do território"}</strong><p>{locationName}</p><small>{isGoodForProximity ? sourceMessage : `Mostrando resultados em ${locationName}`}</small></div></div>
+          <div className="nb-radius-control"><LocateFixed /><label htmlFor="nb-radius">Raio de busca<small>Mostrando resultados em até {radiusKm} km.</small></label><div><select id="nb-radius" value={radiusKm} onChange={(event) => handleRadiusChange(Number(event.target.value))}>{RADIUS_OPTIONS.map((radius) => <option key={radius} value={radius}>{radius} km</option>)}</select><ChevronDown /></div></div>
+          {!isGoodForProximity && locationStatus !== "resolving" ? <button className="nb-gps-button" type="button" onClick={() => resolveLocation()}><Navigation /> Usar GPS</button> : null}
+        </section>
 
-      <div className="min-h-screen bg-[#071017] text-white">
-        <div className="mx-auto max-w-7xl px-4 pb-12 pt-4 sm:px-6 sm:pt-6">
-          <section className="overflow-hidden rounded-[30px] border border-white/10 bg-[radial-gradient(circle_at_14%_18%,rgba(45,212,191,0.15),transparent_30%),radial-gradient(circle_at_86%_10%,rgba(245,158,11,0.08),transparent_26%),linear-gradient(180deg,#0b1d22,#081118)]">
-            <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)] lg:items-end lg:p-8">
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-teal-400/20 bg-teal-400/10 px-3 py-1.5 text-xs font-semibold text-teal-100">
-                    <Compass className="h-3.5 w-3.5" />
-                    Perto de mim
-                  </span>
-                  {resolved ? (
-                    <div className="rounded-full border border-white/10 bg-black/15 px-2 py-1">
-                      <TerritoryIndicator resolved={resolved} />
-                    </div>
-                  ) : null}
-                </div>
+        <section className="nb-filter-panel" aria-label="Filtros de proximidade">
+          <div className="nb-search-row"><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por perto..." /></label><button type="button"><SlidersHorizontal /> Mais próximos <ChevronDown /></button></div>
+          <div className="nb-filter-chips">{categories.map((category, index) => <button className={activeCategory === category ? "is-active" : ""} type="button" key={category} onClick={() => setActiveCategory(category)}>{index === 0 ? <Compass /> : index === 1 ? <Store /> : <Cross />}{category}</button>)}</div>
+        </section>
 
-                <h1 className="mt-4 max-w-3xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-                  Empresas {proximityLabel}
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-white/58 sm:text-base">
-                  {hasPreciseProximity
-                    ? "Descubra empresas próximas usando sua localização real e compare os resultados no mapa."
-                    : `Veja empresas ${territoryLabels.inTerritory}. Ative sua localização para saber o que está realmente perto de você.`}
-                </p>
-
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => navigate(mapUrl)}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl bg-teal-400 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-300"
-                  >
-                    <Map className="h-4 w-4" />
-                    Abrir mapa
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate(businessUrl)}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/[0.07]"
-                  >
-                    <Store className="h-4 w-4" />
-                    Todas as empresas
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <HeroStat
-                  label={hasPreciseProximity ? "Raio atual" : "Referência"}
-                  value={hasPreciseProximity ? `${radiusKm} km` : "Território"}
-                />
-                <HeroStat
-                  label={businesses.length === 1 ? "Empresa" : "Empresas"}
-                  value={String(businesses.length)}
-                />
-              </div>
-            </div>
-
-            <div className="border-t border-white/8 bg-black/10 px-5 py-4 sm:px-7 lg:px-8">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex min-w-0 items-start gap-2.5 text-sm">
-                  <span
-                    className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
-                      hasPreciseProximity
-                        ? "bg-emerald-400/10 text-emerald-300"
-                        : "bg-amber-400/10 text-amber-300"
-                    }`}
-                  >
-                    <Navigation className="h-4 w-4" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="font-medium text-white/88">
-                      {hasPreciseProximity ? "Localização precisa ativa" : "Usando referência territorial"}
-                    </p>
-                    <p className="mt-0.5 text-xs leading-5 text-white/46">
-                      {effectiveSourceMessage}
-                    </p>
-                  </div>
-                </div>
-
-                {!hasPreciseProximity &&
-                locationStatus !== "idle" &&
-                locationStatus !== "resolving" ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0 border-white/10 bg-white/[0.04] text-white hover:bg-white/[0.08]"
-                    onClick={() => resolveLocation()}
-                  >
-                    <Navigation className="mr-1.5 h-3.5 w-3.5" />
-                    Usar GPS
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          </section>
-
-          <section className="sticky top-0 z-40 mt-4 rounded-[24px] border border-white/10 bg-[#081118]/95 p-4 shadow-[0_16px_48px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-            <NearbyFilters
-              radiusKm={radiusKm}
-              onRadiusChange={handleRadiusChange}
-              resultCount={businesses.length}
-              showProximity={hasPreciseProximity}
-            />
-          </section>
-
-          {isLoading ? (
-            <div className="py-20 text-center">
-              <Loader2 className="mx-auto mb-4 h-9 w-9 animate-spin text-teal-300" />
-              <p className="text-sm text-white/50">
-                {locationLoading
-                  ? "Obtendo sua localização..."
-                  : "Buscando empresas por aqui..."}
-              </p>
-            </div>
-          ) : null}
-
-          {isError && !isLoading ? (
-            <section className="mt-5 rounded-[26px] border border-rose-400/15 bg-rose-400/[0.05] p-8 text-center">
-              <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-400/10 text-rose-300">
-                <AlertTriangle className="h-6 w-6" />
-              </span>
-              <h2 className="mt-4 text-xl font-semibold">Não foi possível carregar as empresas</h2>
-              <p className="mt-2 text-sm text-white/50">
-                Tente novamente ou continue pela lista de empresas do território.
-              </p>
-              <Button className="mt-5" onClick={() => navigate(businessUrl)} variant="outline">
-                Ver empresas
-              </Button>
-            </section>
-          ) : null}
-
-          {!isLoading && !isError ? (
-            <div className="mt-5 space-y-5">
-              <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[#0a151d]">
-                <NearbySection
-                  title={territoryLabels.mapLabel}
-                  subtitle={
-                    hasPreciseProximity
-                      ? `Empresas em até ${radiusKm}km`
-                      : `Empresas no mapa ${territoryLabels.inTerritory}`
-                  }
-                  icon={Map}
-                  iconColorClass="bg-teal-400/10 text-teal-300"
-                  onSeeAll={() => navigate(mapUrl)}
-                  seeAllLabel="Abrir mapa"
-                >
-                  <NearbyMiniMap
-                    userLocation={userLocation}
-                    businesses={businesses}
-                    radiusKm={radiusKm}
-                    showProximity={hasPreciseProximity}
-                  />
-                </NearbySection>
-              </div>
-
-              <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[#0a151d]">
-                <NearbySection
-                  title={`Empresas ${proximityLabel}`}
-                  subtitle={
-                    hasPreciseProximity
-                      ? "Empresas próximas com localização real"
-                      : `Empresas disponíveis ${territoryLabels.inTerritory}`
-                  }
-                  icon={MapPin}
-                  iconColorClass="bg-teal-400/10 text-teal-300"
-                  count={businesses.length}
-                  isEmpty={businesses.length === 0}
-                  emptyMessage={
-                    hasPreciseProximity
-                      ? `Nenhuma empresa encontrada em até ${radiusKm}km. Amplie o raio ou veja todas as empresas.`
-                      : `Nenhuma empresa encontrada ${territoryLabels.inTerritory}. Veja todas as empresas disponíveis.`
-                  }
-                  isLoading={isLoading}
-                  onSeeAll={() => navigate(businessUrl)}
-                >
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {visibleBusinesses.map((business) => (
-                      <NearbyCard
-                        key={business.id}
-                        business={business}
-                        onNavigate={navigate}
-                        showProximity={hasPreciseProximity}
-                      />
-                    ))}
-                  </div>
-
-                  {canLoadMore ? (
-                    <div className="mt-6 flex justify-center">
-                      <Button
-                        variant="outline"
-                        className="border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.07]"
-                        onClick={() => setVisibleCount((value) => value + 12)}
-                      >
-                        Ver mais empresas
-                      </Button>
-                    </div>
-                  ) : null}
-                </NearbySection>
-              </div>
-            </div>
-          ) : null}
+        {isError ? <section className="nb-error"><AlertTriangle /><div><strong>Não foi possível carregar os resultados.</strong><p>Você ainda pode explorar a lista completa de empresas.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas</button></section> : null}
+        <div className="nb-layout">
+          <main className="nb-results">
+            <header className="nb-section-heading"><div><Navigation /><span><h2>Mais próximos agora</h2><p>{isLoading ? "Buscando estabelecimentos..." : `${filteredBusinesses.length} resultado${filteredBusinesses.length === 1 ? "" : "s"} encontrado${filteredBusinesses.length === 1 ? "" : "s"}`}</p></span></div><button type="button" onClick={() => navigate(businessUrl)}>Ver todos <ArrowRight /></button></header>
+            {isLoading ? <div className="nb-loading"><LocateFixed /><span>Localizando o que está perto de você…</span></div> : visibleBusinesses.length ? <div className="nb-business-grid">{visibleBusinesses.map((business) => <NearbyBusinessCard key={business.id} business={business} precise={isGoodForProximity} />)}</div> : <div className="nb-no-results"><Search /><strong>Nenhum resultado neste recorte</strong><p>Amplie o raio ou remova os filtros para ver mais opções.</p></div>}
+          </main>
+          <aside className="nb-sidebar">
+            <section className="nb-map-card"><header className="nb-section-heading"><div><Map /><span><h2>Mapa da região</h2><p>{isGoodForProximity ? `Raio de ${radiusKm} km` : locationName}</p></span></div><button type="button" onClick={() => navigate(mapUrl)}>Mapa completo <ArrowRight /></button></header><NearbyMiniMap userLocation={spatialCenter} businesses={filteredBusinesses} radiusKm={radiusKm} showProximity={isGoodForProximity} /></section>
+            {visibleBusinesses.length ? <section className="nb-routes"><header className="nb-section-heading"><div><Navigation /><span><h2>Rotas rápidas</h2><p>Atalhos para os primeiros resultados.</p></span></div></header><div>{visibleBusinesses.slice(0, 4).map((business) => <button type="button" key={business.id} onClick={() => navigate(business.canonicalUrl)}><span>{business.logo ? <img src={business.logo} alt="" /> : <Store />}</span><strong>{business.name}</strong><small>{formatDistance(business.distanceMeters)}</small></button>)}</div></section> : null}
+            <section className="nb-business-cta"><Store /><div><strong>Seu negócio aparece aqui?</strong><p>Cadastre sua empresa e seja encontrado por quem está perto.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Saiba mais <ArrowRight /></button></section>
+          </aside>
         </div>
       </div>
-    </>
-  );
-}
-
-function HeroStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-[22px] border border-white/10 bg-white/[0.04] p-4">
-      <p className="text-xs font-medium text-white/42">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold text-white">{value}</p>
     </div>
   );
 }
