@@ -7,10 +7,7 @@
  *   - Hooks apenas consomem este service.
  *
  * Padrao publico canonico:
- *   /empresas/:state/:city/:district/:slug
- *
- * Contexto comunitario explicito:
- *   /comunidade/:communityAlias/empresas/:slug
+ *   /:state/:city/:district/empresas/:slug
  *
  * Premium isolado:
  *   /p/:slug
@@ -19,14 +16,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 import { PublicIdentityService } from '@/core/public-identity';
-import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
-import { territorialGroupService } from '@/core/territorial';
-import { CommunityPublicAliasService } from '@/core/routing/services/CommunityPublicAliasService';
-import { buildCommunityAliasUrl } from '@/core/routing/utils/territoryUrls';
-import {
-  buildCommunityScopedEntityUrl,
-  buildPublicEntityUrl,
-} from '@/core/routing/policies';
+import { buildPublicEntityUrl } from '@/core/routing/policies';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import {
   buildBusinessPremiumUrl,
@@ -40,15 +30,13 @@ export interface BusinessUrlContext {
   id: string;
   slug: string;
   is_premium?: boolean;
-  /** alias publico da comunidade, quando ja resolvido pelo contexto territorial */
-  community_alias?: string | null;
   /** geographic_path da location associada, ex: /br/ba/salvador/pituba */
   geographic_path: string;
 }
 
 
 export interface ResolvedBusinessUrl {
-  /** URL publica canonica: /empresas/:state/:city/:district/:slug. */
+  /** URL publica canonica: /:state/:city/:district/empresas/:slug. */
   canonical: string;
   /** URL premium curta (so para is_premium): /p/tonecos-studios */
   premium: string | null;
@@ -138,8 +126,7 @@ export class BusinessUrlService {
 
   /**
    * Nome explicito para consumidores novos.
-   * Ignora community_alias por definicao: canonical publico nunca entra em
-   * comunidade automaticamente.
+   * A entidade publica pertence ao territorio; Comunidade nao altera sua URL.
    */
   static getPublicCanonicalUrl(ctx: BusinessUrlContext): string {
     return buildPublicEntityUrl({
@@ -147,62 +134,6 @@ export class BusinessUrlService {
       geographicPath: ctx.geographic_path,
       slug: ctx.slug,
     });
-  }
-
-  /**
-   * URL de empresa dentro de contexto comunitario explicito.
-   * Nao usar para SEO publico, cards publicos ou compartilhamento externo.
-   */
-  static getCommunityScopedUrl(ctx: BusinessUrlContext, communityAlias: string): string {
-    return buildCommunityScopedEntityUrl({
-      communityAlias,
-      module: APP_MODULE_SLUGS.business,
-      slug: ctx.slug,
-    });
-  }
-
-  /**
-   * Resolve a base canonica do portal comunitario da empresa, quando existir.
-   * Mantem retorno nulo para preservar fallback territorial em chamadas antigas.
-   */
-  static async findCommunityPublicBaseUrl(ctx: BusinessUrlContext): Promise<string | null> {
-    if (ctx.community_alias) {
-      return buildCommunityAliasUrl(ctx.community_alias);
-    }
-
-    if (!ctx.geographic_path) return null;
-
-    try {
-      const locationRepository = createLocationRepository();
-      const businessLocation = await locationRepository.findByPath(ctx.geographic_path);
-      if (!businessLocation?.id) return null;
-
-      const locationAlias = await CommunityPublicAliasService.findPublicUrlForTerritory({
-        kind: 'location',
-        territoryId: businessLocation.id,
-      });
-      if (locationAlias) return locationAlias;
-
-      const containingGroups = await territorialGroupService.findGroupsContainingLocation(
-        businessLocation.id,
-      );
-
-      for (const group of containingGroups) {
-        const groupAlias = await CommunityPublicAliasService.findPublicUrlForTerritory({
-          kind: 'group',
-          territoryId: group.id,
-        });
-        if (groupAlias) return groupAlias;
-      }
-
-      return null;
-    } catch (err) {
-      logger.warn(
-        '[BusinessUrlService] Nao foi possivel resolver alias publico da comunidade.',
-        err,
-      );
-      return null;
-    }
   }
 
   /**
@@ -367,7 +298,7 @@ export class BusinessUrlService {
   }
 
   /**
-   * Resolve empresa por UF + cidade + bairro + slug (fallback territorial legado).
+   * Resolve empresa por UF + cidade + bairro + slug.
    * Valida que a empresa pertence ao território informado.
    *
    * Retorna null se não encontrada, inativa, ou território não bate.
