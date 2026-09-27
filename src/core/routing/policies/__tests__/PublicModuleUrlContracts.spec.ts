@@ -34,7 +34,8 @@ describe("public module URL contracts", () => {
     );
 
     expect(hookSource).toContain("buildModuleTerritoryUrl");
-    expect(serviceSource).toContain("`/classificados/${uf}/${cidade}/${bairro}");
+    expect(serviceSource).toContain("buildModuleTerritoryUrl");
+    expect(serviceSource).not.toContain("`/classificados/${uf}/${cidade}/${bairro}");
     expect(`${hookSource}\n${serviceSource}`).not.toContain("buildCommunity");
   });
 
