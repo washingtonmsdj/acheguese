@@ -39,23 +39,35 @@ test.describe('public launch scope', () => {
 
   test('territorial post-MVP routes fall through before loading domain data', async ({ page }) => {
     for (const path of [
+      '/ba/salvador/gastronomia',
+      '/ba/salvador/servicos',
+      '/ba/salvador/classificados',
+      '/ba/salvador/vagas',
+      '/ba/salvador/pontos-turisticos',
+      '/ba/salvador/educacao',
+      '/ba/salvador/comunicacao',
+      '/ba/salvador/comunidade',
+    ]) {
+      await expectNotFoundPublicRoute(page, path);
+    }
+  });
+  test('retired module-first and Community-container URLs do not receive compatibility routing', async ({ page }) => {
+    for (const path of [
       '/gastronomia/ba/salvador',
       '/servicos/ba/salvador',
       '/classificados/ba/salvador',
       '/vagas/ba/salvador',
       '/pontos-turisticos/ba/salvador',
       '/educacao/ba/salvador',
-      '/comunicacao/ba/salvador',
       '/comunidade/ba/salvador',
       '/comunidade/ba/salvador/gastronomia',
       '/comunidade/ba/salvador/servicos',
       '/comunidade/ba/salvador/classificados',
       '/comunidade/ba/salvador/eventos',
       '/comunidade/ba/salvador/vagas',
-      '/comunidade/ba/salvador/educacao',
-      '/comunidade/ba/salvador/mobilidade',
     ]) {
       await expectNotFoundPublicRoute(page, path);
     }
   });
+
 });
