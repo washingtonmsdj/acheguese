@@ -105,6 +105,6 @@ export interface PublicGastronomySnapshot {
 export interface PublicSlugRouteParams {
   readonly state: string;
   readonly city: string;
-  readonly district: string | undefined;
+  readonly territorySlug: string | undefined;
   readonly slug: string;
 }
