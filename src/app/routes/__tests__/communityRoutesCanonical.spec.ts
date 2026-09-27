@@ -49,6 +49,7 @@ describe("community route patterns", () => {
       "src/app/routes/sections/AppLayoutRoutes.tsx",
     );
     const activeLazy = readProjectFile("src/app/routes/activeLazyImports.ts");
+    const territoryConfig = readProjectFile("src/core/routing/config/territory.ts");
 
     expect(
       existsSync(
@@ -69,6 +70,7 @@ describe("community route patterns", () => {
       expect(appRoutes).not.toContain(forbidden);
       expect(appLayout).not.toContain(forbidden);
       expect(activeLazy).not.toContain(forbidden);
+      expect(territoryConfig).not.toContain(forbidden);
     }
   });
 
@@ -86,6 +88,7 @@ describe("community route patterns", () => {
       "CommunityShortEntityRoute",
       'path="/comunidade/:',
       'path="/comunidade"',
+      "LAUNCH_COMMUNITY_PUBLIC_PATH",
     ]) {
       expect(routesSource).not.toContain(forbidden);
     }
