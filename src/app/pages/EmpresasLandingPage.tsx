@@ -377,6 +377,7 @@ export default function EmpresasLandingPage({
     return (
       <TerritoryBusinessDirectory
         territoryName={territoryName}
+        resolvedTerritory={resolved}
         businesses={filteredBusinesses}
         categories={categoryCards}
         quickFilters={QUICK_FILTERS}

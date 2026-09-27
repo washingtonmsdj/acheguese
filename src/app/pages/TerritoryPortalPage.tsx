@@ -67,11 +67,12 @@ function BrandMark() {
 }
 
 type Shortcut = {
-  view: TerritoryPortalView;
+  view?: TerritoryPortalView;
   label: string;
   description: string;
-  href: string;
+  href?: string;
   icon: ComponentType<{ className?: string }>;
+  disabled?: boolean;
 };
 
 export default function TerritoryPortalPage({
@@ -84,6 +85,15 @@ export default function TerritoryPortalPage({
   activeView = "home",
 }: TerritoryPortalPageProps) {
   const navigate = useNavigate();
+  const heroSlug =
+    resolvedTerritory?.kind === "group"
+      ? resolvedTerritory.group.slug
+      : resolvedTerritory?.kind === "location"
+        ? resolvedTerritory.location.geographic_path?.split("/").filter(Boolean).at(-1)
+        : null;
+  const heroImage = heroSlug
+    ? `/territory/heroes/${heroSlug}.jpg`
+    : "/images/home/achegue-se-community-hero-v1.webp";
   const activeViewLabel = {
     home: territoryName,
     map: `Mapa de ${territoryName}`,
@@ -95,17 +105,10 @@ export default function TerritoryPortalPage({
   const shortcuts: readonly Shortcut[] = [
     {
       view: "home",
-      label: "Inicial",
-      description: "Visão geral",
+      label: "Visão geral",
+      description: "Sobre o território",
       href: urls.home,
       icon: Home,
-    },
-    {
-      view: "nearby",
-      label: "Perto de mim",
-      description: "Ver o que está perto",
-      href: urls.nearby,
-      icon: Navigation,
     },
     {
       view: "map",
@@ -122,11 +125,24 @@ export default function TerritoryPortalPage({
       icon: Store,
     },
     {
+      view: "nearby",
+      label: "Perto de mim",
+      description: "Ver o que está perto",
+      href: urls.nearby,
+      icon: Navigation,
+    },
+    {
+      label: "Comunidade",
+      description: "Conexões do bairro",
+      icon: UsersRound,
+      disabled: true,
+    },
+    {
       view: "search",
-      label: "Busca",
-      description: "Procurar no território",
+      label: "Mais",
+      description: "Busca e recursos",
       href: urls.search,
-      icon: Search,
+      icon: Menu,
     },
   ];
 
@@ -201,9 +217,12 @@ export default function TerritoryPortalPage({
       </header>
 
       <main id="pt-content" tabIndex={-1}>
-        <section className="pt-hero" aria-labelledby="pt-title">
+        <section
+          className={`pt-hero ${activeView === "business" ? "pt-hero--business" : ""}`}
+          aria-labelledby="pt-title"
+        >
           <img
-            src="/images/home/achegue-se-community-hero-v1.webp"
+            src={heroImage}
             alt={`Vista e moradores de ${territoryName}`}
             width="1536"
             height="1024"
@@ -213,27 +232,46 @@ export default function TerritoryPortalPage({
           <div className="pt-container pt-hero-content">
             <p className="pt-breadcrumb">
               <Home /> {contextLabel} <span>›</span> {territoryName}
+              {activeView === "business" ? <><span>›</span> Empresas</> : null}
             </p>
+            {activeView === "business" ? (
+              <p className="pt-view-kicker"><Store /> Empresas</p>
+            ) : null}
             <h1 id="pt-title">{territoryName}</h1>
             <p className="pt-tagline">
-              Empresas, mapa, busca e o que está perto de você, em um só lugar.
+              {activeView === "business"
+                ? "Comércio, serviços e negócios locais, em um só lugar."
+                : "Empresas, mapa, busca e o que está perto de você, em um só lugar."}
             </p>
 
             <div className="pt-shortcuts" aria-label="Atalhos do território">
-              {shortcuts.map(({ icon: Icon, ...item }) => (
-                <Link
-                  className={item.view === activeView ? "is-primary" : ""}
-                  to={item.href}
-                  key={item.label}
-                  aria-current={item.view === activeView ? "page" : undefined}
-                >
-                  <Icon />
-                  <span>
-                    <strong>{item.label}</strong>
-                    <small>{item.description}</small>
-                  </span>
-                </Link>
-              ))}
+              {shortcuts.map(({ icon: Icon, ...item }) => {
+                const content = (
+                  <>
+                    <Icon />
+                    <span>
+                      <strong>{item.label}</strong>
+                      <small>{item.description}</small>
+                    </span>
+                    {item.disabled ? <b>Em breve</b> : null}
+                  </>
+                );
+
+                return item.disabled || !item.href ? (
+                  <div className="is-disabled" aria-disabled="true" key={item.label}>
+                    {content}
+                  </div>
+                ) : (
+                  <Link
+                    className={item.view === activeView ? "is-primary" : ""}
+                    to={item.href}
+                    key={item.label}
+                    aria-current={item.view === activeView ? "page" : undefined}
+                  >
+                    {content}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>
