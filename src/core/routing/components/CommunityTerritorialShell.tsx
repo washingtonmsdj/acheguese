@@ -50,44 +50,6 @@ function useCommunitySeoHead(canonicalHref: string, robots: string) {
   }, [canonicalHref, robots]);
 }
 
-function resolveModuleKeyFromCommunityPath(
-  pathname: string,
-  hasScopedTerritory: boolean,
-): ModuleKey {
-  const parts = pathname.split("/").filter(Boolean);
-  const moduleSlug =
-    parts[hasScopedTerritory ? 4 : 3] ?? MODULE_SLUGS.community;
-
-  switch (moduleSlug) {
-    case MODULE_SLUGS.business:
-      return ModuleKey.BUSINESS;
-    case MODULE_SLUGS.services:
-      return ModuleKey.SERVICES;
-    case MODULE_SLUGS.classifieds:
-      return ModuleKey.CLASSIFIEDS;
-    case MODULE_SLUGS.gastronomy:
-      return ModuleKey.GASTRONOMY;
-    case MODULE_SLUGS.education:
-      return ModuleKey.BUSINESS;
-    case MODULE_SLUGS.events:
-      return ModuleKey.EVENTS;
-    case MODULE_SLUGS.jobs:
-      return ModuleKey.JOBS;
-    case MODULE_SLUGS.mobility:
-      return ModuleKey.MOBILITY;
-    case MODULE_SLUGS.map:
-      return ModuleKey.BUSINESS;
-    case "feed":
-    case "grupos":
-    case "alertas":
-    case "problemas":
-    case "achados-e-perdidos":
-    case "comunicacao":
-    case MODULE_SLUGS.community:
-    default:
-      return ModuleKey.COMMUNITY;
-  }
-}
 
 function PartialCoverageBanner({
   activeCount,
@@ -157,10 +119,7 @@ export function CommunityTerritorialShell() {
   const effectiveResolved = resolved ?? publicCommunityFallback;
   const routeParts = location.pathname.split("/").filter(Boolean);
   const hasInvalidRouteParams = !state || !city;
-  const hasLegacyAreaSegment =
-    routeParts[0] === MODULE_SLUGS.community && routeParts[3] === "area";
-  const hasInvalidCommunityRoute =
-    hasInvalidRouteParams || hasLegacyAreaSegment;
+  const hasInvalidCommunityRoute = hasInvalidRouteParams;
   const territoryBase = scopedSlug
     ? `/${state}/${city}/${scopedSlug}`
     : `/${state}/${city}`;
@@ -178,11 +137,7 @@ export function CommunityTerritorialShell() {
       ? effectiveResolved.group.name
       : effectiveResolved.location.name
     : territoryName;
-  const currentModuleKey = useMemo(
-    () =>
-      resolveModuleKeyFromCommunityPath(location.pathname, Boolean(scopedSlug)),
-    [location.pathname, scopedSlug],
-  );
+  const currentModuleKey = ModuleKey.COMMUNITY;
   const groupId =
     effectiveResolved?.kind === "group" ? effectiveResolved.group.id : null;
   const {
