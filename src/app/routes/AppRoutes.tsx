@@ -9,7 +9,6 @@ import { Route, Routes } from "react-router-dom";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import { AuthEntrySessionGate } from "@/app/routes/AuthEntrySessionGate";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
-import { LAUNCH_COMMUNITY_PUBLIC_PATH } from "@/core/routing/config/territory";
 
 const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
 const AppLayoutRoutes = lazy(() =>
@@ -42,7 +41,6 @@ const AceiteTermosPage = lazy(
 );
 const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
 const ComoFuncionaPage = lazy(() => import("@/app/pages/ComoFuncionaPage"));
-const TerritoryPortalPage = lazy(() => import("@/app/pages/TerritoryPortalPage"));
 const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
@@ -102,7 +100,6 @@ export function AppRoutes() {
       />
       <Route path={AUTH_PATHS.termsAcceptance} element={<AceiteTermosPage />} />
       <Route path="/como-funciona" element={<ComoFuncionaPage />} />
-      <Route path={LAUNCH_COMMUNITY_PUBLIC_PATH} element={<TerritoryPortalPage />} />
       <Route path="/sobre" element={<AboutPage />} />
       <Route path="/contato" element={<ContactPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
