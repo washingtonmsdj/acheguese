@@ -127,11 +127,11 @@ function renderInterestPage(path: string) {
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route
-            path="/comunidade/:state/:city/interesse"
+            path="/:state/:city/comunidade/interesse"
             element={<CommunityInterestPage />}
           />
           <Route
-            path="/comunidade/:state/:city/:groupSlugOrDistrict/interesse"
+            path="/:state/:city/:groupSlugOrDistrict/comunidade/interesse"
             element={<CommunityInterestPage />}
           />
           <Route path="*" element={<PathProbe />} />
@@ -156,7 +156,7 @@ describe("CommunityInterestPage persisted write boundary", () => {
   });
 
   it("fails closed for a city without a persisted Community and returns to its explorer", () => {
-    renderInterestPage("/comunidade/ba/salvador/interesse");
+    renderInterestPage("/ba/salvador/comunidade/interesse");
 
     expect(screen.getByRole("heading", { name: "Escolha um bairro" })).toBeVisible();
     expect(screen.queryByRole("form")).not.toBeInTheDocument();
@@ -180,7 +180,7 @@ describe("CommunityInterestPage persisted write boundary", () => {
       status: "active",
     };
 
-    renderInterestPage("/comunidade/ba/salvador/interesse");
+    renderInterestPage("/ba/salvador/comunidade/interesse");
 
     expect(screen.getByRole("heading", { name: "Escolha um bairro" })).toBeVisible();
     expect(screen.queryByRole("button", { name: "Cadastrar interesse" })).not.toBeInTheDocument();
@@ -195,7 +195,7 @@ describe("CommunityInterestPage persisted write boundary", () => {
     };
     mocks.profile = { ...persistedPitubaProfile, slug: "barra" };
 
-    renderInterestPage("/comunidade/ba/salvador/pituba/interesse");
+    renderInterestPage("/ba/salvador/pituba/comunidade/interesse");
 
     expect(screen.getByRole("heading", { name: "Escolha um bairro" })).toBeVisible();
     expect(mocks.registerCommunityInterest).not.toHaveBeenCalled();
@@ -209,7 +209,7 @@ describe("CommunityInterestPage persisted write boundary", () => {
     };
     mocks.profile = persistedPitubaProfile;
 
-    renderInterestPage("/comunidade/ba/salvador/pituba/interesse");
+    renderInterestPage("/ba/salvador/pituba/comunidade/interesse");
 
     fireEvent.change(screen.getByLabelText("Nome completo *"), {
       target: { value: "Pessoa de Teste" },
