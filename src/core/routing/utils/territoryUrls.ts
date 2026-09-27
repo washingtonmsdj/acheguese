@@ -1,28 +1,17 @@
 /**
- * territoryUrls - SSOT para URLs territoriais e aliases publicos.
+ * territoryUrls - SSOT para URLs territoriais públicas.
  *
- * Nunca concatenar paths manualmente no app; usar estas funcoes.
+ * Nunca concatenar paths territoriais manualmente no app; usar estas funções.
  *
- * Padroes publicos territoriais:
+ * Hierarquia canônica:
  *   Cidade:   /:state/:city
- *   Bairro:   /:state/:city/:district
- *   Grupo:    /:state/:city/:groupSlug
- *   Modulo:   /:state/:city/:territorySlug?/[modulo]
+ *   Território: /:state/:city/:territorySlug
+ *   Módulo:   /:state/:city/:territorySlug?/:module
+ *   Entidade: /:state/:city/:territorySlug?/:module/:entitySlug
  *
- * Portal de comunidade explicito:
- *   /comunidade/:communityAlias
- *   /comunidade/:communityAlias/:module
- *   /comunidade/:communityAlias/:module/:entitySlug
- *
- * Fallback tecnico de comunidade:
- *   /comunidade/:state/:city
- *   /comunidade/:state/:city/:districtOrGroup
- *
- * Alias curto legado:
- *   /:communityAlias
- *   /:communityAlias/:module
- *   /:communityAlias/:module/:entitySlug
- *   Nao e superficie canonica nova; links novos devem usar /comunidade/:alias.
+ * O território é sempre o contêiner. Community é um módulo irmão de Empresas,
+ * Mapa, Perto de mim etc. Não existem aliases públicos module-first nem
+ * redirects de compatibilidade para a arquitetura anterior.
  */
 
 import type { Location } from '@/core/location/types';
@@ -45,7 +34,6 @@ export const COMMUNITY_CANONICAL_SUFFIX_SEGMENTS = [
 export type CommunityCanonicalSuffixSegment = (typeof COMMUNITY_CANONICAL_SUFFIX_SEGMENTS)[number];
 
 const COMMUNITY_CANONICAL_SUFFIX_SET = new Set<string>(COMMUNITY_CANONICAL_SUFFIX_SEGMENTS);
-const LEGACY_COMMUNITY_AREA_SEGMENT = 'area';
 const COMMUNITY_EMBEDDED_MODULE_SEGMENTS = new Set<string>([
   MODULE_SLUGS.business,
   MODULE_SLUGS.services,
@@ -115,32 +103,24 @@ export function normalizePublicTerritoryPath(path: string): string {
 }
 
 export function buildCityTerritoryBaseUrl(territoryBaseUrl: string): string {
-  const normalizedBase = normalizePublicTerritoryPath(territoryBaseUrl);
-  const rawParts = normalizedBase.split('/').filter(Boolean);
-  const parts = rawParts[0] === MODULE_SLUGS.community ? rawParts.slice(1) : rawParts;
+  const parts = normalizePublicTerritoryPath(territoryBaseUrl)
+    .split('/')
+    .filter(Boolean);
 
-  if (parts.length < 2) {
+  if (parts.length < 2 || !/^[a-z]{2}$/i.test(parts[0])) {
     throw new Error('buildCityTerritoryBaseUrl exige /:state/:city.');
-  }
-
-  if (parts[2] === LEGACY_COMMUNITY_AREA_SEGMENT) {
-    throw new Error('buildCityTerritoryBaseUrl nao aceita /area/. Use /:state/:city.');
   }
 
   return `/${parts[0]}/${parts[1]}`;
 }
 
 function buildScopedTerritoryBaseUrl(territoryBaseUrl: string): string {
-  const normalizedBase = normalizePublicTerritoryPath(territoryBaseUrl);
-  const rawParts = normalizedBase.split('/').filter(Boolean);
-  const parts = rawParts[0] === MODULE_SLUGS.community ? rawParts.slice(1) : rawParts;
+  const parts = normalizePublicTerritoryPath(territoryBaseUrl)
+    .split('/')
+    .filter(Boolean);
 
-  if (parts.length < 2) {
+  if (parts.length < 2 || !/^[a-z]{2}$/i.test(parts[0])) {
     throw new Error('buildScopedTerritoryBaseUrl exige /:state/:city.');
-  }
-
-  if (parts[2] === LEGACY_COMMUNITY_AREA_SEGMENT) {
-    throw new Error('buildScopedTerritoryBaseUrl nao aceita /area/. Use /:state/:city/:territorySlug.');
   }
 
   return `/${parts.slice(0, 3).join('/')}`;
@@ -149,8 +129,7 @@ function buildScopedTerritoryBaseUrl(territoryBaseUrl: string): string {
 export function hasPublicCityTerritoryPath(path: string | null | undefined): boolean {
   if (!path) return false;
   const parts = normalizePublicTerritoryPath(path).split('/').filter(Boolean);
-  const publicParts = parts[0] === MODULE_SLUGS.community ? parts.slice(1) : parts;
-  return publicParts.length >= 2;
+  return parts.length >= 2 && /^[a-z]{2}$/i.test(parts[0]);
 }
 
 export function buildLocationBaseUrl(location: Location): string {
@@ -224,12 +203,6 @@ export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''
   const scopedBase = buildScopedTerritoryBaseUrl(territoryBaseUrl);
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
   return `${buildModuleTerritoryUrl(MODULE_SLUGS.community, scopedBase)}${normalizedSuffix}`;
-}
-
-export function buildCommunityAliasUrl(alias: string, suffix = ''): string {
-  const cleanAlias = cleanUrlSegment(alias, 'alias publico da comunidade');
-  const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
-  return `/${MODULE_SLUGS.community}/${cleanAlias}${normalizedSuffix}`;
 }
 
 export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): string {
