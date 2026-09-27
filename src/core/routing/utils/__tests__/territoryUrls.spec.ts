@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   MODULE_SLUGS,
-  buildCommunityAliasUrl,
   buildCommunityScopedUrl,
   buildCommunityTabUrlFromPath,
   buildCommunityTerritoryUrl,
@@ -36,7 +35,7 @@ describe("normalizePublicTerritoryPath", () => {
   });
 });
 
-describe("module-first territory urls", () => {
+describe("territory-first module urls", () => {
   const location = {
     geographic_path: "/br/ba/salvador/pituba",
   } as never;
@@ -45,36 +44,47 @@ describe("module-first territory urls", () => {
     slug: "complexo-nordeste",
   } as never;
 
-  it("monta modulo antes do territorio para paths publicos e internos", () => {
+  it("monta territorio antes do modulo", () => {
     expect(buildModuleTerritoryUrl(MODULE_SLUGS.business, "/ba/salvador")).toBe(
-      "/empresas/ba/salvador",
+      "/ba/salvador/empresas",
     );
-    expect(buildModuleTerritoryUrl(MODULE_SLUGS.services, "/br/ba/salvador/pituba")).toBe(
-      "/servicos/ba/salvador/pituba",
-    );
+    expect(
+      buildModuleTerritoryUrl(MODULE_SLUGS.services, "/br/ba/salvador/pituba"),
+    ).toBe("/ba/salvador/pituba/servicos");
   });
 
   it("monta listagem e detalhe a partir do mesmo SSOT territorial", () => {
     expect(
-      buildModuleTerritoryUrlFromSegments(MODULE_SLUGS.education, "ba", "salvador"),
-    ).toBe("/educacao/ba/salvador");
+      buildModuleTerritoryUrlFromSegments(
+        MODULE_SLUGS.education,
+        "ba",
+        "salvador",
+      ),
+    ).toBe("/ba/salvador/educacao");
     expect(
-      buildModuleTerritoryUrlFromSegments(MODULE_SLUGS.education, "ba", "salvador", [
-        "pituba",
-      ]),
-    ).toBe("/educacao/ba/salvador/pituba");
+      buildModuleTerritoryUrlFromSegments(
+        MODULE_SLUGS.education,
+        "ba",
+        "salvador",
+        ["pituba"],
+      ),
+    ).toBe("/ba/salvador/pituba/educacao");
     expect(
       buildModuleTerritoryEntityUrl(
         MODULE_SLUGS.business,
         "/br/ba/salvador/rio-vermelho",
         "cafe-central",
       ),
-    ).toBe("/empresas/ba/salvador/rio-vermelho/cafe-central");
+    ).toBe("/ba/salvador/rio-vermelho/empresas/cafe-central");
   });
 
   it("rejeita slug de entidade vazio ou com separadores de rota", () => {
     expect(() =>
-      buildModuleTerritoryEntityUrl(MODULE_SLUGS.business, "/ba/salvador/pituba", ""),
+      buildModuleTerritoryEntityUrl(
+        MODULE_SLUGS.business,
+        "/ba/salvador/pituba",
+        "",
+      ),
     ).toThrow("segmento unico");
     expect(() =>
       buildModuleTerritoryEntityUrl(
@@ -92,91 +102,89 @@ describe("module-first territory urls", () => {
     ).toThrow("segmento unico");
   });
 
-  it("mantem os builders antigos alinhados ao padrao publico canonico", () => {
+  it("mantem builders especializados alinhados ao territorio primeiro", () => {
     expect(buildLocationModuleUrl(location, MODULE_SLUGS.business)).toBe(
-      "/empresas/ba/salvador/pituba",
+      "/ba/salvador/pituba/empresas",
     );
-    expect(buildGroupModuleUrl(group, "/br/ba/salvador", MODULE_SLUGS.classifieds)).toBe(
-      "/classificados/ba/salvador/complexo-nordeste",
-    );
+    expect(
+      buildGroupModuleUrl(
+        group,
+        "/br/ba/salvador",
+        MODULE_SLUGS.classifieds,
+      ),
+    ).toBe("/ba/salvador/complexo-nordeste/classificados");
     expect(
       buildTerritoryModuleUrl(
         { kind: "location", location },
         MODULE_SLUGS.gastronomy,
       ),
-    ).toBe("/gastronomia/ba/salvador/pituba");
+    ).toBe("/ba/salvador/pituba/gastronomia");
   });
 });
 
 describe("community territory urls", () => {
-  it("preserva bairro ou grupo na URL comunitaria canonica", () => {
+  it("preserva cidade, bairro ou grupo antes do modulo comunidade", () => {
     expect(buildCommunityTerritoryUrl("/ba/salvador")).toBe(
-      "/comunidade/ba/salvador",
+      "/ba/salvador/comunidade",
     );
-    expect(buildCommunityTerritoryUrl("/ba/salvador/chapada-do-rio-vermelho")).toBe(
-      "/comunidade/ba/salvador/chapada-do-rio-vermelho",
-    );
+    expect(
+      buildCommunityTerritoryUrl("/ba/salvador/chapada-do-rio-vermelho"),
+    ).toBe("/ba/salvador/chapada-do-rio-vermelho/comunidade");
     expect(
       buildCommunityTerritoryUrl(
         "/ba/salvador/complexo-do-nordeste-de-amaralina",
         "feed",
       ),
-    ).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
+    ).toBe(
+      "/ba/salvador/complexo-do-nordeste-de-amaralina/comunidade/feed",
+    );
   });
 
   it("gera abas sociais preservando o escopo territorial atual", () => {
     expect(
       buildCommunityTabUrlFromPath(
-        "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
+        "/ba/salvador/complexo-do-nordeste-de-amaralina/comunidade",
         "feed",
       ),
-    ).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina/feed");
-  });
-
-  it("gera base explicita de portal por alias publico da comunidade", () => {
-    expect(buildCommunityAliasUrl("santa-cruz")).toBe("/comunidade/santa-cruz");
-    expect(buildCommunityAliasUrl("santa-cruz", "empresas")).toBe(
-      "/comunidade/santa-cruz/empresas",
+    ).toBe(
+      "/ba/salvador/complexo-do-nordeste-de-amaralina/comunidade/feed",
     );
-    expect(() => buildCommunityAliasUrl("santa/cruz")).toThrow("segmento de URL");
   });
 
-  it("monta modulos dentro da base publica da comunidade", () => {
+  it("monta subrotas dentro da base territorial da comunidade", () => {
     expect(
       buildCommunityScopedUrl(
-        "/comunidade/ba/salvador/nordeste-de-amaralina",
-        "empresas",
+        "/ba/salvador/nordeste-de-amaralina/comunidade",
+        "feed",
       ),
-    ).toBe("/comunidade/ba/salvador/nordeste-de-amaralina/empresas");
-    expect(buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina", "feed")).toBe(
-      "/comunidade/nordeste-de-amaralina/feed",
-    );
-    expect(buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina")).toBe(
-      "/comunidade/nordeste-de-amaralina",
-    );
+    ).toBe("/ba/salvador/nordeste-de-amaralina/comunidade/feed");
     expect(
-      buildCommunityScopedUrl("/comunidade/ba/salvador/feed", "feed"),
-    ).toBe("/comunidade/ba/salvador/feed");
-    expect(() => buildCommunityScopedUrl("/comunidade/nordeste-de-amaralina", "feed?tab=x")).toThrow(
-      "segmento de URL",
-    );
+      buildCommunityScopedUrl(
+        "/ba/salvador/nordeste-de-amaralina/comunidade",
+      ),
+    ).toBe("/ba/salvador/nordeste-de-amaralina/comunidade");
+    expect(() =>
+      buildCommunityScopedUrl(
+        "/ba/salvador/nordeste-de-amaralina/comunidade",
+        "feed?tab=x",
+      ),
+    ).toThrow("segmento de URL");
   });
 
-  it("extrai o territorio de rotas comunitarias sem confundir modulos com bairro", () => {
-    expect(extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador")).toBe(
-      "/ba/salvador",
-    );
+  it("extrai o territorio sem confundir o modulo comunidade com o slug", () => {
     expect(
-      extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador/feed"),
+      extractCommunityTerritoryBaseUrl("/ba/salvador/comunidade"),
     ).toBe("/ba/salvador");
     expect(
-      extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador/empresas"),
+      extractCommunityTerritoryBaseUrl("/ba/salvador/comunidade/feed"),
     ).toBe("/ba/salvador");
     expect(
-      extractCommunityTerritoryBaseUrl("/comunidade/ba/salvador/chapada-do-rio-vermelho/empresas"),
+      extractCommunityTerritoryBaseUrl(
+        "/ba/salvador/chapada-do-rio-vermelho/comunidade/feed",
+      ),
     ).toBe("/ba/salvador/chapada-do-rio-vermelho");
     expect(
-      extractCommunityTerritoryBaseUrl("/comunidade/santa-cruz/empresas"),
+      extractCommunityTerritoryBaseUrl("/comunidade/santa-cruz"),
     ).toBeNull();
   });
 });
