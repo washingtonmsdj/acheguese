@@ -57,6 +57,11 @@ export function AppLayoutSidebar() {
       territorialModuleSlug &&
       TERRITORY_PORTAL_MODULES.has(territorialModuleSlug),
   );
+  const isTerritoryBusinessDetailRoute = Boolean(
+    parsedTerritory.territorySlug &&
+      pathSegments.length === 5 &&
+      territorialModuleSlug === MODULE_SLUGS.business,
+  );
   const isPublicBusinessLandingRoute =
     pathSegments[0] === MODULE_SLUGS.business &&
     pathSegments[1] !== "cadastrar";
@@ -66,7 +71,9 @@ export function AppLayoutSidebar() {
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
   const usesTerritoryVivoShell =
-    (isCanonicalTerritorialModuleRoute && !isTerritoryPortalModuleRoute) ||
+    (isCanonicalTerritorialModuleRoute &&
+      !isTerritoryPortalModuleRoute &&
+      !isTerritoryBusinessDetailRoute) ||
     isAccountRoute ||
     isPublicPersonalProfileRoute;
 
@@ -75,6 +82,7 @@ export function AppLayoutSidebar() {
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
+    isTerritoryBusinessDetailRoute ||
     isPublicBusinessLandingRoute;
 
   const isConversationRoute =
@@ -83,11 +91,13 @@ export function AppLayoutSidebar() {
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
+    isTerritoryBusinessDetailRoute ||
     isPublicBusinessLandingRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
+    isTerritoryBusinessDetailRoute ||
     isConversationRoute;
 
   const isMessagingRoute = pathSegments[0] === "mensagens";

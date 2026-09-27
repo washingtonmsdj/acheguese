@@ -4,9 +4,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Store } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import BusinessSEO from "@/core/business/components/seo/BusinessSEO";
-import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { BusinessHoursService } from "@/core/business";
@@ -16,24 +14,11 @@ import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
 import { useCanonicalBusinessFavorite } from "@/modules/business/hooks/useCanonicalBusinessFavorite";
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
-import { useBusinessRecommendation } from "@/modules/business/hooks/useBusinessRecommendation";
 import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
-import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
-import {
-  EmpresaCTAsSection,
-  EmpresaFotosSection,
-  EmpresaHeroSection,
-  EmpresaInfoSection,
-  EmpresaProdutosSection,
-  EmpresaProximasSection,
-  EmpresaResumoSection,
-} from "@/modules/business/company/sections";
-import { AddressCard, CompanyInfoCard } from "@/modules/business/company/components/info";
-import { EmpresaDetailLayout } from "@/modules/business/company/pages/EmpresaDetailLayout";
-import { getYearsActive } from "@/modules/business/company/utils";
+import { TerritoryBusinessDetail } from "@/modules/business/company/pages/TerritoryBusinessDetail";
 import type {
   BusinessExtended,
   NearbyBusiness,
@@ -58,9 +43,6 @@ interface EmpresaDetailLandingPageProps {
 export default function EmpresaDetailLandingPage(
   props: EmpresaDetailLandingPageProps = {},
 ) {
-  const shellGutterClass = 'w-full px-4 sm:px-6 xl:px-[clamp(32px,2.4vw,52px)] 2xl:px-[clamp(40px,2.8vw,72px)]';
-  const isCompactDesktopLayout = useMediaQuery('(min-width: 1280px) and (max-height: 1080px)');
-  const isShortDesktopLayout = useMediaQuery('(min-width: 1280px) and (max-height: 860px)');
   const urlParams = useParams<{
     state: string;
     city: string;
@@ -77,15 +59,10 @@ export default function EmpresaDetailLandingPage(
   const { user, activeProfile } = useSessionContext();
   const messagingEnabled = isPlatformCapabilityEnabled("messaging");
 
-  const [showAllHours, setShowAllHours] = useState(false);
-  const [showAllProducts, setShowAllProducts] = useState(false);
-  const [copiedPhone, setCopiedPhone] = useState(false);
-  const [showRouteOptions, setShowRouteOptions] = useState(false);
-  const [selectedProductCategory, setSelectedProductCategory] = useState("todos");
   const [nearbyBusinesses, setNearbyBusinesses] = useState<NearbyBusiness[]>([]);
   const [operationConfig, setOperationConfig] = useState<BusinessOperationConfig | null>(null);
   const [businessHoursStatus, setBusinessHoursStatus] = useState<BusinessStatus | null>(null);
-  const [messageLoading, setMessageLoading] = useState(false);
+  const [, setMessageLoading] = useState(false);
 
   const { data: snapshot, isLoading } = usePublicBusinessSnapshot({
     state,
@@ -98,11 +75,6 @@ export default function EmpresaDetailLandingPage(
   const { isFavorite, toggleFavorite } = useCanonicalBusinessFavorite(
     institutionalBusinessDataId,
   );
-  const {
-    isRecommended: hasRecommended,
-    toggleRecommendation,
-    loading: recommendLoading,
-  } = useBusinessRecommendation(institutionalBusinessDataId);
   const { products: rawProducts } = useBusinessProducts(snapshotBusiness?.id);
 
   const normalizedProducts = useMemo<CompanyProduct[]>(
@@ -254,26 +226,6 @@ export default function EmpresaDetailLandingPage(
     };
   }, [snapshotBusiness?.id, snapshotBusiness?.category]);
 
-  const handleCopyPhone = async () => {
-    const phone =
-      snapshot?.institutional.phone ?? snapshotBusiness?.phone ?? "";
-    if (!phone.trim()) return;
-
-    try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error("Clipboard indisponível");
-      }
-
-      await navigator.clipboard.writeText(phone);
-      setCopiedPhone(true);
-      toast.success("Telefone copiado!");
-      setTimeout(() => setCopiedPhone(false), 2000);
-    } catch {
-      setCopiedPhone(false);
-      toast.error("Não foi possível copiar o telefone.");
-    }
-  };
-
   const handleShare = async () => {
     const shareData = {
       title: business.name,
@@ -358,7 +310,6 @@ export default function EmpresaDetailLandingPage(
   const displayNearbyBusinesses = nearbyBusinesses;
   const openStatus = resolvedOpenStatus;
 
-  const yearsActive = getYearsActive(business.created_at);
   const canMessageBusiness =
     messagingEnabled && activeProfile?.id !== business.profile_id;
 
@@ -407,11 +358,18 @@ export default function EmpresaDetailLandingPage(
     });
   };
   const robotsContent = snapshot.seo.robots;
-  const isDeliveryBusiness =
-    business.tem_delivery || business.modos_atendimento?.includes("delivery");
-  const hasDesktopProducts = products.length > 0;
-  const hasDesktopNearby = displayNearbyBusinesses.some((item) => item.id !== business.id);
-  const useDesktopSidebarTabs = isShortDesktopLayout;
+  const territoryName = territorySlug
+    ? territorySlug
+        .split("-")
+        .map((part, index) =>
+          index > 0 && ["da", "de", "do", "das", "dos"].includes(part)
+            ? part
+            : `${part.charAt(0).toUpperCase()}${part.slice(1)}`,
+        )
+        .join(" ")
+    : business.location?.name || institutional.locationText || "Território";
+  const territoryUrl = `/${state || "ba"}/${city || "salvador"}/${territorySlug || "complexo-do-nordeste-de-amaralina"}`;
+  const businessDirectoryUrl = `${territoryUrl}/empresas`;
 
   return (
     <>
@@ -437,240 +395,21 @@ export default function EmpresaDetailLandingPage(
         robots={robotsContent}
       />
 
-      <EmpresaDetailLayout>
-        <EmpresaHeroSection
-          business={business}
-          openStatus={openStatus}
-          yearsActive={yearsActive}
-          onRoute={handleRoute}
-          onClaim={() => navigate('/empresas/cadastrar')}
-        />
-
-        <section className={`${shellGutterClass} mt-2.5 hidden xl:block [@media(max-height:1100px)]:mt-1.5 [@media(max-height:860px)]:mt-0`}>
-          <div className="grid grid-cols-[minmax(0,1.74fr)_minmax(320px,0.7fr)] gap-2.5 [@media(max-height:1100px)]:gap-2 [@media(max-height:860px)]:gap-2.5 2xl:grid-cols-[minmax(0,1.8fr)_minmax(340px,0.68fr)]">
-            <div className="space-y-3 [@media(max-height:1100px)]:space-y-2 [@media(max-height:860px)]:space-y-2.5">
-              <EmpresaCTAsSection
-                embedded
-                business={business}
-                isFavorite={isFavorite}
-                hasRecommended={hasRecommended}
-                recommendLoading={recommendLoading}
-                showRouteOptions={showRouteOptions}
-                onToggleFavorite={() => {
-                  void toggleFavorite();
-                }}
-                onToggleRecommended={() => {
-                  void toggleRecommendation();
-                }}
-                onToggleRouteOptions={() => setShowRouteOptions(!showRouteOptions)}
-                onRoute={handleRoute}
-                onMessage={canMessageBusiness ? () => void handleMessage() : undefined}
-                messageLoading={messageLoading}
-                onShare={() => {
-                  void handleShare();
-                }}
-              />
-
-              {isShortDesktopLayout ? (
-                <Tabs defaultValue={hasDesktopProducts ? "products" : "nearby"} className="space-y-2 [@media(max-height:860px)]:space-y-1.5">
-                  <TabsList className="grid h-auto w-full grid-cols-2 rounded-[18px] border border-white/10 bg-[#0c151c]/96 p-1 [@media(max-height:1080px)]:p-[0.1875rem] [@media(max-height:860px)]:rounded-[16px] [@media(max-height:860px)]:p-0.5">
-                    <TabsTrigger value="products" className="rounded-[14px] text-xs [@media(max-height:1080px)]:h-8 [@media(max-height:1080px)]:text-[11px] [@media(max-height:860px)]:h-[1.875rem] [@media(max-height:860px)]:rounded-[12px]">Produtos</TabsTrigger>
-                    <TabsTrigger value="nearby" className="rounded-[14px] text-xs [@media(max-height:1080px)]:h-8 [@media(max-height:1080px)]:text-[11px] [@media(max-height:860px)]:h-[1.875rem] [@media(max-height:860px)]:rounded-[12px]">Relacionadas</TabsTrigger>
-                  </TabsList>
-
-                  <TabsContent value="products" className="mt-0">
-                    {hasDesktopProducts ? (
-                      <EmpresaProdutosSection
-                        embedded
-                        products={products}
-                        selectedCategory={selectedProductCategory}
-                        showAllProducts={showAllProducts}
-                        onSelectCategory={setSelectedProductCategory}
-                        onToggleShowAll={() => setShowAllProducts(!showAllProducts)}
-                      />
-                    ) : (
-                      <EmpresaResumoSection
-                        embedded
-                        business={business}
-                        yearsActive={yearsActive}
-                      />
-                    )}
-                  </TabsContent>
-
-                  <TabsContent value="nearby" className="mt-0">
-                    {hasDesktopNearby ? (
-                      <EmpresaProximasSection
-                        embedded
-                        layout="row"
-                        nearbyBusinesses={displayNearbyBusinesses}
-                        currentBusinessId={business.id}
-                        currentBusinessGeographicPath={business.geographic_path}
-                        navigate={navigate}
-                        maxItems={3}
-                      />
-                      ) : null}
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <>
-                  {hasDesktopProducts ? (
-                    <EmpresaProdutosSection
-                      embedded
-                      products={products}
-                      selectedCategory={selectedProductCategory}
-                      showAllProducts={showAllProducts}
-                      onSelectCategory={setSelectedProductCategory}
-                      onToggleShowAll={() => setShowAllProducts(!showAllProducts)}
-                    />
-                  ) : (
-                    <EmpresaResumoSection
-                      embedded
-                      business={business}
-                      yearsActive={yearsActive}
-                    />
-                  )}
-
-
-                </>
-              )}
-            </div>
-
-            <div className="space-y-3 [@media(max-height:1100px)]:space-y-2 [@media(max-height:860px)]:space-y-2.5">
-              {useDesktopSidebarTabs ? (
-                <Tabs defaultValue="info" className="space-y-2 [@media(max-height:860px)]:space-y-1.5">
-                  <TabsList className="grid h-auto w-full grid-cols-2 rounded-[18px] border border-white/10 bg-[#0c151c]/96 p-1 [@media(max-height:860px)]:rounded-[16px] [@media(max-height:860px)]:p-0.5">
-                    <TabsTrigger value="info" className="rounded-[14px] text-xs [@media(max-height:1080px)]:h-8 [@media(max-height:1080px)]:text-[11px] [@media(max-height:860px)]:h-[1.875rem] [@media(max-height:860px)]:rounded-[12px]">Info</TabsTrigger>
-                    <TabsTrigger value="map" className="rounded-[14px] text-xs [@media(max-height:1080px)]:h-8 [@media(max-height:1080px)]:text-[11px] [@media(max-height:860px)]:h-[1.875rem] [@media(max-height:860px)]:rounded-[12px]">Mapa</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="info" className="mt-0">
-                    <CompanyInfoCard business={business} products={products} />
-                  </TabsContent>
-                  <TabsContent value="map" className="mt-0">
-                    <AddressCard
-                      business={business}
-                      addressText={institutional.addressText}
-                      locationText={institutional.locationText}
-                      onRoute={handleRoute}
-                    />
-                  </TabsContent>
-                </Tabs>
-              ) : (
-                <>
-                  <CompanyInfoCard business={business} products={products} />
-                  <AddressCard
-                    business={business}
-                    addressText={institutional.addressText}
-                    locationText={institutional.locationText}
-                    onRoute={handleRoute}
-                  />
-                </>
-              )}
-            </div>
-          </div>
-
-          {!isShortDesktopLayout && hasDesktopNearby ? (
-            <div className="mt-2.5 [@media(max-height:1100px)]:mt-2">
-              <EmpresaProximasSection
-                embedded
-                layout="row"
-                nearbyBusinesses={displayNearbyBusinesses}
-                currentBusinessId={business.id}
-                currentBusinessGeographicPath={business.geographic_path}
-                navigate={navigate}
-                maxItems={3}
-              />
-            </div>
-          ) : null}
-        </section>
-
-        <div className="xl:hidden">
-          <EmpresaCTAsSection
-            embedded
-            business={business}
-            isFavorite={isFavorite}
-            hasRecommended={hasRecommended}
-            recommendLoading={recommendLoading}
-            showRouteOptions={showRouteOptions}
-            onToggleFavorite={() => {
-              void toggleFavorite();
-            }}
-            onToggleRecommended={() => {
-              void toggleRecommendation();
-            }}
-            onToggleRouteOptions={() => setShowRouteOptions(!showRouteOptions)}
-            onRoute={handleRoute}
-            onMessage={canMessageBusiness ? () => void handleMessage() : undefined}
-            messageLoading={messageLoading}
-            onShare={() => {
-              void handleShare();
-            }}
-          />
-        </div>
-
-        <div className="xl:hidden">
-          <EmpresaResumoSection
-            embedded
-            business={business}
-            yearsActive={yearsActive}
-          />
-          <EmpresaInfoSection
-            business={business}
-            openStatus={openStatus}
-            addressText={institutional.addressText}
-            locationText={institutional.locationText}
-            isDeliveryBusiness={Boolean(isDeliveryBusiness)}
-            showAllHours={showAllHours}
-            copiedPhone={copiedPhone}
-            showSidebar={false}
-            onToggleShowAllHours={() => setShowAllHours(!showAllHours)}
-            onCopyPhone={handleCopyPhone}
-            onRoute={handleRoute}
-            navigate={navigate}
-          />
-        </div>
-
-        <div className="xl:hidden">
-          <EmpresaProdutosSection
-            products={products}
-            selectedCategory={selectedProductCategory}
-            showAllProducts={showAllProducts}
-            onSelectCategory={setSelectedProductCategory}
-            onToggleShowAll={() => setShowAllProducts(!showAllProducts)}
-          />
-        </div>
-
-        {institutional.photos.length > 0 && (
-          <div className="xl:hidden">
-          <EmpresaFotosSection
-            fotos={institutional.photos}
-            businessName={business.name}
-          />
-          </div>
-        )}
-
-        {business.business_role && business.business_role !== "standalone" && (
-          <div className="xl:hidden">
-            <section className={`${shellGutterClass} mt-6`}>
-              <BranchNetworkBlock
-                businessRole={business.business_role}
-                parentBusinessId={business.parent_business_id ?? null}
-                currentBranchId={business.id}
-                brandHubId={business.id}
-                brandName={business.business_name || business.name}
-              />
-            </section>
-          </div>
-          )}
-
-        <div className="xl:hidden">
-          <EmpresaProximasSection
-          nearbyBusinesses={displayNearbyBusinesses}
-          currentBusinessId={business.id}
-          currentBusinessGeographicPath={business.geographic_path}
-          navigate={navigate}
-          />
-        </div>
-      </EmpresaDetailLayout>
+      <TerritoryBusinessDetail
+        business={business}
+        institutional={institutional}
+        products={products}
+        nearbyBusinesses={displayNearbyBusinesses}
+        openStatus={openStatus}
+        territoryName={territoryName}
+        territoryUrl={territoryUrl}
+        businessDirectoryUrl={businessDirectoryUrl}
+        isFavorite={isFavorite}
+        onToggleFavorite={() => void toggleFavorite()}
+        onShare={() => void handleShare()}
+        onRoute={handleRoute}
+        onMessage={canMessageBusiness ? () => void handleMessage() : undefined}
+      />
     </>
   );
 }
