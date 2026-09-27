@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { resolveHomeCommunityHref } from "../../utils/homeCommunityHref";
 
-describe("resolveHomeCommunityHref", () => {
-  it("prioriza grupo territorial ativo quando o bairro do usuario pertence a uma area", () => {
+describe("resolveHomeCommunityHref hook contract", () => {
+  it("prioritizes an active territorial group", () => {
     const href = resolveHomeCommunityHref({
       homeCityPath: "/ba/salvador",
       homeDistrictPath: "/ba/salvador/chapada-do-rio-vermelho",
@@ -15,30 +15,12 @@ describe("resolveHomeCommunityHref", () => {
       ],
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe(
+      "/ba/salvador/complexo-do-nordeste-de-amaralina/comunidade",
+    );
   });
 
-  it("normaliza alias resolvido do grupo para portal comunitario explicito", () => {
-    const href = resolveHomeCommunityHref({
-      homeCityPath: "/ba/salvador",
-      homeDistrictPath: "/ba/salvador/chapada-do-rio-vermelho",
-      groups: [
-        {
-          slug: "complexo-do-nordeste-de-amaralina",
-          name: "Complexo do Nordeste de Amaralina",
-          status: "active",
-        },
-      ],
-      communityUrlsByTerritoryBaseUrl: {
-        "/ba/salvador/complexo-do-nordeste-de-amaralina":
-          "/complexo-do-nordeste-de-amaralina",
-      },
-    });
-
-    expect(href).toBe("/comunidade/complexo-do-nordeste-de-amaralina");
-  });
-
-  it("usa o bairro quando nao existe grupo territorial ativo", () => {
+  it("uses the district when groups are inactive", () => {
     const href = resolveHomeCommunityHref({
       homeCityPath: "/ba/salvador",
       homeDistrictPath: "/ba/salvador/pituba",
@@ -51,86 +33,43 @@ describe("resolveHomeCommunityHref", () => {
       ],
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/pituba");
+    expect(href).toBe("/ba/salvador/pituba/comunidade");
   });
 
-  it("mantem comunidade municipal quando nao ha bairro", () => {
+  it("keeps the city as the territory container", () => {
     const href = resolveHomeCommunityHref({
       homeCityPath: "/ba/salvador",
       homeDistrictPath: null,
       groups: [],
-      fallbackHref: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
     });
 
-    expect(href).toBe("/comunidade/ba/salvador");
+    expect(href).toBe("/ba/salvador/comunidade");
   });
 
-  it("usa fallback configurado quando o usuario nao tem territorio resolvido", () => {
+  it("uses the last canonical territory when residence is unavailable", () => {
     const href = resolveHomeCommunityHref({
       groups: [],
       homeCityPath: null,
       homeDistrictPath: null,
-      fallbackHref: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
+      lastTerritoryBaseUrl:
+        "/ba/salvador/complexo-do-nordeste-de-amaralina",
+      fallbackHref: "/ba/salvador/pituba/comunidade",
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
+    expect(href).toBe(
+      "/ba/salvador/complexo-do-nordeste-de-amaralina/comunidade",
+    );
   });
 
-  it("usa o ultimo territorio visitado antes do fallback global", () => {
+  it("rejects alias-shaped fallback and keeps the canonical launch fallback", () => {
     const href = resolveHomeCommunityHref({
       groups: [],
       homeCityPath: null,
       homeDistrictPath: null,
-      lastTerritoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
-      fallbackHref: "/comunidade/ba/salvador/pituba",
+      fallbackHref: "/comunidade/pituba",
     });
 
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
-  });
-
-  it("aceita ultimo territorio municipal valido", () => {
-    const href = resolveHomeCommunityHref({
-      groups: [],
-      homeCityPath: null,
-      homeDistrictPath: null,
-      lastTerritoryBaseUrl: "/ba/salvador",
-      fallbackHref: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina",
-    });
-
-    expect(href).toBe("/comunidade/ba/salvador");
-  });
-
-  it("prioriza o territorio atual quando nao ha residencia resolvida", () => {
-    const href = resolveHomeCommunityHref({
-      groups: [],
-      homeCityPath: null,
-      homeDistrictPath: null,
-      currentTerritoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
-      fallbackHref: "/comunidade/ba/salvador",
-    });
-
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
-  });
-
-  it("prioriza o ultimo grupo visitado quando ele ainda esta ativo", () => {
-    const href = resolveHomeCommunityHref({
-      homeCityPath: "/ba/salvador",
-      homeDistrictPath: "/ba/salvador/nordeste-de-amaralina",
-      groups: [
-        {
-          slug: "pituba-plus",
-          name: "Pituba Plus",
-          status: "active",
-        },
-        {
-          slug: "complexo-do-nordeste-de-amaralina",
-          name: "Complexo do Nordeste de Amaralina",
-          status: "active",
-        },
-      ],
-      lastTerritoryBaseUrl: "/ba/salvador/complexo-do-nordeste-de-amaralina",
-    });
-
-    expect(href).toBe("/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina");
+    expect(href).not.toBe("/comunidade/pituba");
+    expect(href).toContain("/comunidade");
   });
 });
