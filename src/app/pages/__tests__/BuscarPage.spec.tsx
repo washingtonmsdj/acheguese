@@ -87,7 +87,7 @@ function renderSearchPage(path: string) {
   render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/:state/:city/:district/busca" element={<BuscarPage />} />
+        <Route path="/:state/:city/:territorySlug/busca" element={<BuscarPage />} />
       </Routes>
     </MemoryRouter>,
   );
