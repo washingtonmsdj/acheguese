@@ -12,6 +12,14 @@ describe("MVP territorial home ownership", () => {
     expect(routes).toContain('import TerritoryHomePage from "@/app/pages/TerritoryHomePage"');
     expect(routes).toContain("element={<TerritoryHomePage />}");
     expect(routes).not.toContain("TerritorialIndexPage");
+
+    const owner = read("src/app/pages/TerritoryHomePage.tsx");
+    expect(owner).toContain(
+      'import TerritoryPortalPage from "@/app/pages/TerritoryPortalPage"',
+    );
+    expect(owner).toContain("<TerritoryPortalPage");
+    expect(owner).toContain("useTerritorialContext()");
+    expect(owner).not.toContain("TERRITORY_CONFIG");
   });
 
   it("keeps the retired multi-domain territorial landing out of runtime", () => {
