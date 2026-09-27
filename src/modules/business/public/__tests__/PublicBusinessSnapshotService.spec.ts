@@ -75,7 +75,7 @@ describe("PublicBusinessSnapshotService", () => {
     const snapshot = await PublicBusinessSnapshotService.getByTerritorySlug({
       state: "ba",
       city: "salvador",
-      district: "pituba",
+      territorySlug: "pituba",
       slug: "restaurante-central",
     });
 
@@ -94,7 +94,7 @@ describe("PublicBusinessSnapshotService", () => {
     const snapshot = await PublicBusinessSnapshotService.getByTerritorySlug({
       state: "ba",
       city: "salvador",
-      district: "pituba",
+      territorySlug: "pituba",
       slug: "nao-existe",
     });
 
