@@ -6,7 +6,7 @@ export const E2E_BUSINESS = {
   slug: "e2e-oficina-horizonte",
   name: "Oficina Horizonte E2E",
   communityAlias: "e2e-complexo",
-  publicPath: "/empresas/ba/salvador/e2e-complexo/e2e-oficina-horizonte",
+  publicPath: "/ba/salvador/e2e-complexo/empresas/e2e-oficina-horizonte",
   communityPath: "/comunidade/e2e-complexo/empresas/e2e-oficina-horizonte",
 } as const;
 
