@@ -26,6 +26,7 @@ import {
 } from "../utils/territoryUrls";
 import { TerritorialNotFound } from "./TerritorialNotFound";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { getAppModuleSlugFromPath } from "@/shared/config/moduleSlugs";
 
 export type TerritorialLayoutContext = {
   resolved: ResolvedTerritory;
@@ -180,7 +181,7 @@ export function TerritorialLayout({
   const state = params.state;
   const city = params.city;
   const slug = params.groupSlug ?? params.district ?? params.groupSlugOrDistrict;
-  const currentModuleSlug = pathname.split("/").filter(Boolean)[0] ?? "";
+  const currentModuleSlug = getAppModuleSlugFromPath(pathname) ?? "";
   const currentModuleKeys = resolveModuleKeysFromSlug(
     currentModuleSlug,
     moduleKeysBySlug,
