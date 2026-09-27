@@ -25,11 +25,11 @@ function BrandMark() { return <span className="pt-brand-mark" aria-hidden="true"
 type Shortcut = { label: string; description: string; href: string; icon: ComponentType<{ className?: string }>; surface?: LaunchSurfaceKey; primary?: boolean };
 const shortcuts: readonly Shortcut[] = [
   { label: "Perto de mim", description: "Ver o que tem perto", href: LAUNCH_URLS.nearby, icon: Navigation, primary: true },
-  { label: "Mapa", description: "Explorar o território", href: LAUNCH_URLS.mapTerritory, icon: Map },
-  { label: "Empresas", description: "Comércio e serviços", href: LAUNCH_URLS.businessTerritory, icon: Store },
+  { label: "Mapa", description: "Explorar o território", href: LAUNCH_URLS.map, icon: Map },
+  { label: "Empresas", description: "Comércio e serviços", href: LAUNCH_URLS.business, icon: Store },
   { label: "Comunidade", description: "Conversas do bairro", href: LAUNCH_URLS.community, icon: UsersRound, surface: "community" },
-  { label: "Serviços", description: "Profissionais locais", href: LAUNCH_URLS.servicesTerritory, icon: Wrench, surface: "services" },
-  { label: "Eventos", description: "O que está rolando", href: LAUNCH_URLS.eventsTerritory, icon: CalendarDays, surface: "events" },
+  { label: "Serviços", description: "Profissionais locais", href: LAUNCH_URLS.services, icon: Wrench, surface: "services" },
+  { label: "Eventos", description: "O que está rolando", href: LAUNCH_URLS.events, icon: CalendarDays, surface: "events" },
 ];
 const businesses = [
   ["Mercadinho Amaralina", "Mercado", "450 m", ShoppingCart], ["Salão Beleza Negra", "Beleza e estética", "600 m", UsersRound],
@@ -51,17 +51,17 @@ export default function TerritoryPortalPage() {
     <a className="pt-skip-link" href="#pt-content">Pular para o conteúdo</a>
     <header className="pt-header"><div className="pt-container pt-header-inner">
       <Link className="pt-brand" to="/"><BrandMark /><strong>achegue-se</strong></Link>
-      <nav><Link to={LAUNCH_URLS.nearby}>Por perto</Link><Link to="/como-funciona">Como funciona</Link><Link to={LAUNCH_URLS.businessTerritory}>Para negócios</Link></nav>
+      <nav><Link to={LAUNCH_URLS.nearby}>Por perto</Link><Link to="/como-funciona">Como funciona</Link><Link to={LAUNCH_URLS.business}>Para negócios</Link></nav>
       <form className="pt-search" action={LAUNCH_URLS.search}><Search /><input name="q" aria-label="Buscar no território" placeholder="Buscar empresas, serviços, lugares..." /></form>
-      <Link className="pt-location" to={LAUNCH_URLS.mapTerritory}><MapPin /> Salvador, BA <ChevronDown /></Link>
+      <Link className="pt-location" to={LAUNCH_URLS.map}><MapPin /> Salvador, BA <ChevronDown /></Link>
       <Link className="pt-login" to={AUTH_PATHS.login}>Entrar <ArrowRight /></Link>
       <details className="pt-mobile-menu">
         <summary aria-label="Abrir menu"><Menu /><span>Menu</span></summary>
         <nav aria-label="Navegação mobile">
           <Link to={LAUNCH_URLS.nearby}>Por perto</Link>
           <Link to="/como-funciona">Como funciona</Link>
-          <Link to={LAUNCH_URLS.businessTerritory}>Para negócios</Link>
-          <Link to={LAUNCH_URLS.mapTerritory}>Mapa do território</Link>
+          <Link to={LAUNCH_URLS.business}>Para negócios</Link>
+          <Link to={LAUNCH_URLS.map}>Mapa do território</Link>
         </nav>
       </details>
     </div></header>
@@ -75,13 +75,13 @@ export default function TerritoryPortalPage() {
       </section>
 
       <div className="pt-container pt-dashboard">
-        <section className="pt-panel pt-map-panel"><PanelHeading icon={Map} title="Mapa do território" description="Explore ruas, comércios, serviços e pontos de interesse." href={LAUNCH_URLS.mapTerritory} label="Abrir mapa" />
+        <section className="pt-panel pt-map-panel"><PanelHeading icon={Map} title="Mapa do território" description="Explore ruas, comércios, serviços e pontos de interesse." href={LAUNCH_URLS.map} label="Abrir mapa" />
           <div className="pt-map-shell"><Suspense fallback={<div className="pt-map-loading">Carregando mapa…</div>}><TerritoryMap city={cityLocation} resolvedTerritory={resolved} label={NAME} /></Suspense></div>
           <div className="pt-map-legend"><span>Todos</span><span>● Alimentação</span><span>● Comércio</span><span>● Serviços</span><span>● Saúde</span></div>
         </section>
 
-        <section className="pt-panel pt-business-panel"><PanelHeading icon={Store} title="Empresas em destaque" description="Negócios locais que fazem a diferença." href={LAUNCH_URLS.businessTerritory} label="Ver todas" />
-          <div className="pt-business-grid">{businesses.map(([name, category, distance, Icon], index) => <Link to={LAUNCH_URLS.businessTerritory} key={name}><div className={`pt-business-image crop-${index}`}><Icon /></div><strong>{name}</strong><small>{category}</small><p>{distance}</p><span>★ 4.{8 - index} <em>({128 - index * 21})</em></span></Link>)}</div>
+        <section className="pt-panel pt-business-panel"><PanelHeading icon={Store} title="Empresas em destaque" description="Negócios locais que fazem a diferença." href={LAUNCH_URLS.business} label="Ver todas" />
+          <div className="pt-business-grid">{businesses.map(([name, category, distance, Icon], index) => <Link to={LAUNCH_URLS.business} key={name}><div className={`pt-business-image crop-${index}`}><Icon /></div><strong>{name}</strong><small>{category}</small><p>{distance}</p><span>★ 4.{8 - index} <em>({128 - index * 21})</em></span></Link>)}</div>
         </section>
 
         <aside className="pt-panel pt-about"><PanelHeading icon={Info} title="Sobre o território" /><p>O {NAME} é uma das maiores comunidades de Salvador, com forte cultura, história e diversidade de serviços, comércios e iniciativas locais.</p>
