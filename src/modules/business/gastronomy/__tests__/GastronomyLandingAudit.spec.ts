@@ -14,7 +14,8 @@ describe('gastronomy landing public discovery audit', () => {
   it('keeps the public catalog available without forcing a delivery destination', () => {
     const source = readProjectFile('src/modules/business/gastronomy/pages/GastronomyLandingPage.tsx');
 
-    expect(source).toContain("const shouldShowDestinationGate = !isCommunityScopedSurface && !hasDeliveryContext;");
+    expect(source).toContain("const shouldShowDestinationGate = !hasDeliveryContext;");
+    expect(source).not.toContain("isCommunityScopedSurface");
     expect(source).toContain("const canShowCatalog = territoryFilter.scope !== 'none';");
     expect(source).toContain("const shouldLoadCatalog = canShowCatalog;");
   });
