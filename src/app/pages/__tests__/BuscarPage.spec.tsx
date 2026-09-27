@@ -87,7 +87,7 @@ function renderSearchPage(path: string) {
   render(
     <MemoryRouter initialEntries={[path]}>
       <Routes>
-        <Route path="/busca/:state/:city/:district" element={<BuscarPage />} />
+        <Route path="/:state/:city/:district/busca" element={<BuscarPage />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -100,7 +100,7 @@ describe("BuscarPage", () => {
 
   it("hydrates q from the URL and searches inside the resolved community territory", async () => {
     renderSearchPage(
-      "/busca/ba/salvador/complexo-do-nordeste-de-amaralina?q=pizzaria",
+      "/ba/salvador/complexo-do-nordeste-de-amaralina/busca?q=pizzaria",
     );
 
     expect(screen.getByLabelText("Busca inteligente")).toHaveValue("pizzaria");
