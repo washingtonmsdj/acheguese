@@ -46,7 +46,6 @@ import type {
 export interface MapaPageV4Props {
   resolved?: ResolvedTerritory | null;
   activeMemberIds?: string[];
-  presentation?: 'standalone' | 'embedded';
   initialLayers?: readonly MapLayerKey[];
   providers?: readonly MapLayerProviderRuntime[];
   nearbyEnabled?: boolean;
@@ -305,7 +304,6 @@ function resolveNearbyUrl(resolved: ResolvedTerritory | null): string {
 export default function MapaPageV4({
   resolved,
   activeMemberIds = [],
-  presentation = 'standalone',
   initialLayers = EMPTY_MAP_LAYERS,
   providers = EMPTY_MAP_PROVIDERS,
   nearbyEnabled = true,
@@ -634,10 +632,6 @@ export default function MapaPageV4({
       )}
     </div>
   );
-
-  if (presentation === 'embedded') {
-    return mapCanvas;
-  }
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5">
