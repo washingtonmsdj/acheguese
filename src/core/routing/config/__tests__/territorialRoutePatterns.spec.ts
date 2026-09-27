@@ -32,14 +32,14 @@ describe("territorial route patterns", () => {
         TERRITORIAL_ROUTE_STATIC_SEGMENTS.category,
         TERRITORIAL_ROUTE_PARAMS.category,
       ]),
-    ).toBe("/:state/:city/:district/empresas/categoria/:category");
+    ).toBe("/:state/:city/:territorySlug/empresas/categoria/:category");
   });
 
   it("keeps bare and community territorial paths canonical", () => {
     expect(buildTerritorialBareRoutePath()).toBe("/:state/:city");
     expect(
       buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.community),
-    ).toBe("/:state/:city/:district/comunidade");
+    ).toBe("/:state/:city/:territorySlug/comunidade");
     expect(
       buildCommunityTerritoryRoutePath([TERRITORIAL_ROUTE_PARAMS.slug]),
     ).toBe("/:state/:city/comunidade/:slug");
