@@ -19,7 +19,7 @@ import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritory
 import type { ClassifiedUrlContext } from '@/core/classifieds/services/ClassifiedUrlService';
 
 export interface ClassifiedUrls {
-  /** Lista de classificados: /classificados/ba/salvador ou /classificados/ba/salvador/complexo-do-nordeste */
+  /** Lista de classificados: /ba/salvador/classificados ou /ba/salvador/complexo-do-nordeste/classificados */
   list: string;
   /** Novo classificado: /classificados/novo (global) */
   new: string;
@@ -41,7 +41,7 @@ export function useClassifiedUrls(routeResolved?: ResolvedTerritory | null): Cla
   
   if (routeResolved) {
     if (routeResolved.kind === 'group') {
-      // Grupo: /classificados/ba/salvador/complexo-do-nordeste-de-amaralina
+      // Grupo: /ba/salvador/complexo-do-nordeste-de-amaralina/classificados
       const firstMember = routeResolved.group.members[0];
       if (firstMember?.geographic_path) {
         const parts = firstMember.geographic_path.split('/').filter(Boolean);
@@ -51,7 +51,7 @@ export function useClassifiedUrls(routeResolved?: ResolvedTerritory | null): Cla
         listUrl = LAUNCH_URLS.classifieds;
       }
     } else {
-      // Location: /classificados/ba/salvador ou /classificados/ba/salvador/pituba
+      // Location: /ba/salvador/classificados ou /ba/salvador/pituba/classificados
       listUrl = buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, geoPathToPublicUrl(routeResolved.location.geographic_path));
     }
   } else if (activeLocation?.geographic_path) {
