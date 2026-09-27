@@ -122,7 +122,7 @@ function renderPage(path: string) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
-          <Route path="/:state/:city/:district/busca" element={<BuscaPage />} />
+          <Route path="/:state/:city/:territorySlug/busca" element={<BuscaPage />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
