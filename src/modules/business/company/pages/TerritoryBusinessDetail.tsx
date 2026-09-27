@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from "react";
+import { useEffect, useState, type ComponentType, type MouseEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import {
   Accessibility,
@@ -116,6 +116,16 @@ function humanizeLabel(value: string) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+const DETAIL_SECTION_IDS = ["visao-geral", "produtos", "avaliacoes", "fotos", "localizacao", "informacoes"] as const;
+type DetailSectionId = (typeof DETAIL_SECTION_IDS)[number];
+
+function readActiveSection(): DetailSectionId {
+  const hash = typeof window === "undefined" ? "" : window.location.hash.slice(1);
+  return DETAIL_SECTION_IDS.includes(hash as DetailSectionId)
+    ? hash as DetailSectionId
+    : "visao-geral";
+}
+
 export function TerritoryBusinessDetail({
   business,
   institutional,
@@ -131,6 +141,7 @@ export function TerritoryBusinessDetail({
   onRoute,
   onMessage,
 }: TerritoryBusinessDetailProps) {
+  const [activeSection, setActiveSection] = useState<DetailSectionId>(readActiveSection);
   const category = humanizeLabel(business.subcategoria || business.category || "Empresa local");
   const normalizedCategory = `${business.category || ""} ${business.subcategoria || ""}`.toLowerCase();
   const isFoodBusiness = ["aliment", "gastr", "restaurante", "lanch", "padaria"].some((term) => normalizedCategory.includes(term));
@@ -183,6 +194,33 @@ export function TerritoryBusinessDetail({
       : null;
   const mapCoordinates = physicalCoordinates || territoryCoordinates;
   const isTerritoryReference = !physicalCoordinates && Boolean(territoryCoordinates);
+  const navigateToSection = (event: MouseEvent<HTMLAnchorElement>, sectionId: DetailSectionId) => {
+    event.preventDefault();
+    const nextHash = `#${sectionId}`;
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
+    }
+    setActiveSection(sectionId);
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  useEffect(() => {
+    const syncActiveSection = () => setActiveSection(readActiveSection());
+    window.addEventListener("hashchange", syncActiveSection);
+    window.addEventListener("popstate", syncActiveSection);
+    return () => {
+      window.removeEventListener("hashchange", syncActiveSection);
+      window.removeEventListener("popstate", syncActiveSection);
+    };
+  }, []);
+
+  useEffect(() => {
+    const navigation = document.querySelector<HTMLElement>(".bd-section-nav > .bd-container");
+    const activeLink = navigation?.querySelector<HTMLElement>(`a[href="#${activeSection}"]`);
+    if (!navigation || !activeLink || navigation.scrollWidth <= navigation.clientWidth) return;
+    const nextLeft = activeLink.offsetLeft - (navigation.clientWidth - activeLink.offsetWidth) / 2;
+    navigation.scrollTo({ left: Math.max(0, nextLeft), behavior: "smooth" });
+  }, [activeSection]);
 
   return (
     <div className="bd-page">
@@ -262,12 +300,12 @@ export function TerritoryBusinessDetail({
 
         <nav className="bd-section-nav" aria-label="Seções da empresa">
           <div className="bd-container">
-            <a className="is-active" href="#visao-geral"><Home /> Visão geral</a>
-            <a href="#produtos"><ShoppingBag /> Produtos e serviços</a>
-            <a href="#avaliacoes"><Star /> Avaliações</a>
-            {institutional.photos.length > 0 ? <a href="#fotos"><Camera /> Fotos</a> : null}
-            <a href="#localizacao"><MapPin /> Localização</a>
-            <a href="#informacoes"><Info /> Informações</a>
+            <a className={activeSection === "visao-geral" ? "is-active" : undefined} aria-current={activeSection === "visao-geral" ? "page" : undefined} href="#visao-geral" onClick={(event) => navigateToSection(event, "visao-geral")}><Home /> Visão geral</a>
+            <a className={activeSection === "produtos" ? "is-active" : undefined} aria-current={activeSection === "produtos" ? "page" : undefined} href="#produtos" onClick={(event) => navigateToSection(event, "produtos")}><ShoppingBag /> Produtos e serviços</a>
+            <a className={activeSection === "avaliacoes" ? "is-active" : undefined} aria-current={activeSection === "avaliacoes" ? "page" : undefined} href="#avaliacoes" onClick={(event) => navigateToSection(event, "avaliacoes")}><Star /> Avaliações</a>
+            {institutional.photos.length > 0 ? <a className={activeSection === "fotos" ? "is-active" : undefined} aria-current={activeSection === "fotos" ? "page" : undefined} href="#fotos" onClick={(event) => navigateToSection(event, "fotos")}><Camera /> Fotos</a> : null}
+            <a className={activeSection === "localizacao" ? "is-active" : undefined} aria-current={activeSection === "localizacao" ? "page" : undefined} href="#localizacao" onClick={(event) => navigateToSection(event, "localizacao")}><MapPin /> Localização</a>
+            <a className={activeSection === "informacoes" ? "is-active" : undefined} aria-current={activeSection === "informacoes" ? "page" : undefined} href="#informacoes" onClick={(event) => navigateToSection(event, "informacoes")}><Info /> Informações</a>
           </div>
         </nav>
 
