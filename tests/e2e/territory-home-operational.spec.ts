@@ -95,10 +95,10 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
       await expect(main.getByText(pausedLabel, { exact: true })).toHaveCount(0);
     }
 
-    await expect(main.locator('a[href^="/empresas/"]').first()).toBeVisible();
-    await expect(main.locator('a[href^="/mapa/"]').first()).toBeVisible();
+    await expect(main.locator('a[href$="/empresas"]').first()).toBeVisible();
+    await expect(main.locator('a[href$="/mapa"]').first()).toBeVisible();
     await expect(main.locator('a[href="/perto-de-mim"]').first()).toBeVisible();
-    await expect(main.locator('form[action^="/busca/"]').first()).toBeVisible();
+    await expect(main.locator('form[action$="/busca"]').first()).toBeVisible();
 
     await expectNoHorizontalOverflow(page);
 
@@ -120,16 +120,16 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
 
     const main = page.locator("main");
     await expect(
-      main.locator('a[href="/empresas/ba/salvador/pituba"]'),
+      main.locator('a[href="/ba/salvador/pituba/empresas"]'),
     ).toBeVisible();
     await expect(
-      main.locator('a[href="/mapa/ba/salvador/pituba"]'),
+      main.locator('a[href="/ba/salvador/pituba/mapa"]'),
     ).toBeVisible();
     await expect(
-      main.locator('a[href="/perto-de-mim/ba/salvador/pituba"]'),
+      main.locator('a[href="/ba/salvador/pituba/perto-de-mim"]'),
     ).toBeVisible();
     await expect(
-      main.locator('a[href="/busca/ba/salvador/pituba"]'),
+      main.locator('a[href="/ba/salvador/pituba/busca"]'),
     ).toBeVisible();
 
     for (const staleSurface of [
@@ -151,7 +151,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
   test("Busca fica ativa e não expõe categorias pausadas", async ({ page }) => {
     const health = observeBrowserHealth(page);
 
-    await gotoApp(page, "/busca/ba/salvador/pituba");
+    await gotoApp(page, "/ba/salvador/pituba/busca");
 
     await expect(
       page.getByRole("heading", { name: "Busca", exact: true }),
@@ -186,7 +186,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
   }) => {
     const health = observeBrowserHealth(page);
 
-    await gotoApp(page, "/empresas/ba/salvador/pituba");
+    await gotoApp(page, "/ba/salvador/pituba/empresas");
 
     await expect(
       page.getByRole("heading", { name: "Empresas do bairro" }),
@@ -199,7 +199,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await expect(mapLink).toHaveAttribute("href", /\/mapa/);
 
     await expect(
-      page.locator('a[href="/perto-de-mim/ba/salvador/pituba"]').first(),
+      page.locator('a[href="/ba/salvador/pituba/perto-de-mim"]').first(),
     ).toBeVisible();
     await expect(page.locator('a[href^="/recomendacoes"]')).toHaveCount(0);
     await expect(page.getByText("Indicar negocio", { exact: true })).toHaveCount(0);
@@ -213,7 +213,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
   }) => {
     const health = observeBrowserHealth(page);
 
-    await gotoApp(page, "/mapa/ba/salvador/pituba");
+    await gotoApp(page, "/ba/salvador/pituba/mapa");
 
     await expect(page.locator('[data-page="mapa-v4"]')).toBeVisible({
       timeout: 30_000,
@@ -227,7 +227,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     ).toBeVisible();
     await expect(
       relatedModules.getByRole("link", { name: "Perto de mim" }),
-    ).toHaveAttribute("href", "/perto-de-mim/ba/salvador/pituba");
+    ).toHaveAttribute("href", "/ba/salvador/pituba/perto-de-mim");
 
     for (const paused of ["Gastronomia", "Serviços", "Classificados", "Eventos"]) {
       await expect(relatedModules.getByText(paused, { exact: true })).toHaveCount(
@@ -246,7 +246,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await enablePreciseGeolocation(context);
     const health = observeBrowserHealth(page);
 
-    await gotoApp(page, "/perto-de-mim/ba/salvador/pituba");
+    await gotoApp(page, "/ba/salvador/pituba/perto-de-mim");
 
     await expect(page.getByText(HOME_BUSINESS.business_name).first()).toBeVisible({
       timeout: 30_000,
@@ -271,6 +271,6 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     health.assertHealthy();
 
     await openMapButton.click();
-    await expect(page).toHaveURL(/\/mapa\/ba\/salvador\/pituba$/);
+    await expect(page).toHaveURL(/\/ba\/salvador\/pituba\/mapa$/);
   });
 });
