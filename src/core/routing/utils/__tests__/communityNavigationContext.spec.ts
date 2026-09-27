@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   buildCommunityNavigationModuleUrls,
-  getCommunityAliasCandidateFromPath,
   resolveCommunityNavigationContext,
 } from "../communityNavigationContext";
 
@@ -17,16 +16,9 @@ const district = {
 };
 
 describe("communityNavigationContext", () => {
-  it("uses explicit community alias as base for embedded module links", () => {
+  it("resolves Community only inside the canonical territorial hierarchy", () => {
     const context = resolveCommunityNavigationContext({
-      pathname: "/comunidade/santa-cruz/empresas",
-      aliasResolution: {
-        status: "resolved",
-        alias: "santa-cruz",
-        canonicalPath: "/comunidade/ba/salvador/santa-cruz",
-        publicTerritoryPath: "/ba/salvador/santa-cruz",
-        resolved: { kind: "location", location: district as never },
-      },
+      pathname: "/ba/salvador/santa-cruz/comunidade",
     });
 
     expect(context).toMatchObject({
@@ -34,69 +26,59 @@ describe("communityNavigationContext", () => {
       city: "salvador",
       territorySlug: "santa-cruz",
       territoryBasePath: "/ba/salvador/santa-cruz",
-      basePath: "/comunidade/santa-cruz",
+      basePath: "/ba/salvador/santa-cruz/comunidade",
       groupId: null,
-      usesEmbeddedCommunityModules: true,
+    });
+  });
+
+  it("builds sibling module URLs from the same territory", () => {
+    const context = resolveCommunityNavigationContext({
+      pathname: "/ba/salvador/santa-cruz/comunidade/feed",
     });
 
+    expect(context).not.toBeNull();
     expect(buildCommunityNavigationModuleUrls(context!).business).toBe(
-      "/comunidade/santa-cruz/empresas",
+      "/ba/salvador/santa-cruz/empresas",
     );
     expect(buildCommunityNavigationModuleUrls(context!).gastronomy).toBe(
-      "/comunidade/santa-cruz/gastronomia",
+      "/ba/salvador/santa-cruz/gastronomia",
     );
     expect(buildCommunityNavigationModuleUrls(context!).jobs).toBe(
-      "/comunidade/santa-cruz/vagas",
+      "/ba/salvador/santa-cruz/vagas",
+    );
+    expect(buildCommunityNavigationModuleUrls(context!).map).toBe(
+      "/ba/salvador/santa-cruz/mapa",
     );
   });
 
-  it("uses territorial fallback links when only the legacy community path is known", () => {
+  it("derives the canonical territory from a resolved territorial context", () => {
     const context = resolveCommunityNavigationContext({
-      pathname: "/comunidade/ba/salvador/santa-cruz/empresas",
-    });
-
-    expect(context).toMatchObject({
-      territoryBasePath: "/ba/salvador/santa-cruz",
-      basePath: "/comunidade/ba/salvador/santa-cruz",
-      usesEmbeddedCommunityModules: false,
-    });
-
-    expect(buildCommunityNavigationModuleUrls(context!).business).toBe(
-      "/empresas/ba/salvador/santa-cruz",
-    );
-  });
-
-  it("uses explicit community portal links from territorial context", () => {
-    const context = resolveCommunityNavigationContext({
-      pathname: "/comunidade/santa-cruz/empresas",
+      pathname: "/qualquer-rota-interna",
       territorialContext: {
         resolved: { kind: "location", location: district as never },
         baseUrl: "/ba/salvador/santa-cruz",
-        communityBaseUrl: "/comunidade/santa-cruz",
+        communityBaseUrl: "/ba/salvador/santa-cruz/comunidade",
       },
     });
 
     expect(context).toMatchObject({
       territoryBasePath: "/ba/salvador/santa-cruz",
-      basePath: "/comunidade/santa-cruz",
-      usesEmbeddedCommunityModules: true,
+      basePath: "/ba/salvador/santa-cruz/comunidade",
+      groupId: null,
     });
-
-    expect(buildCommunityNavigationModuleUrls(context!).business).toBe(
-      "/comunidade/santa-cruz/empresas",
-    );
-    expect(buildCommunityNavigationModuleUrls(context!).gastronomy).toBe(
-      "/comunidade/santa-cruz/gastronomia",
-    );
   });
 
-  it("does not treat reserved root paths as community aliases", () => {
-    expect(getCommunityAliasCandidateFromPath("/empresas/ba/salvador")).toBeNull();
-    expect(getCommunityAliasCandidateFromPath("/p/padaria-do-joao")).toBeNull();
-    expect(getCommunityAliasCandidateFromPath("/santa-cruz/empresas")).toBeNull();
-    expect(getCommunityAliasCandidateFromPath("/comunidade/ba/salvador")).toBeNull();
-    expect(getCommunityAliasCandidateFromPath("/comunidade/santa-cruz/empresas")).toBe(
-      "santa-cruz",
-    );
+  it("does not resolve retired alias or module-first Community paths", () => {
+    expect(
+      resolveCommunityNavigationContext({
+        pathname: "/comunidade/santa-cruz",
+      }),
+    ).toBeNull();
+
+    expect(
+      resolveCommunityNavigationContext({
+        pathname: "/comunidade/ba/salvador/santa-cruz",
+      }),
+    ).toBeNull();
   });
 });
