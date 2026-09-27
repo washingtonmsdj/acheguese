@@ -66,7 +66,7 @@ describe("buildTerritorialMetadata", () => {
       kind: "group",
       group: territorialGroup,
       module: "empresas",
-      canonicalPath: "/empresas/ba/salvador/complexo-do-nordeste-de-amaralina",
+      canonicalPath: "/ba/salvador/complexo-do-nordeste-de-amaralina/empresas",
     });
 
     expect(meta.title).toBe(
