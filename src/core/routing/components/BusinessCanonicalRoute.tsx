@@ -1,7 +1,7 @@
 ﻿/**
  * BusinessCanonicalRoute - rota territorial canônica de empresa.
  *
- * URL canônica: /:state/:city/:district/empresas/:slug.
+ * URL canônica: /:state/:city/:territorySlug/empresas/:slug.
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
@@ -24,10 +24,10 @@ type RouteState =
 export default function BusinessCanonicalRoute({
   BusinessDetailComponent,
 }: BusinessCanonicalRouteProps = {}) {
-  const { state, city, district, slug } = useParams<{
+  const { state, city, territorySlug, slug } = useParams<{
     state: string;
     city: string;
-    district: string;
+    territorySlug: string;
     slug: string;
   }>();
   const [routeState, setRouteState] = useState<RouteState>({ status: 'loading' });
@@ -35,7 +35,7 @@ export default function BusinessCanonicalRoute({
   useEffect(() => {
     let cancelled = false;
 
-    if (!state || !city || !district || !slug) {
+    if (!state || !city || !territorySlug || !slug) {
       setRouteState({ status: 'not-found' });
       return;
     }
@@ -45,13 +45,13 @@ export default function BusinessCanonicalRoute({
         const attemptedUrl = buildBusinessPublicUrlFromSegments({
           state,
           city,
-          district,
+          territorySlug,
           slug,
         });
         const ctx = await BusinessUrlService.resolveByTerritoryAndSlug(
           state,
           city,
-          district,
+          territorySlug,
           slug,
         );
 
@@ -92,7 +92,7 @@ export default function BusinessCanonicalRoute({
     return () => {
       cancelled = true;
     };
-  }, [state, city, district, slug]);
+  }, [state, city, territorySlug, slug]);
 
   if (routeState.status === 'loading') {
     return (
