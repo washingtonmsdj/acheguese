@@ -38,7 +38,7 @@ Este documento substitui os mapas de transicao antigos. O sistema esta em desenv
 - `/empresas`: descoberta publica.
 - `/empresas/cadastrar`: landing comercial.
 - `/empresas/:id/catalogo`: catalogo publico.
-- Rotas territoriais de detalhe/listagem vivem sob `/empresas/:state/:city...`.
+- Rotas territoriais de detalhe/listagem vivem em `/:state/:city[/:territory]/empresas[...]`.
 
 ## Politica de redirects
 
