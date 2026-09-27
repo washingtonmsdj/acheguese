@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 const PUBLIC_COPY_FILES = [
   "src/app/pages/TerritoryEntryPage.tsx",
   "src/app/pages/TerritoryHomePage.tsx",
+  "src/app/pages/TerritoryPortalPage.tsx",
   "src/app/pages/ComoFuncionaPage.tsx",
   "src/app/pages/BuscaPage.tsx",
   "src/core/maps/pages/MapaPageV4.tsx",
