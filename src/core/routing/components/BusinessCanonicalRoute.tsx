@@ -6,7 +6,7 @@
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState } from 'react';
 import type { ComponentType } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { buildBusinessPublicUrlFromSegments } from '@/core/business/utils/businessPublicUrls';
 import { Loader2 } from 'lucide-react';
@@ -24,7 +24,6 @@ type RouteState =
 export default function BusinessCanonicalRoute({
   BusinessDetailComponent,
 }: BusinessCanonicalRouteProps = {}) {
-  const location = useLocation();
   const { state, city, district, slug } = useParams<{
     state: string;
     city: string;
