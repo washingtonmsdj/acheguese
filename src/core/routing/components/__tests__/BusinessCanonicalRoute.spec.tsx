@@ -29,14 +29,14 @@ describe("BusinessCanonicalRoute", () => {
       geographic_path: "/br/ba/salvador/pituba",
     });
     vi.mocked(BusinessUrlService.getCanonicalUrl).mockReturnValue(
-      "/empresas/ba/salvador/pituba/padaria-x",
+      "/ba/salvador/pituba/empresas/padaria-x",
     );
   });
 
   it("renderiza rota territorial publica sem redirecionar para alias de comunidade", async () => {
     render(
       <MemoryRouter
-        initialEntries={["/empresas/ba/salvador/pituba/padaria-x?origem=zap#topo"]}
+        initialEntries={["/ba/salvador/pituba/empresas/padaria-x?origem=zap#topo"]}
       >
         <Routes>
           <Route
@@ -61,7 +61,7 @@ describe("BusinessCanonicalRoute", () => {
 
   it("renderiza detalhe pela rota territorial quando nao ha alias publico", async () => {
     render(
-      <MemoryRouter initialEntries={["/empresas/ba/salvador/pituba/padaria-x"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/pituba/empresas/padaria-x"]}>
         <Routes>
           <Route
             path="/empresas/:state/:city/:district/:slug"
