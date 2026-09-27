@@ -50,6 +50,7 @@ interface SelectedTerritoryCandidate {
 interface RouteParams {
   state?: string;
   city?: string;
+  territorySlug?: string;
   district?: string;
   groupSlug?: string;
   groupSlugOrDistrict?: string;
@@ -145,6 +146,7 @@ export function useModuleTerritoryFilter({
     citySlug: uiFilter?.citySlug ?? routeParams.city,
     locationSlug:
       uiFilter?.locationSlug ??
+      routeParams.territorySlug ??
       routeParams.district ??
       routeParams.groupSlug ??
       routeParams.groupSlugOrDistrict ??
