@@ -7,6 +7,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import BusinessSEO from "@/core/business/components/seo/BusinessSEO";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
 import { BusinessHoursService } from "@/core/business";
 import { openBusinessDirectConversation } from "@/core/messaging";
 import { buildLoginPath } from "@/core/auth/constants/authFlow";
@@ -360,9 +361,13 @@ export default function EmpresaDetailLandingPage(
   };
 
   const handleRoute = () => {
+    const coordinates = getPhysicalBusinessCoordinates(business);
     const addr = institutional.addressText || business.name || "";
     const loc = institutional.locationText || "";
-    openSafeExternalUrl(buildGoogleMapsSearchUrl(`${addr} ${loc}`), {
+    const destination = coordinates
+      ? `${coordinates.latitude},${coordinates.longitude}`
+      : `${addr} ${loc}`;
+    openSafeExternalUrl(buildGoogleMapsSearchUrl(destination), {
       context: "company-detail-route",
     });
   };

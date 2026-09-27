@@ -29,6 +29,8 @@ import {
   Utensils,
 } from "lucide-react";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
+import { LazyMiniMap } from "@/core/maps/components/LazyMiniMap";
 import type { PublicSnapshotInstitutional } from "@/core/business/types/publicSnapshots";
 import type {
   BusinessExtended,
@@ -161,6 +163,16 @@ export function TerritoryBusinessDetail({
   const heroDescription = shortDescription.length > 82
     ? `${shortDescription.slice(0, 79).trimEnd()}…`
     : shortDescription;
+  const physicalCoordinates = getPhysicalBusinessCoordinates(business);
+  const territoryLatitude = business.location?.canonical_lat;
+  const territoryLongitude = business.location?.canonical_lng;
+  const territoryCoordinates =
+    typeof territoryLatitude === "number" && Number.isFinite(territoryLatitude) &&
+    typeof territoryLongitude === "number" && Number.isFinite(territoryLongitude)
+      ? { latitude: territoryLatitude, longitude: territoryLongitude }
+      : null;
+  const mapCoordinates = physicalCoordinates || territoryCoordinates;
+  const isTerritoryReference = !physicalCoordinates && Boolean(territoryCoordinates);
 
   return (
     <div className="bd-page">
@@ -308,11 +320,31 @@ export function TerritoryBusinessDetail({
 
           <aside className="bd-side-column">
             <section className="bd-card bd-location-card" id="localizacao">
-              <SectionTitle icon={MapPin} action={<button type="button" onClick={onRoute}>Ver no mapa <ExternalLink /></button>}>Localização</SectionTitle>
-              <button className="bd-map-preview" type="button" onClick={onRoute} aria-label="Abrir rota no mapa">
-                <span className="bd-map-road road-one" /><span className="bd-map-road road-two" /><span className="bd-map-road road-three" />
-                <MapPin /><strong>{territoryName}</strong>
-              </button>
+              <SectionTitle icon={MapPin} action={<Link to={`${territoryUrl}/mapa`}>Ver no mapa <ExternalLink /></Link>}>Localização</SectionTitle>
+              <Link className="bd-map-preview" to={`${territoryUrl}/mapa`} aria-label="Abrir mapa do território">
+                {mapCoordinates ? (
+                  <>
+                    <LazyMiniMap
+                      latitude={mapCoordinates.latitude}
+                      longitude={mapCoordinates.longitude}
+                      title={physicalCoordinates ? business.name : territoryName}
+                      description={physicalCoordinates ? address : "Referência central do território"}
+                      zoom={physicalCoordinates ? 16 : 14}
+                      height="100%"
+                      className="h-full w-full"
+                      markerColor={physicalCoordinates ? "#ef4640" : "#078b8f"}
+                      showControls={false}
+                      interactive={false}
+                      fallbackClassName="bg-[#edf3f2]"
+                    />
+                    <span className={`bd-map-context ${isTerritoryReference ? "is-territory" : ""}`}>
+                      {isTerritoryReference ? "Referência do território" : "Localização da empresa"}
+                    </span>
+                  </>
+                ) : (
+                  <span className="bd-map-unavailable"><MapPin /><strong>Coordenadas ainda não informadas</strong></span>
+                )}
+              </Link>
               <div className="bd-address"><MapPin /><span><strong>{address}</strong><small>{location}</small></span></div>
               <button className="bd-route-button" type="button" onClick={onRoute}><Navigation /> Como chegar</button>
             </section>
