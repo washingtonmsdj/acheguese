@@ -75,8 +75,8 @@ describe("community supabase security audit", () => {
     const communities = readProjectFile(
       "supabase/migrations/20260514094500_create_territory_communities.sql",
     );
-    const aliases = readProjectFile(
-      "supabase/migrations/20260601090000_create_community_public_aliases.sql",
+    const aliasRetirement = readProjectFile(
+      "supabase/migrations/20260927183000_retire_community_public_aliases.sql",
     );
 
     expect(foundation).toContain(
@@ -103,18 +103,8 @@ describe("community supabase security audit", () => {
       "GRANT SELECT ON territory_communities TO anon, authenticated;",
     );
 
-    expect(aliases).toContain(
-      "ALTER TABLE community_public_aliases ENABLE ROW LEVEL SECURITY;",
-    );
-    expect(aliases).toContain(
-      'CREATE POLICY "community_public_aliases_public_select"',
-    );
-    expect(aliases).toContain("status = 'active'");
-    expect(aliases).toContain(
-      "GRANT SELECT ON community_public_aliases TO anon, authenticated;",
-    );
-    expect(aliases).toContain(
-      "CONSTRAINT community_public_aliases_alias_not_reserved",
+    expect(aliasRetirement).toContain(
+      "DROP TABLE IF EXISTS public.community_public_aliases;",
     );
   });
 
