@@ -18,7 +18,7 @@ describe("public root home redesign contract", () => {
     expect(page).toContain("logo ali.");
     expect(page).toContain("Explorar o {LAUNCH_COMMUNITY_DISCOVERY_LABEL}");
     expect(page).toContain("ag-explore-cta");
-    expect(page).toContain("href={LAUNCH_URLS.businessTerritory}");
+    expect(page).toContain("href={LAUNCH_URLS.business}");
     expect(page).toContain("Explorar negócios");
     expect(page).toContain("href={LAUNCH_URLS.map}");
     expect(page).toContain('href="/perto-de-mim"');
