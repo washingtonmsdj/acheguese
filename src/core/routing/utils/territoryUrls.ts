@@ -7,7 +7,7 @@
  *   Cidade:   /:state/:city
  *   Bairro:   /:state/:city/:district
  *   Grupo:    /:state/:city/:groupSlug
- *   Modulo:   /[modulo]/:state/:city/:district?
+ *   Modulo:   /:state/:city/:territorySlug?/[modulo]
  *
  * Portal de comunidade explicito:
  *   /comunidade/:communityAlias
@@ -83,19 +83,17 @@ export function isCommunityRouteSuffixSegment(segment: string | undefined): bool
 
 export function extractCommunityTerritoryBaseUrl(pathname: string): string | null {
   const parts = pathname.split('/').filter(Boolean);
-  if (parts[0] !== MODULE_SLUGS.community || parts.length < 3) return null;
-  if (!/^[a-z]{2}$/i.test(parts[1])) return null;
+  if (!/^[a-z]{2}$/i.test(parts[0]) || !parts[1]) return null;
 
-  const firstAfterCity = parts[3];
-  if (
-    firstAfterCity &&
-    firstAfterCity !== LEGACY_COMMUNITY_AREA_SEGMENT &&
-    !isCommunityRouteSuffixSegment(firstAfterCity)
-  ) {
-    return `/${parts[1]}/${parts[2]}/${firstAfterCity}`;
+  if (parts[2] === MODULE_SLUGS.community) {
+    return `/${parts[0]}/${parts[1]}`;
   }
 
-  return `/${parts[1]}/${parts[2]}`;
+  if (parts[2] && parts[3] === MODULE_SLUGS.community) {
+    return `/${parts[0]}/${parts[1]}/${parts[2]}`;
+  }
+
+  return null;
 }
 
 export function isEntityDetailRoute(pathname: string): boolean {
@@ -197,7 +195,8 @@ export function buildTerritoryModuleUrl(
 }
 
 export function buildModuleTerritoryUrl(module: ModuleSlug, territoryBaseUrl: string): string {
-  return `/${module}${normalizePublicTerritoryPath(territoryBaseUrl)}`;
+  const base = normalizePublicTerritoryPath(territoryBaseUrl).replace(/\\/+$/g, '');
+  return `${base}/${module}`;
 }
 
 export function buildModuleTerritoryUrlFromSegments(
@@ -224,7 +223,7 @@ export function buildModuleTerritoryEntityUrl(
 export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''): string {
   const scopedBase = buildScopedTerritoryBaseUrl(territoryBaseUrl);
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
-  return `/${MODULE_SLUGS.community}${scopedBase}${normalizedSuffix}`;
+  return `${buildModuleTerritoryUrl(MODULE_SLUGS.community, scopedBase)}${normalizedSuffix}`;
 }
 
 export function buildCommunityAliasUrl(alias: string, suffix = ''): string {
@@ -255,17 +254,9 @@ export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): 
 export type CommunityTabSuffix = 'feed' | 'grupos';
 
 export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTabSuffix): string | null {
-  const parts = pathname.split('/').filter(Boolean);
-  if (parts[0] !== MODULE_SLUGS.community || parts.length < 3) return null;
-  if (isCommunityCanonicalSuffixSegment(parts[3])) return null;
-
-  const base = [MODULE_SLUGS.community, parts[1], parts[2]];
-  const territorySlug = parts[3];
-  if (territorySlug && territorySlug !== LEGACY_COMMUNITY_AREA_SEGMENT) {
-    base.push(territorySlug);
-  }
-
-  return `/${base.join('/')}/${tab}`;
+  const territoryBase = extractCommunityTerritoryBaseUrl(pathname);
+  if (!territoryBase) return null;
+  return buildCommunityTerritoryUrl(territoryBase, tab);
 }
 
 export function extractRouteContext(pathname: string): {
