@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
 
@@ -17,20 +16,7 @@ interface StoredBrowsingCity {
   city: string;
 }
 
-const PUBLIC_MODULE_PREFIXES = new Set([
-  APP_MODULE_SLUGS.business,
-  APP_MODULE_SLUGS.services,
-  APP_MODULE_SLUGS.gastronomy,
-  APP_MODULE_SLUGS.events,
-  APP_MODULE_SLUGS.classifieds,
-  APP_MODULE_SLUGS.jobs,
-  APP_MODULE_SLUGS.search,
-  "buscar",
-  APP_MODULE_SLUGS.map,
-  APP_MODULE_SLUGS.touristPoints,
-  APP_MODULE_SLUGS.education,
-  APP_MODULE_SLUGS.community,
-]);
+
 
 function normalizeSlug(value: string): string {
   return value.trim().toLowerCase();
@@ -61,21 +47,12 @@ function writeStoredCity(value: StoredBrowsingCity): void {
 
 export function parsePublicBrowsingCityFromPathname(pathname: string): StoredBrowsingCity | null {
   const parts = pathname.split("/").filter(Boolean);
-  if (parts.length < 2) return null;
+  if (parts.length < 2 || !isStateSlug(parts[0])) return null;
 
-  if (PUBLIC_MODULE_PREFIXES.has(parts[0])) {
-    if (parts.length < 3) return null;
-    if (!isStateSlug(parts[1])) return null;
-    const state = normalizeSlug(parts[1]);
-    const city = normalizeSlug(parts[2]);
-    if (!state || !city) return null;
-    return { state, city };
-  }
-
-  if (!isStateSlug(parts[0])) return null;
   const state = normalizeSlug(parts[0]);
   const city = normalizeSlug(parts[1]);
   if (!state || !city) return null;
+
   return { state, city };
 }
 
