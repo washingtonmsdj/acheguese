@@ -2,10 +2,7 @@ import { COMMUNITY_EXPERIENCE_STATUS } from "@/core/community-experience/constan
 import { CommunityExperienceRepository } from "@/core/community-experience/repositories/CommunityExperienceRepository";
 import type {
   CommunityExperienceResolvedTerritory,
-  CommunityPublicAliasRecord,
-  CommunityPublicAliasTerritoryReference,
   CommunitySearchResult,
-  CommunitySlugLookup,
   CommunityStatus,
   CommunityTerritoryType,
   TerritorialCommunityProfile,
@@ -126,20 +123,6 @@ export class CommunityExperienceService {
     return CommunityExperienceRepository.findCommunityById(id);
   }
 
-  static async findSingleActiveCommunityBySlug(
-    alias: string,
-  ): Promise<CommunitySlugLookup> {
-    return CommunityExperienceRepository.findSingleActiveCommunityBySlug(alias);
-  }
-
-  static async findCommunityByTerritoryReference(
-    reference: CommunityPublicAliasTerritoryReference,
-  ): Promise<TerritoryCommunityRecord | null> {
-    return CommunityExperienceRepository.findCommunityByTerritoryReference(
-      reference,
-    );
-  }
-
   static async findCommunityByCityAndSlug(
     cityId: string,
     slug: string,
@@ -147,20 +130,6 @@ export class CommunityExperienceService {
     return CommunityExperienceRepository.findCommunityByCityAndSlug(
       cityId,
       slug,
-    );
-  }
-
-  static async findActivePublicAlias(
-    alias: string,
-  ): Promise<CommunityPublicAliasRecord | null> {
-    return CommunityExperienceRepository.findActivePublicAlias(alias);
-  }
-
-  static async findActivePublicAliasByCommunityId(
-    communityId: string,
-  ): Promise<CommunityPublicAliasRecord | null> {
-    return CommunityExperienceRepository.findActivePublicAliasByCommunityId(
-      communityId,
     );
   }
 
