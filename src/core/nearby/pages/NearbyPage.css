@@ -7,3 +7,5 @@
 .nb-page .nb-business-card{display:block}
 .nb-page .nb-business-media{width:100%}
 .nb-page .nb-business-copy{width:100%;min-width:0}
+.nb-sort-control{position:relative;height:39px;border:1px solid var(--nb-line);border-radius:999px;background:#fff;color:var(--nb-ink);display:flex;align-items:center;gap:7px;padding:0 12px}.nb-sort-control>svg{width:14px;flex:none}.nb-sort-control select{min-width:112px;appearance:none;border:0;outline:0;background:transparent;padding-right:17px;color:var(--nb-ink);font-size:10px;font-weight:800;cursor:pointer}.nb-sort-control>svg:last-child{position:absolute;right:10px;pointer-events:none}
+@media(max-width:520px){.nb-sort-control{width:42px;padding:0;justify-content:center}.nb-sort-control select{position:absolute;inset:0;width:100%;min-width:0;opacity:0}.nb-sort-control>svg:last-child{display:none}}

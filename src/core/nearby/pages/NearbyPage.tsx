@@ -17,6 +17,7 @@ import "./NearbyPage.css";
 
 interface NearbyPageProps { providerIds: readonly NearbyProviderId[]; }
 const RADIUS_OPTIONS = [1, 2, 5, 10, 20] as const;
+type SortMode = "distance" | "name" | "rating";
 
 function formatDistance(meters: number): string {
   if (!meters) return "No território";
@@ -61,6 +62,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const [radiusKm, setRadiusKm] = useState(5);
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
+  const [sortMode, setSortMode] = useState<SortMode>("distance");
   const resolved: ResolvedTerritory | null = territorialContext?.resolved ?? (activeTerritory?.location ? { kind: "location", location: activeTerritory.location } : null);
   const routeFallbackLocation = territorialContext ? resolved?.kind === "location" ? resolved.location : null : undefined;
   const businessUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business) : buildAppModulePath(APP_MODULE_SLUGS.business);
@@ -87,8 +89,13 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const categories = useMemo(() => ["Todos", ...[...new Set(businesses.map((item) => item.category).filter(Boolean))].slice(0, 5)], [businesses]);
   const filteredBusinesses = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
-    return businesses.filter((business) => (activeCategory === "Todos" || business.category === activeCategory) && (!normalizedQuery || `${business.name} ${business.category} ${business.neighborhood || ""}`.toLocaleLowerCase("pt-BR").includes(normalizedQuery)));
-  }, [activeCategory, businesses, query]);
+    const matches = businesses.filter((business) => (activeCategory === "Todos" || business.category === activeCategory) && (!normalizedQuery || `${business.name} ${business.category} ${business.neighborhood || ""}`.toLocaleLowerCase("pt-BR").includes(normalizedQuery)));
+    return [...matches].sort((left, right) => {
+      if (sortMode === "name") return left.name.localeCompare(right.name, "pt-BR");
+      if (sortMode === "rating") return right.rating - left.rating;
+      return left.distanceMeters - right.distanceMeters;
+    });
+  }, [activeCategory, businesses, query, sortMode]);
   const visibleBusinesses = filteredBusinesses.slice(0, 8);
   const locationName = territoryLabels.name || resolvedUserLocation?.locationName || "território selecionado";
   const isLoading = locationLoading || businessesLoading;
@@ -107,7 +114,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
         </section>
 
         <section className="nb-filter-panel" aria-label="Filtros de proximidade">
-          <div className="nb-search-row"><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por perto..." /></label><button type="button"><SlidersHorizontal /> Mais próximos <ChevronDown /></button></div>
+          <div className="nb-search-row"><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por perto..." /></label><div className="nb-sort-control"><SlidersHorizontal /><select aria-label="Ordenar resultados" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliados</option><option value="name">Ordem alfabética</option></select><ChevronDown /></div></div>
           <div className="nb-filter-chips">{categories.map((category, index) => <button className={activeCategory === category ? "is-active" : ""} type="button" key={category} onClick={() => setActiveCategory(category)}>{index === 0 ? <Compass /> : index === 1 ? <Store /> : <Cross />}{formatCategory(category)}</button>)}</div>
         </section>
 
