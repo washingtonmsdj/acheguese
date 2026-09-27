@@ -24,6 +24,7 @@ import {
 } from "@/shared/components/ui/sheet";
 import { normalizeBusinessCategoryId } from "@/shared/taxonomy/businessCategories";
 import { EmpresasLandingLayout } from "@/app/features/business-landing/pages/EmpresasLandingLayout";
+import { TerritoryBusinessDirectory } from "@/app/features/business-landing/pages/TerritoryBusinessDirectory";
 import {
   CATEGORIES,
   QUICK_FILTERS,
@@ -371,6 +372,33 @@ export default function EmpresasLandingPage({
 
     return `${territoryName}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;
   }, [resolved, territoryName]);
+
+  if (embedded) {
+    return (
+      <TerritoryBusinessDirectory
+        territoryName={territoryName}
+        businesses={filteredBusinesses}
+        categories={categoryCards}
+        quickFilters={QUICK_FILTERS}
+        activeCategory={activeCategory}
+        activeFilters={activeFilters}
+        searchQuery={searchQuery}
+        sortBy={sortBy}
+        savedBusinesses={savedBusinesses}
+        isLoading={isBusinessesLoading}
+        isError={isBusinessesError}
+        createHref={createBusinessHref}
+        mapHref={moduleUrls.map}
+        nearbyHref={nearbyHref}
+        onSearchChange={setSearchQuery}
+        onSelectCategory={setActiveCategory}
+        onToggleFilter={handleToggleFilter}
+        onSortChange={setSortBy}
+        onOpenBusiness={openBusiness}
+        onToggleSave={handleToggleSave}
+      />
+    );
+  }
 
   return (
     <EmpresasLandingLayout embedded={embedded}>
