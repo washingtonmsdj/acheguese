@@ -51,14 +51,14 @@
   .pt-search{padding:.58rem .9rem}
   .pt-location{padding:.56rem .85rem}
   .pt-login{padding:.62rem 1.05rem}
-  .pt-hero-content{min-height:0;padding-block:1.25rem .58rem}
+  .pt-hero-content{min-height:14.5rem;padding-block:1.25rem .58rem}
   .pt-breadcrumb{font-size:.65rem}
   .pt-view-kicker{margin-top:.35rem!important;font-size:.75rem}
   .pt-view-kicker svg{width:.95rem;height:.95rem}
   .pt-hero h1{margin-top:.3rem;font-size:clamp(2.15rem,3vw,3.05rem);line-height:1}
   .pt-hero--business h1{max-width:none;white-space:nowrap}
   .pt-tagline{margin-top:.32rem!important;font-size:.82rem}
-  .pt-shortcuts{margin-top:.62rem;padding-top:0;gap:.48rem}
+  .pt-shortcuts{margin-top:auto;padding-top:0;gap:.48rem}
   .pt-shortcuts>a,.pt-shortcuts>div{min-height:3.75rem;gap:.62rem;padding:.5rem .68rem;border-radius:.72rem}
   .pt-shortcuts svg{width:1.35rem;height:1.35rem}
   .pt-shortcuts strong{font-size:.74rem}
