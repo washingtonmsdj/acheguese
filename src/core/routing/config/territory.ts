@@ -34,6 +34,7 @@ export const TERRITORY_CONFIG = {
 } as const;
 
 export const LAUNCH_URLS = {
+  portal: LAUNCH_COMMUNITY_TERRITORY_PATH,
   territory: LAUNCH_COMMUNITY_TERRITORY_PATH,
   community: buildModuleTerritoryUrl(
     APP_MODULE_SLUGS.community,
@@ -81,6 +82,22 @@ export const LAUNCH_URLS = {
   ),
   touristPoints: buildModuleTerritoryUrl(
     APP_MODULE_SLUGS.touristPoints,
+    LAUNCH_COMMUNITY_TERRITORY_PATH,
+  ),
+  businessTerritory: buildModuleTerritoryUrl(
+    APP_MODULE_SLUGS.business,
+    LAUNCH_COMMUNITY_TERRITORY_PATH,
+  ),
+  servicesTerritory: buildModuleTerritoryUrl(
+    APP_MODULE_SLUGS.services,
+    LAUNCH_COMMUNITY_TERRITORY_PATH,
+  ),
+  eventsTerritory: buildModuleTerritoryUrl(
+    APP_MODULE_SLUGS.events,
+    LAUNCH_COMMUNITY_TERRITORY_PATH,
+  ),
+  mapTerritory: buildModuleTerritoryUrl(
+    APP_MODULE_SLUGS.map,
     LAUNCH_COMMUNITY_TERRITORY_PATH,
   ),
 } as const;

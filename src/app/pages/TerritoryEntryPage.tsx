@@ -242,7 +242,7 @@ export default function TerritoryEntryPage() {
               </p>
 
               <div className="ag-discovery-action">
-                <a className="ag-explore-cta" href={LAUNCH_URLS.community}>
+                <a className="ag-explore-cta" href={LAUNCH_URLS.portal}>
                   Explorar o {LAUNCH_COMMUNITY_DISCOVERY_LABEL}
                   <ArrowIcon />
                 </a>
@@ -296,7 +296,7 @@ export default function TerritoryEntryPage() {
                 </a>
               ))}
             </div>
-            <a className="ag-nearby-link" href="/perto-de-mim">
+            <a className="ag-nearby-link" href={LAUNCH_URLS.nearby}>
               Perto de mim <ArrowIcon />
             </a>
           </div>
