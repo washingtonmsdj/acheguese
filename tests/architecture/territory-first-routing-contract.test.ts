@@ -149,5 +149,14 @@ describe("territory-first public routing contract", () => {
     expect(appShell).not.toContain(
       'pathSegments[0] === MODULE_SLUGS.search',
     );
+
+    const citySelector = readFileSync(
+      join(ROOT, "src/app/components/navigation/PublicCitySelector.tsx"),
+      "utf8",
+    );
+    expect(citySelector).toContain("getAppModuleSlugFromPath(pathname)");
+    expect(citySelector).toContain("buildModuleTerritoryUrl");
+    expect(citySelector).not.toContain("buildAppModulePath");
+    expect(citySelector).not.toContain("const module = parts[0]");
   });
 });
