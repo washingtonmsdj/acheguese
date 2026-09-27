@@ -299,7 +299,7 @@ describe("Gastronomy territorial runtime", () => {
           businessId: "business-1",
           slug: "pasta-lab",
           displayName: "Pasta Lab",
-          canonicalBusinessUrl: "/empresas/ba/salvador/pituba/pasta-lab",
+          canonicalBusinessUrl: "/ba/salvador/pituba/empresas/pasta-lab",
         },
         institutional: {
           name: "Pasta Lab",
@@ -319,9 +319,9 @@ describe("Gastronomy territorial runtime", () => {
         verticals: {
           activeVerticals: ["gastronomy"],
           primaryVertical: "gastronomy",
-          canonicalVerticalUrl: "/empresas/ba/salvador/pituba/pasta-lab",
+          canonicalVerticalUrl: "/ba/salvador/pituba/empresas/pasta-lab",
           verticalPublicUrls: {
-            gastronomy: "/empresas/ba/salvador/pituba/pasta-lab",
+            gastronomy: "/ba/salvador/pituba/empresas/pasta-lab",
           },
         },
         gastronomy: {
@@ -372,13 +372,13 @@ describe("Gastronomy territorial runtime", () => {
         seo: {
           title: "Pasta Lab - Cardapio e pedidos | Achegue-se",
           description: "Massas artesanais",
-          canonical: "/empresas/ba/salvador/pituba/pasta-lab",
+          canonical: "/ba/salvador/pituba/empresas/pasta-lab",
           robots: "index, follow",
           schemaType: "Restaurant",
           hasLocalBusinessSchema: true,
           hasRestaurantSchema: true,
-          canonicalGastronomyUrl: "/empresas/ba/salvador/pituba/pasta-lab",
-          canonicalBusinessUrl: "/empresas/ba/salvador/pituba/pasta-lab",
+          canonicalGastronomyUrl: "/ba/salvador/pituba/empresas/pasta-lab",
+          canonicalBusinessUrl: "/ba/salvador/pituba/empresas/pasta-lab",
           shouldNoIndex: false,
         },
       },
