@@ -62,7 +62,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
     indexElement: <P.TerritorialCategoryBusinessPage />,
   },
   {
-    id: "business-category-district",
+    id: "business-category-territory",
     owner: { kind: "product", key: "business" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
       TERRITORIAL_STATIC.category,
@@ -72,7 +72,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
     indexElement: <P.TerritorialCategoryBusinessPage />,
   },
   {
-    id: "business-district",
+    id: "business-territory",
     owner: { kind: "product", key: "business" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
     element: <P.ActiveTerritorialLayout />,
@@ -89,7 +89,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
 
 const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
-    id: "map-district",
+    id: "map-territory",
     owner: { kind: "capability", key: "map" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
     element: <P.ActiveTerritorialLayout />,
@@ -106,7 +106,7 @@ const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
 
 const APP_LAYOUT_NEARBY_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
-    id: "nearby-district",
+    id: "nearby-territory",
     owner: { kind: "capability", key: "nearby" },
     path: buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby),
     element: <P.ActiveTerritorialLayout />,
