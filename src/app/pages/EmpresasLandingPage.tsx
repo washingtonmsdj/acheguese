@@ -49,7 +49,6 @@ import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 interface EmpresasLandingPageProps {
   resolved?: ResolvedTerritory;
   activeMemberIds?: string[];
-  presentation?: "standalone" | "embedded";
 }
 
 function parseInitialSlugs(resolved: ResolvedTerritory | null | undefined) {
@@ -216,7 +215,6 @@ function LandingTopBar({
 export default function EmpresasLandingPage({
   resolved: resolvedProp,
   activeMemberIds: activeMemberIdsProp,
-  presentation = "standalone",
 }: EmpresasLandingPageProps = {}) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -373,7 +371,7 @@ export default function EmpresasLandingPage({
   }, [resolved, territoryName]);
 
   return (
-    <EmpresasLandingLayout embedded={presentation === "embedded"}>
+    <EmpresasLandingLayout>
       {!resolved ? (
         <Helmet>
           <title>Empresas locais | Achegue-se</title>
@@ -384,7 +382,6 @@ export default function EmpresasLandingPage({
         </Helmet>
       ) : null}
 
-      {presentation !== "embedded" ? (
       <LandingTopBar
         locationLabel={topLocationLabel}
         searchQuery={searchQuery}
@@ -396,9 +393,7 @@ export default function EmpresasLandingPage({
         secondaryHref={topSecondaryHref}
         secondaryLabel={topSecondaryLabel}
       />
-      ) : null}
 
-      {presentation !== "embedded" ? (
       <EmpresasHeroSection
         territoryName={territoryName}
         businesses={filteredBusinesses}
@@ -414,7 +409,6 @@ export default function EmpresasLandingPage({
         onOpenLocationDialog={() => setLocationDialogOpen(true)}
         onOpenBusiness={openBusiness}
       />
-      ) : null}
 
       <EmpresasCategoriasSection
         categories={categoryCards}
