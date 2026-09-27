@@ -1,5 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { type User } from "@supabase/supabase-js";
+import { buildBusinessPublicUrlFromTerritory } from "@/core/business/utils/businessPublicUrls";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+import { buildModuleTerritoryUrl, geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
 import { login } from "./helpers/auth";
 import {
   createOperationalAnonClient,
@@ -354,27 +357,17 @@ async function bootstrapInstitutionalBusinessForUser(input: {
 }
 
 function buildCompanyPublicUrl(geographicPath: string, slug: string): string {
-  const parts = geographicPath.replace(/^\/+|\/+$/g, "").split("/");
-  if (parts.length < 4) {
-    throw new Error(
-      `geographic_path invalido para rota publica: ${geographicPath}`,
-    );
-  }
-
-  const [, state, city, district] = parts;
-  return `/empresas/${state}/${city}/${district}/${slug}`;
+  return buildBusinessPublicUrlFromTerritory(
+    geoPathToPublicUrl(geographicPath),
+    slug,
+  );
 }
 
 function buildCompanyListUrl(geographicPath: string): string {
-  const parts = geographicPath.replace(/^\/+|\/+$/g, "").split("/");
-  if (parts.length < 4) {
-    throw new Error(
-      `geographic_path invalido para rota de lista: ${geographicPath}`,
-    );
-  }
-
-  const [, state, city, district] = parts;
-  return `/empresas/${state}/${city}/${district}`;
+  return buildModuleTerritoryUrl(
+    APP_MODULE_SLUGS.business,
+    geoPathToPublicUrl(geographicPath),
+  );
 }
 
 async function waitForRecommendationRecord(input: {
