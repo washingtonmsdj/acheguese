@@ -42,20 +42,20 @@ function UrlProbe() {
 }
 
 describe("useBusinessUrls", () => {
-  it("uses explicit community scoped URLs only inside the current community", () => {
+  it("keeps Business as a sibling module even when current surface is Community", () => {
     const context: TerritorialLayoutContext = {
       resolved: { kind: "location", location: district as never },
       baseUrl: "/ba/salvador/santa-cruz",
-      communityBaseUrl: "/comunidade/santa-cruz",
+      communityBaseUrl: "/ba/salvador/santa-cruz/comunidade",
       groupAvailability: "full",
       activeMemberIds: [],
     };
 
     render(
-      <MemoryRouter initialEntries={["/comunidade/santa-cruz/empresas"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/santa-cruz/comunidade"]}>
         <Routes>
           <Route element={<ContextProvider context={context} />}>
-            <Route path="/comunidade/santa-cruz/empresas" element={<UrlProbe />} />
+            <Route path="/ba/salvador/santa-cruz/comunidade" element={<UrlProbe />} />
           </Route>
         </Routes>
       </MemoryRouter>,
@@ -63,7 +63,7 @@ describe("useBusinessUrls", () => {
 
     expect(
       screen.getByText(
-        "/comunidade/santa-cruz/empresas|/comunidade/santa-cruz/empresas/padaria-x|/empresas/ba/salvador/pituba/mercado-y",
+        "/ba/salvador/santa-cruz/empresas|/ba/salvador/santa-cruz/empresas/padaria-x|/ba/salvador/pituba/empresas/mercado-y",
       ),
       ).toBeInTheDocument();
   });
@@ -72,7 +72,7 @@ describe("useBusinessUrls", () => {
     const context: TerritorialLayoutContext = {
       resolved: { kind: "location", location: district as never },
       baseUrl: "/ba/salvador/santa-cruz",
-      communityBaseUrl: "/comunidade/santa-cruz",
+      communityBaseUrl: "/ba/salvador/santa-cruz/comunidade",
       groupAvailability: "full",
       activeMemberIds: [],
     };
@@ -89,7 +89,7 @@ describe("useBusinessUrls", () => {
 
     expect(
       screen.getByText(
-        "/empresas/ba/salvador/santa-cruz|/empresas/ba/salvador/santa-cruz/padaria-x|/empresas/ba/salvador/pituba/mercado-y",
+        "/ba/salvador/santa-cruz/empresas|/ba/salvador/santa-cruz/empresas/padaria-x|/ba/salvador/pituba/empresas/mercado-y",
       ),
     ).toBeInTheDocument();
   });
