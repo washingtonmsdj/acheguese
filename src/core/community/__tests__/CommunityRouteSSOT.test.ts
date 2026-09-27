@@ -17,7 +17,8 @@ describe("community route SSOT", () => {
     );
 
     expect(patterns).toContain("buildCommunityTerritoryRoutePath");
-    expect(patterns).toContain("buildCommunityAliasRoutePath");
+    expect(patterns).toContain("buildScopedTerritorialModuleRoutePath");
+    expect(patterns).not.toContain("buildCommunityAliasRoutePath");
     expect(registry).toMatch(/community:\s*{\s*status:\s*"paused"/);
 
     expect(
@@ -31,6 +32,7 @@ describe("community route SSOT", () => {
     expect(appLayout).not.toContain("CommunityTerritorialShell");
     expect(appLayout).not.toContain("CommunityPersistentPortalLayout");
     expect(appLayout).not.toContain("CommunityAliasRoute");
+    expect(appLayout).not.toContain("/comunidade/:");
     expect(appLayout).not.toContain("buildCommunityLegacyAreaRoutePath");
     expect(appLayout).not.toContain("CommunityAreaCanonicalRedirect");
   });
