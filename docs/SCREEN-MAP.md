@@ -10,10 +10,10 @@
 
 | Superfície | Rotas principais | Owner | Estado |
 | --- | --- | --- | --- |
-| Empresas | `/empresas`, `/empresas/:uf/:cidade[/:bairro]`, detalhe canônico por slug | `core/business` + `EmpresasLandingPage` | ativo; catálogo, detalhe, contato, horários e integração territorial |
-| Mapa | `/mapa`, `/mapa/:uf/:cidade[/:bairro]` | `core/maps` | ativo |
-| Perto de mim | `/perto-de-mim`, `/perto-de-mim/:uf/:cidade[/:bairro]` | `core/nearby` | ativo; capability depende de Mapa + Localização; Business é provider MVP lifecycle-scoped; rota territorial é autoridade quando presente |
-| Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; buckets autorizados por `app/config/searchProviderScope.ts`; Business-only no MVP |
+| Empresas | `/empresas` (entrada geral), `/:uf/:cidade[/:territorio]/empresas`, detalhe `.../empresas/:slug` | `core/business` + `EmpresasLandingPage` | ativo; o território é o contêiner canônico |
+| Mapa | `/mapa` (mapa geral), `/:uf/:cidade[/:territorio]/mapa` | `core/maps` | ativo; contexto territorial fica antes do módulo |
+| Perto de mim | `/perto-de-mim` (entrada geral), `/:uf/:cidade[/:territorio]/perto-de-mim` | `core/nearby` | ativo; capability depende de Mapa + Localização; Business é provider MVP lifecycle-scoped |
+| Busca | `/busca`, `/buscar` (entradas gerais), `/:uf/:cidade[/:territorio]/busca` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; buckets autorizados por `app/config/searchProviderScope.ts`; Business-only no MVP |
 | Mensagens | `/mensagens`, `/mensagens/business/:threadId` | `core/messaging` + `modules/messaging` | ativo; provider Business no MVP |
 
 ### Contrato de integração
@@ -68,6 +68,23 @@ O shell de gestão Business também não pode consultar Billing/Gastronomia/vert
 ### Boundary do shell público
 
 `AppLayoutRoutes.tsx` importa somente `activeLazyImports.ts`. O antigo `lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx` foram aposentados após censo provar ausência de caller runtime. Código pós-MVP permanece nos bounded contexts/owners preservados, fora do grafo público ativo. O boundary territorial ativo é `ActiveTerritorialModulePages.tsx`; URL sem owner ativo cai naturalmente no `NotFound` canônico, sem placeholder, redirect ou fallback de módulo pausado. O `AppLayoutSidebar` não aplica shells especiais de Community/Services/Gastronomy/Groups a URLs pausadas; somente superfícies ativas influenciam o layout.
+
+## Contrato territorial de rotas
+
+A hierarquia pública é **território primeiro, módulo depois**:
+
+```txt
+/:uf/:cidade
+/:uf/:cidade/:territorio
+/:uf/:cidade/:territorio/empresas
+/:uf/:cidade/:territorio/mapa
+/:uf/:cidade/:territorio/perto-de-mim
+/:uf/:cidade/:territorio/busca
+```
+
+Quando Community for reativada, seguirá o mesmo contrato: `/:uf/:cidade/:territorio/comunidade`.
+
+Rotas territoriais no formato `/modulo/:uf/:cidade/...` não fazem parte da aplicação e não recebem redirect ou alias de compatibilidade.
 
 ## Rotas legadas
 
