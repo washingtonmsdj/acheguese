@@ -12,15 +12,15 @@ export function EmpresasLandingLayout({ children, embedded = false }: EmpresasLa
   return (
     <div
       className={embedded
-        ? "flex w-full min-w-0 flex-col bg-[#071017] text-white"
-        : "flex min-h-screen w-full flex-col bg-[#071017] text-white"}
+        ? "territory-vivo flex w-full min-w-0 flex-col bg-territory-surface text-territory-ink"
+        : "territory-vivo flex min-h-screen w-full flex-col bg-territory-surface text-territory-ink"}
       data-module-presentation={embedded ? "embedded" : "standalone"}
     >
       {children}
 
       {!embedded ? (
-        <footer className="mt-auto hidden w-full border-t border-white/8 bg-[#071017] px-4 py-5 text-center text-xs text-white/42 lg:block lg:px-6">
-          Empresas locais - {launchPlace} - Territorio conectado
+        <footer className="mt-auto hidden w-full border-t border-territory-border bg-territory-surface px-4 py-5 text-center text-xs text-territory-muted lg:block lg:px-6">
+          Empresas locais · {launchPlace} · Território conectado
         </footer>
       ) : null}
     </div>

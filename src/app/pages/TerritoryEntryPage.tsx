@@ -115,9 +115,6 @@ export default function TerritoryEntryPage() {
           <a href="/" className="entry-wordmark" aria-label="Achegue-se — início">
             achegue-se<span aria-hidden="true">.</span>
           </a>
-          <p className="mvp-entry-tagline">
-            <span aria-hidden="true">/</span> Encontre o que está perto
-          </p>
           <nav className="entry-desktop-nav" aria-label="Navegação pública">
             <a className="hover:bg-territory-raised" href="/como-funciona">
               Como funciona
@@ -137,7 +134,7 @@ export default function TerritoryEntryPage() {
           <section className="mvp-entry-panel" aria-labelledby="territory-entry-title">
             <div className="mvp-entry-hero">
               <p className="mvp-entry-eyebrow">COMEÇAMOS PELO COMPLEXO</p>
-              <h1 id="territory-entry-title">Tudo perto de você.</h1>
+              <h1 id="territory-entry-title">Seu lugar,<br />mais perto.</h1>
               <p className="mvp-entry-hero-subtitle">
                 Encontre empresas e estabelecimentos {launchCommunityGenitiveLabel}.
               </p>

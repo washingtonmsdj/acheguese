@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
-import { CircleUserRound, MapPin, Search, SlidersHorizontal, UserRoundPlus } from "lucide-react";
+import { MapPin, Search, SlidersHorizontal } from "lucide-react";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
@@ -88,128 +88,43 @@ function LandingTopBar({
   secondaryLabel: string;
 }) {
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 pb-4 pt-3 sm:px-6">
-      <div className="flex flex-col gap-3 lg:rounded-[26px] lg:border lg:border-white/10 lg:bg-[linear-gradient(180deg,rgba(9,18,24,0.98),rgba(7,14,20,0.98))] lg:px-5 lg:py-4">
-        <div className="hidden lg:flex lg:items-center lg:gap-5">
-          <Link to="/" className="flex items-center gap-3 text-white">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/14 text-teal-300">
-              <MapPin className="h-5 w-5" />
-            </span>
-            <span className="min-w-0">
-              <span className="block text-[1.55rem] font-semibold leading-none">Achegue-se</span>
-              <span className="block pt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-teal-200/78">
-                Seu bairro, mais perto.
-              </span>
-            </span>
+    <header className="border-b border-territory-border bg-territory-surface">
+      <div className="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link to="/" className="text-2xl font-extrabold tracking-tight text-territory-brand" aria-label="Achegue-se — início">
+            achegue-se<span className="text-territory-sun">.</span>
           </Link>
-
-          <div className="flex flex-1 items-center gap-3">
-            <button
-              type="button"
-              onClick={onOpenLocationDialog}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/82 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
-            >
-              <MapPin className="h-4 w-4 text-teal-300" />
-              {locationLabel}
-            </button>
-
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/38" />
-              <Input
-                type="search"
-                value={searchQuery}
-                onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="Buscar empresa ou estabelecimento no bairro"
-                aria-label="Buscar empresas no bairro"
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-16 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
-              />
-              <span className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[0.68rem] font-medium text-white/42 sm:inline-flex">
-                Ctrl + K
-              </span>
-            </div>
-          </div>
-
           <div className="flex items-center gap-3">
-            <Link
-              to={secondaryHref}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/[0.05]"
-            >
-              {secondaryLabel}
-            </Link>
-            <Link
-              to={primaryHref}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
-            >
-              {primaryLabel}
-            </Link>
+            <Link to={secondaryHref} className="inline-flex min-h-11 items-center rounded-xl px-3 text-sm font-medium text-territory-ink hover:bg-territory-raised">{secondaryLabel}</Link>
+            <Link to={primaryHref} className="inline-flex min-h-11 items-center rounded-xl border border-territory-border px-3 text-sm font-semibold text-territory-brand hover:bg-territory-raised">{primaryLabel}</Link>
           </div>
         </div>
-
-        <div className="space-y-3 lg:hidden">
-          <div className="flex items-center justify-between gap-3">
-            <Link to="/" className="flex min-w-0 items-center gap-2 text-white">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-500/14 text-teal-300">
-                <MapPin className="h-4.5 w-4.5" />
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-[1.3rem] font-semibold leading-none">Achegue-se</span>
-                <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-teal-200/72">
-                  Seu bairro, mais perto.
-                </span>
-              </span>
-            </Link>
-
-            <div className="flex items-center gap-2">
-              <Link
-                to={secondaryHref}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/74 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
-                aria-label={secondaryLabel}
-              >
-                <CircleUserRound className="h-4.5 w-4.5" />
-              </Link>
-              <Link
-                to={primaryHref}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-500 text-slate-950 transition-colors hover:bg-teal-400"
-                aria-label={primaryLabel}
-              >
-                <UserRoundPlus className="h-4.5 w-4.5" />
-              </Link>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onOpenLocationDialog}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/82 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
-          >
-            <MapPin className="h-4 w-4 text-teal-300" />
-            {locationLabel}
+        <div className="mt-8">
+          <p className="text-sm text-territory-muted">Início / Empresas</p>
+          <h1 className="mt-2 text-3xl font-bold leading-tight tracking-tight text-territory-ink sm:text-4xl">
+            Explore as empresas locais
+          </h1>
+          <p className="mt-2 text-base text-territory-muted">
+            Conheça quem faz parte do comércio local.
+          </p>
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={onOpenLocationDialog} className="inline-flex min-h-11 items-center gap-2 text-sm text-territory-muted">
+            <MapPin className="h-4 w-4 shrink-0" />{locationLabel}
           </button>
-
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/38" />
-              <Input
-                type="search"
-                value={searchQuery}
-                onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="Buscar empresa no bairro"
-                aria-label="Buscar empresas no bairro"
-                className="h-11 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-4 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={onOpenFilters}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/78 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
-              aria-label="Abrir filtros e ordenacao"
-            >
-              <SlidersHorizontal className="h-4.5 w-4.5" />
+          <div className="relative min-w-0 basis-full sm:ml-auto sm:flex-1 sm:basis-auto sm:max-w-xl">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-territory-muted" />
+            <Input type="search" value={searchQuery} onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Busque por nome ou categoria" aria-label="Buscar empresas"
+              className="h-12 rounded-xl border-territory-border bg-territory-surface pl-11 pr-14 text-base text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-focus" />
+            <button type="button" onClick={onOpenFilters} aria-label="Abrir filtros e ordenação"
+              className="absolute right-1 top-1 inline-flex h-10 w-10 items-center justify-center rounded-lg text-territory-brand hover:bg-territory-raised">
+              <SlidersHorizontal className="h-5 w-5" />
             </button>
           </div>
         </div>
       </div>
-    </section>
+    </header>
   );
 }
 
@@ -320,9 +235,9 @@ export default function EmpresasLandingPage({
     const verifiedCount = businessesToShow.filter((business) => business.is_verified).length;
     const recommendedCount = businessesToShow.reduce((sum, business) => sum + business.neighborRecs, 0);
     return [
-      { label: "negocios", value: String(businessesToShow.length) },
+      { label: "negócios", value: String(businessesToShow.length) },
       { label: "verificados", value: String(verifiedCount) },
-      { label: "recomendacoes", value: String(recommendedCount) },
+      { label: "recomendações", value: String(recommendedCount) },
     ];
   }, [businessesToShow]);
 
@@ -385,35 +300,35 @@ export default function EmpresasLandingPage({
       ) : null}
 
       {presentation !== "embedded" ? (
-      <LandingTopBar
-        locationLabel={topLocationLabel}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onOpenLocationDialog={() => setLocationDialogOpen(true)}
-        onOpenFilters={() => setMobileFiltersOpen(true)}
-        primaryHref={topPrimaryHref}
-        primaryLabel={topPrimaryLabel}
-        secondaryHref={topSecondaryHref}
-        secondaryLabel={topSecondaryLabel}
-      />
+        <LandingTopBar
+          locationLabel={topLocationLabel}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onOpenLocationDialog={() => setLocationDialogOpen(true)}
+          onOpenFilters={() => setMobileFiltersOpen(true)}
+          primaryHref={topPrimaryHref}
+          primaryLabel={topPrimaryLabel}
+          secondaryHref={topSecondaryHref}
+          secondaryLabel={topSecondaryLabel}
+        />
       ) : null}
 
       {presentation !== "embedded" ? (
-      <EmpresasHeroSection
-        territoryName={territoryName}
-        businesses={filteredBusinesses}
-        territoryPolygons={territoryPolygons}
-        resolved={resolved}
-        isLoadingBounds={isLoadingBounds}
-        stats={heroStats}
-        primaryHref={createBusinessHref}
-        primaryLabel="Cadastrar empresa"
-        secondaryHref={nearbyHref}
-        secondaryLabel="Perto de mim"
-        mapHref={moduleUrls.map}
-        onOpenLocationDialog={() => setLocationDialogOpen(true)}
-        onOpenBusiness={openBusiness}
-      />
+        <EmpresasHeroSection
+          territoryName={territoryName}
+          businesses={filteredBusinesses}
+          territoryPolygons={territoryPolygons}
+          resolved={resolved}
+          isLoadingBounds={isLoadingBounds}
+          stats={heroStats}
+          primaryHref={createBusinessHref}
+          primaryLabel="Cadastrar empresa"
+          secondaryHref={nearbyHref}
+          secondaryLabel="Perto de mim"
+          mapHref={moduleUrls.map}
+          onOpenLocationDialog={() => setLocationDialogOpen(true)}
+          onOpenBusiness={openBusiness}
+        />
       ) : null}
 
       <EmpresasCategoriasSection
@@ -459,17 +374,17 @@ export default function EmpresasLandingPage({
       <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
         <SheetContent
           side="bottom"
-          className="max-h-[82vh] overflow-y-auto rounded-t-[28px] border-white/10 bg-[#081118] px-4 pb-8 pt-5 text-white"
+          className="max-h-[82vh] overflow-y-auto rounded-t-[28px] border-territory-border bg-territory-surface px-4 pb-8 pt-5 text-territory-ink"
         >
           <SheetHeader className="text-left">
-            <SheetTitle className="text-left text-xl text-white">Filtros do bairro</SheetTitle>
-            <SheetDescription className="text-left text-white/52">
-              Ajuste categorias, filtros rapidos e ordenacao da vitrine.
+            <SheetTitle className="text-left text-xl text-territory-ink">Filtros do bairro</SheetTitle>
+            <SheetDescription className="text-left text-territory-muted">
+              Ajuste categorias, filtros rápidos e ordenação da vitrine.
             </SheetDescription>
           </SheetHeader>
 
           <div className="mt-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-territory-muted">
               Categorias
             </p>
             <div className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -479,8 +394,8 @@ export default function EmpresasLandingPage({
                     icon: CATEGORIES[0]?.icon ?? Search,
                     label: "Tudo",
                     count: String(businessesToShow.length),
-                    iconColor: "text-white/70",
-                    bg: "bg-black/20",
+                    iconColor: "text-territory-muted",
+                    bg: "bg-territory-raised",
                     slug: "all",
                   }}
                   isActive={activeCategory === "all"}
@@ -499,8 +414,8 @@ export default function EmpresasLandingPage({
           </div>
 
           <div className="mt-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
-              Filtros rapidos
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-territory-muted">
+              Filtros rápidos
             </p>
             <div className="flex flex-wrap gap-2">
               {QUICK_FILTERS.map((filter) => (
@@ -515,13 +430,13 @@ export default function EmpresasLandingPage({
           </div>
 
           <div className="mt-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
-              Ordenacao
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-territory-muted">
+              Ordenação
             </p>
             <div className="grid grid-cols-1 gap-2">
               {(
                 [
-                  ["relevance", "Mais uteis no bairro"],
+                  ["relevance", "Mais úteis no bairro"],
                   ["recommendations", "Mais recomendadas"],
                   ["rating", "Melhor avaliadas"],
                   ["recent", "Mais recentes"],
@@ -534,13 +449,13 @@ export default function EmpresasLandingPage({
                   className={[
                     "flex min-h-12 items-center justify-between rounded-2xl border px-4 text-sm font-medium transition-colors",
                     sortBy === value
-                      ? "border-teal-400/35 bg-teal-400/12 text-teal-100"
-                      : "border-white/10 bg-white/[0.03] text-white/74 hover:border-white/20 hover:bg-white/[0.05]",
+                      ? "border-territory-brand/25 bg-territory-brand/10 text-territory-brand"
+                      : "border-territory-border bg-territory-raised text-territory-muted hover:border-territory-border hover:bg-territory-raised",
                   ].join(" ")}
                   aria-pressed={sortBy === value}
                 >
                   <span>{label}</span>
-                  <span className={sortBy === value ? "text-teal-200" : "text-white/28"}>•</span>
+                  <span className={sortBy === value ? "text-territory-brand" : "text-territory-muted"}>•</span>
                 </button>
               ))}
             </div>
@@ -549,7 +464,7 @@ export default function EmpresasLandingPage({
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(false)}
-            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-territory-sun px-4 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-sun"
           >
             Ver {filteredBusinesses.length} resultados
           </button>

@@ -16,34 +16,24 @@ export function EmpresasCategoriasSection({
             type="button"
             onClick={() => onSelectCategory("all")}
             className={cn(
-              "inline-flex min-h-[5.5rem] w-[5.5rem] shrink-0 flex-col items-start gap-2 rounded-[22px] border px-3 py-3 text-left transition-colors lg:min-h-14 lg:w-auto lg:flex-row lg:items-center lg:gap-2 lg:rounded-2xl lg:px-4 lg:py-3",
+              "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-left transition-colors",
               activeCategory === "all"
-                ? "border-teal-400/40 bg-teal-400/12 text-teal-100 shadow-[0_0_0_1px_rgba(45,212,191,0.18)]"
-                : "border-white/10 bg-white/[0.03] text-white/78 hover:border-white/20 hover:bg-white/[0.05]",
+                ? "border-territory-brand/25 bg-territory-brand/10 text-territory-brand"
+                : "border-territory-border bg-territory-raised text-territory-muted hover:border-territory-border hover:bg-territory-raised",
             )}
             aria-pressed={activeCategory === "all"}
           >
             <span
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-2xl border lg:h-9 lg:w-9 lg:rounded-xl",
+                "flex h-6 w-6 items-center justify-center rounded-full",
                 activeCategory === "all"
-                  ? "border-teal-400/30 bg-teal-400/12"
-                  : "border-white/10 bg-black/20",
+                  ? "border-territory-brand/25 bg-territory-brand/10"
+                  : "border-territory-border bg-territory-raised",
               )}
             >
-              <Grid2x2 className={cn("h-4.5 w-4.5", activeCategory === "all" ? "text-teal-200" : "text-white/60")} />
+              <Grid2x2 className={cn("h-4.5 w-4.5", activeCategory === "all" ? "text-territory-brand" : "text-territory-muted")} />
             </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="text-[0.78rem] font-semibold leading-[1.15rem] lg:text-sm">Tudo</span>
-              <span
-                className={cn(
-                  "text-[0.72rem] leading-4 lg:text-xs",
-                  activeCategory === "all" ? "text-teal-100/70" : "text-white/42",
-                )}
-              >
-                Geral
-              </span>
-            </span>
+            <span className="text-sm font-semibold">Todas</span>
           </button>
 
           {categories.map((category) => (

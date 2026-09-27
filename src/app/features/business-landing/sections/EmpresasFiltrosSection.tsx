@@ -9,10 +9,10 @@ import { QuickFilterChip } from "../components/filters";
 import type { BusinessSortOption, EmpresasFiltrosSectionProps } from "./types";
 
 const SORT_LABELS: Record<BusinessSortOption, string> = {
-  relevance: "Mais uteis no bairro",
+  relevance: "Mais úteis no bairro",
   recommendations: "Mais recomendadas",
   rating: "Melhor avaliadas",
-  distance: "Mais proximas",
+  distance: "Mais próximas",
   recent: "Mais recentes",
 };
 
@@ -28,29 +28,29 @@ export function EmpresasFiltrosSection({
     <section className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3 lg:hidden">
-          <p className="text-sm text-white/48">{resultCount} empresas encontradas</p>
-          <span className="text-xs font-medium uppercase tracking-[0.16em] text-white/38">
-            filtros rapidos
+          <p className="text-sm text-territory-muted">{resultCount} empresas encontradas</p>
+          <span className="text-xs font-medium uppercase tracking-[0.16em] text-territory-muted">
+            filtros rápidos
           </span>
         </div>
 
         <div className="hidden items-center justify-between gap-3 lg:flex">
-          <p className="text-sm text-white/48">{resultCount} empresas encontradas</p>
+          <p className="text-sm text-territory-muted">{resultCount} empresas encontradas</p>
 
           <Select value={sortBy} onValueChange={(value) => onSortChange(value as BusinessSortOption)}>
-            <SelectTrigger className="h-11 min-w-[13rem] rounded-2xl border-white/10 bg-white/[0.03] text-sm text-white focus:ring-teal-400/30 focus:ring-offset-0">
+            <SelectTrigger className="h-11 min-w-[13rem] rounded-2xl border-territory-border bg-territory-raised text-sm text-territory-ink focus:ring-territory-focus focus:ring-offset-0">
               <SelectValue placeholder="Ordenar por">
                 {SORT_LABELS[sortBy]}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="border-white/10 bg-[#0c141b] text-white">
+            <SelectContent className="border-territory-border bg-territory-surface text-territory-ink">
               {Object.entries(SORT_LABELS)
                 .filter(([value]) => value !== "distance")
                 .map(([value, label]) => (
                   <SelectItem
                     key={value}
                     value={value}
-                    className="focus:bg-white/[0.06] focus:text-white"
+                    className="focus:bg-territory-raised focus:text-territory-ink"
                   >
                     {label}
                   </SelectItem>

@@ -15,8 +15,8 @@ export function EmpresasRecomendacoesSection({
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pb-6 sm:px-6">
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-semibold text-white sm:text-2xl">Destaques do bairro</h2>
-        <Info className="h-4 w-4 text-white/35" aria-hidden="true" />
+        <h2 className="text-xl font-semibold text-territory-ink sm:text-2xl">Destaques do bairro</h2>
+        <Info className="h-4 w-4 text-territory-muted" aria-hidden="true" />
       </div>
 
       <div className="overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
