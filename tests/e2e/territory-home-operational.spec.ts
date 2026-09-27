@@ -98,7 +98,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await expect(main.locator('a[href^="/empresas/"]').first()).toBeVisible();
     await expect(main.locator('a[href^="/mapa/"]').first()).toBeVisible();
     await expect(main.locator('a[href="/perto-de-mim"]').first()).toBeVisible();
-    await expect(main.locator('a[href^="/busca/"]').first()).toBeVisible();
+    await expect(main.locator('form[action^="/busca/"]').first()).toBeVisible();
 
     await expectNoHorizontalOverflow(page);
 
