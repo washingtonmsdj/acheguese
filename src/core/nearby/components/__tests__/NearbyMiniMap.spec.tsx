@@ -52,7 +52,7 @@ function LocationProbe() {
 describe("NearbyMiniMap", () => {
   it("opens a business marker through its canonical Business URL", () => {
     render(
-      <MemoryRouter initialEntries={["/perto-de-mim/ba/salvador/pituba"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/pituba/perto-de-mim"]}>
         <NearbyMiniMap
           userLocation={{ latitude: -13.003, longitude: -38.458 }}
           businesses={[
@@ -64,7 +64,7 @@ describe("NearbyMiniMap", () => {
               latitude: -13.004,
               longitude: -38.459,
               canonicalUrl:
-                "/empresas/ba/salvador/pituba/pizzaria-central",
+                "/ba/salvador/pituba/empresas/pizzaria-central",
               rating: 4.8,
               verified: true,
             },
@@ -81,7 +81,7 @@ describe("NearbyMiniMap", () => {
     );
 
     expect(screen.getByTestId("location")).toHaveTextContent(
-      "/empresas/ba/salvador/pituba/pizzaria-central",
+      "/ba/salvador/pituba/empresas/pizzaria-central",
     );
   });
 });
