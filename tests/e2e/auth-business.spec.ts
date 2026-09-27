@@ -1,6 +1,8 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { User } from "@supabase/supabase-js";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { buildBusinessPublicUrlFromTerritory } from "@/core/business/utils/businessPublicUrls";
+import { geoPathToPublicUrl } from "@/core/routing/utils/territoryUrls";
 import {
   createOptionalOperationalAdminClient,
   createOptionalOperationalAnonClient,
@@ -326,15 +328,10 @@ function buildBusinessPublicUrl(
   geographicPath: string,
   slug: string,
 ): string {
-  const parts = geographicPath.replace(/^\/+|\/+$/g, "").split("/");
-  if (parts.length < 4 || parts[0] !== "br") {
-    throw new Error(
-      `geographic_path invalido para empresa E2E: ${geographicPath}`,
-    );
-  }
-
-  const [, state, city, district] = parts;
-  return `/empresas/${state}/${city}/${district}/${slug}`;
+  return buildBusinessPublicUrlFromTerritory(
+    geoPathToPublicUrl(geographicPath),
+    slug,
+  );
 }
 
 async function createConfirmedUser(input: {
