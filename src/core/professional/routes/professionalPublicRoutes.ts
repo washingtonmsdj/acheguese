@@ -4,6 +4,7 @@ import {
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
+import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 
 export interface ProfessionalTerritoryRouteInput {
   state: string;
@@ -64,37 +65,36 @@ export const professionalPublicRoutes = {
   detailPreview: (slug: string) =>
     (() => {
       try {
-        return buildAppModulePath(
+        return `${buildModuleTerritoryUrl(
           APP_MODULE_SLUGS.services,
-          [
-            TERRITORIAL_ROUTE_PARAMS.state,
-            TERRITORIAL_ROUTE_PARAMS.city,
-            TERRITORIAL_ROUTE_STATIC_SEGMENTS.professional,
-            cleanRouteSegment(slug, "slug do profissional"),
-          ].join("/"),
-        );
+          `/${TERRITORIAL_ROUTE_PARAMS.state}/${TERRITORIAL_ROUTE_PARAMS.city}`,
+        )}/${TERRITORIAL_ROUTE_STATIC_SEGMENTS.professional}/${cleanRouteSegment(
+          slug,
+          "slug do profissional",
+        )}`;
       } catch {
         return "";
       }
     })(),
   list: (input: ProfessionalTerritoryRouteInput) =>
-    buildAppModulePath(
+    buildModuleTerritoryUrl(
       APP_MODULE_SLUGS.services,
-      `${cleanRouteSegment(input.state, "estado do profissional")}/${cleanRouteSegment(
+      `/${cleanRouteSegment(input.state, "estado do profissional")}/${cleanRouteSegment(
         input.city,
         "cidade do profissional",
       )}`,
     ),
   detail: (input: ProfessionalDetailRouteInput) =>
-    buildAppModulePath(
+    `${buildModuleTerritoryUrl(
       APP_MODULE_SLUGS.services,
-      [
-        cleanRouteSegment(input.state, "estado do profissional"),
-        cleanRouteSegment(input.city, "cidade do profissional"),
-        TERRITORIAL_ROUTE_STATIC_SEGMENTS.professional,
-        cleanRouteSegment(input.slug, "slug do profissional"),
-      ].join("/"),
-    ),
+      `/${cleanRouteSegment(input.state, "estado do profissional")}/${cleanRouteSegment(
+        input.city,
+        "cidade do profissional",
+      )}`,
+    )}/${TERRITORIAL_ROUTE_STATIC_SEGMENTS.professional}/${cleanRouteSegment(
+      input.slug,
+      "slug do profissional",
+    )}`,
   listFromGeographicPath: (geographicPath: string) =>
     professionalPublicRoutes.list(parseCityRouteFromGeographicPath(geographicPath)),
   detailFromGeographicPath: (geographicPath: string, slug: string) =>
