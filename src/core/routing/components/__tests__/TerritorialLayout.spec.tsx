@@ -60,7 +60,7 @@ describe("TerritorialLayout", () => {
       <MemoryRouter initialEntries={["/ba/salvador/pituba/empresas"]}>
         <Routes>
           <Route
-            path="/:state/:city/:groupSlugOrDistrict/empresas"
+            path="/:state/:city/:territorySlug/empresas"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>conteudo publico</div>} />
@@ -86,7 +86,7 @@ describe("TerritorialLayout", () => {
       <MemoryRouter initialEntries={["/ba/salvador/pituba/empresas"]}>
         <Routes>
           <Route
-            path="/:state/:city/:groupSlugOrDistrict/empresas"
+            path="/:state/:city/:territorySlug/empresas"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>conteudo publico</div>} />
@@ -130,7 +130,7 @@ describe("TerritorialLayout", () => {
       <MemoryRouter initialEntries={["/ba/salvador/pituba/comunidade"]}>
         <Routes>
           <Route
-            path="/:state/:city/:groupSlugOrDistrict/comunidade"
+            path="/:state/:city/:territorySlug/comunidade"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>rota comunidade renderizada</div>} />
@@ -172,7 +172,7 @@ describe("TerritorialLayout", () => {
       <MemoryRouter initialEntries={["/ba/salvador/rio-vermelho/empresas"]}>
         <Routes>
           <Route
-            path="/:state/:city/:groupSlugOrDistrict/empresas"
+            path="/:state/:city/:territorySlug/empresas"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>detail publico legitimo</div>} />
