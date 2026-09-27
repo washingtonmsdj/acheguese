@@ -4,7 +4,6 @@ import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 export const TERRITORIAL_ROUTE_PARAMS = {
   state: ":state",
   city: ":city",
-  district: ":district",
   territorySlug: ":territorySlug",
   groupSlugOrDistrict: ":groupSlugOrDistrict",
   slug: ":slug",
