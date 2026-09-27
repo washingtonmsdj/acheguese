@@ -17,9 +17,6 @@ export const LAUNCH_CITY_PATH = launchState && launchCity ? `/${launchState}/${l
 export const LAUNCH_COMMUNITY_TERRITORY_PATH = launchCommunitySlug
   ? `${LAUNCH_CITY_PATH}/${launchCommunitySlug}`
   : LAUNCH_CITY_PATH;
-export const LAUNCH_COMMUNITY_PUBLIC_PATH = launchCommunitySlug
-  ? `/${launchCommunitySlug}`
-  : LAUNCH_COMMUNITY_TERRITORY_PATH;
 export const TERRITORY_CONFIG = {
   launch: {
     country: launchCountry,
