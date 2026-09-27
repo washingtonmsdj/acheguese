@@ -43,7 +43,6 @@ export default function TerritoryHomePage() {
       memberLabels={memberLabels}
       resolvedTerritory={resolved}
       urls={{
-        home: baseUrl,
         business: businessUrl,
         map: mapUrl,
         nearby: nearbyUrl,
