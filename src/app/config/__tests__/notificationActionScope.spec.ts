@@ -7,11 +7,11 @@ import {
 
 describe("notification action lifecycle scope", () => {
   it.each([
-    ["/empresas/ba/salvador", "business"],
+    ["/ba/salvador/empresas", "business"],
     ["/central/empresas/business-1", "business"],
-    ["/mapa/ba/salvador", "map"],
-    ["/perto-de-mim/ba/salvador", "nearby"],
-    ["/busca/ba/salvador?q=cafe", "search"],
+    ["/ba/salvador/mapa", "map"],
+    ["/ba/salvador/perto-de-mim", "nearby"],
+    ["/ba/salvador/busca?q=cafe", "search"],
     ["/mensagens/business/thread-1", "messaging"],
     ["/u/washington", "profiles"],
   ])("keeps active surface destination %s", (href, surface) => {
@@ -33,7 +33,7 @@ describe("notification action lifecycle scope", () => {
     ["/central/motoboy/entregas", "mobility"],
     ["/classificados/item-1", "classifieds"],
     ["/eventos/event-1", "events"],
-    ["/comunidade/ba/salvador/eventos/event-1", "events"],
+    ["/ba/salvador/comunidade/eventos/event-1", "events"],
     ["/planos", "billing"],
   ])("fails closed for paused surface destination %s", (href, surface) => {
     expect(resolveNotificationActionTarget(href, "Abrir")).toEqual({
@@ -49,6 +49,10 @@ describe("notification action lifecycle scope", () => {
     "/settings/notifications",
     "/perfil/editar/profile-1",
     "/edit-business/business-1",
+    "/empresas/ba/salvador",
+    "/mapa/ba/salvador",
+    "/perto-de-mim/ba/salvador",
+    "/busca/ba/salvador",
   ])("fails closed for retired notification destination %s", (href) => {
     expect(resolveNotificationActionTarget(href, "Abrir")).toEqual({
       href: NOTIFICATION_INBOX_PATH,
