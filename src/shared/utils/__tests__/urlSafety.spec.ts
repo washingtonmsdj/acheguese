@@ -15,8 +15,8 @@ describe('urlSafety', () => {
   });
 
   it('only allows relative links when explicitly requested', () => {
-    expect(isSafeLinkUrl('/empresas/ba/salvador')).toBe(false);
-    expect(isSafeLinkUrl('/empresas/ba/salvador', { allowInternal: true })).toBe(true);
+    expect(isSafeLinkUrl('/ba/salvador/empresas')).toBe(false);
+    expect(isSafeLinkUrl('/ba/salvador/empresas', { allowInternal: true })).toBe(true);
     expect(isSafeLinkUrl('//evil.example.com', { allowInternal: true })).toBe(false);
   });
 
