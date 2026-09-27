@@ -10,7 +10,7 @@ export function usePublicBusinessSnapshot(params: Partial<PublicSlugRouteParams>
   );
 
   return useQuery({
-    queryKey: ["public-business-snapshot", params.state, params.city, params.district, params.slug],
+    queryKey: ["public-business-snapshot", params.state, params.city, params.territorySlug, params.slug],
     queryFn: () =>
       PublicBusinessSnapshotService.getByTerritorySlug(params as PublicSlugRouteParams),
     enabled: hasRoute,
