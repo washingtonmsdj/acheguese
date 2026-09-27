@@ -57,10 +57,10 @@ describe("TerritorialLayout", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/empresas/ba/salvador/pituba"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/pituba/empresas"]}>
         <Routes>
           <Route
-            path="/empresas/:state/:city/:groupSlugOrDistrict"
+            path="/:state/:city/:groupSlugOrDistrict/empresas"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>conteudo publico</div>} />
@@ -83,10 +83,10 @@ describe("TerritorialLayout", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/empresas/ba/salvador/pituba"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/pituba/empresas"]}>
         <Routes>
           <Route
-            path="/empresas/:state/:city/:groupSlugOrDistrict"
+            path="/:state/:city/:groupSlugOrDistrict/empresas"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>conteudo publico</div>} />
@@ -127,10 +127,10 @@ describe("TerritorialLayout", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/comunidade/ba/salvador/pituba"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/pituba/comunidade"]}>
         <Routes>
           <Route
-            path="/comunidade/:state/:city/:groupSlugOrDistrict"
+            path="/:state/:city/:groupSlugOrDistrict/comunidade"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>rota comunidade renderizada</div>} />
@@ -169,10 +169,10 @@ describe("TerritorialLayout", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/empresas/ba/salvador/rio-vermelho"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/rio-vermelho/empresas"]}>
         <Routes>
           <Route
-            path="/empresas/:state/:city/:groupSlugOrDistrict"
+            path="/:state/:city/:groupSlugOrDistrict/empresas"
             element={<TerritorialLayout />}
           >
             <Route index element={<div>detail publico legitimo</div>} />
