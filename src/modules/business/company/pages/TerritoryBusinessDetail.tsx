@@ -132,6 +132,11 @@ export function TerritoryBusinessDetail({
   onMessage,
 }: TerritoryBusinessDetailProps) {
   const category = humanizeLabel(business.subcategoria || business.category || "Empresa local");
+  const normalizedCategory = `${business.category || ""} ${business.subcategoria || ""}`.toLowerCase();
+  const isFoodBusiness = ["aliment", "gastr", "restaurante", "lanch", "padaria"].some((term) => normalizedCategory.includes(term));
+  const CatalogIcon = isFoodBusiness ? Utensils : ShoppingBag;
+  const PrimaryContactIcon = isFoodBusiness ? Utensils : MessageCircle;
+  const primaryContactLabel = isFoodBusiness ? "Fazer pedido" : "Entrar em contato";
   const cover = business.banner_url || institutional.photos[0];
   const gallery = institutional.photos.slice(0, 3);
   const visibleProducts = products.filter((product) => product.active !== false).slice(0, 6);
@@ -152,6 +157,11 @@ export function TerritoryBusinessDetail({
     .slice(0, 6);
   const todayHours = openStatus.todayHours || "Horário sob consulta";
   const displayedOpenStatus = openStatus.todayHours ? openStatus.open : null;
+  const openStatusLabel = displayedOpenStatus === true
+    ? "Aberto agora"
+    : displayedOpenStatus === false
+      ? "Fechado agora"
+      : "Horário não informado";
   const headerLocation = [business.business_city, business.business_state]
     .filter(Boolean)
     .join(", ") || "Salvador, BA";
@@ -207,7 +217,7 @@ export function TerritoryBusinessDetail({
       </header>
 
       <main id="bd-content">
-        <section className={`bd-hero ${institutional.photos.length === 0 ? "max-md:!min-h-[330px]" : ""}`}>
+        <section className={`bd-hero ${institutional.photos.length > 0 ? "has-gallery" : ""}`}>
           {cover ? <img className="bd-hero-cover" src={cover} alt="" /> : <div className="bd-hero-cover bd-hero-fallback" />}
           <div className="bd-hero-overlay" />
           <div className="bd-container bd-hero-inner">
@@ -220,10 +230,11 @@ export function TerritoryBusinessDetail({
               <div className="bd-logo-card">
                 {business.logo_url ? <img src={business.logo_url} alt={`Logo de ${business.name}`} /> : <Store />}
                 <span className={displayedOpenStatus === false ? "is-closed" : ""}>
-                  {displayedOpenStatus === true ? "Aberto agora" : displayedOpenStatus === false ? "Fechado agora" : "Horário não informado"}
+                  {openStatusLabel}
                 </span>
               </div>
               <div className="bd-title-block min-w-0">
+                <span className={`bd-mobile-status ${displayedOpenStatus === false ? "is-closed" : ""}`}>{openStatusLabel}</span>
                 <h1 className="break-words">{business.name}</h1>
                 <p>{category} <i>•</i> {heroDescription}</p>
                 <div className="bd-rating-row">
@@ -251,7 +262,7 @@ export function TerritoryBusinessDetail({
             <a className="is-active" href="#visao-geral"><Home /> Visão geral</a>
             <a href="#produtos"><ShoppingBag /> Produtos e serviços</a>
             <a href="#avaliacoes"><Star /> Avaliações</a>
-            <a href="#fotos"><Camera /> Fotos</a>
+            {institutional.photos.length > 0 ? <a href="#fotos"><Camera /> Fotos</a> : null}
             <a href="#localizacao"><MapPin /> Localização</a>
             <a href="#informacoes"><Info /> Informações</a>
           </div>
@@ -276,13 +287,13 @@ export function TerritoryBusinessDetail({
             </section>
 
             <section className="bd-card bd-products" id="produtos">
-              <SectionTitle icon={Utensils}>Produtos e serviços</SectionTitle>
+              <SectionTitle icon={CatalogIcon}>Produtos e serviços</SectionTitle>
               {visibleProducts.length ? (
                 <div className="bd-product-grid">
                   {visibleProducts.map((product) => (
                     <article key={product.id}>
                       <div className="bd-product-image">
-                        {product.image_url ? <img src={product.image_url} alt={product.name} /> : <Utensils />}
+                        {product.image_url ? <img src={product.image_url} alt={product.name} /> : <CatalogIcon />}
                       </div>
                       <strong>{product.name}</strong>
                       <span>{formatPrice(product.promotional_price ?? product.price)}</span>
@@ -353,13 +364,15 @@ export function TerritoryBusinessDetail({
               <section className="bd-card bd-contact-card">
                 <SectionTitle icon={Phone}>Contato</SectionTitle>
                 {phone ? <a className="bd-phone" href={`tel:${phone.replace(/\D/g, "")}`}><Phone /><span><strong>{phone}</strong><small>Toque para ligar</small></span></a> : null}
-                <div className={`bd-contact-actions ${phone ? "" : "!mt-0"}`}>
-                  {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a> : null}
-                  {onMessage ? <button type="button" onClick={onMessage}><MessageCircle /> Mensagem</button> : null}
-                </div>
+                {whatsappHref || (phone && onMessage) ? (
+                  <div className={`bd-contact-actions ${phone ? "" : "!mt-0"}`}>
+                    {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a> : null}
+                    {phone && onMessage ? <button type="button" onClick={onMessage}><MessageCircle /> Mensagem</button> : null}
+                  </div>
+                ) : null}
                 {whatsappHref || onMessage ? (
                   <button className="bd-order-button" type="button" onClick={whatsappHref ? () => window.open(whatsappHref, "_blank", "noopener,noreferrer") : onMessage}>
-                    <Utensils /> Falar com a empresa <ArrowRight />
+                    <PrimaryContactIcon /> {primaryContactLabel} <ArrowRight />
                   </button>
                 ) : null}
               </section>
