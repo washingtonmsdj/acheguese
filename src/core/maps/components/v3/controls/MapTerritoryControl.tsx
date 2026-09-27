@@ -29,7 +29,7 @@ export function MapTerritoryControl({
         <TerritoryIndicator
           resolved={resolved}
           variant="compact"
-          className="bg-background/95 backdrop-blur-sm px-2 py-1 rounded-lg text-xs shadow-lg border border-border"
+          className="rounded-lg border border-territory-border bg-territory-surface/95 px-2 py-1 text-xs text-territory-ink shadow-lg backdrop-blur-sm"
         />
       )}
     </div>

@@ -40,8 +40,8 @@ export function MapLocationControl({
         onClick={onRequestLocation}
         disabled={isLoading}
         className={cn(
-          'shadow-lg shrink-0 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200',
-          hasLocation && isHighAccuracy && 'bg-green-500 hover:bg-green-600 text-white border-green-600',
+          'shrink-0 border border-territory-border bg-territory-surface text-territory-brand shadow-lg hover:bg-territory-raised',
+          hasLocation && isHighAccuracy && 'border-territory-success bg-territory-success text-territory-on-image hover:bg-territory-success',
           isLoading && 'opacity-70'
         )}
         aria-label="Minha localização"
@@ -56,14 +56,14 @@ export function MapLocationControl({
 
       {/* Indicador de precisão */}
       {showAccuracy && hasLocation && accuracy !== undefined && (
-        <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-lg flex items-center gap-2 min-w-[140px]">
+        <div className="flex min-w-[140px] items-center gap-2 rounded-lg border border-territory-border bg-territory-surface px-3 py-2 text-sm shadow-lg">
           <div
             className={cn(
               'w-2 h-2 rounded-full shrink-0',
-              isHighAccuracy ? 'bg-green-500' : 'bg-yellow-500'
+              isHighAccuracy ? 'bg-territory-success' : 'bg-territory-warning'
             )}
           />
-          <span className="text-gray-700 font-medium whitespace-nowrap">
+          <span className="whitespace-nowrap font-medium text-territory-ink">
             ±{Math.round(accuracy)}m
           </span>
         </div>

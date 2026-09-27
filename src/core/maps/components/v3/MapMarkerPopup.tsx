@@ -26,10 +26,10 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
       role="dialog"
       aria-label={`Detalhes: ${marker.title}`}
     >
-      <div className="bg-card border border-border rounded-2xl shadow-xl overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-territory-border bg-territory-surface shadow-xl">
         <div className="flex items-start gap-3 p-4 pb-3">
           <div
-            className="w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold text-white mt-0.5"
+            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-territory-on-image"
             style={{ backgroundColor: `${config.color}20` }}
           >
             <span style={{ color: config.color }}>{config.abbr}</span>
@@ -37,42 +37,42 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <h3 className="font-semibold text-sm text-foreground leading-tight truncate">
+              <h3 className="truncate text-sm font-semibold leading-tight text-territory-ink">
                 {marker.title}
               </h3>
               {marker.isPremium && (
-                <span className="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                <span className="rounded bg-territory-warning/10 px-1.5 py-0.5 text-[10px] font-bold text-territory-warning">
                   PRO
                 </span>
               )}
               {isVerified && (
-                <span className="text-[10px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                <span className="rounded bg-territory-brand/10 px-1.5 py-0.5 text-[10px] font-bold text-territory-brand">
                   <CheckCircle2 className="h-3 w-3" aria-label="Verificado" />
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-xs text-muted-foreground">{config.label}</span>
+              <span className="text-xs text-territory-muted">{config.label}</span>
               {category && (
                 <>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span className="text-xs text-muted-foreground capitalize">{category}</span>
+                  <span className="text-territory-muted/40">·</span>
+                  <span className="text-xs capitalize text-territory-muted">{category}</span>
                 </>
               )}
               {rating !== undefined && rating > 0 && (
                 <>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span className="flex items-center gap-0.5 text-xs text-amber-500 font-medium">
-                    <Star className="h-3 w-3 fill-amber-500" />
+                  <span className="text-territory-muted/40">·</span>
+                  <span className="flex items-center gap-0.5 text-xs font-medium text-territory-warning">
+                    <Star className="h-3 w-3 fill-current" />
                     {rating.toFixed(1)}
                   </span>
                 </>
               )}
               {distanceMeters !== undefined && (
                 <>
-                  <span className="text-muted-foreground/40">·</span>
-                  <span className="text-xs text-blue-600 font-medium">
+                  <span className="text-territory-muted/40">·</span>
+                  <span className="text-xs font-medium text-territory-brand">
                     {(distanceMeters / 1000).toFixed(1)} km
                   </span>
                 </>
@@ -80,7 +80,7 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
             </div>
 
             {marker.subtitle && (
-              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+              <p className="mt-1.5 line-clamp-2 text-xs text-territory-muted">
                 {marker.subtitle}
               </p>
             )}
@@ -88,7 +88,7 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
 
           <button
             onClick={onClose}
-            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            className="shrink-0 text-territory-muted transition-colors hover:text-territory-ink"
             aria-label="Fechar"
           >
             <X className="h-4 w-4" />
@@ -103,7 +103,7 @@ export function MapMarkerPopup({ marker, onClose, onNavigate }: MapMarkerPopupPr
                 onClose();
               }}
               size="sm"
-              className="w-full gap-1.5"
+              className="w-full gap-1.5 bg-territory-brand text-territory-on-image hover:bg-territory-brand-strong"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Ver detalhes

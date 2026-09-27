@@ -71,16 +71,16 @@ function MvpMapHeader({
   nearbyHref: string | null;
 }) {
   return (
-    <section className="rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
+    <header className="border-b border-territory-border bg-territory-surface px-4 py-5 sm:px-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-territory-brand">
             {territoryName}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold text-foreground">
+          <h1 className="mt-1 font-heading text-2xl font-bold tracking-tight text-territory-ink sm:text-3xl">
             {mapLabel}
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-territory-muted">
             Veja as empresas disponíveis no território e abra cada resultado para saber mais.
           </p>
         </div>
@@ -93,7 +93,7 @@ function MvpMapHeader({
               <Link
                 key={`${link.label}:${link.href}`}
                 to={link.href}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-territory-border bg-territory-surface px-3 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised"
               >
                 <Layers3 className="h-4 w-4" aria-hidden="true" />
                 {link.label}
@@ -102,7 +102,7 @@ function MvpMapHeader({
             {nearbyHref && (
               <Link
                 to={nearbyHref}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-territory-brand bg-territory-surface px-3 text-sm font-semibold text-territory-brand transition-colors hover:bg-territory-raised"
               >
                 <Navigation className="h-4 w-4" aria-hidden="true" />
                 Perto de mim
@@ -111,7 +111,7 @@ function MvpMapHeader({
           </nav>
         )}
       </div>
-    </section>
+    </header>
   );
 }
 
@@ -596,7 +596,7 @@ export default function MapaPageV4({
 
       {loadingLayers.size > 0 && (
         <div
-          style={{ position: 'absolute', top: 64, right: 16, zIndex: 10 }}
+          className="absolute right-4 top-16 z-10 rounded-full border border-territory-border bg-territory-surface/95 px-3 py-2 text-xs font-semibold text-territory-muted shadow-lg backdrop-blur-sm"
           role="status"
           aria-live="polite"
           aria-label="Carregando dados do mapa"
@@ -608,23 +608,11 @@ export default function MapaPageV4({
 
       {sourceMessage && locationStatus !== 'idle' && locationStatus !== 'resolving' && (
         <div
-          style={{
-            position: 'absolute',
-            bottom: 16,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-            background: isGps ? 'rgba(34, 197, 94, 0.95)' : 'rgba(59, 130, 246, 0.95)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: 500,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
+          className={`absolute bottom-4 left-1/2 z-10 flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur-sm ${
+            isGps
+              ? 'border-territory-success/30 bg-territory-surface/95 text-territory-success'
+              : 'border-territory-brand/30 bg-territory-surface/95 text-territory-brand'
+          }`}
           role="status"
           aria-live="polite"
         >
@@ -640,19 +628,19 @@ export default function MapaPageV4({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5">
+    <main className="territory-vivo mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-[var(--public-content-max)] flex-col bg-territory-surface pb-20 md:pb-6">
       <MvpMapHeader
         territoryName={territoryName}
         mapLabel={territoryLabels.mapLabel}
         providerLinks={providerLinks}
         nearbyHref={nearbyUrl}
       />
-      <section className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
-        <div className="h-[68vh] min-h-[28rem]">
+      <section className="overflow-hidden border-y border-territory-border bg-territory-raised md:border-x">
+        <div className="h-[70dvh] min-h-[30rem] md:h-[calc(100dvh-15rem)]">
           {mapCanvas}
         </div>
       </section>
-    </div>
+    </main>
   );
 
 }
