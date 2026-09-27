@@ -211,11 +211,11 @@ export class PublicSnapshotRpcService {
     params: PublicSlugRouteParams,
   ): Promise<PublicBusinessSnapshot | null> {
     try {
-      const district = params.district || "_";
+      const territorySlug = params.territorySlug || "_";
       const rpcParams = {
         p_state: params.state,
         p_city: params.city,
-        p_district: district,
+        p_district: territorySlug,
         p_slug: params.slug,
       };
 
@@ -244,11 +244,11 @@ export class PublicSnapshotRpcService {
     params: PublicSlugRouteParams,
   ): Promise<PublicGastronomySnapshot | null> {
     try {
-      const district = params.district || "_";
+      const territorySlug = params.territorySlug || "_";
       const rpcParams = {
         p_state: params.state,
         p_city: params.city,
-        p_district: district,
+        p_district: territorySlug,
         p_slug: params.slug,
       };
 
