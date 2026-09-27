@@ -30,16 +30,16 @@ describe("territoryNavigationModes", () => {
     ]);
     expect(modes.find((mode) => mode.id === "home")?.href).toBe(COMPLEX_BASE);
     expect(modes.find((mode) => mode.id === "map")?.href).toBe(
-      `/mapa${COMPLEX_BASE}`,
+      `${COMPLEX_BASE}/mapa`,
     );
     expect(modes.find((mode) => mode.id === "business")?.href).toBe(
-      `/empresas${COMPLEX_BASE}`,
+      `${COMPLEX_BASE}/empresas`,
     );
     expect(modes.find((mode) => mode.id === "nearby")?.href).toBe(
-      `/perto-de-mim${COMPLEX_BASE}`,
+      `${COMPLEX_BASE}/perto-de-mim`,
     );
     expect(modes.find((mode) => mode.id === "search")?.href).toBe(
-      `/busca${COMPLEX_BASE}`,
+      `${COMPLEX_BASE}/busca`,
     );
     expect(modes.some((mode) => mode.id === ("community" as never))).toBe(false);
     expect(modes.some((mode) => mode.id === ("explore" as never))).toBe(false);
@@ -48,7 +48,7 @@ describe("territoryNavigationModes", () => {
   it("keeps the current URL territory ahead of remembered fallback", () => {
     expect(
       resolveTerritoryNavigationBase(
-        "/mapa/ba/salvador/santa-cruz",
+        "/ba/salvador/santa-cruz/mapa",
         CITY_FALLBACK,
         COMPLEX_BASE,
       ),
