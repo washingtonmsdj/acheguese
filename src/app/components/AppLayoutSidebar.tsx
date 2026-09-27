@@ -21,6 +21,8 @@ import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefe
 import { ACCOUNT_PATHS, ACCOUNT_SETTINGS_SHELL_PATHS } from "@/core/routing/config/account";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import { getAppModuleSlugFromPath } from "@/shared/config/moduleSlugs";
+import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
@@ -29,28 +31,29 @@ export function AppLayoutSidebar() {
   }, []);
 
   const pathSegments = pathname.split("/").filter(Boolean);
+  const parsedTerritory = parsePublicTerritoryPath(pathname);
+  const hasCanonicalTerritory = Boolean(
+    parsedTerritory.state && parsedTerritory.city,
+  );
+  const territorialModuleSlug = getAppModuleSlugFromPath(pathname);
   const isBarePublicTerritorialRoute =
+    hasCanonicalTerritory &&
+    !territorialModuleSlug &&
     pathSegments.length >= 2 &&
     pathSegments.length <= 3 &&
-    /^[a-z]{2}$/i.test(pathSegments[0] ?? "") &&
     !isReservedSlug(pathSegments[0] ?? "");
+  const isCanonicalTerritorialModuleRoute =
+    hasCanonicalTerritory && Boolean(territorialModuleSlug);
   const isPublicBusinessLandingRoute =
     pathSegments[0] === MODULE_SLUGS.business &&
     pathSegments[1] !== "cadastrar";
-  const isTerritoryVivoExploreRoute =
-    pathSegments[0] === MODULE_SLUGS.search &&
-    (pathSegments.length === 1 ||
-      (/^[a-z]{2}$/i.test(pathSegments[1] ?? "") &&
-        pathSegments.length >= 3 &&
-        pathSegments.length <= 4));
   const isAccountRoute = pathSegments[0] === "conta";
   const isAccountOverview = pathname === ACCOUNT_PATHS.home;
   const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
   const usesTerritoryVivoShell =
-    isBarePublicTerritorialRoute ||
-    isTerritoryVivoExploreRoute ||
+    isCanonicalTerritorialModuleRoute ||
     isAccountRoute ||
     isPublicPersonalProfileRoute;
 
@@ -58,7 +61,6 @@ export function AppLayoutSidebar() {
   const hideGlobalSidebar =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
-    isTerritoryVivoExploreRoute ||
     isPublicBusinessLandingRoute;
 
   const isConversationRoute =
@@ -66,10 +68,10 @@ export function AppLayoutSidebar() {
   const useDocumentScrollPublicShell =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
-    isTerritoryVivoExploreRoute ||
     isPublicBusinessLandingRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
+    isBarePublicTerritorialRoute ||
     isConversationRoute;
 
   const isMessagingRoute = pathSegments[0] === "mensagens";
