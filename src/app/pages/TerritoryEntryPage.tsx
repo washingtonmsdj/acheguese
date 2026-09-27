@@ -87,10 +87,10 @@ const StoreIcon = () => (
   </Icon>
 );
 
-const BriefcaseIcon = () => (
+const SearchIcon = () => (
   <Icon>
-    <rect x="3" y="7" width="18" height="12" rx="2" />
-    <path d="M8 7V5h8v2M3 12.5c5.2 2.3 12.8 2.3 18 0M12 12v3" />
+    <circle cx="10.5" cy="10.5" r="6.5" />
+    <path d="m15.5 15.5 5 5" />
   </Icon>
 );
 
@@ -111,43 +111,43 @@ const MapIcon = () => (
 
 const modules = [
   {
-    className: "ag-module-community",
-    eyebrow: "Conversas reais",
-    title: "A comunidade sabe primeiro.",
-    copy: "Perguntas, avisos, encontros e histórias de quem vive o território todos os dias.",
-    href: LAUNCH_URLS.community,
-    link: "Entrar na comunidade",
-    icon: <PeopleIcon />,
-    number: "01",
-  },
-  {
     className: "ag-module-business",
     eyebrow: "Economia do bairro",
     title: "Compre de quem está por perto.",
     copy: "Descubra lojas, restaurantes e pequenos negócios com endereço e contexto local.",
     href: LAUNCH_URLS.business,
-    link: "Explorar negócios",
+    link: "Explorar empresas",
     icon: <StoreIcon />,
+    number: "01",
+  },
+  {
+    className: "ag-module-community",
+    eyebrow: "Território no mapa",
+    title: "Veja o que existe em cada rua.",
+    copy: "Explore empresas e pontos úteis dentro do território pelo mapa.",
+    href: LAUNCH_URLS.map,
+    link: "Abrir o mapa",
+    icon: <MapIcon />,
     number: "02",
   },
   {
     className: "ag-module-work",
-    eyebrow: "Talento local",
-    title: "Serviços e oportunidades circulando.",
-    copy: "Encontre profissionais, trabalhos e soluções que movimentam a vizinhança.",
-    href: LAUNCH_URLS.services,
-    link: "Encontrar serviços",
-    icon: <BriefcaseIcon />,
+    eyebrow: "Mais perto de você",
+    title: "Encontre o que está próximo agora.",
+    copy: "Use sua localização para descobrir empresas disponíveis ao seu redor.",
+    href: LAUNCH_URLS.nearby,
+    link: "Ver perto de mim",
+    icon: <RouteIcon />,
     number: "03",
   },
   {
     className: "ag-module-mobility",
-    eyebrow: "Cidade conectada",
-    title: "Caminhos que aproximam.",
-    copy: "Acesse o mapa do território e veja o que acontece entre um ponto e outro.",
-    href: LAUNCH_URLS.map,
-    link: "Abrir o mapa",
-    icon: <RouteIcon />,
+    eyebrow: "Busca territorial",
+    title: "Procure sem sair do contexto local.",
+    copy: "Busque empresas e lugares dentro do território atual.",
+    href: LAUNCH_URLS.search,
+    link: "Buscar no território",
+    icon: <SearchIcon />,
     number: "04",
   },
 ] as const;
@@ -237,8 +237,8 @@ export default function TerritoryEntryPage() {
                 <em>logo ali.</em>
               </h1>
               <p className="ag-hero-lead">
-                Negócios, serviços, eventos e gente {launchCommunityGenitiveLabel}, em um só
-                lugar.
+                Empresas, mapa, busca e o que está perto de você {launchCommunityGenitiveLabel},
+                em um só lugar.
               </p>
 
               <div className="ag-discovery-action">
@@ -359,7 +359,7 @@ export default function TerritoryEntryPage() {
                 <span>2</span>
                 <div>
                   <h3>Descubra o que está acontecendo</h3>
-                  <p>Busque lugares, serviços, conversas e oportunidades em poucos toques.</p>
+                  <p>Busque empresas, lugares e o que está perto de você em poucos toques.</p>
                 </div>
               </li>
               <li>
@@ -384,8 +384,8 @@ export default function TerritoryEntryPage() {
                 O Achegue-se nasce no Complexo do Nordeste de Amaralina para tornar visível a
                 potência que já existe em cada rua.
               </p>
-              <a href={LAUNCH_URLS.community}>
-                Conhecer a comunidade <ArrowIcon />
+              <a href={LAUNCH_URLS.portal}>
+                Explorar o território <ArrowIcon />
               </a>
             </div>
             <BrandMark />
