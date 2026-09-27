@@ -16,7 +16,7 @@ describe("como funciona public experience contract", () => {
     expect(page).toContain("Descubra o que está perto");
     expect(page).toContain("Participe quando quiser");
     expect(page).toContain("LAUNCH_URLS.community");
-    expect(page).toContain("LAUNCH_URLS.businessTerritory");
+    expect(page).toContain("LAUNCH_URLS.business");
     expect(page).toContain("AUTH_PATHS.signup");
   });
 
