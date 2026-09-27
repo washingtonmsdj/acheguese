@@ -2,6 +2,10 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import {
+  APP_MODULE_SLUGS,
+  getAppModuleSlugFromPath,
+} from "@/shared/config/moduleSlugs";
 
 interface GruposHeaderProps {
   onCreateClick: () => void;
@@ -13,7 +17,7 @@ export function GruposHeader({ onCreateClick, backHref }: GruposHeaderProps) {
   const location = useLocation();
   const currentParams = new URLSearchParams(location.search);
   const isCommunityTabGroups =
-    location.pathname.startsWith("/comunidade/") &&
+    getAppModuleSlugFromPath(location.pathname) === APP_MODULE_SLUGS.community &&
     currentParams.get("tab") === "grupos";
 
   const handleBack = () => {
