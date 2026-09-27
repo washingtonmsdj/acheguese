@@ -7,7 +7,6 @@ export const TERRITORIAL_ROUTE_PARAMS = {
   district: ":district",
   territorySlug: ":territorySlug",
   groupSlugOrDistrict: ":groupSlugOrDistrict",
-  communitySlug: ":communitySlug",
   slug: ":slug",
   eventId: ":eventId",
   id: ":id",
@@ -50,6 +49,13 @@ function joinRoutePath(segments: readonly string[]): string {
   return `/${segments.filter(Boolean).join("/")}`;
 }
 
+/**
+ * Canonical territorial hierarchy:
+ *   /:state/:city
+ *   /:state/:city/:district
+ *   /:state/:city/:module
+ *   /:state/:city/:district/:module
+ */
 export function buildTerritorialBareRoutePath(
   suffixSegments: readonly string[] = [],
 ): string {
@@ -61,13 +67,19 @@ export function buildTerritorialBareRoutePath(
 }
 
 export function buildTerritorialRoutePath(
-  rootSegment: string,
+  segment: string,
   suffixSegments: readonly string[] = [],
 ): string {
-  return joinRoutePath([
-    rootSegment,
-    TERRITORIAL_ROUTE_PARAMS.state,
-    TERRITORIAL_ROUTE_PARAMS.city,
+  return buildTerritorialBareRoutePath([segment, ...suffixSegments]);
+}
+
+export function buildScopedTerritorialRoutePath(
+  segment: string,
+  suffixSegments: readonly string[] = [],
+): string {
+  return buildTerritorialBareRoutePath([
+    TERRITORIAL_ROUTE_PARAMS.district,
+    segment,
     ...suffixSegments,
   ]);
 }
@@ -79,18 +91,18 @@ export function buildTerritorialModuleRoutePath(
   return buildTerritorialRoutePath(module, suffixSegments);
 }
 
+export function buildScopedTerritorialModuleRoutePath(
+  module: AppModuleSlug,
+  suffixSegments: readonly string[] = [],
+): string {
+  return buildScopedTerritorialRoutePath(module, suffixSegments);
+}
+
 export function buildCommunityTerritoryRoutePath(
   suffixSegments: readonly string[] = [],
 ): string {
-  return buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.community, suffixSegments);
-}
-
-export function buildCommunityAliasRoutePath(
-  suffixSegments: readonly string[] = [],
-): string {
-  return joinRoutePath([
+  return buildTerritorialModuleRoutePath(
     APP_MODULE_SLUGS.community,
-    TERRITORIAL_ROUTE_PARAMS.communitySlug,
-    ...suffixSegments,
-  ]);
+    suffixSegments,
+  );
 }
