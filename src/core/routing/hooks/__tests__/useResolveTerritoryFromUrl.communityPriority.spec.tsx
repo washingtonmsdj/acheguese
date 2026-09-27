@@ -66,9 +66,9 @@ describe("useResolveTerritoryFromUrl community priority", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/comunidade/ba/salvador"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/comunidade"]}>
         <Routes>
-          <Route path="/comunidade/:state/:city" element={<Probe />} />
+          <Route path="/:state/:city/comunidade" element={<Probe />} />
         </Routes>
       </MemoryRouter>,
     );
@@ -97,9 +97,9 @@ describe("useResolveTerritoryFromUrl community priority", () => {
     });
 
     render(
-      <MemoryRouter initialEntries={["/comunidade/ba/salvador/feed"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/comunidade/feed"]}>
         <Routes>
-          <Route path="/comunidade/:state/:city/feed" element={<Probe />} />
+          <Route path="/:state/:city/comunidade/feed" element={<Probe />} />
         </Routes>
       </MemoryRouter>,
     );
