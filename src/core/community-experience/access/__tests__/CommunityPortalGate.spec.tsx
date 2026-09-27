@@ -16,7 +16,7 @@ vi.mock("@/core/routing/hooks", () => ({
       manage: "/conta/perfis",
       addresses: "/conta/enderecos",
     },
-    community: { feed: "/comunidade/ba/salvador/feed" },
+    community: { feed: "/ba/salvador/comunidade/feed" },
   })),
 }));
 
@@ -77,7 +77,7 @@ describe("CommunityPortalGate", () => {
     vi.mocked(useCommunityAccess).mockReturnValue(accessDecision({}));
 
     render(
-      <MemoryRouter initialEntries={["/comunidade/ba/salvador/feed?tab=posts"]}>
+      <MemoryRouter initialEntries={["/ba/salvador/comunidade/feed?tab=posts"]}>
         <CommunityPortalGate resolved={target} action="create_post" />
       </MemoryRouter>,
     );
@@ -85,7 +85,7 @@ describe("CommunityPortalGate", () => {
     expect(screen.getByText("Entre para participar da comunidade")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Entrar" })).toHaveAttribute(
       "href",
-      "/login?redirect=%2Fcomunidade%2Fba%2Fsalvador%2Ffeed%3Ftab%3Dposts",
+      "/login?redirect=%2Fba%2Fsalvador%2Fcomunidade%2Ffeed%3Ftab%3Dposts",
     );
   });
 
