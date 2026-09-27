@@ -47,7 +47,7 @@ describe("territory-first public routing contract", () => {
       "/:state/:city/empresas",
     );
     expect(buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.map)).toBe(
-      "/:state/:city/:district/mapa",
+      "/:state/:city/:territorySlug/mapa",
     );
     expect(
       buildModuleTerritoryUrl(
