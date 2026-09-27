@@ -139,10 +139,10 @@ export default function TerritoryPortalPage({
     },
     {
       view: "search",
-      label: "Mais",
-      description: "Busca e recursos",
+      label: "Busca",
+      description: "Procurar no território",
       href: urls.search,
-      icon: Menu,
+      icon: Search,
     },
   ];
 
