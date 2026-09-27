@@ -122,7 +122,7 @@ function renderPage(path: string) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
-          <Route path="/busca/:state/:city/:district" element={<BuscaPage />} />
+          <Route path="/:state/:city/:district/busca" element={<BuscaPage />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -166,7 +166,7 @@ describe("BuscaPage", () => {
   });
 
   it("hydrates URL query, applies territory and hides paused launch filters", () => {
-    renderPage("/busca/ba/salvador/pituba?q=pizzaria");
+    renderPage("/ba/salvador/pituba/busca?q=pizzaria");
 
     expect(
       screen.getByRole("searchbox", { name: "O que você procura por aqui?" }),
@@ -209,7 +209,7 @@ describe("BuscaPage", () => {
               type: "business",
               title: "Pizzaria Central",
               subtitle: "restaurant",
-              url: "/empresas/ba/salvador/pituba/pizzaria-central",
+              url: "/ba/salvador/pituba/empresas/pizzaria-central",
             },
           ],
           communities: [],
@@ -249,13 +249,13 @@ describe("BuscaPage", () => {
       }),
     );
 
-    renderPage("/busca/ba/salvador/pituba?q=pizza");
+    renderPage("/ba/salvador/pituba/busca?q=pizza");
 
     expect(
       await screen.findByRole("link", { name: "Ver negócio" }),
     ).toHaveAttribute(
       "href",
-      "/empresas/ba/salvador/pituba/pizzaria-central",
+      "/ba/salvador/pituba/empresas/pizzaria-central",
     );
   });
 
@@ -272,7 +272,7 @@ describe("BuscaPage", () => {
               type: "business",
               title: "Pizzaria Central",
               subtitle: "restaurant",
-              url: "/empresas/ba/salvador/pituba/pizzaria-central",
+              url: "/ba/salvador/pituba/empresas/pizzaria-central",
             },
           ],
           communities: [],
@@ -312,7 +312,7 @@ describe("BuscaPage", () => {
       }),
     );
 
-    renderPage("/busca/ba/salvador/pituba?q=pizza");
+    renderPage("/ba/salvador/pituba/busca?q=pizza");
 
     fireEvent.click(
       await screen.findByRole("button", {
@@ -370,7 +370,7 @@ describe("BuscaPage", () => {
       }),
     );
 
-    renderPage("/busca/ba/salvador/pituba?q=pizza");
+    renderPage("/ba/salvador/pituba/busca?q=pizza");
 
     expect(
       screen.queryByRole("heading", { name: "Comunidades" }),
