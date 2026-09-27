@@ -29,18 +29,18 @@ describe("community route patterns", () => {
     ).toBe("/:state/:city/comunidade/feed");
     expect(
       buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.community),
-    ).toBe("/:state/:city/:district/comunidade");
+    ).toBe("/:state/:city/:territorySlug/comunidade");
     expect(
       buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.community, [
         TERRITORIAL_ROUTE_STATIC_SEGMENTS.feed,
       ]),
-    ).toBe("/:state/:city/:district/comunidade/feed");
+    ).toBe("/:state/:city/:territorySlug/comunidade/feed");
     expect(
       buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.community, [
         TERRITORIAL_ROUTE_STATIC_SEGMENTS.groups,
         ":id",
       ]),
-    ).toBe("/:state/:city/:district/comunidade/grupos/:id");
+    ).toBe("/:state/:city/:territorySlug/comunidade/grupos/:id");
   });
 
   it("keeps post-MVP Community disconnected from the active public router", () => {
