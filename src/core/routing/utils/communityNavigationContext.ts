@@ -1,14 +1,11 @@
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import type { CommunityPublicAliasTerritoryResolution } from "@/core/routing/services/CommunityPublicAliasTerritoryResolver";
 import {
-  buildCommunityAliasUrl,
   buildCommunityTerritoryUrl,
   buildModuleTerritoryUrl,
   extractCommunityTerritoryBaseUrl,
   geoPathToPublicUrl,
   MODULE_SLUGS,
   normalizePublicTerritoryPath,
-  type ModuleSlug,
 } from "@/core/routing/utils/territoryUrls";
 
 type ResolvedCommunityTerritory = Exclude<ResolvedTerritory, null>;
@@ -26,7 +23,6 @@ export interface CommunityNavigationContext {
   territoryBasePath: string;
   basePath: string;
   groupId: string | null;
-  usesEmbeddedCommunityModules: boolean;
 }
 
 export interface CommunityNavigationModuleUrls {
@@ -41,14 +37,9 @@ export interface CommunityNavigationModuleUrls {
   mobility: string;
 }
 
-export function getCommunityAliasCandidateFromPath(pathname: string): string | null {
-  const parts = pathname.split("/").filter(Boolean);
-  if (parts[0] !== MODULE_SLUGS.community || !parts[1]) return null;
-  if (/^[a-z]{2}$/i.test(parts[1])) return null;
-  return parts[1];
-}
-
-function normalizeTerritoryBasePath(value: string | null | undefined): string | null {
+function normalizeTerritoryBasePath(
+  value: string | null | undefined,
+): string | null {
   if (!value) return null;
 
   const normalized = normalizePublicTerritoryPath(value);
@@ -58,28 +49,30 @@ function normalizeTerritoryBasePath(value: string | null | undefined): string | 
   return `/${parts.slice(0, 3).join("/")}`;
 }
 
-function isCommunityAliasBasePath(value: string): boolean {
-  const parts = value.split("/").filter(Boolean);
-  return parts.length === 2 && !/^[a-z]{2}$/i.test(parts[1]);
-}
-
-function getTerritoryBasePathFromResolved(resolved: ResolvedCommunityTerritory): string | null {
+function getTerritoryBasePathFromResolved(
+  resolved: ResolvedCommunityTerritory,
+): string | null {
   if (resolved.kind === "location") {
-    return normalizeTerritoryBasePath(geoPathToPublicUrl(resolved.location.geographic_path));
+    return normalizeTerritoryBasePath(
+      geoPathToPublicUrl(resolved.location.geographic_path),
+    );
   }
 
   const firstMember = resolved.group.members.at(0);
   if (!firstMember?.geographic_path) return null;
 
-  const cityBasePath = normalizeTerritoryBasePath(geoPathToPublicUrl(firstMember.geographic_path));
-  return cityBasePath ? `${cityBasePath}/${resolved.group.slug}` : null;
+  const cityBasePath = normalizeTerritoryBasePath(
+    geoPathToPublicUrl(firstMember.geographic_path),
+  );
+  if (!cityBasePath) return null;
+
+  const cityParts = cityBasePath.split("/").filter(Boolean).slice(0, 2);
+  return `/${[...cityParts, resolved.group.slug].join("/")}`;
 }
 
 function buildContext(input: {
   territoryBasePath: string;
-  communityBasePath: string;
   resolved?: ResolvedCommunityTerritory | null;
-  usesEmbeddedCommunityModules: boolean;
 }): CommunityNavigationContext | null {
   const territoryBasePath = normalizeTerritoryBasePath(input.territoryBasePath);
   if (!territoryBasePath) return null;
@@ -99,76 +92,72 @@ function buildContext(input: {
     city,
     territorySlug,
     territoryBasePath,
-    basePath: input.communityBasePath,
+    basePath: buildCommunityTerritoryUrl(territoryBasePath),
     groupId: resolved?.kind === "group" ? resolved.group.id : null,
-    usesEmbeddedCommunityModules: input.usesEmbeddedCommunityModules,
   };
 }
 
 export function resolveCommunityNavigationContext(input: {
   pathname: string;
   territorialContext?: CommunityNavigationTerritorialContext | null;
-  aliasResolution?: Extract<
-    CommunityPublicAliasTerritoryResolution,
-    { status: "resolved" }
-  > | null;
 }): CommunityNavigationContext | null {
-  if (input.aliasResolution) {
-    return buildContext({
-      territoryBasePath: input.aliasResolution.publicTerritoryPath,
-      communityBasePath: buildCommunityAliasUrl(input.aliasResolution.alias),
-      resolved: input.aliasResolution.resolved,
-      usesEmbeddedCommunityModules: true,
-    });
-  }
-
   if (input.territorialContext) {
-    const territoryBasePath = getTerritoryBasePathFromResolved(input.territorialContext.resolved);
+    const territoryBasePath = getTerritoryBasePathFromResolved(
+      input.territorialContext.resolved,
+    );
     if (!territoryBasePath) return null;
 
     return buildContext({
       territoryBasePath,
-      communityBasePath: input.territorialContext.communityBaseUrl,
       resolved: input.territorialContext.resolved,
-      usesEmbeddedCommunityModules:
-        input.territorialContext.communityBaseUrl === input.territorialContext.baseUrl ||
-        isCommunityAliasBasePath(input.territorialContext.communityBaseUrl),
     });
   }
 
-  const legacyTerritoryBasePath = extractCommunityTerritoryBaseUrl(input.pathname);
-  if (!legacyTerritoryBasePath) return null;
+  const territoryBasePath = extractCommunityTerritoryBaseUrl(input.pathname);
+  if (!territoryBasePath) return null;
 
-  return buildContext({
-    territoryBasePath: legacyTerritoryBasePath,
-    communityBasePath: buildCommunityTerritoryUrl(legacyTerritoryBasePath),
-    usesEmbeddedCommunityModules: false,
-  });
-}
-
-function buildScopedCommunityModuleUrl(
-  context: CommunityNavigationContext,
-  module: ModuleSlug,
-): string {
-  if (context.usesEmbeddedCommunityModules) {
-    return `${context.basePath}/${module}`;
-  }
-
-  return buildModuleTerritoryUrl(module, context.territoryBasePath);
+  return buildContext({ territoryBasePath });
 }
 
 export function buildCommunityNavigationModuleUrls(
   context: CommunityNavigationContext,
 ): CommunityNavigationModuleUrls {
   return {
-    business: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.business),
-    gastronomy: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.gastronomy),
-    education: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.education),
-    services: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.services),
-    classifieds: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.classifieds),
-    events: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.events),
-    jobs: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.jobs),
-    map: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.map),
-    mobility: buildScopedCommunityModuleUrl(context, MODULE_SLUGS.mobility),
+    business: buildModuleTerritoryUrl(
+      MODULE_SLUGS.business,
+      context.territoryBasePath,
+    ),
+    gastronomy: buildModuleTerritoryUrl(
+      MODULE_SLUGS.gastronomy,
+      context.territoryBasePath,
+    ),
+    education: buildModuleTerritoryUrl(
+      MODULE_SLUGS.education,
+      context.territoryBasePath,
+    ),
+    services: buildModuleTerritoryUrl(
+      MODULE_SLUGS.services,
+      context.territoryBasePath,
+    ),
+    classifieds: buildModuleTerritoryUrl(
+      MODULE_SLUGS.classifieds,
+      context.territoryBasePath,
+    ),
+    events: buildModuleTerritoryUrl(
+      MODULE_SLUGS.events,
+      context.territoryBasePath,
+    ),
+    jobs: buildModuleTerritoryUrl(
+      MODULE_SLUGS.jobs,
+      context.territoryBasePath,
+    ),
+    map: buildModuleTerritoryUrl(
+      MODULE_SLUGS.map,
+      context.territoryBasePath,
+    ),
+    mobility: buildModuleTerritoryUrl(
+      MODULE_SLUGS.mobility,
+      context.territoryBasePath,
+    ),
   };
 }
