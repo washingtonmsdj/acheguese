@@ -12,6 +12,8 @@ import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
+  buildScopedTerritorialModuleRoutePath,
+  buildScopedTerritorialRoutePath,
   buildTerritorialBareRoutePath,
   buildTerritorialModuleRoutePath,
   buildTerritorialRoutePath,
@@ -142,9 +144,7 @@ export function AppLayoutRoutes() {
               element={<P.BuscaPage />}
             />
             <Route
-              path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [
-                TERRITORIAL_PARAMS.district,
-              ])}
+              path={buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
               element={<P.BuscaPage />}
             />
             <Route
@@ -152,9 +152,7 @@ export function AppLayoutRoutes() {
               element={<P.BuscarPage />}
             />
             <Route
-              path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias, [
-                TERRITORIAL_PARAMS.district,
-              ])}
+              path={buildScopedTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)}
               element={<P.BuscarPage />}
             />
           </>
