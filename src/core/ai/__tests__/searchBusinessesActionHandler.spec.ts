@@ -38,7 +38,7 @@ describe("SearchBusinessesActionHandler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getCanonicalUrl.mockImplementation(
-      (ctx) => `/empresas/ba/salvador/pituba/${ctx.slug}`,
+      (ctx) => `/ba/salvador/pituba/empresas/${ctx.slug}`,
     );
   });
 
