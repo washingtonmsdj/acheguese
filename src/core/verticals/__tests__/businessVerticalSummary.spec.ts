@@ -15,7 +15,7 @@ describe('buildBusinessVerticalSummary', () => {
     expect(summary.activeVerticals).toEqual(['gastronomy']);
     expect(summary.primaryVertical).toBe('gastronomy');
     expect(summary.canonicalVerticalUrl).toBe(
-      '/empresas/ba/salvador/rio-vermelho/cafe-central',
+      '/ba/salvador/rio-vermelho/empresas/cafe-central',
     );
   });
 
@@ -67,7 +67,7 @@ describe('buildBusinessVerticalSummary', () => {
     expect(summary.activeVerticals).toEqual(['gastronomy', 'education']);
     expect(summary.primaryVertical).toBe('gastronomy');
     expect(summary.verticalPublicUrls).toMatchObject({
-      gastronomy: '/empresas/ba/salvador/pituba/hub-completo',
+      gastronomy: '/ba/salvador/pituba/empresas/hub-completo',
       education: '/educacao/ba/salvador/pituba/hub-completo',
     });
   });
