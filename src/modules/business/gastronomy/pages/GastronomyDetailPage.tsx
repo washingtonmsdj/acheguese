@@ -117,7 +117,7 @@ function GastronomyDetailLivePage({
   const urlParams = useParams();
   const state = routeParams?.state ?? urlParams.state;
   const city = routeParams?.city ?? urlParams.city;
-  const district = routeParams?.district ?? urlParams.district;
+  const territorySlug = routeParams?.district ?? urlParams.district;
   const slug = routeParams?.slug ?? urlParams.slug;
   const navigate = useNavigate();
   const [selectedItem, setSelectedItem] =
@@ -130,7 +130,7 @@ function GastronomyDetailLivePage({
     isLoading: isLoadingSnapshot,
     refetch: refetchSnapshot,
   } = usePublicGastronomySnapshot(
-    { state, city, district, slug },
+    { state, city, territorySlug, slug },
   );
 
   const showCoupons = isLaunchSurfaceEnabled("coupons");
