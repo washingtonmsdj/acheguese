@@ -27,9 +27,42 @@ export function buildAppModulePath(slug: AppModuleSlug, suffix = ""): string {
   return `/${slug}${normalizedSuffix}`;
 }
 
+const APP_MODULE_SLUG_SET = new Set<AppModuleSlug>(
+  Object.values(APP_MODULE_SLUGS),
+);
+
+function isStateSegment(value: string | undefined): boolean {
+  return Boolean(value && /^[a-z]{2}$/i.test(value));
+}
+
+export function getAppModuleSlugFromPath(
+  pathname: string,
+): AppModuleSlug | null {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return null;
+
+  const first = segments[0] as AppModuleSlug;
+  if (APP_MODULE_SLUG_SET.has(first)) {
+    // Standalone module surfaces such as /empresas and /empresas/cadastrar
+    // remain valid. The retired /module/:state/:city shape is intentionally
+    // not recognized.
+    if (isStateSegment(segments[1]) && segments[2]) return null;
+    return first;
+  }
+
+  if (!isStateSegment(segments[0]) || !segments[1]) return null;
+
+  const cityLevel = segments[2] as AppModuleSlug | undefined;
+  if (cityLevel && APP_MODULE_SLUG_SET.has(cityLevel)) return cityLevel;
+
+  const scoped = segments[3] as AppModuleSlug | undefined;
+  if (scoped && APP_MODULE_SLUG_SET.has(scoped)) return scoped;
+
+  return null;
+}
+
 export function isAppModulePath(pathname: string, slug: AppModuleSlug): boolean {
-  const root = buildAppModulePath(slug);
-  return pathname === root || pathname.startsWith(`${root}/`);
+  return getAppModuleSlugFromPath(pathname) === slug;
 }
 
 export const ROUTING_MODULE_SLUGS = {
