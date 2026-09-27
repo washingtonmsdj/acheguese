@@ -30,6 +30,7 @@ const suspiciousMojibakeTokens = [
 const publicSurfaceFiles = [
   "src/app/pages/TerritoryEntryPage.tsx",
   "src/app/pages/TerritoryHomePage.tsx",
+  "src/app/pages/TerritoryPortalPage.tsx",
   "src/app/pages/EmpresasLandingPage.tsx",
   "src/core/maps/pages/MapaPageV4.tsx",
   "src/core/nearby/pages/NearbyPage.tsx",
@@ -49,16 +50,20 @@ describe("public territorial copy regression", () => {
   });
 
   it("keeps canonical MVP copy aligned with the active product", () => {
-    const territoryHome = read("src/app/pages/TerritoryHomePage.tsx");
+    const territoryHome = [
+      read("src/app/pages/TerritoryHomePage.tsx"),
+      read("src/app/pages/TerritoryPortalPage.tsx"),
+    ].join("\n");
     expect(territoryHome).toContain(
-      "Descubra empresas e lugares ao seu redor.",
+      "Empresas, mapa, busca e o que está perto de você",
     );
-    expect(territoryHome).toContain('title="Empresas"');
-    expect(territoryHome).toContain('title="Mapa"');
-    expect(territoryHome).toContain('title="Perto de mim"');
+    expect(territoryHome).toContain('label: "Empresas"');
+    expect(territoryHome).toContain('label: "Mapa"');
+    expect(territoryHome).toContain('label: "Perto de mim"');
+    expect(territoryHome).toContain('label: "Busca"');
 
     const entry = read("src/app/pages/TerritoryEntryPage.tsx");
-    expect(entry).toContain("Encontre empresas, visualize o território no mapa");
+    expect(entry).toContain("Empresas, mapa, busca e o que está perto de você");
     expect(entry).not.toContain("eventos");
     expect(entry).not.toContain("serviços e histórias");
   });
