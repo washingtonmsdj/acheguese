@@ -6,54 +6,55 @@ import {
   REQUIRED_CITY_TERRITORIAL_MODULES,
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
-  buildCommunityAliasRoutePath,
   buildCommunityTerritoryRoutePath,
+  buildScopedTerritorialModuleRoutePath,
   buildTerritorialBareRoutePath,
   buildTerritorialModuleRoutePath,
   buildTerritorialRoutePath,
 } from "../territorialRoutePatterns";
 
 describe("territorial route patterns", () => {
-  it("builds the mandatory /module/state/city route", () => {
+  it("builds canonical territory-first city module routes", () => {
     expect(buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events)).toBe(
-      "/eventos/:state/:city",
+      "/:state/:city/eventos",
     );
     expect(buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business)).toBe(
-      "/empresas/:state/:city",
+      "/:state/:city/empresas",
     );
     expect(buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby)).toBe(
-      "/perto-de-mim/:state/:city",
+      "/:state/:city/perto-de-mim",
     );
   });
 
-  it("builds district and module suffix routes from shared params", () => {
+  it("builds scoped territory module routes with the module after the territory", () => {
     expect(
-      buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-        TERRITORIAL_ROUTE_PARAMS.district,
+      buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
         TERRITORIAL_ROUTE_STATIC_SEGMENTS.category,
         TERRITORIAL_ROUTE_PARAMS.category,
       ]),
-    ).toBe("/empresas/:state/:city/:district/categoria/:category");
+    ).toBe("/:state/:city/:district/empresas/categoria/:category");
   });
 
   it("keeps bare and community territorial paths canonical", () => {
     expect(buildTerritorialBareRoutePath()).toBe("/:state/:city");
     expect(
+      buildScopedTerritorialModuleRoutePath(APP_MODULE_SLUGS.community),
+    ).toBe("/:state/:city/:district/comunidade");
+    expect(
       buildCommunityTerritoryRoutePath([TERRITORIAL_ROUTE_PARAMS.slug]),
-    ).toBe("/comunidade/:state/:city/:slug");
-    expect(buildCommunityAliasRoutePath()).toBe("/comunidade/:communitySlug");
+    ).toBe("/:state/:city/comunidade/:slug");
   });
 
-  it("builds non-module territorial aliases from shared params", () => {
+  it("builds non-module territorial aliases after the territory", () => {
     expect(
       buildTerritorialRoutePath(TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias),
-    ).toBe("/buscar/:state/:city");
+    ).toBe("/:state/:city/buscar");
     expect(
       buildTerritorialRoutePath(
         TERRITORIAL_ROUTE_STATIC_SEGMENTS.communication,
         [TERRITORIAL_ROUTE_PARAMS.channelSlug],
       ),
-    ).toBe("/comunicacao/:state/:city/:channelSlug");
+    ).toBe("/:state/:city/comunicacao/:channelSlug");
   });
 
   it("centralizes event child route segments for canonical aliases", () => {
@@ -65,7 +66,7 @@ describe("territorial route patterns", () => {
     expect(TERRITORIAL_ROUTE_STATIC_SEGMENTS.professional).toBe("profissional");
   });
 
-  it("tracks every public city module that must expose /module/state/city", () => {
+  it("tracks every public city module that must expose territory-first routes", () => {
     expect(REQUIRED_CITY_TERRITORIAL_MODULES).toEqual([
       "empresas",
       "servicos",
