@@ -1,9 +1,8 @@
-import { lazy, Suspense, useEffect, useRef, type ComponentType, type FormEvent } from "react";
+import { lazy, Suspense, type FormEvent } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  ArrowLeft,
   ChevronDown,
   Home,
   Info,
@@ -18,6 +17,7 @@ import {
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { TerritorialModuleHero, type TerritorialHeroBreadcrumb, type TerritoryModuleNavItem, type TerritoryModuleNavMoreItem } from "@/app/components/territorial";
 
 import "./TerritoryPortalPage.css";
 
@@ -67,15 +67,6 @@ function BrandMark() {
   );
 }
 
-type Shortcut = {
-  view?: TerritoryPortalView;
-  label: string;
-  description: string;
-  href?: string;
-  icon: ComponentType<{ className?: string }>;
-  disabled?: boolean;
-};
-
 export default function TerritoryPortalPage({
   territoryName,
   contextLabel,
@@ -86,7 +77,6 @@ export default function TerritoryPortalPage({
   activeView = "home",
 }: TerritoryPortalPageProps) {
   const navigate = useNavigate();
-  const shortcutRef = useRef<HTMLDivElement>(null);
   const heroSlug =
     resolvedTerritory?.kind === "group"
       ? resolvedTerritory.group.slug
@@ -104,43 +94,44 @@ export default function TerritoryPortalPage({
     search: `Busca em ${territoryName}`,
   }[activeView];
 
-  const shortcuts: readonly Shortcut[] = [
+  const moduleNavItems: readonly TerritoryModuleNavItem[] = [
     {
-      view: "home",
+      id: "home",
       label: "Visão geral",
       description: "Sobre o território",
       href: urls.home,
       icon: Home,
     },
     {
-      view: "map",
+      id: "map",
       label: "Mapa",
       description: "Explorar o território",
       href: urls.map,
       icon: Map,
     },
     {
-      view: "business",
+      id: "business",
       label: "Empresas",
       description: "Comércio e negócios",
       href: urls.business,
       icon: Store,
     },
     {
-      view: "nearby",
+      id: "nearby",
       label: "Perto de mim",
       description: "Ver o que está perto",
       href: urls.nearby,
       icon: Navigation,
     },
     {
+      id: "community",
       label: "Comunidade",
       description: "Conexões do bairro",
       icon: UsersRound,
       disabled: true,
     },
     {
-      view: "search",
+      id: "search",
       label: "Busca",
       description: "Procurar no território",
       href: urls.search,
@@ -148,23 +139,35 @@ export default function TerritoryPortalPage({
     },
   ];
 
+  const moreNavItems: readonly TerritoryModuleNavMoreItem[] = [
+    { label: "Visão geral", href: urls.home },
+    { label: "Busca", href: urls.search },
+    { label: "Comunidade", disabled: true },
+    { label: "Serviços", disabled: true },
+    { label: "Eventos", disabled: true },
+  ];
+
+  const heroBreadcrumbs: readonly TerritorialHeroBreadcrumb[] = [
+    { label: contextLabel, icon: Home },
+    { label: territoryName },
+    ...(activeView === "business" ? [{ label: "Empresas" }] : []),
+    ...(activeView === "nearby" ? [{ label: "Perto de mim" }] : []),
+  ];
+
+  const heroTitle = activeView === "nearby" ? "Perto de mim" : territoryName;
+  const heroDescription = activeView === "business"
+    ? "Comércio, serviços e negócios locais, em um só lugar."
+    : activeView === "nearby"
+      ? "Encontre comércios, serviços e lugares próximos de você."
+      : "Empresas, mapa, busca e o que está perto de você, em um só lugar.";
+  const heroEyebrow = activeView === "business" ? "Empresas" : undefined;
+  const heroIcon = activeView === "business" ? Store : activeView === "nearby" ? Navigation : undefined;
+
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const query = String(new FormData(event.currentTarget).get("q") ?? "").trim();
     navigate(query ? `${urls.search}?q=${encodeURIComponent(query)}` : urls.search);
   };
-
-  useEffect(() => {
-    const navigation = shortcutRef.current;
-    if (!navigation) return;
-    const frame = window.requestAnimationFrame(() => {
-      const activeShortcut = navigation.querySelector<HTMLElement>('[aria-current="page"]');
-      if (!activeShortcut || navigation.scrollWidth <= navigation.clientWidth) return;
-      const left = activeShortcut.offsetLeft - (navigation.clientWidth - activeShortcut.offsetWidth) / 2;
-      navigation.scrollTo({ left: Math.max(0, left), behavior: "auto" });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [activeView]);
 
   return (
     <div className="pt-page">
@@ -231,93 +234,20 @@ export default function TerritoryPortalPage({
       </header>
 
       <main id="pt-content" tabIndex={-1}>
-        <section
-          className={`pt-hero ${activeView !== "home" ? "pt-hero--module" : ""} ${activeView === "business" ? "pt-hero--business" : ""} ${activeView === "nearby" ? "pt-hero--nearby" : ""}`}
-          aria-labelledby="pt-title"
-        >
-          <img
-            src={heroImage}
-            alt={`Vista e moradores de ${territoryName}`}
-            width="1536"
-            height="1024"
-          />
-          <div className="pt-hero-shade" />
-
-          <div className="pt-container pt-hero-content">
-            <p className="pt-breadcrumb">
-              {activeView === "nearby" ? (
-                <>
-                  <span className="pt-breadcrumb-mobile"><ArrowLeft /> {territoryName}</span>
-                  <span className="pt-breadcrumb-desktop"><Home /> {contextLabel} <b>›</b> {territoryName} <b>›</b> Perto de mim</span>
-                </>
-              ) : (
-                <><Home /> {contextLabel} <span>›</span> {territoryName}{activeView === "business" ? <><span>›</span> Empresas</> : null}</>
-              )}
-            </p>
-            {activeView === "business" ? (
-              <p className="pt-view-kicker"><Store /> Empresas</p>
-            ) : null}
-            {activeView === "nearby" ? (
-              <div className="pt-nearby-heading">
-                <span className="pt-nearby-heading-icon" aria-hidden="true"><Navigation /></span>
-                <div>
-                  <h1 id="pt-title">Perto de mim</h1>
-                  <p className="pt-view-territory">{territoryName}</p>
-                  <p className="pt-tagline">Encontre comércios, serviços e lugares próximos de você.</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                <h1 id="pt-title">{territoryName}</h1>
-                <p className="pt-tagline">
-                  {activeView === "business"
-                    ? "Comércio, serviços e negócios locais, em um só lugar."
-                    : "Empresas, mapa, busca e o que está perto de você, em um só lugar."}
-                </p>
-              </>
-            )}
-
-            <div className="pt-shortcuts" aria-label="Atalhos do território" ref={shortcutRef}>
-              {shortcuts.map(({ icon: Icon, ...item }) => {
-                const content = (
-                  <>
-                    <Icon />
-                    <span>
-                      <strong>{item.label}</strong>
-                      <small>{item.description}</small>
-                    </span>
-                    {item.disabled ? <b>Em breve</b> : null}
-                  </>
-                );
-
-                return item.disabled || !item.href ? (
-                  <div className="is-disabled" aria-disabled="true" key={item.label}>
-                    {content}
-                  </div>
-                ) : (
-                  <Link
-                    className={item.view === activeView ? "is-primary" : ""}
-                    to={item.href}
-                    key={item.label}
-                    aria-current={item.view === activeView ? "page" : undefined}
-                  >
-                    {content}
-                  </Link>
-                );
-              })}
-              <details className="pt-shortcuts-more">
-                <summary aria-label="Abrir mais páginas"><Menu /><strong>Mais</strong></summary>
-                <nav aria-label="Mais páginas do território">
-                  <Link to={urls.home}>Visão geral</Link>
-                  <Link to={urls.search}>Busca</Link>
-                  <span>Comunidade <b>Em breve</b></span>
-                  <span>Serviços <b>Em breve</b></span>
-                  <span>Eventos <b>Em breve</b></span>
-                </nav>
-              </details>
-            </div>
-          </div>
-        </section>
+        <TerritorialModuleHero
+          territory={territoryName}
+          module={activeView}
+          activeModule={activeView}
+          eyebrow={heroEyebrow}
+          icon={heroIcon}
+          iconPlacement={activeView === "nearby" ? "title" : "eyebrow"}
+          title={heroTitle}
+          description={heroDescription}
+          breadcrumbs={heroBreadcrumbs}
+          backgroundImage={heroImage}
+          navItems={moduleNavItems}
+          moreNavItems={moreNavItems}
+        />
 
         {activeView !== "home" ? (
           <section
