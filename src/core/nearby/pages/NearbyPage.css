@@ -139,3 +139,29 @@
   .nb-routes button small{margin-top:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.62rem}
   .nb-business-cta{order:6}
 }
+
+/* Acabamento mobile: prioriza busca, referência e mapa no primeiro viewport. */
+@media(max-width:520px){
+  .nb-filter-panel{margin:.5rem .75rem 0;padding:.72rem .75rem}
+  .nb-search-row{gap:.5rem}
+  .nb-search-row label{height:2.65rem;padding-inline:.85rem}
+  .nb-filter-trigger{width:2.65rem;height:2.65rem}
+  .nb-filter-chips{gap:.5rem .25rem;margin:.68rem 0 0}
+  .nb-filter-chips button{gap:.22rem;font-size:.58rem;line-height:1.1}
+  .nb-filter-chips button svg{width:1.08rem;height:1.08rem}
+  .nb-filter-chips button.is-active svg{width:2.35rem;height:2.35rem;padding:.58rem;box-shadow:0 0 0 .3rem #edf9f7}
+
+  .nb-location-strip{margin:0 .75rem .35rem;padding:.52rem .65rem;column-gap:.45rem}
+  .nb-location-summary{gap:.45rem}
+  .nb-location-summary>span{width:1.65rem;height:1.65rem;padding:.34rem}
+  .nb-location-summary strong{font-size:.68rem;line-height:1.15}
+  .nb-location-summary p{margin-top:.08rem;font-size:.6rem;line-height:1.18}
+  .nb-gps-button{height:1.85rem;padding-inline:.58rem;font-size:.62rem}
+  .nb-radius-quick{gap:.25rem;margin-top:.28rem}
+  .nb-radius-quick button{height:1.8rem;font-size:.59rem}
+
+  .nb-map-card{margin-top:0;padding:.55rem .75rem .65rem}
+  .nb-map-card .nb-section-heading{margin-bottom:.42rem}
+  .nb-map-card .nb-section-heading>button{min-height:1.85rem}
+  .nb-map-card [style*="height: 400px"]{height:13.75rem!important;min-height:13.75rem!important}
+}
