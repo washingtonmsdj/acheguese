@@ -6,24 +6,39 @@
  * - Focus target → URL com lat/lng explicita, sem herdar filtro territorial artificial
  * - Layers       → providers injetados pelo boundary de aplicação
  * - Viewport     → useMapViewportFetch + MapLibreAdapter
- * - Geoloc GPS   → MapLibreAdapter.controls.location (via MapLocationControl → useRobustGeolocation → GeolocationService)
+ * - Geoloc GPS   → opcional, solicitado apenas pelo controle explícito do mapa
  *
  * @module core/maps/pages
  */
 
 import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Layers3, Navigation } from 'lucide-react';
+import {
+  ArrowUpRight,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Filter,
+  Layers3,
+  MapPin,
+  Navigation,
+  Search,
+  SlidersHorizontal,
+  Star,
+  Store,
+  X,
+} from 'lucide-react';
 import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/MapLibreAdapter';
 import { MapMarkerPopup } from '../components/v3/MapMarkerPopup';
+import './MapaTerritorialExplorer.css';
 import { useMapViewportFetch, type LayerFetcher } from '../hooks/useMapViewportFetch';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
-import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
 import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
 import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import { useTerritoryPolygon, type TerritoryPolygon } from '../hooks/useTerritoryPolygon';
+import { getLayerConfig } from '../config/markerConfig';
 import { useQuery } from '@tanstack/react-query';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
@@ -37,6 +52,7 @@ import { boundaryService } from '@/core/geospatial';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import { EntityStatus } from '@/shared/types/enums';
 import { LocationStatus, type Location } from '@/core/location/types';
+import { getBusinessCategoryLabel } from '@/shared/taxonomy/businessCategories';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type {
   MapLayerProviderRuntime,
@@ -70,7 +86,7 @@ function MvpMapHeader({
   nearbyHref: string | null;
 }) {
   return (
-    <section className="rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
+    <section className="map-page-header rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
@@ -80,7 +96,7 @@ function MvpMapHeader({
             {mapLabel}
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Veja as empresas disponíveis no território e abra cada resultado para saber mais.
+            Explore o território, filtre as camadas disponíveis e abra cada lugar para saber mais.
           </p>
         </div>
         {(providerLinks.length > 0 || nearbyHref) && (
@@ -111,6 +127,156 @@ function MvpMapHeader({
         )}
       </div>
     </section>
+  );
+}
+
+type MapSortMode = 'relevance' | 'alphabetical' | 'rating';
+
+interface MapCategoryOption {
+  key: string;
+  label: string;
+  count: number;
+}
+
+function getMarkerCategory(marker: MapMarker): string | null {
+  const category = marker.metadata?.category;
+  return typeof category === 'string' && category.trim() ? category.trim() : null;
+}
+
+function getMarkerCategoryLabel(marker: MapMarker): string {
+  const category = getMarkerCategory(marker);
+  if (marker.type === 'business' && category) return getBusinessCategoryLabel(category);
+  const label = category ?? marker.type.replace(/_/g, ' ');
+  return label.charAt(0).toLocaleUpperCase('pt-BR') + label.slice(1);
+}
+
+function MapResultItem({
+  marker,
+  selected,
+  onSelect,
+}: {
+  marker: MapMarker;
+  selected: boolean;
+  onSelect: (marker: MapMarker) => void;
+}) {
+  const ratingValue = marker.metadata?.rating;
+  const rating = typeof ratingValue === 'number' && ratingValue > 0 ? ratingValue : null;
+  const reviewCountValue = marker.metadata?.review_count;
+  const reviewCount = typeof reviewCountValue === 'number' && reviewCountValue > 0
+    ? reviewCountValue
+    : null;
+  const isVerified = marker.metadata?.is_verified === true;
+
+  return (
+    <article className="map-result-item" data-selected={selected || undefined}>
+      <button
+        type="button"
+        className="map-result-select"
+        onClick={() => onSelect(marker)}
+        aria-pressed={selected}
+        aria-label={`Mostrar ${marker.title} no mapa`}
+      >
+        <span className="map-result-icon" aria-hidden="true">
+          {marker.type === 'business' ? <Store /> : <MapPin />}
+        </span>
+        <span className="map-result-copy">
+          <span className="map-result-category">{getMarkerCategoryLabel(marker)}</span>
+          <strong>{marker.title}</strong>
+          <span className="map-result-meta">
+            {isVerified ? (
+              <span className="map-result-verified"><CheckCircle2 aria-hidden="true" /> Verificado</span>
+            ) : null}
+            {rating !== null ? (
+              <span className="map-result-rating">
+                <Star aria-hidden="true" /> {rating.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}
+                {reviewCount !== null ? ` (${reviewCount})` : ''}
+              </span>
+            ) : null}
+          </span>
+        </span>
+      </button>
+      {marker.url ? (
+        <Link
+          className="map-result-details"
+          to={marker.url}
+          aria-label={`Ver detalhes de ${marker.title}`}
+          title="Ver detalhes"
+        >
+          <ArrowUpRight aria-hidden="true" />
+        </Link>
+      ) : null}
+    </article>
+  );
+}
+
+function MapFilterDialog({
+  open,
+  verifiedAvailable,
+  ratingAvailable,
+  verifiedOnly,
+  ratedOnly,
+  onVerifiedChange,
+  onRatedChange,
+  onClose,
+  onClear,
+}: {
+  open: boolean;
+  verifiedAvailable: boolean;
+  ratingAvailable: boolean;
+  verifiedOnly: boolean;
+  ratedOnly: boolean;
+  onVerifiedChange: (value: boolean) => void;
+  onRatedChange: (value: boolean) => void;
+  onClose: () => void;
+  onClear: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="map-filter-backdrop" onMouseDown={onClose}>
+      <section
+        className="map-filter-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="map-filter-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header>
+          <div>
+            <span className="map-filter-kicker"><Filter aria-hidden="true" /> Ajuste a exploração</span>
+            <h2 id="map-filter-title">Filtros do mapa</h2>
+          </div>
+          <button type="button" className="map-filter-close" onClick={onClose} aria-label="Fechar filtros">
+            <X aria-hidden="true" />
+          </button>
+        </header>
+        {verifiedAvailable || ratingAvailable ? (
+          <fieldset className="map-filter-options">
+            <legend>Exibir somente</legend>
+            {verifiedAvailable ? (
+              <label>
+                <input type="checkbox" checked={verifiedOnly} onChange={(event) => onVerifiedChange(event.target.checked)} />
+                <span>Negócios verificados</span>
+              </label>
+            ) : null}
+            {ratingAvailable ? (
+              <label>
+                <input type="checkbox" checked={ratedOnly} onChange={(event) => onRatedChange(event.target.checked)} />
+                <span>Lugares com avaliação</span>
+              </label>
+            ) : null}
+          </fieldset>
+        ) : (
+          <p className="map-filter-empty">Ainda não há critérios adicionais disponíveis para estes resultados.</p>
+        )}
+        <footer>
+          <button type="button" className="map-filter-clear" onClick={onClear}>Limpar filtros</button>
+          <button type="button" className="map-filter-apply" onClick={onClose}>
+            <Check aria-hidden="true" /> Aplicar
+          </button>
+        </footer>
+      </section>
+    </div>
   );
 }
 
@@ -314,6 +480,13 @@ export default function MapaPageV4({
     [providers],
   );
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
+  const [mapQuery, setMapQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [sortMode, setSortMode] = useState<MapSortMode>('relevance');
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
+  const [ratedOnly, setRatedOnly] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [resultsExpanded, setResultsExpanded] = useState(false);
   const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(() =>
     createFocusedVisibleLayers(initialLayers, runtimeLayerKeys),
   );
@@ -403,15 +576,6 @@ export default function MapaPageV4({
     },
     [canonicalTerritoryCenter, fallbackMapLocation, focusTarget],
   );
-
-  const {
-    isGps,
-    status: locationStatus,
-    sourceMessage,
-  } = useResolvedUserLocation({
-    autoResolve: true,
-    tryGps: true,
-  });
 
   const moduleTerritory = useModuleTerritoryFilter({
     routeResolved: effectiveResolved,
@@ -518,10 +682,65 @@ export default function MapaPageV4({
     ] satisfies MapMarker[];
   }, [focusTarget]);
 
-  const markers = React.useMemo(
+  const allMarkers = React.useMemo(
     () => [...focusMarkers, ...Object.values(layerData).flat()],
     [focusMarkers, layerData],
   );
+
+  const categoryOptions = React.useMemo<MapCategoryOption[]>(() => {
+    const counts = new Map<string, number>();
+    allMarkers.forEach((marker) => {
+      const category = getMarkerCategory(marker);
+      if (!category) return;
+      counts.set(category, (counts.get(category) ?? 0) + 1);
+    });
+
+    return [...counts.entries()]
+      .map(([key, count]) => ({
+        key,
+        count,
+        label: getBusinessCategoryLabel(key),
+      }))
+      .sort((left, right) => left.label.localeCompare(right.label, 'pt-BR'));
+  }, [allMarkers]);
+
+  const verifiedFilterAvailable = React.useMemo(
+    () => allMarkers.some((marker) => marker.metadata?.is_verified === true),
+    [allMarkers],
+  );
+  const ratingFilterAvailable = React.useMemo(
+    () => allMarkers.some((marker) => typeof marker.metadata?.rating === 'number' && Number(marker.metadata.rating) > 0),
+    [allMarkers],
+  );
+
+  const filteredMarkers = React.useMemo(() => {
+    const normalizedQuery = mapQuery.trim().toLocaleLowerCase('pt-BR');
+    const filtered = allMarkers.filter((marker) => {
+      const category = getMarkerCategory(marker);
+      if (activeCategory !== 'all' && category !== activeCategory) return false;
+      if (verifiedOnly && marker.metadata?.is_verified !== true) return false;
+      if (ratedOnly && !(typeof marker.metadata?.rating === 'number' && marker.metadata.rating > 0)) return false;
+      if (!normalizedQuery) return true;
+
+      return [marker.title, marker.subtitle ?? '', category ?? '']
+        .some((value) => value.toLocaleLowerCase('pt-BR').includes(normalizedQuery));
+    });
+
+    return filtered.sort((left, right) => {
+      if (sortMode === 'alphabetical') return left.title.localeCompare(right.title, 'pt-BR');
+      if (sortMode === 'rating') {
+        const leftRating = typeof left.metadata?.rating === 'number' ? left.metadata.rating : -1;
+        const rightRating = typeof right.metadata?.rating === 'number' ? right.metadata.rating : -1;
+        return rightRating - leftRating || left.title.localeCompare(right.title, 'pt-BR');
+      }
+      return (right.score ?? 0) - (left.score ?? 0) || left.title.localeCompare(right.title, 'pt-BR');
+    });
+  }, [activeCategory, allMarkers, mapQuery, ratedOnly, sortMode, verifiedOnly]);
+
+  useEffect(() => {
+    if (!selectedMarker || filteredMarkers.some((marker) => marker.id === selectedMarker.id)) return;
+    setSelectedMarker(null);
+  }, [filteredMarkers, selectedMarker]);
 
   useEffect(() => {
     if (!focusTarget || selectedMarker || focusMarkers.length === 0) return;
@@ -530,7 +749,7 @@ export default function MapaPageV4({
 
   const mapCanvas = (
     <div
-      className="relative h-full min-h-[24rem] w-full md:min-h-[34rem]"
+      className="map-page-canvas relative h-full w-full"
       data-page="mapa-v4"
       data-territory-scope={territoryFilter.scope}
       data-map-mode={isFocusOnlyMode ? 'focus-target' : 'territory'}
@@ -541,23 +760,17 @@ export default function MapaPageV4({
           styleUrl={TILE_STYLE_URL}
           initialViewport={initialViewport}
           territoryPolygons={territoryPolygons}
-          markers={markers}
+          markers={filteredMarkers}
           resolved={effectiveResolved}
           enableClustering={false}
           onMarkerClick={(id) => {
-            const marker = markers.find((m) => m.id === id);
+            const marker = filteredMarkers.find((m) => m.id === id);
             if (!marker) return;
             setSelectedMarker(marker);
             adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 17 });
           }}
           onViewportChange={handleViewportChange}
           controls={{
-            search: {
-              type: 'geocoding',
-              position: 'top-left',
-              placeholder: 'Buscar lugar ou endereço...',
-              debounceMs: 300,
-            },
             location: {
               enabled: true,
               position: 'top-right',
@@ -565,7 +778,7 @@ export default function MapaPageV4({
               autoFlyTo: true,
             },
             layers: {
-              enabled: runtimeLayerKeys.length > 1,
+              enabled: false,
               position: 'bottom-left',
               layers: runtimeLayerKeys,
               layout: 'vertical',
@@ -573,10 +786,10 @@ export default function MapaPageV4({
               onLayerToggle: handleLayerToggle,
             },
             territory: {
-              enabled: true,
+              enabled: false,
               position: 'top-right',
               showSelector: false,
-              showIndicator: !isFocusOnlyMode && territoryFilter.scope !== 'none',
+              showIndicator: false,
               compact: true,
             },
           }}
@@ -604,48 +817,233 @@ export default function MapaPageV4({
         </div>
       )}
 
-      {sourceMessage && locationStatus !== 'idle' && locationStatus !== 'resolving' && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 16,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10,
-            background: isGps ? 'rgba(34, 197, 94, 0.95)' : 'rgba(59, 130, 246, 0.95)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: 500,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-          role="status"
-          aria-live="polite"
-        >
-          <span>{isGps ? 'GPS' : 'Território'}</span>
-          <span>{sourceMessage}</span>
-        </div>
-      )}
     </div>
   );
 
+  const selectMarker = (marker: MapMarker) => {
+    setSelectedMarker(marker);
+    adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 16 });
+  };
+
+  const refreshCurrentArea = () => {
+    const map = adapterRef.current?.getMap();
+    const bounds = map?.getBounds();
+    if (!map || !bounds) return;
+
+    fetchByBounds(
+      [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+      map.getZoom(),
+    );
+  };
+
+  const clearMapFilters = () => {
+    setActiveCategory('all');
+    setVerifiedOnly(false);
+    setRatedOnly(false);
+    setMapQuery('');
+  };
+
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5">
+    <div className="map-page mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5">
       <MvpMapHeader
         territoryName={territoryName}
         mapLabel={territoryLabels.mapLabel}
         providerLinks={providerLinks}
         nearbyHref={nearbyUrl}
       />
-      <section className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
-        <div className="h-[68vh] min-h-[28rem]">
-          {mapCanvas}
-        </div>
-      </section>
+      <div className="map-explorer" data-map-explorer>
+        <aside className="map-explorer-sidebar" aria-label="Busca e resultados do mapa">
+          <div className="map-explorer-tools">
+            <div className="map-explorer-heading">
+              <span className="map-explorer-heading-icon"><Layers3 aria-hidden="true" /></span>
+              <div>
+                <h2>Mapa do território</h2>
+                <p>Explore os lugares reais disponíveis nesta área.</p>
+              </div>
+            </div>
+
+            <div className="map-explorer-search-row">
+              <label className="map-explorer-search">
+                <Search aria-hidden="true" />
+                <input
+                  type="search"
+                  value={mapQuery}
+                  onChange={(event) => setMapQuery(event.target.value)}
+                  placeholder="Buscar no mapa..."
+                  aria-label="Buscar lugares no mapa"
+                />
+                {mapQuery ? (
+                  <button type="button" onClick={() => setMapQuery('')} aria-label="Limpar busca">
+                    <X aria-hidden="true" />
+                  </button>
+                ) : null}
+              </label>
+              {verifiedFilterAvailable || ratingFilterAvailable ? (
+                <button
+                  type="button"
+                  className="map-filter-trigger"
+                  onClick={() => setFiltersOpen(true)}
+                  aria-label="Abrir filtros"
+                  title="Filtros"
+                >
+                  <SlidersHorizontal aria-hidden="true" />
+                  {(verifiedOnly || ratedOnly) ? <span aria-label="Filtros ativos" /> : null}
+                </button>
+              ) : null}
+            </div>
+
+            {providers.length > 0 ? (
+              <div className="map-explorer-layers" role="group" aria-label="Camadas do mapa">
+                {providers.map((provider) => {
+                  const isVisible = visibleLayers[provider.layerKey] !== false;
+                  const layerConfig = getLayerConfig(provider.layerKey);
+                  return (
+                    <button
+                      type="button"
+                      key={provider.layerKey}
+                      className="map-layer-chip"
+                      data-active={isVisible}
+                      aria-pressed={isVisible}
+                      onClick={() => handleLayerToggle(provider.layerKey, !isVisible)}
+                    >
+                      <span style={{ backgroundColor: layerConfig.color }} aria-hidden="true" />
+                      {provider.label}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+
+            {categoryOptions.length > 0 ? (
+              <div className="map-category-area">
+                <div className="map-category-heading">
+                  <span>Categorias</span>
+                  <span>{categoryOptions.length} disponíveis</span>
+                </div>
+                <div className="map-category-chips" role="group" aria-label="Filtrar por categoria">
+                  <button
+                    type="button"
+                    className="map-category-chip"
+                    data-active={activeCategory === 'all'}
+                    aria-pressed={activeCategory === 'all'}
+                    onClick={() => setActiveCategory('all')}
+                  >
+                    Todas <span>{allMarkers.length}</span>
+                  </button>
+                  {categoryOptions.map((category) => (
+                    <button
+                      type="button"
+                      className="map-category-chip"
+                      key={category.key}
+                      data-active={activeCategory === category.key}
+                      aria-pressed={activeCategory === category.key}
+                      onClick={() => setActiveCategory(category.key)}
+                    >
+                      {category.label} <span>{category.count}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <section
+            className="map-results-panel"
+            data-expanded={resultsExpanded}
+            aria-label="Resultados encontrados no mapa"
+          >
+            <div className="map-results-header">
+              <div className="map-results-title">
+                <span>
+                  <strong>{filteredMarkers.length} {filteredMarkers.length === 1 ? 'lugar' : 'lugares'}</strong>
+                  <small>visíveis no mapa</small>
+                </span>
+                <button
+                  type="button"
+                  className="map-results-expand"
+                  aria-expanded={resultsExpanded}
+                  aria-label={resultsExpanded ? 'Recolher resultados' : 'Expandir resultados'}
+                  onClick={() => setResultsExpanded((expanded) => !expanded)}
+                >
+                  <ChevronDown aria-hidden="true" />
+                </button>
+              </div>
+              <label className="map-sort-control">
+                <span>Ordenar</span>
+                <select
+                  value={sortMode}
+                  onChange={(event) => setSortMode(event.target.value as MapSortMode)}
+                  aria-label="Ordenar resultados do mapa"
+                >
+                  <option value="relevance">Mais relevantes</option>
+                  {ratingFilterAvailable ? <option value="rating">Melhor avaliados</option> : null}
+                  <option value="alphabetical">Nome (A–Z)</option>
+                </select>
+                <ChevronDown aria-hidden="true" />
+              </label>
+            </div>
+
+            <div className="map-results-list" aria-live="polite">
+              {filteredMarkers.map((marker) => (
+                <MapResultItem
+                  key={`${marker.type}:${marker.id}`}
+                  marker={marker}
+                  selected={selectedMarker?.id === marker.id}
+                  onSelect={selectMarker}
+                />
+              ))}
+              {filteredMarkers.length === 0 ? (
+                <div className="map-results-empty">
+                  {loadingLayers.size > 0 ? (
+                    <p role="status">Carregando lugares desta área…</p>
+                  ) : allMarkers.length > 0 ? (
+                    <>
+                      <p>Nenhum lugar corresponde à busca e aos filtros.</p>
+                      <button type="button" onClick={clearMapFilters}>Limpar busca e filtros</button>
+                    </>
+                  ) : (
+                    <p>Nenhum lugar disponível nesta área do mapa.</p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </section>
+        </aside>
+
+        <section className="map-explorer-map-panel" aria-label={`Mapa de ${territoryName}`}>
+          <div className="map-page-viewport">
+            {mapCanvas}
+          </div>
+          <div className="map-territory-label" aria-label={`Território: ${territoryName}`}>
+            <MapPin aria-hidden="true" />
+            <span>{territoryName}</span>
+          </div>
+          <button
+            type="button"
+            className="map-refresh-area"
+            onClick={refreshCurrentArea}
+            disabled={loadingLayers.size > 0}
+          >
+            <Search aria-hidden="true" />
+            {loadingLayers.size > 0 ? 'Atualizando…' : 'Buscar nesta área'}
+          </button>
+        </section>
+      </div>
+
+      <MapFilterDialog
+        open={filtersOpen}
+        verifiedAvailable={verifiedFilterAvailable}
+        ratingAvailable={ratingFilterAvailable}
+        verifiedOnly={verifiedOnly}
+        ratedOnly={ratedOnly}
+        onVerifiedChange={setVerifiedOnly}
+        onRatedChange={setRatedOnly}
+        onClose={() => setFiltersOpen(false)}
+        onClear={() => {
+          setVerifiedOnly(false);
+          setRatedOnly(false);
+        }}
+      />
     </div>
   );
 
