@@ -49,7 +49,8 @@
   .nb-results>.nb-section-heading p{font-size:.66rem}
   .nb-results>.nb-section-heading>button{display:none}
   .nb-mobile-sort{position:relative;display:flex;align-items:center;border:1px solid var(--nb-line);border-radius:999px;background:#fff}
-  .nb-mobile-sort select{height:2.35rem;appearance:none;border:0;outline:0;background:transparent;padding:0 1.8rem 0 .8rem;color:var(--nb-ink);font-size:.65rem;font-weight:800}
+  .nb-mobile-sort span{padding-left:.7rem;color:var(--nb-muted);font-size:.62rem;font-weight:700;white-space:nowrap}
+  .nb-mobile-sort select{height:2.35rem;appearance:none;border:0;outline:0;background:transparent;padding:0 1.8rem 0 .35rem;color:var(--nb-ink);font-size:.65rem;font-weight:800}
   .nb-mobile-sort svg{position:absolute;right:.55rem;width:.8rem;pointer-events:none}
   .nb-business-grid{display:block}
   .nb-page .nb-business-card{display:grid;grid-template-columns:7rem minmax(0,1fr);width:100%;min-height:7.5rem;border:0;border-bottom:1px solid var(--nb-line);border-radius:0}
@@ -103,7 +104,7 @@
   .nb-map-card .nb-section-heading>button{min-height:2rem;border:1px solid var(--nb-line);border-radius:999px;padding:0 .65rem;background:#fff;font-size:.62rem}
   .nb-map-cta-desktop{display:none}
   .nb-map-cta-mobile{display:inline}
-  .nb-map-card [style*="height: 400px"]{height:15.75rem!important;min-height:15.75rem!important;border-radius:.8rem}
+  .nb-map-card [style*="height: 400px"]{height:14.5rem!important;min-height:14.5rem!important;border-radius:.8rem}
   .nb-map-card .maplibregl-ctrl-attrib{max-width:70%;padding:.1rem .25rem;font-size:.5rem;line-height:1.25}
 
   .nb-results{order:4}
@@ -121,9 +122,16 @@
   .nb-business-copy .nb-business-footer{display:flex!important;margin-top:.25rem}
   .nb-business-copy .nb-business-footer em{margin:0;font-size:.62rem}
   .nb-business-copy .nb-business-footer em svg{width:.75rem;height:.75rem}
+  .nb-business-copy .nb-business-footer .nb-rating-empty{display:inline-flex!important;align-items:center;border-radius:999px;background:#f1f5f4;padding:.2rem .42rem;color:#527074;font-size:.57rem;font-style:normal;font-weight:750}
   .nb-business-copy .nb-save-button{display:grid!important;width:1.65rem;height:1.65rem;place-items:center;border:1px solid var(--nb-line);border-radius:50%;color:var(--nb-sea)}
   .nb-business-copy .nb-save-button svg{width:.8rem;height:.8rem}
 
   .nb-routes{order:5}
+  .nb-routes>div{display:flex;gap:.65rem;overflow-x:auto;padding:.1rem .05rem .3rem;scrollbar-width:none;scroll-snap-type:x proximity}
+  .nb-routes>div::-webkit-scrollbar{display:none}
+  .nb-routes>div>button{flex:0 0 10.25rem;min-width:10.25rem;padding:.55rem;border:1px solid var(--nb-line);border-radius:.8rem;background:#fff;scroll-snap-align:start}
+  .nb-routes button>span{height:3.75rem;border-radius:.6rem}
+  .nb-routes button strong{margin-top:.45rem;min-height:2.15rem;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  .nb-routes button small{margin-top:.3rem;font-size:.62rem}
   .nb-business-cta{order:6}
 }

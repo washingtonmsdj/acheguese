@@ -35,6 +35,11 @@ function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1).replace(".", ",")} km`;
 }
 
+function formatTerritoryDistance(meters: number): string {
+  const distance = formatDistance(meters);
+  return distance === "No território" ? distance : `${distance} do centro do território`;
+}
+
 function formatCategory(value: string): string {
   const normalized = value.trim().toLocaleLowerCase("pt-BR");
   const labels: Record<string, string> = {
@@ -58,9 +63,9 @@ function NearbyBusinessCard({ business, precise }: { business: NearbyBusiness; p
       <span className="nb-business-copy">
         <small>{business.category ? formatCategory(business.category) : "Empresa local"}</small>
         <strong>{business.name}</strong>
-        <span className="nb-business-distance"><MapPin /> {precise ? formatDistance(business.distanceMeters) : business.neighborhood || `${formatDistance(business.distanceMeters)} do centro do território`}</span>
+        <span className="nb-business-distance"><MapPin /> {precise ? formatDistance(business.distanceMeters) : formatTerritoryDistance(business.distanceMeters)}</span>
         <span className="nb-business-status">Horário não informado</span>
-        <span className="nb-business-footer"><em><Star /> {business.rating > 0 ? business.rating.toFixed(1) : "Novo"}</em><span className="nb-save-button" aria-label={`Salvar ${business.name}`} title="Salvar"><Bookmark /></span></span>
+        <span className="nb-business-footer">{business.rating > 0 ? <em><Star /> {business.rating.toFixed(1)}</em> : <em className="nb-rating-empty">Sem avaliações</em>}<span className="nb-save-button" aria-label={`Salvar ${business.name}`} title="Salvar"><Bookmark /></span></span>
       </span>
     </button>
   );
@@ -135,12 +140,12 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
         {isError ? <section className="nb-error"><AlertTriangle /><div><strong>Não foi possível carregar os resultados.</strong><p>Você ainda pode explorar a lista completa de empresas.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas</button></section> : null}
         <div className="nb-layout">
           <main className="nb-results">
-            <header className="nb-section-heading"><div><Navigation /><span><h2>Mais próximos agora</h2><p>{isLoading ? "Buscando estabelecimentos..." : `${filteredBusinesses.length} empresa${filteredBusinesses.length === 1 ? "" : "s"} em até ${radiusKm < 1 ? `${radiusKm * 1000} m` : `${radiusKm} km`}`}</p></span></div><button type="button" onClick={() => navigate(businessUrl)}>Ver todos <ArrowRight /></button><div className="nb-mobile-sort"><select aria-label="Ordenar resultados" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliação</option><option value="name">Nome (A → Z)</option></select><ChevronDown /></div></header>
+            <header className="nb-section-heading"><div><Navigation /><span><h2>{isGoodForProximity ? "Mais próximos de você" : "Próximos no território"}</h2><p>{isLoading ? "Buscando estabelecimentos..." : `${filteredBusinesses.length} empresa${filteredBusinesses.length === 1 ? "" : "s"} em até ${radiusKm < 1 ? `${radiusKm * 1000} m` : `${radiusKm} km`}`}</p></span></div><button type="button" onClick={() => navigate(businessUrl)}>Ver todos <ArrowRight /></button><div className="nb-mobile-sort"><span>Ordenar:</span><select aria-label="Ordenar resultados" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliação</option><option value="name">Nome (A → Z)</option></select><ChevronDown /></div></header>
             {isLoading ? <div className="nb-loading"><LocateFixed /><span>Localizando o que está perto de você…</span></div> : visibleBusinesses.length ? <div className="nb-business-grid">{visibleBusinesses.map((business) => <NearbyBusinessCard key={business.id} business={business} precise={isGoodForProximity} />)}</div> : <div className="nb-no-results"><Search /><strong>Nenhum resultado neste recorte</strong><p>Amplie o raio ou remova os filtros para ver mais opções.</p></div>}
           </main>
           <aside className="nb-sidebar">
             <section className="nb-map-card"><header className="nb-section-heading"><div><Map /><span><h2>Mapa da região</h2><p>{isGoodForProximity ? `Raio de ${radiusKm} km` : locationName}</p></span></div><button type="button" onClick={() => navigate(mapUrl)}><span className="nb-map-cta-desktop">Mapa completo</span><span className="nb-map-cta-mobile">Expandir mapa</span><ArrowRight /></button></header><NearbyMiniMap userLocation={spatialCenter} businesses={filteredBusinesses} radiusKm={radiusKm} showProximity={isGoodForProximity} /></section>
-            {visibleBusinesses.length ? <section className="nb-routes"><header className="nb-section-heading"><div><Navigation /><span><h2>Rotas rápidas</h2><p>Atalhos para os primeiros resultados.</p></span></div></header><div>{visibleBusinesses.slice(0, 4).map((business) => <button type="button" key={business.id} onClick={() => navigate(business.canonicalUrl)}><span>{business.logo ? <img src={business.logo} alt="" /> : <Store />}</span><strong>{business.name}</strong><small>{formatDistance(business.distanceMeters)}{isGoodForProximity ? "" : " do centro do território"}</small></button>)}</div></section> : null}
+            {visibleBusinesses.length ? <section className="nb-routes"><header className="nb-section-heading"><div><Navigation /><span><h2>Rotas rápidas</h2><p>Atalhos para os primeiros resultados.</p></span></div></header><div>{visibleBusinesses.slice(0, 4).map((business) => <button type="button" key={business.id} onClick={() => navigate(business.canonicalUrl)}><span>{business.logo ? <img src={business.logo} alt="" /> : <Store />}</span><strong>{business.name}</strong><small>{isGoodForProximity ? formatDistance(business.distanceMeters) : formatTerritoryDistance(business.distanceMeters)}</small></button>)}</div></section> : null}
             <section className="nb-business-cta"><Store /><div><strong>Seu negócio aparece aqui?</strong><p>Cadastre sua empresa e seja encontrado por quem está perto.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Saiba mais <ArrowRight /></button></section>
           </aside>
         </div>
