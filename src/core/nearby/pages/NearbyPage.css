@@ -42,7 +42,7 @@
   .nb-map-card{order:3;margin:0;padding:0;border:0;border-radius:0;box-shadow:none}
   .nb-map-card .nb-section-heading{display:none}
   .nb-map-card [style*="height: 400px"]{height:20rem!important;border-radius:0}
-  .nb-results{order:4;margin:0;padding:0;border:0;border-radius:0;box-shadow:none}
+  .nb-results{order:5;margin:0;padding:0;border:0;border-radius:0;box-shadow:none}
   .nb-results>.nb-section-heading{margin:0;padding:.9rem 1rem;border-bottom:1px solid var(--nb-line)}
   .nb-results>.nb-section-heading>div>svg{display:none}
   .nb-results>.nb-section-heading h2{font-size:1rem}
@@ -56,7 +56,17 @@
   .nb-page .nb-business-media{width:auto;height:6.25rem;margin:.65rem;border-radius:.65rem}
   .nb-business-copy{align-self:center;overflow:hidden;padding:.7rem .9rem .7rem 0}
   .nb-business-copy small{font-size:.63rem}.nb-business-copy strong{font-size:.84rem;white-space:normal;line-height:1.25}.nb-business-copy span,.nb-business-copy em{font-size:.68rem}
-  .nb-routes{order:5;margin:0;border-radius:0}.nb-business-cta{order:6;margin:.75rem}
+  .nb-routes{order:4;margin:.75rem 0 0;padding:1rem;border:0;border-radius:0;box-shadow:none}
+  .nb-routes .nb-section-heading{margin-bottom:.7rem}
+  .nb-routes .nb-section-heading h2{font-size:.95rem}
+  .nb-routes .nb-section-heading p{font-size:.64rem}
+  .nb-routes>div{display:flex;gap:.65rem;overflow-x:auto;padding-bottom:.2rem;scrollbar-width:none}
+  .nb-routes>div::-webkit-scrollbar{display:none}
+  .nb-routes>div>button{flex:0 0 8.25rem}
+  .nb-routes button>span{height:3.5rem;border-radius:.65rem}
+  .nb-routes button strong{margin-top:.4rem;font-size:.66rem}
+  .nb-routes button small{font-size:.6rem}
+  .nb-business-cta{order:6;margin:.75rem}
 
   .nb-filter-overlay{position:fixed;inset:0;z-index:100;background:rgba(3,24,26,.58);display:flex;align-items:flex-end}
   .nb-filter-sheet{width:100%;max-height:88vh;overflow-y:auto;border-radius:1.4rem 1.4rem 0 0;background:#fff;padding:1rem 1.15rem calc(1rem + env(safe-area-inset-bottom));box-shadow:0 -1rem 3rem rgba(3,24,26,.2)}
