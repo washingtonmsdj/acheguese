@@ -89,7 +89,7 @@
   .nb-location-summary{gap:.55rem}
   .nb-location-summary>span{width:1.85rem;height:1.85rem;padding:.38rem}
   .nb-location-summary strong{font-size:.72rem}
-  .nb-location-summary p{font-size:.64rem}
+  .nb-location-summary p{max-width:100%;font-size:.64rem;line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
   .nb-gps-button{height:2rem;padding-inline:.68rem;font-size:.66rem}
   .nb-gps-button svg{width:.9rem}
   .nb-radius-quick{gap:.3rem;margin-top:.35rem}
@@ -126,12 +126,12 @@
   .nb-business-copy .nb-save-button{display:grid!important;width:1.65rem;height:1.65rem;place-items:center;border:1px solid var(--nb-line);border-radius:50%;color:var(--nb-sea)}
   .nb-business-copy .nb-save-button svg{width:.8rem;height:.8rem}
 
-  .nb-routes{order:5}
-  .nb-routes>div{display:flex;gap:.65rem;overflow-x:auto;padding:.1rem .05rem .3rem;scrollbar-width:none;scroll-snap-type:x proximity}
+  .nb-routes{order:5;min-width:0;overflow:hidden}
+  .nb-routes>div{display:flex;width:100%;min-width:0;gap:.65rem;overflow-x:auto;padding:.1rem .05rem .3rem;scrollbar-width:none;scroll-snap-type:x proximity}
   .nb-routes>div::-webkit-scrollbar{display:none}
-  .nb-routes>div>button{flex:0 0 10.25rem;min-width:10.25rem;padding:.55rem;border:1px solid var(--nb-line);border-radius:.8rem;background:#fff;scroll-snap-align:start}
-  .nb-routes button>span{height:3.75rem;border-radius:.6rem}
-  .nb-routes button strong{margin-top:.45rem;min-height:2.15rem;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
-  .nb-routes button small{margin-top:.3rem;font-size:.62rem}
+  .nb-routes>div>button{display:block;flex:0 0 11.25rem;flex-shrink:0;width:11.25rem;min-width:11.25rem;max-width:11.25rem;overflow:hidden;padding:.6rem;border:1px solid var(--nb-line);border-radius:.8rem;background:#fff;scroll-snap-align:start}
+  .nb-routes button>span{height:3.9rem;border-radius:.6rem}
+  .nb-routes button strong{margin-top:.48rem;min-height:2.25rem;overflow:hidden;white-space:normal;line-height:1.2;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  .nb-routes button small{margin-top:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.62rem}
   .nb-business-cta{order:6}
 }
