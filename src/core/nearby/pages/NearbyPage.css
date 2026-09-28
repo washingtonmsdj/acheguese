@@ -198,4 +198,8 @@
   .nb-location-sheet .nb-address-picker{height:auto;flex-direction:column}
   .nb-location-sheet .nb-address-picker label{min-height:2.75rem}
   .nb-location-sheet .nb-address-picker button{min-height:2.75rem!important}
+
+  .nb-page--awaiting-location .nb-container{padding-bottom:0}
+  .nb-page--awaiting-location .nb-location-strip{margin-top:.45rem}
+  .nb-page--awaiting-location .nb-layout{display:none}
 }

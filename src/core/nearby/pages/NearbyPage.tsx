@@ -158,7 +158,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   if (providerIds.length === 0) return <div className="nb-page"><section className="nb-empty-state"><Compass /><h2>Perto de mim indisponível agora</h2><p>Continue explorando as empresas deste território.</p><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas <ArrowRight /></button></section></div>;
 
   return (
-    <div className="nb-page">
+    <div className={`nb-page${isGoodForProximity ? "" : " nb-page--awaiting-location"}`}>
       <Helmet><title>Perto de mim — {locationName}</title><meta name="description" content={`Encontre empresas e serviços perto de você em ${locationName}.`} /></Helmet>
       <div className="nb-container">
         <section className={`nb-location-strip${isGoodForProximity ? " nb-location-strip--resolved" : ""}`}>
