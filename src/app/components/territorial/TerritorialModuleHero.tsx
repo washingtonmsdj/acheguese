@@ -64,7 +64,6 @@ export function TerritorialModuleHero({
           {TitleIcon ? <span className="tmh__title-icon" aria-hidden="true"><TitleIcon /></span> : null}
           <div>
             <h1 id="territorial-module-hero-title">{title}</h1>
-            {activeModule === "nearby" ? <p className="tmh__territory">{territory}</p> : null}
             <p className="tmh__description">{description}</p>
           </div>
         </div>

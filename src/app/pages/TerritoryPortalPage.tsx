@@ -152,16 +152,35 @@ export default function TerritoryPortalPage({
     { label: territoryName },
     ...(activeView === "business" ? [{ label: "Empresas" }] : []),
     ...(activeView === "nearby" ? [{ label: "Perto de mim" }] : []),
+    ...(activeView === "map" ? [{ label: "Mapa" }] : []),
+    ...(activeView === "search" ? [{ label: "Busca" }] : []),
   ];
 
-  const heroTitle = activeView === "nearby" ? "Perto de mim" : territoryName;
+  const heroTitle = {
+    home: territoryName,
+    business: "Empresas",
+    nearby: "Perto de mim",
+    map: "Mapa",
+    search: "Busca",
+  }[activeView];
   const heroDescription = activeView === "business"
     ? "Comércio, serviços e negócios locais, em um só lugar."
     : activeView === "nearby"
       ? "Encontre comércios, serviços e lugares próximos de você."
-      : "Empresas, mapa, busca e o que está perto de você, em um só lugar.";
-  const heroEyebrow = activeView === "business" ? "Empresas" : undefined;
-  const heroIcon = activeView === "business" ? Store : activeView === "nearby" ? Navigation : undefined;
+      : activeView === "map"
+        ? "Explore ruas, lugares e pontos importantes do território."
+        : activeView === "search"
+          ? "Encontre empresas, serviços e lugares do território."
+          : "Empresas, mapa, busca e o que está perto de você, em um só lugar.";
+  const heroIcon = activeView === "business"
+    ? Store
+    : activeView === "nearby"
+      ? Navigation
+      : activeView === "map"
+        ? Map
+        : activeView === "search"
+          ? Search
+          : undefined;
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -238,9 +257,9 @@ export default function TerritoryPortalPage({
           territory={territoryName}
           module={activeView}
           activeModule={activeView}
-          eyebrow={heroEyebrow}
+          eyebrow={undefined}
           icon={heroIcon}
-          iconPlacement={activeView === "nearby" ? "title" : "eyebrow"}
+          iconPlacement="title"
           title={heroTitle}
           description={heroDescription}
           breadcrumbs={heroBreadcrumbs}
