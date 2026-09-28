@@ -1075,13 +1075,13 @@
   }
 
   .tbd-card-main {
-    grid-template-columns: 5.5rem minmax(0, 1fr);
-    gap: 0.7rem;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    gap: 0.55rem;
   }
 
   .tbd-card-cover {
-    width: 5.5rem;
-    height: 5.5rem;
+    width: 4.5rem;
+    height: 4.5rem;
   }
 
   .tbd-card-body h3 {
@@ -1089,8 +1089,11 @@
   }
 
   .tbd-card-meta {
-    gap: 0.15rem 0.35rem;
-    font-size: 0.54rem;
+    flex-wrap: nowrap;
+    gap: 0.1rem;
+    font-size: 0.5rem;
+    letter-spacing: -0.04em;
+    white-space: nowrap;
   }
 
   .tbd-save {
