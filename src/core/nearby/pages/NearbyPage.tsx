@@ -29,6 +29,11 @@ function readNearbyReference(): NearbyReference | null {
     return Number.isFinite(reference.latitude) && Number.isFinite(reference.longitude) ? reference : null;
   } catch { return null; }
 }
+
+function persistNearbyReference(reference: NearbyReference): void {
+  if (typeof window === "undefined") return;
+  try { window.sessionStorage.setItem(NEARBY_REFERENCE_KEY, JSON.stringify(reference)); } catch { /* armazenamento pode estar bloqueado */ }
+}
 const RADIUS_OPTIONS = [0.5, 1, 3, 5, 10, 20] as const;
 type SortMode = "distance" | "name" | "rating";
 const CATEGORY_OPTIONS = [
@@ -110,14 +115,14 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
     if (!geocodedAddress) return;
     const reference: NearbyReference = { type: "address", label: geocodedAddress.address.formatted || addressInput, latitude: geocodedAddress.coordinates.latitude, longitude: geocodedAddress.coordinates.longitude };
     setSavedReference(reference);
-    window.sessionStorage.setItem(NEARBY_REFERENCE_KEY, JSON.stringify(reference));
+    persistNearbyReference(reference);
     setLocationEditorOpen(false);
   }, [addressInput, geocodedAddress]);
   useEffect(() => {
     if (!hasGpsLocation || userLatitude == null || userLongitude == null) return;
     const reference: NearbyReference = { type: "gps", label: resolvedUserLocation?.locationName || "Sua localização atual", latitude: userLatitude, longitude: userLongitude };
     setSavedReference(reference);
-    window.sessionStorage.setItem(NEARBY_REFERENCE_KEY, JSON.stringify(reference));
+    persistNearbyReference(reference);
     setLocationEditorOpen(false);
   }, [hasGpsLocation, resolvedUserLocation?.locationName, userLatitude, userLongitude]);
   const territoryCenter = useMemo(() => {
