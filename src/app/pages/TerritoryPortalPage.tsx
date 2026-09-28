@@ -209,7 +209,7 @@ export default function TerritoryPortalPage({
   };
 
   return (
-    <div className="pt-page">
+    <div className={`pt-page${activeView === "home" ? " pt-page-home" : ""}`}>
       <Helmet>
         <title>{activeViewLabel} | Achegue-se</title>
         <meta
