@@ -99,3 +99,12 @@
 @media(prefers-reduced-motion:reduce){
   .tmh *{scroll-behavior:auto!important;transition:none!important}
 }
+
+/* Na Home, os quatro atalhos preservam o formato de cards e deslizam no mobile. */
+@media(max-width:760px){
+  .tmh.tmh--home .tmh-nav--mvp{display:flex;justify-content:flex-start;overflow-x:auto}
+  .tmh.tmh--home .tmh-nav--mvp .tmh-nav__item{flex:0 0 10.5rem;min-height:4.7rem;justify-content:flex-start;gap:.55rem;padding:.55rem;scroll-snap-align:start}
+  .tmh.tmh--home .tmh-nav--mvp .tmh-nav__item>svg{width:1.2rem;height:1.2rem}
+  .tmh.tmh--home .tmh-nav--mvp .tmh-nav__item strong{font-size:.72rem}
+  .tmh.tmh--home .tmh-nav--mvp .tmh-nav__item small{display:block;font-size:.58rem;line-height:1.2}
+}

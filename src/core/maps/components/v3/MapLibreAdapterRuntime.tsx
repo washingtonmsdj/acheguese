@@ -909,11 +909,11 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           const el = document.createElement('div');
 
           if (isTerritoryReference) {
-            el.style.cssText = 'display:flex;align-items:center;gap:7px;width:max-content;max-width:220px;min-height:34px;pointer-events:none;';
+            el.style.cssText = 'position:relative;display:block;width:22px;height:22px;pointer-events:none;';
             const point = document.createElement('span');
-            point.style.cssText = 'display:block;width:22px;height:22px;flex:0 0 22px;border:5px solid white;border-radius:50%;background:#087f83;box-shadow:0 2px 8px rgba(0,0,0,.3);';
+            point.style.cssText = 'position:absolute;inset:0;display:block;box-sizing:border-box;width:22px;height:22px;border:5px solid white;border-radius:50%;background:#087f83;box-shadow:0 2px 8px rgba(0,0,0,.3);';
             const label = document.createElement('span');
-            label.style.cssText = 'display:flex;max-width:185px;flex-direction:column;gap:1px;border:1px solid rgba(13,54,57,.12);border-radius:8px;background:rgba(255,255,255,.96);padding:5px 8px;box-shadow:0 2px 8px rgba(0,0,0,.16);font:600 11px/1.2 Arial,sans-serif;color:#0d3639;white-space:normal;';
+            label.style.cssText = 'position:absolute;left:50%;bottom:calc(100% + 8px);display:flex;width:max-content;max-width:min(185px,calc(100vw - 2rem));transform:translateX(-50%);flex-direction:column;gap:1px;border:1px solid rgba(13,54,57,.12);border-radius:8px;background:rgba(255,255,255,.96);padding:5px 8px;box-shadow:0 2px 8px rgba(0,0,0,.16);font:600 11px/1.2 Arial,sans-serif;color:#0d3639;white-space:normal;';
             const title = document.createElement('span');
             title.textContent = marker.title;
             const subtitle = document.createElement('small');
@@ -986,7 +986,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
           const m = new maplibregl.Marker({
             element: el,
-            anchor: isUserLocation || isCluster ? 'center' : isTerritoryReference ? 'left' : 'bottom-left',
+            anchor: isUserLocation || isCluster || isTerritoryReference ? 'center' : 'bottom-left',
           }).setLngLat([safeLng, safeLat]).addTo(map);
 
           current.set(marker.id, m);
