@@ -86,12 +86,16 @@
 
 @media(max-width:520px){
   .nb-location-strip{margin-bottom:.55rem;padding:.7rem .75rem}
+  .nb-location-strip{grid-template-columns:minmax(0,1fr) auto;column-gap:.55rem}
   .nb-location-summary{gap:.55rem}
   .nb-location-summary>span{width:1.85rem;height:1.85rem;padding:.38rem}
   .nb-location-summary strong{font-size:.72rem}
   .nb-location-summary p{max-width:100%;font-size:.64rem;line-height:1.25;white-space:normal;overflow:visible;text-overflow:clip;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
   .nb-gps-button{height:2rem;padding-inline:.68rem;font-size:.66rem}
   .nb-gps-button svg{width:.9rem}
+  .nb-mobile-sort{flex:0 0 auto;max-width:8.2rem}
+  .nb-mobile-sort .nb-sort-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+  .nb-mobile-sort select{max-width:7.2rem;padding-left:.55rem;padding-right:1.45rem}
   .nb-radius-quick{gap:.3rem;margin-top:.35rem}
   .nb-radius-quick button{height:2rem;font-size:.62rem}
 
