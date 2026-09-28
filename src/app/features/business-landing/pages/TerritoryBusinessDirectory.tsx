@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Bookmark,
+  ChevronDown,
   Grid2X2,
   Info,
   MapPin,
@@ -28,6 +29,14 @@ import type {
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 
 import "./TerritoryBusinessDirectory.css";
+
+const BUSINESS_SORT_OPTIONS: readonly { value: BusinessSortOption; label: string }[] = [
+  { value: "relevance", label: "Mais relevantes" },
+  { value: "recommendations", label: "Mais recomendadas" },
+  { value: "rating", label: "Melhor avaliadas" },
+  { value: "distance", label: "Mais próximas" },
+  { value: "recent", label: "Mais recentes" },
+];
 
 const TerritoryMap = lazy(
   () => import("@/app/components/territory-vivo/TerritoryEntryMap"),
@@ -240,11 +249,9 @@ export function TerritoryBusinessDirectory({
                 onChange={(event) => onSortChange(event.target.value as BusinessSortOption)}
                 aria-label="Ordenar empresas"
               >
-                <option value="relevance">Mais relevantes</option>
-                <option value="recommendations">Mais recomendadas</option>
-                <option value="rating">Melhor avaliadas</option>
-                <option value="distance">Mais próximas</option>
-                <option value="recent">Mais recentes</option>
+                {BUSINESS_SORT_OPTIONS.map((option) => (
+                  <option value={option.value} key={option.value}>{option.label}</option>
+                ))}
               </select>
             </label>
             <details className="tbd-filter-menu">
@@ -279,22 +286,28 @@ export function TerritoryBusinessDirectory({
           </div>
 
           <div className="tbd-filter-row" aria-label="Filtros rápidos">
-            <label className="tbd-sort tbd-sort-inline">
-              <SlidersHorizontal />
-              <span className="sr-only">Ordenar empresas</span>
-              <select
-                id="tbd-sort-inline-select"
-                value={sortBy}
-                onChange={(event) => onSortChange(event.target.value as BusinessSortOption)}
-                aria-label="Ordenar empresas"
-              >
-                <option value="relevance">Mais relevantes</option>
-                <option value="recommendations">Mais recomendadas</option>
-                <option value="rating">Melhor avaliadas</option>
-                <option value="distance">Mais próximas</option>
-                <option value="recent">Mais recentes</option>
-              </select>
-            </label>
+            <details className="tbd-sort-inline">
+              <summary aria-label="Ordenar empresas">
+                <SlidersHorizontal />
+                <span>{BUSINESS_SORT_OPTIONS.find((option) => option.value === sortBy)?.label}</span>
+                <ChevronDown />
+              </summary>
+              <div className="tbd-sort-menu">
+                {BUSINESS_SORT_OPTIONS.map((option) => (
+                  <button
+                    type="button"
+                    className={sortBy === option.value ? "is-active" : ""}
+                    onClick={(event) => {
+                      onSortChange(option.value);
+                      event.currentTarget.closest("details")?.removeAttribute("open");
+                    }}
+                    key={option.value}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </details>
             <button
               type="button"
               className={`tbd-filter-all ${hasActiveFilters ? "is-active" : ""}`}
