@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import type { Location } from "@/core/location/types";
+import type { MapMarker } from "@/core/maps/types/core";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import {
   TERRITORY_ENTRY_MAP_ARRIVAL_STATUS,
@@ -24,6 +25,8 @@ interface TerritoryEntryMapProps {
   resolvedTerritory?: ResolvedTerritory | null;
   label?: string;
   className?: string;
+  markers?: MapMarker[];
+  showTerritoryReference?: boolean;
 }
 
 function EntryMapArrivalSurface({
@@ -67,6 +70,8 @@ export default function TerritoryEntryMap({
   resolvedTerritory = null,
   label,
   className = "",
+  markers = [],
+  showTerritoryReference = false,
 }: TerritoryEntryMapProps) {
   const territoryLabel = label ?? resolveTerritoryLabel(resolvedTerritory, city);
 
@@ -84,6 +89,8 @@ export default function TerritoryEntryMap({
         resolvedTerritory={resolvedTerritory}
         label={territoryLabel}
         className={className}
+        markers={markers}
+        showTerritoryReference={showTerritoryReference}
       />
     </Suspense>
   );

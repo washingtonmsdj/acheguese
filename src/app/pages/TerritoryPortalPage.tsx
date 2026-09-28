@@ -23,6 +23,7 @@ import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
 import { getBusinessUrl, normalizeRealBusinessEntry } from "@/app/features/business-landing/utils";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
+import type { MapMarker } from "@/core/maps/types/core";
 
 import "./TerritoryPortalPage.css";
 
@@ -96,6 +97,33 @@ export default function TerritoryPortalPage({
   const businessPreview = useMemo(
     () => territoryBusinesses.slice(0, 4).map(normalizeRealBusinessEntry),
     [territoryBusinesses],
+  );
+  const businessMapMarkers = useMemo<MapMarker[]>(
+    () => businessPreview.flatMap((business) => {
+      const { lat, lng } = business.coords;
+      if (
+        !Number.isFinite(lat) ||
+        !Number.isFinite(lng) ||
+        lat < -90 || lat > 90 ||
+        lng < -180 || lng > 180 ||
+        (lat === 0 && lng === 0)
+      ) return [];
+
+      return [{
+        id: business.id,
+        type: "business",
+        coordinates: { latitude: lat, longitude: lng },
+        title: business.name,
+        status: "active",
+        url: getBusinessUrl(business, urls.business, businessUrls.canonical),
+        metadata: {
+          category: getBusinessCategoryLabel(business.category),
+          rating: business.rating || undefined,
+          is_verified: business.is_verified,
+        },
+      }];
+    }),
+    [businessPreview, businessUrls.canonical, urls.business],
   );
   const heroSlug =
     resolvedTerritory?.kind === "group"
@@ -332,6 +360,8 @@ export default function TerritoryPortalPage({
                       city={null}
                       resolvedTerritory={resolvedTerritory}
                       label={territoryName}
+                      markers={businessMapMarkers}
+                      showTerritoryReference
                     />
                   </Suspense>
                 </div>
@@ -339,24 +369,17 @@ export default function TerritoryPortalPage({
 
               <aside className="pt-panel pt-home-about">
                 <PanelHeading icon={Info} title="Sobre o território" />
-                <p>
-                  Encontre informação local e acesse as experiências disponíveis em {territoryName}.
-                </p>
                 <dl>
                   <div>
-                    <dt><MapPin /> Região</dt>
+                    <dt><MapPin /> Localização</dt>
                     <dd>{contextLabel}</dd>
                   </div>
                   {memberLabels.length > 0 ? (
                     <div>
-                      <dt><UsersRound /> Áreas</dt>
+                      <dt><UsersRound /> Áreas do território</dt>
                       <dd>{memberLabels.join(", ")}</dd>
                     </div>
                   ) : null}
-                  <div>
-                    <dt><Store /> Disponível</dt>
-                    <dd>Empresas, mapa, perto de mim e busca</dd>
-                  </div>
                 </dl>
               </aside>
             </div>
@@ -373,9 +396,8 @@ export default function TerritoryPortalPage({
               {businessesLoading ? (
                 <div className="pt-business-preview-state">Carregando empresas…</div>
               ) : businessesError ? (
-                <div className="pt-business-preview-state">
-                  <span>Não foi possível carregar a vitrine agora.</span>
-                  <Link to={urls.business}>Abrir empresas <ArrowRight /></Link>
+                <div className="pt-business-preview-empty">
+                  Não foi possível carregar empresas agora.
                 </div>
               ) : businessPreview.length > 0 ? (
                 <div className="pt-business-preview-grid">
@@ -420,9 +442,8 @@ export default function TerritoryPortalPage({
                   })}
                 </div>
               ) : (
-                <div className="pt-business-preview-state">
-                  <span>Ainda não há empresas publicadas neste território.</span>
-                  <Link to={urls.business}>Ver página de empresas <ArrowRight /></Link>
+                <div className="pt-business-preview-empty">
+                  Ainda não há empresas publicadas neste território.
                 </div>
               )}
             </section>
@@ -444,7 +465,7 @@ export default function TerritoryPortalPage({
                   <p>Busque empresas, serviços e lugares neste território.</p>
                   <form action={urls.search} onSubmit={handleSearchSubmit}>
                     <Search />
-                    <input name="q" aria-label="Buscar no território" placeholder="Ex.: farmácia, padaria, escola…" />
+                    <input name="q" aria-label="Buscar neste território" placeholder="Buscar neste território..." />
                     <button type="submit">Buscar <ArrowRight /></button>
                   </form>
                 </div>

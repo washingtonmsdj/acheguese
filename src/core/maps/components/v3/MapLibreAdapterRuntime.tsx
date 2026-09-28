@@ -881,6 +881,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
           const metadata = (marker.metadata ?? {}) as Record<string, unknown>;
           const isUserLocation = metadata.isUserLocation === true;
+          const isTerritoryReference = metadata.isTerritoryReference === true;
           const isCluster = metadata.isCluster === true;
           const pointCount = typeof metadata.pointCount === 'number' ? metadata.pointCount : 0;
           const markerSignature = [
@@ -888,6 +889,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             safeLat.toFixed(6),
             safeLng.toFixed(6),
             isUserLocation ? 'user' : 'poi',
+            isTerritoryReference ? `${marker.title}|${marker.subtitle ?? ''}` : '',
             isCluster ? pointCount : '',
             markerPresentation,
           ].join('|');
@@ -906,7 +908,20 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
           const el = document.createElement('div');
 
-          if (isUserLocation) {
+          if (isTerritoryReference) {
+            el.style.cssText = 'display:flex;align-items:center;gap:7px;width:max-content;max-width:220px;min-height:34px;pointer-events:none;';
+            const point = document.createElement('span');
+            point.style.cssText = 'display:block;width:22px;height:22px;flex:0 0 22px;border:5px solid white;border-radius:50%;background:#087f83;box-shadow:0 2px 8px rgba(0,0,0,.3);';
+            const label = document.createElement('span');
+            label.style.cssText = 'display:flex;max-width:185px;flex-direction:column;gap:1px;border:1px solid rgba(13,54,57,.12);border-radius:8px;background:rgba(255,255,255,.96);padding:5px 8px;box-shadow:0 2px 8px rgba(0,0,0,.16);font:600 11px/1.2 Arial,sans-serif;color:#0d3639;white-space:normal;';
+            const title = document.createElement('span');
+            title.textContent = marker.title;
+            const subtitle = document.createElement('small');
+            subtitle.textContent = marker.subtitle ?? 'Referência territorial';
+            subtitle.style.cssText = 'font:500 9px/1.2 Arial,sans-serif;color:#587276;';
+            label.append(title, subtitle);
+            el.append(point, label);
+          } else if (isUserLocation) {
             el.style.cssText = 'width:60px;height:60px;display:flex;align-items:center;justify-content:center;position:relative;pointer-events:auto;';
             // ✅ SEGURO - Usa DOM API ao invés de innerHTML
             const svg = createUserLocationSvg();
@@ -971,7 +986,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
           const m = new maplibregl.Marker({
             element: el,
-            anchor: isUserLocation ? 'center' : isCluster ? 'center' : 'bottom-left',
+            anchor: isUserLocation || isCluster ? 'center' : isTerritoryReference ? 'left' : 'bottom-left',
           }).setLngLat([safeLng, safeLat]).addTo(map);
 
           current.set(marker.id, m);

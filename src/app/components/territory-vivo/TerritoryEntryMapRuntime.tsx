@@ -5,6 +5,7 @@ import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { MAP_DEFAULT_COORDINATES } from "@/shared/config/mapDefaults";
+import type { MapMarker } from "@/core/maps/types/core";
 import {
   markPublicRootMapReady,
   PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS,
@@ -79,6 +80,8 @@ export interface TerritoryEntryMapRuntimeProps {
   resolvedTerritory?: ResolvedTerritory | null;
   label?: string;
   className?: string;
+  markers?: MapMarker[];
+  showTerritoryReference?: boolean;
 }
 
 export default function TerritoryEntryMapRuntime({
@@ -86,6 +89,8 @@ export default function TerritoryEntryMapRuntime({
   resolvedTerritory = null,
   label,
   className = "",
+  markers = [],
+  showTerritoryReference = false,
 }: TerritoryEntryMapRuntimeProps) {
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
@@ -99,10 +104,44 @@ export default function TerritoryEntryMapRuntime({
     () => resolvedTerritory ?? (city ? { kind: "location", location: city } : null),
     [city, resolvedTerritory],
   );
+  const territoryName = resolved?.kind === "group"
+    ? resolved.group.name
+    : resolved?.kind === "location"
+      ? resolved.location.name
+      : city?.name ?? label ?? "Território";
+  const territoryLabel = label ?? territoryName;
   const initialViewport = useMemo(
     () => resolveInitialViewport(resolved, city),
     [city, resolved],
   );
+  const territoryReference = useMemo(() => {
+    if (!resolved) return null;
+    if (resolved.kind === "location") return readLocationCenter(resolved.location);
+
+    const centers = resolved.group.members
+      .map(readLocationCenter)
+      .filter((center): center is { latitude: number; longitude: number } => Boolean(center));
+    if (centers.length === 0) return null;
+    return {
+      latitude: centers.reduce((sum, center) => sum + center.latitude, 0) / centers.length,
+      longitude: centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length,
+    };
+  }, [resolved]);
+  const renderedMarkers = useMemo(() => {
+    if (!showTerritoryReference || !territoryReference) return markers;
+    return [
+      ...markers,
+      {
+        id: "territory-reference",
+        type: "user_location" as const,
+        coordinates: territoryReference,
+        title: territoryLabel,
+        subtitle: "Referência territorial",
+        status: "active" as const,
+        metadata: { isTerritoryReference: true },
+      },
+    ];
+  }, [markers, showTerritoryReference, territoryLabel, territoryReference]);
   const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved, {
     enabled: boundaryStarted,
   });
@@ -137,12 +176,6 @@ export default function TerritoryEntryMapRuntime({
   );
 
   const isCity = !resolved || (resolved.kind === "location" && resolved.location.type === LocationType.CITY);
-  const territoryName = resolved?.kind === "group"
-    ? resolved.group.name
-    : resolved?.kind === "location"
-      ? resolved.location.name
-      : city?.name ?? label ?? "Território";
-  const territoryLabel = label ?? territoryName;
   const boundaryUnavailable =
     boundaryStarted &&
     resolved?.kind === "group" &&
@@ -228,7 +261,7 @@ export default function TerritoryEntryMapRuntime({
         fitTerritoryBounds={entryPolygons.length > 0}
         territoryFitPadding={20}
         territoryFitMaxZoom={isCity ? 10.5 : 14}
-        markers={[]}
+        markers={renderedMarkers}
         userLocationMarker={{ enabled: false, autoAdd: false }}
         enableClustering={false}
         attribution
