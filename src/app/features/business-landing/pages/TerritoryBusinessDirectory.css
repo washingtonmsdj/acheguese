@@ -898,7 +898,7 @@
     justify-content: center;
   }
 
-  .tbd-filter-row > .tbd-filter-verified {
+  .tbd-filter-row > button:nth-of-type(n + 3) {
     display: none;
   }
 
@@ -1107,8 +1107,8 @@
 
 @media (max-width: 360px) {
   .tbd-card {
-    grid-template-columns: minmax(0, 1fr) 2.5rem;
-    column-gap: 0.35rem;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
   }
 
   .tbd-card-main {
@@ -1127,14 +1127,24 @@
 
   .tbd-card-meta {
     flex-wrap: nowrap;
-    gap: 0.1rem;
-    font-size: 0.5rem;
-    letter-spacing: -0.04em;
+    gap: 0.35rem;
+    font-size: 0.54rem;
+    letter-spacing: 0;
     white-space: nowrap;
   }
 
   .tbd-save {
-    width: 2.5rem;
-    height: 2.5rem;
+    display: none;
+  }
+}
+
+@media (min-width: 361px) and (max-width: 680px) {
+  .tbd-card {
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .tbd-save {
+    display: none;
   }
 }
