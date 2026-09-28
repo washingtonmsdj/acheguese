@@ -232,7 +232,7 @@ export default function TerritoryPortalPage({
 
       <main id="pt-content" tabIndex={-1}>
         <section
-          className={`pt-hero ${activeView === "business" ? "pt-hero--business" : ""} ${activeView === "nearby" ? "pt-hero--nearby" : ""}`}
+          className={`pt-hero ${activeView !== "home" ? "pt-hero--module" : ""} ${activeView === "business" ? "pt-hero--business" : ""} ${activeView === "nearby" ? "pt-hero--nearby" : ""}`}
           aria-labelledby="pt-title"
         >
           <img
@@ -305,6 +305,16 @@ export default function TerritoryPortalPage({
                   </Link>
                 );
               })}
+              <details className="pt-shortcuts-more">
+                <summary aria-label="Abrir mais páginas"><Menu /><strong>Mais</strong></summary>
+                <nav aria-label="Mais páginas do território">
+                  <Link to={urls.home}>Visão geral</Link>
+                  <Link to={urls.search}>Busca</Link>
+                  <span>Comunidade <b>Em breve</b></span>
+                  <span>Serviços <b>Em breve</b></span>
+                  <span>Eventos <b>Em breve</b></span>
+                </nav>
+              </details>
             </div>
           </div>
         </section>
