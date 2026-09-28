@@ -146,8 +146,9 @@
   .nb-search-row{gap:.5rem}
   .nb-search-row label{height:2.65rem;padding-inline:.85rem}
   .nb-filter-trigger{width:2.65rem;height:2.65rem}
-  .nb-filter-chips{grid-template-columns:repeat(5,minmax(0,1fr));gap:.2rem;margin:.68rem 0 0}
+  .nb-filter-chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:.2rem;margin:.68rem 0 0}
   .nb-filter-chips button{gap:.22rem;font-size:.52rem;line-height:1.1}
+  .nb-filter-chips button:first-child{display:none}
   .nb-filter-chips button:nth-child(n+5):nth-child(-n+7){display:none}
   .nb-filter-chips button svg{width:1.08rem;height:1.08rem}
   .nb-filter-chips button.is-active svg{width:2.35rem;height:2.35rem;padding:.58rem;box-shadow:0 0 0 .3rem #edf9f7}
@@ -159,7 +160,7 @@
   .nb-location-summary p{margin-top:.08rem;font-size:.6rem;line-height:1.18}
   .nb-gps-button{height:1.85rem;padding-inline:.58rem;font-size:.62rem}
   .nb-radius-quick{gap:.25rem;margin-top:0}
-  .nb-radius-quick button{height:1.8rem;font-size:.59rem}
+  .nb-radius-quick button{height:2.1rem;min-height:2.1rem!important;font-size:.57rem}
 
   .nb-map-card{margin-top:0;padding:.55rem .75rem .65rem}
   .nb-map-card .nb-section-heading{margin-bottom:.42rem}
