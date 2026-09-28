@@ -16,6 +16,8 @@
 .nb-filter-trigger,.nb-radius-quick,.nb-mobile-sort{display:none}
 
 @media(max-width:520px){
+  .nb-location-strip{order:1}
+  .nb-filter-panel{order:2}
   .nb-page{background:#f3f7f6}
   .nb-container{display:flex;width:100%;flex-direction:column;padding:0 0 1.5rem}
   .nb-filter-panel{order:1;margin:.85rem .75rem 0;padding:1.05rem 1rem;border-radius:1rem 1rem 0 0;box-shadow:0 .35rem 1.2rem rgba(14,54,57,.06)}
