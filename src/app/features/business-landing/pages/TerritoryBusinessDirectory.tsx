@@ -247,6 +247,35 @@ export function TerritoryBusinessDirectory({
                 <option value="recent">Mais recentes</option>
               </select>
             </label>
+            <details className="tbd-filter-menu">
+              <summary aria-label="Todos os filtros"><Menu /></summary>
+              <div className="tbd-filter-menu-panel">
+                <strong>Todos os filtros</strong>
+                {hasActiveFilters ? (
+                  <button
+                    type="button"
+                    className="tbd-filter-menu-clear"
+                    onClick={() => {
+                      onSelectCategory("all");
+                      activeFilters.forEach((filterId) => onToggleFilter(filterId));
+                    }}
+                  >
+                    Limpar filtros
+                  </button>
+                ) : null}
+                {quickFilters.map(({ icon: Icon, ...filter }) => (
+                  <button
+                    type="button"
+                    className={activeFilters.includes(filter.id) ? "is-active" : ""}
+                    onClick={() => onToggleFilter(filter.id)}
+                    aria-pressed={activeFilters.includes(filter.id)}
+                    key={`menu-${filter.id}`}
+                  >
+                    <Icon /> {filter.label}
+                  </button>
+                ))}
+              </div>
+            </details>
           </div>
 
           <div className="tbd-filter-row" aria-label="Filtros rápidos">
