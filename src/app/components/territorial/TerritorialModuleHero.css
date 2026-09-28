@@ -3,7 +3,7 @@
   --tmh-sea:#087f83;
   --tmh-sun:#ffc83d;
   --tmh-height-desktop:14.5rem;
-  --tmh-height-mobile:12.5rem;
+  --tmh-height-mobile:13rem;
   position:relative;
   min-height:var(--tmh-height-desktop);
   overflow:hidden;
@@ -42,14 +42,15 @@
 @media(max-width:760px){
   .tmh{min-height:var(--tmh-height-mobile)}
   .tmh__inner{width:min(100% - 1.5rem,94rem);min-height:var(--tmh-height-mobile);padding-block:.6rem .45rem}
-  .tmh__breadcrumbs{font-size:.58rem}
+  .tmh__overlay{background:linear-gradient(90deg,rgba(4,29,31,.88),rgba(4,29,31,.48) 58%,rgba(4,29,31,.22)),linear-gradient(0deg,rgba(4,29,31,.7),transparent 62%)}
+  .tmh__breadcrumbs{font-size:.62rem}
   .tmh__breadcrumbs-desktop{display:none}
   .tmh__breadcrumbs-mobile{display:flex;align-items:center;gap:.45rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tmh__breadcrumbs-mobile svg{flex:0 0 auto}
   .tmh__eyebrow{margin-top:.5rem;font-size:.68rem;line-height:1.15}
   .tmh__eyebrow svg{width:.9rem;height:.9rem}
-  .tmh h1{max-width:100%;font-size:clamp(1.82rem,8vw,2.2rem);line-height:1.04;letter-spacing:-.045em}
-  .tmh__description{max-width:27rem;margin-top:.22rem;font-size:.68rem;line-height:1.3}
+  .tmh h1{max-width:100%;font-size:clamp(1.95rem,8.3vw,2.25rem);line-height:1.03;letter-spacing:-.045em}
+  .tmh__description{max-width:27rem;margin-top:.28rem;font-size:.72rem;line-height:1.34}
   .tmh__title-group--icon{gap:.42rem}
   .tmh__title-icon{width:1.85rem;height:1.85rem}
   .tmh__title-icon svg{width:1.7rem;height:1.7rem}

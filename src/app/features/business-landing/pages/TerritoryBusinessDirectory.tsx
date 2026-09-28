@@ -353,7 +353,7 @@ export function TerritoryBusinessDirectory({
             <Store />
             <div>
               <h2>Tem um negócio aqui?</h2>
-              <p>Cadastre sua empresa e seja encontrado por mais pessoas da comunidade.</p>
+              <p>Cadastre sua empresa e seja encontrado por quem está por perto.</p>
               <Link to={createHref}>Cadastrar agora <Plus /></Link>
             </div>
           </section>

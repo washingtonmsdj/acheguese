@@ -843,10 +843,15 @@
   }
 
   .tbd-card {
-    min-height: 8.35rem;
+    display: grid;
+    min-height: 8.5rem;
+    grid-template-columns: minmax(0, 1fr) 2.75rem;
+    align-items: start;
+    column-gap: 0.5rem;
     border-radius: 0;
     border-inline: 0;
     box-shadow: none;
+    padding: 1rem 0;
   }
 
   .tbd-card:first-child {
@@ -854,18 +859,20 @@
   }
 
   .tbd-card-main {
-    display: flex;
-    min-height: 8.35rem;
-    align-items: stretch;
+    display: grid;
+    min-width: 0;
+    min-height: 0;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.875rem;
   }
 
   .tbd-card-cover {
-    width: 6.25rem;
-    height: 6.25rem;
+    width: 6rem;
+    height: 6rem;
     min-height: 0;
-    flex: 0 0 6.25rem;
-    align-self: center;
-    margin: 0.6rem 0 0.6rem 0.1rem;
+    align-self: start;
+    margin: 0;
     border-radius: 0.75rem;
   }
 
@@ -889,7 +896,7 @@
 
   .tbd-card-body {
     min-width: 0;
-    padding: 0.7rem 2.9rem 0.7rem 0.65rem;
+    padding: 0;
   }
 
   .tbd-card-kicker,
@@ -900,7 +907,7 @@
   .tbd-card-body h3 {
     min-height: 0;
     margin-top: 0.18rem;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     line-height: 1.25;
   }
 
@@ -951,12 +958,13 @@
   }
 
   .tbd-save {
-    top: 50%;
-    right: 0.45rem;
-    bottom: auto;
-    width: 2.5rem;
-    height: 2.5rem;
-    transform: translateY(-50%);
+    position: static;
+    width: 2.75rem;
+    height: 2.75rem;
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+    transform: none;
     border: 1px solid #dfe8e5;
     color: #236164;
   }
@@ -1014,21 +1022,27 @@
 }
 
 @media (max-width: 360px) {
-  .tbd-card-cover {
-    width: 6.15rem;
-    height: 6.15rem;
-    flex-basis: 6.15rem;
+  .tbd-card {
+    grid-template-columns: minmax(0, 1fr) 2.5rem;
+    column-gap: 0.35rem;
   }
 
-  .tbd-card-body {
-    padding-right: 2.65rem;
+  .tbd-card-main {
+    grid-template-columns: 5.5rem minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .tbd-card-cover {
+    width: 5.5rem;
+    height: 5.5rem;
   }
 
   .tbd-card-body h3 {
     font-size: 0.74rem;
   }
 
-  .tbd-card-status {
-    max-width: 7.4rem;
+  .tbd-save {
+    width: 2.5rem;
+    height: 2.5rem;
   }
 }
