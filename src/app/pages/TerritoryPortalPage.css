@@ -124,3 +124,22 @@
   .pt-shortcuts small{margin-top:.1rem;font-size:.58rem}
   .pt-shortcuts b{top:.42rem;right:.45rem;font-size:.48rem}
 }
+
+/* Hero mobile de proximidade: preserva contexto e navegação sem ocupar a primeira dobra. */
+@media(max-width:520px){
+  .pt-hero--nearby .pt-hero-content{min-height:11.5rem;padding-block:.55rem .45rem}
+  .pt-hero--nearby .pt-breadcrumb{font-size:.54rem}
+  .pt-nearby-heading{gap:.42rem;margin-top:.62rem}
+  .pt-nearby-heading-icon{width:1.85rem;height:1.85rem}
+  .pt-nearby-heading-icon svg{width:1.7rem;height:1.7rem}
+  .pt-hero--nearby h1{font-size:clamp(1.78rem,8vw,2.08rem);line-height:1.02}
+  .pt-hero--nearby .pt-tagline{max-width:25rem;margin-top:.2rem!important;font-size:.66rem;line-height:1.28}
+  .pt-hero--nearby .pt-shortcuts{gap:.14rem;margin-top:auto;padding:.22rem;border-radius:.7rem}
+  .pt-hero--nearby .pt-shortcuts>a,.pt-hero--nearby .pt-shortcuts>div{min-height:2.55rem;gap:.28rem;border-radius:.48rem;padding:.28rem .3rem}
+  .pt-hero--nearby .pt-shortcuts svg{width:.85rem;height:.85rem}
+  .pt-hero--nearby .pt-shortcuts strong{font-size:.54rem}
+  .pt-shortcuts-more{flex-basis:2.55rem;min-width:2.55rem}
+  .pt-shortcuts-more summary{min-height:2.55rem}
+  .pt-shortcuts-more summary svg{width:.88rem;height:.88rem}
+  .pt-shortcuts-more summary strong{font-size:.52rem}
+}
