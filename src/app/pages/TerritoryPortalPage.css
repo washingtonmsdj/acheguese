@@ -122,12 +122,6 @@
 }
 
 @media(min-width:981px) and (max-height:1000px){
-  .pt-page-home .tmh{--tmh-height-desktop:12.25rem}
-  .pt-page-home .tmh__inner{padding-block:.8rem .42rem}
-  .pt-page-home .tmh__title-group{margin-block:.55rem .7rem}
-  .pt-page-home .tmh h1{font-size:clamp(1.85rem,2.35vw,2.35rem)}
-  .pt-page-home .tmh .tmh__description{margin-top:.3rem;font-size:.82rem}
-  .pt-page-home .tmh-nav__item{min-height:3.3rem}
   .pt-page-home .pt-home-map .pt-map-shell{height:12.75rem}
   .pt-page-home .pt-home-about dl{margin-top:.6rem}
   .pt-page-home .pt-home-about dl>div{padding:.45rem 0}

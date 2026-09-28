@@ -41,6 +41,10 @@ export function TerritorialModuleHero({
 }: TerritorialModuleHeroProps) {
   const TitleIcon = Icon && iconPlacement === "title" ? Icon : null;
   const EyebrowIcon = Icon && iconPlacement === "eyebrow" ? Icon : null;
+  const mobileContext = module === "home"
+    ? breadcrumbs.find((breadcrumb) => breadcrumb.label !== territory)?.label ?? territory
+    : territory;
+  const ContextIcon = module === "home" ? Home : ArrowLeft;
 
   return (
     <section className={`tmh tmh--${module}`} data-module={module} aria-labelledby="territorial-module-hero-title">
@@ -48,7 +52,7 @@ export function TerritorialModuleHero({
       <div className="tmh__overlay" aria-hidden="true" />
       <div className="tmh__inner">
         <nav className="tmh__breadcrumbs" aria-label="Navegação estrutural">
-          <span className="tmh__breadcrumbs-mobile"><ArrowLeft /> {territory}</span>
+          <span className="tmh__breadcrumbs-mobile"><ContextIcon aria-hidden="true" /> {mobileContext}</span>
           <span className="tmh__breadcrumbs-desktop">
             {breadcrumbs.map((breadcrumb, index) => {
               const BreadcrumbIcon = breadcrumb.icon ?? (index === 0 ? Home : null);

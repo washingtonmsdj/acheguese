@@ -1,6 +1,5 @@
 import { useEffect, useRef, type ComponentType } from "react";
 import { Link } from "react-router-dom";
-import { Menu } from "lucide-react";
 
 export interface TerritoryModuleNavItem {
   id: string;
@@ -28,7 +27,6 @@ export interface TerritoryModuleNavProps {
 export function TerritoryModuleNav({
   items,
   activeModule,
-  moreItems = [],
 }: TerritoryModuleNavProps) {
   const navigationRef = useRef<HTMLDivElement>(null);
 
@@ -47,14 +45,14 @@ export function TerritoryModuleNav({
   }, [activeModule]);
 
   return (
-    <div className="tmh-nav" aria-label="Atalhos do território" ref={navigationRef}>
-      {items.map((item) => {
+    <div className="tmh-nav tmh-nav--mvp" aria-label="Atalhos do território" ref={navigationRef}>
+      {["business", "nearby", "map", "search"].flatMap((id) => items.filter((item) => item.id === id && item.href && !item.disabled)).map((item) => {
         const Icon = item.icon;
         const content = (
           <>
             <Icon />
             <span>
-              <strong>{item.label}</strong>
+              <strong>{item.id === "search" ? "Buscar" : item.label}</strong>
               <small>{item.description}</small>
             </span>
             {item.disabled || item.badge ? <b>{item.badge ?? "Em breve"}</b> : null}
@@ -81,21 +79,6 @@ export function TerritoryModuleNav({
         );
       })}
 
-      {moreItems.length ? (
-        <details className="tmh-nav__more">
-          <summary aria-label="Abrir mais páginas"><Menu /><strong>Mais</strong></summary>
-          <nav aria-label="Mais páginas do território">
-            {moreItems.map((item) => {
-              const content = <><span>{item.label}</span>{item.disabled || item.badge ? <b>{item.badge ?? "Em breve"}</b> : null}</>;
-              return item.disabled || !item.href ? (
-                <span className="tmh-nav__more-item tmh-nav__more-item--disabled" key={item.label}>{content}</span>
-              ) : (
-                <Link className="tmh-nav__more-item" to={item.href} key={item.label}>{content}</Link>
-              );
-            })}
-          </nav>
-        </details>
-      ) : null}
     </div>
   );
 }
