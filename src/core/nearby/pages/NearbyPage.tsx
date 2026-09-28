@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, ArrowRight, ChevronDown, Compass, Cross, LocateFixed, Map, MapPin, Navigation, Search, SlidersHorizontal, Star, Store } from "lucide-react";
+import { AlertTriangle, ArrowRight, ChevronDown, Compass, GraduationCap, HeartPulse, LocateFixed, Map, MapPin, MoreHorizontal, Navigation, Scissors, Search, ShoppingCart, SlidersHorizontal, Star, Store, UtensilsCrossed, Wrench, X } from "lucide-react";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { useLocationContext } from "@/core/location/hooks/useLocationContext";
 import { useResolvedUserLocation } from "@/core/location/hooks/useResolvedUserLocation";
@@ -16,8 +16,18 @@ import type { NearbyProviderId } from "../providers/registry";
 import "./NearbyPage.css";
 
 interface NearbyPageProps { providerIds: readonly NearbyProviderId[]; }
-const RADIUS_OPTIONS = [1, 2, 5, 10, 20] as const;
+const RADIUS_OPTIONS = [0.5, 1, 3, 5, 10, 20] as const;
 type SortMode = "distance" | "name" | "rating";
+const CATEGORY_OPTIONS = [
+  { value: "Todos", label: "Todos", icon: Compass },
+  { value: "alimentacao", label: "Alimentação", icon: UtensilsCrossed },
+  { value: "mercados", label: "Mercados", icon: ShoppingCart },
+  { value: "saude", label: "Saúde", icon: HeartPulse },
+  { value: "educacao", label: "Educação", icon: GraduationCap },
+  { value: "beleza", label: "Beleza", icon: Scissors },
+  { value: "servicos", label: "Serviços", icon: Wrench },
+  { value: "Mais", label: "Mais", icon: MoreHorizontal },
+] as const;
 
 function formatDistance(meters: number): string {
   if (!meters) return "No território";
@@ -63,6 +73,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [sortMode, setSortMode] = useState<SortMode>("distance");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const resolved: ResolvedTerritory | null = territorialContext?.resolved ?? (activeTerritory?.location ? { kind: "location", location: activeTerritory.location } : null);
   const routeFallbackLocation = territorialContext ? resolved?.kind === "location" ? resolved.location : null : undefined;
   const businessUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business) : buildAppModulePath(APP_MODULE_SLUGS.business);
@@ -86,7 +97,6 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const spatialLocationId = territorialContext ? resolved?.kind === "location" ? routeFallbackLocation?.id : undefined : activeLocation?.id;
   const spatialLocationIds = territorialContext && resolved?.kind === "group" ? territorialContext.activeMemberIds : undefined;
   const { businesses, isLoading: businessesLoading, isError } = useNearbyBusinesses({ enabled: providerIds.includes("business"), radiusKm, center: spatialCenter, locationId: spatialLocationId, locationIds: spatialLocationIds, limit: 100 });
-  const categories = useMemo(() => ["Todos", ...[...new Set(businesses.map((item) => item.category).filter(Boolean))].slice(0, 5)], [businesses]);
   const filteredBusinesses = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
     const matches = businesses.filter((business) => (activeCategory === "Todos" || business.category === activeCategory) && (!normalizedQuery || `${business.name} ${business.category} ${business.neighborhood || ""}`.toLocaleLowerCase("pt-BR").includes(normalizedQuery)));
@@ -110,13 +120,16 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
         <section className="nb-location-strip">
           <div className="nb-location-summary"><span><MapPin /></span><div><strong>{isGoodForProximity ? "Sua localização atual" : "Referência do território"}</strong><p>{locationName}</p><small>{isGoodForProximity ? sourceMessage : `Mostrando resultados em ${locationName}`}</small></div></div>
           <div className="nb-radius-control"><LocateFixed /><label htmlFor="nb-radius">Raio de busca<small>Mostrando resultados em até {radiusKm} km.</small></label><div><select id="nb-radius" value={radiusKm} onChange={(event) => handleRadiusChange(Number(event.target.value))}>{RADIUS_OPTIONS.map((radius) => <option key={radius} value={radius}>{radius} km</option>)}</select><ChevronDown /></div></div>
+          <div className="nb-radius-quick">{RADIUS_OPTIONS.slice(0, 4).map((radius) => <button className={radiusKm === radius ? "is-active" : ""} type="button" key={radius} onClick={() => setRadiusKm(radius)}>{radius < 1 ? `${radius * 1000} m` : `${radius} km`}</button>)}</div>
           {!isGoodForProximity && locationStatus !== "resolving" ? <button className="nb-gps-button" type="button" onClick={() => resolveLocation()}><Navigation /> Usar GPS</button> : null}
         </section>
 
         <section className="nb-filter-panel" aria-label="Filtros de proximidade">
-          <div className="nb-search-row"><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por perto..." /></label><div className="nb-sort-control"><SlidersHorizontal /><select aria-label="Ordenar resultados" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliados</option><option value="name">Ordem alfabética</option></select><ChevronDown /></div></div>
-          <div className="nb-filter-chips">{categories.map((category, index) => <button className={activeCategory === category ? "is-active" : ""} type="button" key={category} onClick={() => setActiveCategory(category)}>{index === 0 ? <Compass /> : index === 1 ? <Store /> : <Cross />}{formatCategory(category)}</button>)}</div>
+          <div className="nb-search-row"><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por perto..." /></label><div className="nb-sort-control"><SlidersHorizontal /><select aria-label="Ordenar resultados" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliados</option><option value="name">Ordem alfabética</option></select><ChevronDown /></div><button className="nb-filter-trigger" type="button" aria-label="Abrir filtros" onClick={() => setFiltersOpen(true)}><SlidersHorizontal /></button></div>
+          <div className="nb-filter-chips">{CATEGORY_OPTIONS.map(({ value, label, icon: Icon }) => <button className={activeCategory === value ? "is-active" : ""} type="button" key={value} onClick={() => value === "Mais" ? setFiltersOpen(true) : setActiveCategory(value)}><Icon />{label}</button>)}</div>
         </section>
+
+        {filtersOpen ? <div className="nb-filter-overlay" role="presentation" onClick={() => setFiltersOpen(false)}><section className="nb-filter-sheet" role="dialog" aria-modal="true" aria-labelledby="nb-filter-title" onClick={(event) => event.stopPropagation()}><span className="nb-sheet-handle" /><header><h2 id="nb-filter-title">Filtros</h2><button type="button" aria-label="Fechar filtros" onClick={() => setFiltersOpen(false)}><X /></button></header><div className="nb-sheet-group"><h3>Raio de busca</h3><div>{RADIUS_OPTIONS.slice(0, 4).map((radius) => <button className={radiusKm === radius ? "is-active" : ""} type="button" key={radius} onClick={() => setRadiusKm(radius)}>{radius < 1 ? `${radius * 1000} m` : `${radius} km`}</button>)}</div></div><div className="nb-sheet-group"><h3>Categorias</h3><div>{CATEGORY_OPTIONS.slice(0, -1).map(({ value, label }) => <button className={activeCategory === value ? "is-active" : ""} type="button" key={value} onClick={() => setActiveCategory(value)}>{label}</button>)}</div></div><div className="nb-sheet-group"><h3>Ordenar por</h3><div>{([['distance','Mais próximos'],['rating','Melhor avaliação'],['name','Nome (A → Z)']] as const).map(([value,label]) => <button className={sortMode === value ? "is-active" : ""} type="button" key={value} onClick={() => setSortMode(value)}>{label}</button>)}</div></div><button className="nb-apply-filters" type="button" onClick={() => setFiltersOpen(false)}>Aplicar filtros</button><button className="nb-clear-filters" type="button" onClick={() => { setRadiusKm(5); setActiveCategory("Todos"); setSortMode("distance"); }}>Limpar filtros</button></section></div> : null}
 
         {isError ? <section className="nb-error"><AlertTriangle /><div><strong>Não foi possível carregar os resultados.</strong><p>Você ainda pode explorar a lista completa de empresas.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas</button></section> : null}
         <div className="nb-layout">

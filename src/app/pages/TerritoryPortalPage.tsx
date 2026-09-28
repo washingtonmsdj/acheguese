@@ -3,6 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
+  ArrowLeft,
   ChevronDown,
   Home,
   Info,
@@ -244,9 +245,14 @@ export default function TerritoryPortalPage({
 
           <div className="pt-container pt-hero-content">
             <p className="pt-breadcrumb">
-              <Home /> {contextLabel} <span>›</span> {territoryName}
-              {activeView === "business" ? <><span>›</span> Empresas</> : null}
-              {activeView === "nearby" ? <><span>›</span> Perto de mim</> : null}
+              {activeView === "nearby" ? (
+                <>
+                  <span className="pt-breadcrumb-mobile"><ArrowLeft /> {territoryName}</span>
+                  <span className="pt-breadcrumb-desktop"><Home /> {contextLabel} <b>›</b> {territoryName} <b>›</b> Perto de mim</span>
+                </>
+              ) : (
+                <><Home /> {contextLabel} <span>›</span> {territoryName}{activeView === "business" ? <><span>›</span> Empresas</> : null}</>
+              )}
             </p>
             {activeView === "business" ? (
               <p className="pt-view-kicker"><Store /> Empresas</p>
