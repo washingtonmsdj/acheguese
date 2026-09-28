@@ -201,5 +201,9 @@
 
   .nb-page--awaiting-location .nb-container{padding-bottom:0}
   .nb-page--awaiting-location .nb-location-strip{margin-top:.45rem}
-  .nb-page--awaiting-location .nb-layout{display:none}
 }
+
+.nb-page--awaiting-location .nb-layout{display:none}
+.pt-page .pt-module-view:has(.nb-page--awaiting-location){min-height:0!important;padding-block:0!important}
+.pt-page:has(.nb-page--awaiting-location){display:flex;min-height:100svh;flex-direction:column}
+.pt-page:has(.nb-page--awaiting-location) .pt-footer{margin-top:auto}
