@@ -49,7 +49,7 @@
   .tmh__breadcrumbs-mobile svg{flex:0 0 auto}
   .tmh__eyebrow{margin-top:.5rem;font-size:.68rem;line-height:1.15}
   .tmh__eyebrow svg{width:.9rem;height:.9rem}
-  .tmh h1{max-width:100%;font-size:clamp(1.95rem,8.3vw,2.25rem);line-height:1.03;letter-spacing:-.045em}
+  .tmh h1{max-width:100%;font-size:clamp(1.82rem,7.8vw,2.1rem);line-height:1.03;letter-spacing:-.045em}
   .tmh__description{max-width:27rem;margin-top:.28rem;font-size:.72rem;line-height:1.34}
   .tmh__title-group{margin-top:.52rem}
   .tmh__title-group--icon{display:block}

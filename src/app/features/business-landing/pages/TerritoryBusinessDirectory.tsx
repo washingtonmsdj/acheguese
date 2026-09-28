@@ -8,6 +8,7 @@ import {
   Grid2X2,
   Info,
   MapPin,
+  Menu,
   Navigation,
   Plus,
   Search,
@@ -227,10 +228,11 @@ export function TerritoryBusinessDirectory({
                 aria-label="Buscar empresas no território"
               />
             </label>
-            <label className="tbd-sort">
-              <SlidersHorizontal />
+            <label className="tbd-sort tbd-sort-top">
+              <Menu />
               <span className="sr-only">Ordenar empresas</span>
               <select
+                id="tbd-sort-top-select"
                 value={sortBy}
                 onChange={(event) => onSortChange(event.target.value as BusinessSortOption)}
                 aria-label="Ordenar empresas"
@@ -245,6 +247,22 @@ export function TerritoryBusinessDirectory({
           </div>
 
           <div className="tbd-filter-row" aria-label="Filtros rápidos">
+            <label className="tbd-sort tbd-sort-inline">
+              <SlidersHorizontal />
+              <span className="sr-only">Ordenar empresas</span>
+              <select
+                id="tbd-sort-inline-select"
+                value={sortBy}
+                onChange={(event) => onSortChange(event.target.value as BusinessSortOption)}
+                aria-label="Ordenar empresas"
+              >
+                <option value="relevance">Mais relevantes</option>
+                <option value="recommendations">Mais recomendadas</option>
+                <option value="rating">Melhor avaliadas</option>
+                <option value="distance">Mais próximas</option>
+                <option value="recent">Mais recentes</option>
+              </select>
+            </label>
             <button
               type="button"
               className={`tbd-filter-all ${hasActiveFilters ? "is-active" : ""}`}
