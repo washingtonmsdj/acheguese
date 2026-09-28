@@ -391,6 +391,7 @@ export default function TerritoryPortalPage({
                 description="Conheça negócios e serviços disponíveis nesta região."
                 href={urls.business}
                 label="Ver todas as empresas"
+                mobileLabel="Ver todas"
               />
 
               {businessesLoading ? (
@@ -466,7 +467,7 @@ export default function TerritoryPortalPage({
                   <form action={urls.search} onSubmit={handleSearchSubmit}>
                     <Search />
                     <input name="q" aria-label="Buscar neste território" placeholder="Buscar neste território..." />
-                    <button type="submit">Buscar <ArrowRight /></button>
+                    <button type="submit" aria-label="Buscar neste território"><span>Buscar</span><ArrowRight /></button>
                   </form>
                 </div>
               </section>
@@ -500,12 +501,14 @@ function PanelHeading({
   description,
   href,
   label,
+  mobileLabel,
 }: {
   icon: ComponentType<{ className?: string }>;
   title: string;
   description?: string;
   href?: string;
   label?: string;
+  mobileLabel?: string;
 }) {
   return (
     <div className="pt-panel-heading">
@@ -517,8 +520,10 @@ function PanelHeading({
         </span>
       </div>
       {href ? (
-        <Link to={href}>
-          {label} <ArrowRight />
+        <Link to={href} aria-label={label}>
+          <span className={mobileLabel ? "pt-panel-link-desktop" : undefined}>{label}</span>
+          {mobileLabel ? <span className="pt-panel-link-mobile">{mobileLabel}</span> : null}
+          <ArrowRight aria-hidden="true" />
         </Link>
       ) : null}
     </div>
