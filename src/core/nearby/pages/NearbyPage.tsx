@@ -9,6 +9,7 @@ import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { MODULE_SLUGS, buildLocationModuleUrl, buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
+import { useGeocoding } from "@/core/geospatial/hooks/useGeocoding";
 import { NearbyMiniMap } from "../components";
 import { useNearbyBusinesses } from "../hooks/useNearbyBusinesses";
 import type { NearbyBusiness } from "../domain/types";
@@ -77,6 +78,8 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const { activeLocation, activeTerritory } = useLocationContext();
   const [radiusKm, setRadiusKm] = useState(1);
   const [query, setQuery] = useState("");
+  const [addressInput, setAddressInput] = useState("");
+  const [addressRequest, setAddressRequest] = useState("");
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [sortMode, setSortMode] = useState<SortMode>("distance");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -85,7 +88,8 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const businessUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business) : buildAppModulePath(APP_MODULE_SLUGS.business);
   const mapUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.map, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map) : buildAppModulePath(APP_MODULE_SLUGS.map);
   const territoryLabels = useTerritoryLabels(resolved);
-  const { location: resolvedUserLocation, coords: userLocation, status: locationStatus, isGoodForProximity, sourceMessage, resolve: resolveLocation, isLoading: locationLoading } = useResolvedUserLocation({ autoResolve: true, tryGps: true, territoryLocation: routeFallbackLocation });
+  const { location: resolvedUserLocation, coords: userLocation, status: locationStatus, isGoodForProximity: hasGpsLocation, sourceMessage, resolve: resolveLocation, isLoading: gpsLoading } = useResolvedUserLocation({ autoResolve: false, tryGps: true, territoryLocation: routeFallbackLocation });
+  const { data: geocodedAddress, isFetching: addressLoading, isError: addressError } = useGeocoding({ address: addressRequest, enabled: Boolean(addressRequest) });
   const territoryCenter = useMemo(() => {
     const locations = resolved?.kind === "group" ? resolved.group.members : resolved?.kind === "location" ? [resolved.location] : [];
     const centers = locations.flatMap((location) => {
@@ -99,10 +103,12 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
       longitude: centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length,
     };
   }, [resolved]);
-  const spatialCenter = isGoodForProximity ? userLocation : territoryCenter ?? userLocation;
+  const addressLocation = geocodedAddress?.coordinates ?? null;
+  const isGoodForProximity = Boolean(addressLocation || hasGpsLocation);
+  const spatialCenter = addressLocation ?? (hasGpsLocation ? userLocation : territoryCenter ?? userLocation);
   const spatialLocationId = territorialContext ? resolved?.kind === "location" ? routeFallbackLocation?.id : undefined : activeLocation?.id;
   const spatialLocationIds = territorialContext && resolved?.kind === "group" ? territorialContext.activeMemberIds : undefined;
-  const { businesses, isLoading: businessesLoading, isError } = useNearbyBusinesses({ enabled: providerIds.includes("business"), radiusKm, center: spatialCenter, locationId: spatialLocationId, locationIds: spatialLocationIds, limit: 100 });
+  const { businesses, isLoading: businessesLoading, isError } = useNearbyBusinesses({ enabled: providerIds.includes("business") && isGoodForProximity, radiusKm, center: spatialCenter, locationId: spatialLocationId, locationIds: spatialLocationIds, limit: 100 });
   const filteredBusinesses = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("pt-BR");
     const matches = businesses.filter((business) => (activeCategory === "Todos" || business.category === activeCategory) && (!normalizedQuery || `${business.name} ${business.category} ${business.neighborhood || ""}`.toLocaleLowerCase("pt-BR").includes(normalizedQuery)));
@@ -114,7 +120,8 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   }, [activeCategory, businesses, query, sortMode]);
   const visibleBusinesses = filteredBusinesses.slice(0, 8);
   const locationName = territoryLabels.name || resolvedUserLocation?.locationName || "território selecionado";
-  const isLoading = locationLoading || businessesLoading;
+  const proximityLocationName = geocodedAddress?.address.formatted || (hasGpsLocation ? resolvedUserLocation?.locationName || "Localização GPS" : "");
+  const isLoading = gpsLoading || addressLoading || businessesLoading;
   const handleRadiusChange = useCallback((value: number) => setRadiusKm(value), []);
 
   if (providerIds.length === 0) return <div className="nb-page"><section className="nb-empty-state"><Compass /><h2>Perto de mim indisponível agora</h2><p>Continue explorando as empresas deste território.</p><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas <ArrowRight /></button></section></div>;
@@ -123,11 +130,12 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
     <div className="nb-page">
       <Helmet><title>Perto de mim — {locationName}</title><meta name="description" content={`Encontre empresas e serviços perto de você em ${locationName}.`} /></Helmet>
       <div className="nb-container">
-        <section className="nb-location-strip">
-          <div className="nb-location-summary"><span><MapPin /></span><div><strong>{isGoodForProximity ? "Sua localização atual" : "Referência do território"}</strong><p>{locationName}</p><small>{isGoodForProximity ? sourceMessage : `Mostrando resultados em ${locationName}`}</small></div></div>
-          <div className="nb-radius-control"><LocateFixed /><label htmlFor="nb-radius">Raio de busca<small>Mostrando resultados em até {radiusKm} km.</small></label><div><select id="nb-radius" value={radiusKm} onChange={(event) => handleRadiusChange(Number(event.target.value))}>{RADIUS_OPTIONS.map((radius) => <option key={radius} value={radius}>{radius} km</option>)}</select><ChevronDown /></div></div>
-          <div className="nb-radius-quick">{RADIUS_OPTIONS.slice(0, 4).map((radius) => <button className={radiusKm === radius ? "is-active" : ""} type="button" key={radius} onClick={() => setRadiusKm(radius)}>{radius < 1 ? `${radius * 1000} m` : `${radius} km`}</button>)}</div>
-          {!isGoodForProximity && locationStatus !== "resolving" ? <button className="nb-gps-button" type="button" onClick={() => resolveLocation()}><Navigation /> Usar GPS</button> : null}
+        <section className={`nb-location-strip${isGoodForProximity ? " nb-location-strip--resolved" : ""}`}>
+          <form className="nb-address-picker" onSubmit={(event) => { event.preventDefault(); const nextAddress = addressInput.trim(); if (nextAddress) setAddressRequest(`${nextAddress}, ${locationName}`); }}><label htmlFor="nb-address"><MapPin /><input id="nb-address" value={addressInput} onChange={(event) => setAddressInput(event.target.value)} placeholder="Digite seu endereço ou CEP" /></label><button type="submit" disabled={!addressInput.trim() || addressLoading}>{addressLoading ? "Buscando…" : "Usar endereço"}</button></form>
+          {isGoodForProximity || addressError ? <div className="nb-location-summary"><span><MapPin /></span><div><strong>{isGoodForProximity ? "Localização definida" : "Endereço não encontrado"}</strong><p>{proximityLocationName || "Revise o endereço e tente novamente"}</p><small>{addressError ? "Não foi possível localizar esta referência." : geocodedAddress ? "Usando o endereço informado" : sourceMessage}</small></div></div> : null}
+          {isGoodForProximity ? <div className="nb-radius-control"><LocateFixed /><label htmlFor="nb-radius">Raio de busca<small>Mostrando resultados em até {radiusKm} km.</small></label><div><select id="nb-radius" value={radiusKm} onChange={(event) => handleRadiusChange(Number(event.target.value))}>{RADIUS_OPTIONS.map((radius) => <option key={radius} value={radius}>{radius} km</option>)}</select><ChevronDown /></div></div> : null}
+          {isGoodForProximity ? <div className="nb-radius-quick">{RADIUS_OPTIONS.slice(0, 4).map((radius) => <button className={radiusKm === radius ? "is-active" : ""} type="button" key={radius} onClick={() => setRadiusKm(radius)}>{radius < 1 ? `${radius * 1000} m` : `${radius} km`}</button>)}</div> : null}
+          {!hasGpsLocation && locationStatus !== "resolving" ? <button className="nb-gps-button" type="button" onClick={() => { setAddressRequest(""); void resolveLocation(); }}><Navigation /> Usar GPS</button> : null}
         </section>
 
         <section className="nb-filter-panel" aria-label="Filtros de proximidade">
@@ -140,11 +148,11 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
         {isError ? <section className="nb-error"><AlertTriangle /><div><strong>Não foi possível carregar os resultados.</strong><p>Você ainda pode explorar a lista completa de empresas.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Ver empresas</button></section> : null}
         <div className="nb-layout">
           <main className="nb-results">
-            <header className="nb-section-heading"><div><Navigation /><span><h2>{isGoodForProximity ? "Mais próximos de você" : "Próximos no território"}</h2><p>{isLoading ? "Buscando estabelecimentos..." : `${filteredBusinesses.length} resultado${filteredBusinesses.length === 1 ? "" : "s"} em até ${radiusKm < 1 ? `${radiusKm * 1000} m` : `${radiusKm} km`}`}</p></span></div><button type="button" onClick={() => navigate(businessUrl)}>Ver todos <ArrowRight /></button><div className="nb-mobile-sort"><span className="nb-sort-label">Ordenar por</span><select aria-label="Ordenar por" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliação</option><option value="name">Nome (A → Z)</option></select><ChevronDown /></div></header>
-            {isLoading ? <div className="nb-loading"><LocateFixed /><span>Localizando o que está perto de você…</span></div> : visibleBusinesses.length ? <div className="nb-business-grid">{visibleBusinesses.map((business) => <NearbyBusinessCard key={business.id} business={business} precise={isGoodForProximity} />)}</div> : <div className="nb-no-results"><Search /><strong>Nenhum resultado neste recorte</strong><p>Amplie o raio ou remova os filtros para ver mais opções.</p></div>}
+            <header className="nb-section-heading"><div><Navigation /><span><h2>{isGoodForProximity ? "Mais próximos de você" : "Defina sua localização"}</h2><p>{!isGoodForProximity ? "Digite um endereço ou use o GPS para começar." : isLoading ? "Buscando estabelecimentos..." : `${filteredBusinesses.length} resultado${filteredBusinesses.length === 1 ? "" : "s"} em até ${radiusKm < 1 ? `${radiusKm * 1000} m` : `${radiusKm} km`}`}</p></span></div><button type="button" onClick={() => navigate(businessUrl)}>Ver todos <ArrowRight /></button><div className="nb-mobile-sort"><span className="nb-sort-label">Ordenar por</span><select aria-label="Ordenar por" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliação</option><option value="name">Nome (A → Z)</option></select><ChevronDown /></div></header>
+            {!isGoodForProximity ? <div className="nb-no-results"><MapPin /><strong>Onde você quer buscar?</strong><p>Informe um endereço ou ative o GPS para calcular distâncias reais.</p></div> : isLoading ? <div className="nb-loading"><LocateFixed /><span>Localizando o que está perto de você…</span></div> : visibleBusinesses.length ? <div className="nb-business-grid">{visibleBusinesses.map((business) => <NearbyBusinessCard key={business.id} business={business} precise />)}</div> : <div className="nb-no-results"><Search /><strong>Nenhum resultado neste recorte</strong><p>Amplie o raio ou remova os filtros para ver mais opções.</p></div>}
           </main>
           <aside className="nb-sidebar">
-            <section className="nb-map-card"><header className="nb-section-heading"><div><Map /><span><h2>Mapa da região</h2><p>{isGoodForProximity ? `Raio de ${radiusKm} km` : locationName}</p></span></div><button type="button" onClick={() => navigate(mapUrl)}><span className="nb-map-cta-desktop">Mapa completo</span><span className="nb-map-cta-mobile">Expandir mapa</span><ArrowRight /></button></header><NearbyMiniMap userLocation={spatialCenter} businesses={filteredBusinesses} radiusKm={radiusKm} showProximity={isGoodForProximity} /></section>
+            {isGoodForProximity ? <section className="nb-map-card"><header className="nb-section-heading"><div><Map /><span><h2>Mapa da região</h2><p>{`Raio de ${radiusKm} km`}</p></span></div><button type="button" onClick={() => navigate(mapUrl)}><span className="nb-map-cta-desktop">Mapa completo</span><span className="nb-map-cta-mobile">Expandir mapa</span><ArrowRight /></button></header><NearbyMiniMap userLocation={spatialCenter} businesses={filteredBusinesses} radiusKm={radiusKm} showProximity /></section> : null}
             {visibleBusinesses.length ? <section className="nb-routes"><header className="nb-section-heading"><div><Navigation /><span><h2>Rotas rápidas</h2><p>Atalhos para os primeiros resultados.</p></span></div></header><div>{visibleBusinesses.slice(0, 4).map((business) => <button type="button" key={business.id} onClick={() => navigate(business.canonicalUrl)}><span>{business.logo ? <img src={business.logo} alt="" /> : <Store />}</span><strong>{business.name}</strong><small>{isGoodForProximity ? formatDistance(business.distanceMeters) : formatTerritoryDistance(business.distanceMeters)}</small></button>)}</div></section> : null}
             <section className="nb-business-cta"><Store /><div><strong>Seu negócio aparece aqui?</strong><p>Cadastre sua empresa e seja encontrado por quem está perto.</p></div><button type="button" onClick={() => navigate(businessUrl)}>Saiba mais <ArrowRight /></button></section>
           </aside>
