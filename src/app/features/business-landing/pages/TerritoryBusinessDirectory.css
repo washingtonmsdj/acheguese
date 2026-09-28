@@ -39,6 +39,24 @@
   letter-spacing: -0.03em;
 }
 
+.tbd-categories-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.tbd-categories-heading > button {
+  border: 0;
+  background: transparent;
+  color: #087f83;
+  font: inherit;
+  font-size: 0.62rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 .tbd-categories h2 svg,
 .tbd-category-list svg {
   width: 1.05rem;
@@ -647,6 +665,10 @@
     scroll-snap-align: start;
   }
 
+  .tbd-category-list button:nth-child(n + 5) {
+    display: none;
+  }
+
   .tbd-context {
     grid-column: auto;
     grid-template-columns: 1fr 1fr;
@@ -831,19 +853,19 @@
 
   .tbd-sort-inline {
     display: flex;
-    width: max-content;
+    width: 6rem;
     max-width: none;
     min-height: 2.25rem;
     flex: 0 0 auto;
     justify-content: flex-start;
-    padding-inline: 0.65rem;
+    padding-inline: 0.45rem;
     overflow: visible;
   }
 
   .tbd-sort-inline select {
     width: auto;
-    max-width: 7.5rem;
-    font-size: 0.58rem;
+    max-width: 4.4rem;
+    font-size: 0.56rem;
   }
 
   .tbd-sort select {
@@ -861,9 +883,19 @@
 
   .tbd-filter-row button {
     min-height: 2.25rem;
-    padding-inline: 0.65rem;
-    font-size: 0.62rem;
+    padding-inline: 0.5rem;
+    font-size: 0.56rem;
     scroll-snap-align: start;
+  }
+
+  .tbd-filter-row > .tbd-filter-all {
+    width: 5.1rem;
+    justify-content: center;
+  }
+
+  .tbd-filter-row > button:nth-of-type(2) {
+    width: 4.7rem;
+    justify-content: center;
   }
 
   .tbd-results-heading {
@@ -1010,7 +1042,8 @@
     height: 2.75rem;
     grid-column: 2;
     grid-row: 1;
-    align-self: start;
+    align-self: end;
+    margin-bottom: 0.1rem;
     transform: none;
     border: 1px solid #dfe8e5;
     color: #236164;

@@ -188,7 +188,10 @@ export function TerritoryBusinessDirectory({
     <div className="tbd-page">
       <div className="tbd-layout">
         <aside className="tbd-categories" aria-labelledby="tbd-categories-title">
-          <h2 id="tbd-categories-title"><Grid2X2 /> Categorias</h2>
+          <div className="tbd-categories-heading">
+            <h2 id="tbd-categories-title"><Grid2X2 /> Categorias</h2>
+            <button type="button" onClick={() => onSelectCategory("all")}>Ver todos</button>
+          </div>
           <div className="tbd-category-list">
             <button
               type="button"
