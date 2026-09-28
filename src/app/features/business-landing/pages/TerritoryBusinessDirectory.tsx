@@ -24,6 +24,7 @@ import type {
   Category,
   QuickFilter,
 } from "@/app/features/business-landing/sections/types";
+import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 
 import "./TerritoryBusinessDirectory.css";
 
@@ -57,19 +58,26 @@ interface TerritoryBusinessDirectoryProps {
 
 function BusinessDirectoryCard({
   business,
+  territoryName,
   index,
   isSaved,
   onOpen,
   onToggleSave,
 }: {
   business: Business;
+  territoryName: string;
   index: number;
   isSaved: boolean;
   onOpen: () => void;
   onToggleSave: (id: string, event: MouseEvent) => void;
 }) {
   const favoriteId = business.business_data_id ?? business.id;
-  const status = business.statusText ?? (business.isOpen ? "Aberto agora" : "Horário não informado");
+  const rawStatus = business.statusText?.trim().toLowerCase() ?? "";
+  const status = business.isOpen
+    ? "Aberto agora"
+    : rawStatus.includes("inform") || !rawStatus
+      ? "Horário não informado"
+      : "Fechado agora";
   const hasDistance = Boolean(
     business.distance && business.distance.trim().toLowerCase() !== "n/a",
   );
@@ -88,20 +96,20 @@ function BusinessDirectoryCard({
         </div>
 
         <div className="tbd-card-body">
-          <p className="tbd-card-kicker">{business.subcategoria || business.category}</p>
+          <p className="tbd-card-kicker">{getBusinessCategoryLabel(business.category)}</p>
           <h3>
             {business.name}
             {business.is_verified ? <BadgeCheck aria-label="Empresa verificada" /> : null}
           </h3>
           <p className="tbd-card-location">
-            {hasDistance ? business.distance : "No território"}
+            {hasDistance ? business.distance : territoryName}
           </p>
 
           <div className="tbd-card-meta">
             <span className={`tbd-card-status ${statusTone}`}>{status}</span>
             {business.rating > 0 ? (
               <span className="tbd-rating">
-                <Star /> {business.rating.toFixed(1)}
+                <Star /> {business.rating.toFixed(1).replace(".", ",")}
                 {business.reviews > 0 ? <small>({business.reviews})</small> : null}
               </span>
             ) : (
@@ -290,6 +298,7 @@ export function TerritoryBusinessDirectory({
                 <BusinessDirectoryCard
                   key={business.id}
                   business={business}
+                  territoryName={territoryName}
                   index={index}
                   isSaved={savedBusinesses.has(business.business_data_id ?? business.id)}
                   onOpen={() => onOpenBusiness(business)}
