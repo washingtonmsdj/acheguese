@@ -1,4 +1,4 @@
-import { lazy, Suspense, type FormEvent } from "react";
+import { lazy, Suspense, useMemo, type ComponentType, type FormEvent } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -11,6 +11,7 @@ import {
   Menu,
   Navigation,
   Search,
+  Star,
   Store,
   UsersRound,
 } from "lucide-react";
@@ -18,6 +19,10 @@ import {
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { TerritorialModuleHero, type TerritorialHeroBreadcrumb, type TerritoryModuleNavItem, type TerritoryModuleNavMoreItem } from "@/app/components/territorial";
+import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
+import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
+import { getBusinessUrl, normalizeRealBusinessEntry } from "@/app/features/business-landing/utils";
+import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 
 import "./TerritoryPortalPage.css";
 
@@ -77,6 +82,21 @@ export default function TerritoryPortalPage({
   activeView = "home",
 }: TerritoryPortalPageProps) {
   const navigate = useNavigate();
+  const businessUrls = useBusinessUrls(resolvedTerritory);
+  const {
+    businesses: territoryBusinesses,
+    isLoading: businessesLoading,
+    isError: businessesError,
+  } = useBusinessList({
+    enabled: activeView === "home",
+    pageSize: 4,
+    routeResolved: resolvedTerritory,
+    activeMemberIds,
+  });
+  const businessPreview = useMemo(
+    () => territoryBusinesses.slice(0, 4).map(normalizeRealBusinessEntry),
+    [territoryBusinesses],
+  );
   const heroSlug =
     resolvedTerritory?.kind === "group"
       ? resolvedTerritory.group.slug
@@ -294,102 +314,142 @@ export default function TerritoryPortalPage({
             </Suspense>
           </section>
         ) : (
-          <div className="pt-container pt-dashboard">
-            <section className="pt-panel pt-map-panel">
-            <PanelHeading
-              icon={Map}
-              title="Mapa do território"
-              description="Explore empresas e pontos úteis dentro do território."
-              href={urls.map}
-              label="Abrir mapa"
-            />
-            <div className="pt-map-shell">
-              <Suspense
-                fallback={<div className="pt-map-loading">Carregando mapa…</div>}
-              >
-                <TerritoryMap
-                  city={null}
-                  resolvedTerritory={resolvedTerritory}
-                  label={territoryName}
+          <div className="pt-container pt-home-dashboard">
+            <div className="pt-home-overview">
+              <section className="pt-panel pt-home-map">
+                <PanelHeading
+                  icon={Map}
+                  title="Mapa do território"
+                  description="Explore empresas e pontos úteis dentro do território."
+                  href={urls.map}
+                  label="Abrir mapa"
                 />
-              </Suspense>
-            </div>
-          </section>
-
-          <section className="pt-panel pt-business-panel">
-            <PanelHeading
-              icon={Store}
-              title="Empresas"
-              description="Veja os negócios disponíveis neste território."
-              href={urls.business}
-              label="Ver empresas"
-            />
-            <div className="pt-business-grid">
-              <Link to={urls.business}>
-                <div className="pt-business-image">
-                  <Store />
+                <div className="pt-map-shell">
+                  <Suspense
+                    fallback={<div className="pt-map-loading">Carregando mapa…</div>}
+                  >
+                    <TerritoryMap
+                      city={null}
+                      resolvedTerritory={resolvedTerritory}
+                      label={territoryName}
+                    />
+                  </Suspense>
                 </div>
-                <strong>Explorar empresas</strong>
-                <small>{territoryName}</small>
-                <p>Abrir catálogo do território</p>
-                <span>
-                  Abrir <ArrowRight />
-                </span>
-              </Link>
-            </div>
-          </section>
+              </section>
 
-          <aside className="pt-panel pt-about">
-            <PanelHeading icon={Info} title="Sobre o território" />
-            <p>
-              Este portal reúne as superfícies públicas ativas do Achegue-se para
-              {territoryName}.
-            </p>
-            <dl>
-              <div>
-                <dt>
-                  <MapPin /> Região
-                </dt>
-                <dd>{contextLabel}</dd>
-              </div>
-              {memberLabels.length > 0 ? (
-                <div>
-                  <dt>
-                    <UsersRound /> Áreas do território
-                  </dt>
-                  <dd>{memberLabels.join(", ")}</dd>
+              <aside className="pt-panel pt-home-about">
+                <PanelHeading icon={Info} title="Sobre o território" />
+                <p>
+                  Encontre informação local e acesse as experiências disponíveis em {territoryName}.
+                </p>
+                <dl>
+                  <div>
+                    <dt><MapPin /> Região</dt>
+                    <dd>{contextLabel}</dd>
+                  </div>
+                  {memberLabels.length > 0 ? (
+                    <div>
+                      <dt><UsersRound /> Áreas</dt>
+                      <dd>{memberLabels.join(", ")}</dd>
+                    </div>
+                  ) : null}
+                  <div>
+                    <dt><Store /> Disponível</dt>
+                    <dd>Empresas, mapa, perto de mim e busca</dd>
+                  </div>
+                </dl>
+              </aside>
+            </div>
+
+            <section className="pt-panel pt-home-businesses">
+              <PanelHeading
+                icon={Store}
+                title="Empresas no território"
+                description="Conheça negócios e serviços disponíveis nesta região."
+                href={urls.business}
+                label="Ver todas as empresas"
+              />
+
+              {businessesLoading ? (
+                <div className="pt-business-preview-state">Carregando empresas…</div>
+              ) : businessesError ? (
+                <div className="pt-business-preview-state">
+                  <span>Não foi possível carregar a vitrine agora.</span>
+                  <Link to={urls.business}>Abrir empresas <ArrowRight /></Link>
                 </div>
-              ) : null}
-              <div>
-                <dt>
-                  <Store /> Disponível agora
-                </dt>
-                <dd>Empresas, Mapa, Perto de mim e Busca</dd>
-              </div>
-            </dl>
-          </aside>
+              ) : businessPreview.length > 0 ? (
+                <div className="pt-business-preview-grid">
+                  {businessPreview.map((business) => {
+                    const href = getBusinessUrl(
+                      business,
+                      urls.business,
+                      businessUrls.canonical,
+                    );
+                    const status = business.isOpen
+                      ? "Aberto agora"
+                      : business.statusText?.toLowerCase().includes("inform") || !business.statusText
+                        ? "Horário não informado"
+                        : "Fechado agora";
 
-          <section className="pt-panel pt-nearby">
-            <PanelHeading
-              icon={Navigation}
-              title="Perto de você"
-              description="Use sua localização para descobrir empresas próximas."
-              href={urls.nearby}
-              label="Abrir"
-            />
-            <div className="pt-nearby-grid">
-              <Link to={urls.nearby}>
-                <Navigation />
-                <strong>Abrir Perto de mim</strong>
-                <small>Resultados calculados pela sua localização</small>
-              </Link>
-              <Link to={urls.search}>
-                <Search />
-                <strong>Buscar no território</strong>
-                <small>Procure pelo que precisa</small>
-              </Link>
-            </div>
+                    return (
+                      <Link className="pt-business-preview-card" to={href} key={business.id}>
+                        <div className="pt-business-preview-media">
+                          <span aria-hidden="true"><Store /></span>
+                          {business.logoUrl ? (
+                            <img
+                              src={business.logoUrl}
+                              alt=""
+                              loading="lazy"
+                              onError={(event) => { event.currentTarget.hidden = true; }}
+                            />
+                          ) : null}
+                        </div>
+                        <div className="pt-business-preview-copy">
+                          <small>{getBusinessCategoryLabel(business.category)}</small>
+                          <h3>{business.name}</h3>
+                          <p><MapPin /> {territoryName}</p>
+                          <div>
+                            <span className={business.isOpen ? "is-open" : ""}>{status}</span>
+                            {business.rating > 0 ? (
+                              <b><Star /> {business.rating.toFixed(1).replace(".", ",")}</b>
+                            ) : null}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="pt-business-preview-state">
+                  <span>Ainda não há empresas publicadas neste território.</span>
+                  <Link to={urls.business}>Ver página de empresas <ArrowRight /></Link>
+                </div>
+              )}
             </section>
+
+            <div className="pt-home-actions">
+              <section className="pt-panel pt-home-nearby">
+                <Navigation />
+                <div>
+                  <h2>Descubra o que está perto de você</h2>
+                  <p>Informe sua localização para encontrar lugares próximos de verdade.</p>
+                  <Link to={urls.nearby}>Abrir Perto de mim <ArrowRight /></Link>
+                </div>
+              </section>
+
+              <section className="pt-panel pt-home-search-cta">
+                <Search />
+                <div>
+                  <h2>O que você procura?</h2>
+                  <p>Busque empresas, serviços e lugares neste território.</p>
+                  <form action={urls.search} onSubmit={handleSearchSubmit}>
+                    <Search />
+                    <input name="q" aria-label="Buscar no território" placeholder="Ex.: farmácia, padaria, escola…" />
+                    <button type="submit">Buscar <ArrowRight /></button>
+                  </form>
+                </div>
+              </section>
+            </div>
           </div>
         )}
       </main>
