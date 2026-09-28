@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle, ArrowRight, Bookmark, ChevronDown, Compass, GraduationCap, HeartPulse, LocateFixed, Map, MapPin, MoreHorizontal, Navigation, Scissors, Search, ShoppingCart, SlidersHorizontal, Star, Store, UtensilsCrossed, Wrench, X } from "lucide-react";
@@ -17,6 +17,18 @@ import type { NearbyProviderId } from "../providers/registry";
 import "./NearbyPage.css";
 
 interface NearbyPageProps { providerIds: readonly NearbyProviderId[]; }
+interface NearbyReference { type: "address" | "gps"; label: string; latitude: number; longitude: number; }
+const NEARBY_REFERENCE_KEY = "achegue-se:nearby-reference";
+
+function readNearbyReference(): NearbyReference | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = window.sessionStorage.getItem(NEARBY_REFERENCE_KEY);
+    if (!stored) return null;
+    const reference = JSON.parse(stored) as NearbyReference;
+    return Number.isFinite(reference.latitude) && Number.isFinite(reference.longitude) ? reference : null;
+  } catch { return null; }
+}
 const RADIUS_OPTIONS = [0.5, 1, 3, 5, 10, 20] as const;
 type SortMode = "distance" | "name" | "rating";
 const CATEGORY_OPTIONS = [
@@ -80,6 +92,8 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const [query, setQuery] = useState("");
   const [addressInput, setAddressInput] = useState("");
   const [addressRequest, setAddressRequest] = useState("");
+  const [savedReference, setSavedReference] = useState<NearbyReference | null>(readNearbyReference);
+  const [locationEditorOpen, setLocationEditorOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [sortMode, setSortMode] = useState<SortMode>("distance");
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -88,8 +102,24 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const businessUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business) : buildAppModulePath(APP_MODULE_SLUGS.business);
   const mapUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.map, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map) : buildAppModulePath(APP_MODULE_SLUGS.map);
   const territoryLabels = useTerritoryLabels(resolved);
-  const { location: resolvedUserLocation, coords: userLocation, status: locationStatus, isGoodForProximity: hasGpsLocation, sourceMessage, resolve: resolveLocation, isLoading: gpsLoading } = useResolvedUserLocation({ autoResolve: false, tryGps: true, territoryLocation: routeFallbackLocation });
+  const { location: resolvedUserLocation, coords: userLocation, status: locationStatus, isGoodForProximity: hasGpsLocation, resolve: resolveLocation, isLoading: gpsLoading } = useResolvedUserLocation({ autoResolve: false, tryGps: true, territoryLocation: routeFallbackLocation });
   const { data: geocodedAddress, isFetching: addressLoading, isError: addressError } = useGeocoding({ address: addressRequest, enabled: Boolean(addressRequest) });
+  const userLatitude = userLocation?.latitude;
+  const userLongitude = userLocation?.longitude;
+  useEffect(() => {
+    if (!geocodedAddress) return;
+    const reference: NearbyReference = { type: "address", label: geocodedAddress.address.formatted || addressInput, latitude: geocodedAddress.coordinates.latitude, longitude: geocodedAddress.coordinates.longitude };
+    setSavedReference(reference);
+    window.sessionStorage.setItem(NEARBY_REFERENCE_KEY, JSON.stringify(reference));
+    setLocationEditorOpen(false);
+  }, [addressInput, geocodedAddress]);
+  useEffect(() => {
+    if (!hasGpsLocation || userLatitude == null || userLongitude == null) return;
+    const reference: NearbyReference = { type: "gps", label: resolvedUserLocation?.locationName || "Sua localização atual", latitude: userLatitude, longitude: userLongitude };
+    setSavedReference(reference);
+    window.sessionStorage.setItem(NEARBY_REFERENCE_KEY, JSON.stringify(reference));
+    setLocationEditorOpen(false);
+  }, [hasGpsLocation, resolvedUserLocation?.locationName, userLatitude, userLongitude]);
   const territoryCenter = useMemo(() => {
     const locations = resolved?.kind === "group" ? resolved.group.members : resolved?.kind === "location" ? [resolved.location] : [];
     const centers = locations.flatMap((location) => {
@@ -103,10 +133,10 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
       longitude: centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length,
     };
   }, [resolved]);
-  const addressLocation = geocodedAddress?.coordinates ?? null;
-  const isGoodForProximity = Boolean(addressLocation || hasGpsLocation);
+  const addressLocation = savedReference ? { latitude: savedReference.latitude, longitude: savedReference.longitude } : null;
+  const isGoodForProximity = Boolean(savedReference);
   const gpsUnavailable = !hasGpsLocation && (locationStatus === "territory" || locationStatus === "fallback" || locationStatus === "error");
-  const spatialCenter = addressLocation ?? (hasGpsLocation ? userLocation : territoryCenter ?? userLocation);
+  const spatialCenter = addressLocation ?? territoryCenter ?? userLocation;
   const spatialLocationId = territorialContext ? resolved?.kind === "location" ? routeFallbackLocation?.id : undefined : activeLocation?.id;
   const spatialLocationIds = territorialContext && resolved?.kind === "group" ? territorialContext.activeMemberIds : undefined;
   const { businesses, isLoading: businessesLoading, isError } = useNearbyBusinesses({ enabled: providerIds.includes("business") && isGoodForProximity, radiusKm, center: spatialCenter, locationId: spatialLocationId, locationIds: spatialLocationIds, limit: 100 });
@@ -121,7 +151,7 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   }, [activeCategory, businesses, query, sortMode]);
   const visibleBusinesses = filteredBusinesses.slice(0, 8);
   const locationName = territoryLabels.name || resolvedUserLocation?.locationName || "território selecionado";
-  const proximityLocationName = geocodedAddress?.address.formatted || (hasGpsLocation ? resolvedUserLocation?.locationName || "Localização GPS" : "");
+  const proximityLocationName = savedReference?.label || "";
   const isLoading = gpsLoading || addressLoading || businessesLoading;
   const handleRadiusChange = useCallback((value: number) => setRadiusKm(value), []);
 
@@ -132,12 +162,14 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
       <Helmet><title>Perto de mim — {locationName}</title><meta name="description" content={`Encontre empresas e serviços perto de você em ${locationName}.`} /></Helmet>
       <div className="nb-container">
         <section className={`nb-location-strip${isGoodForProximity ? " nb-location-strip--resolved" : ""}`}>
-          <form className="nb-address-picker" onSubmit={(event) => { event.preventDefault(); const nextAddress = addressInput.trim(); if (nextAddress) setAddressRequest(`${nextAddress}, ${locationName}`); }}><label htmlFor="nb-address"><MapPin /><input id="nb-address" value={addressInput} onChange={(event) => setAddressInput(event.target.value)} placeholder="Digite seu endereço ou CEP" /></label><button type="submit" disabled={!addressInput.trim() || addressLoading}>{addressLoading ? "Buscando…" : "Usar endereço"}</button></form>
-          {isGoodForProximity || addressError || gpsUnavailable ? <div className="nb-location-summary"><span><MapPin /></span><div><strong>{isGoodForProximity ? "Localização definida" : addressError ? "Endereço não encontrado" : "GPS indisponível"}</strong><p>{proximityLocationName || (addressError ? "Revise o endereço e tente novamente" : "Digite um endereço para continuar")}</p><small>{addressError ? "Não foi possível localizar esta referência." : gpsUnavailable ? "Não foi possível obter sua posição com precisão." : geocodedAddress ? "Usando o endereço informado" : sourceMessage}</small></div></div> : null}
+          {!isGoodForProximity ? <><div className="nb-location-prompt"><strong>Onde você quer buscar?</strong><small>Informe um endereço ou use sua localização atual.</small></div><form className="nb-address-picker" onSubmit={(event) => { event.preventDefault(); const nextAddress = addressInput.trim(); if (nextAddress) setAddressRequest(`${nextAddress}, ${locationName}`); }}><label htmlFor="nb-address"><MapPin /><input id="nb-address" value={addressInput} onChange={(event) => setAddressInput(event.target.value)} placeholder="Digite seu endereço ou CEP" /></label><button type="submit" disabled={!addressInput.trim() || addressLoading}>{addressLoading ? "Buscando…" : "Usar endereço"}</button></form></> : <div className="nb-location-summary"><span><MapPin /></span><div><small>Buscando perto de:</small><strong>{proximityLocationName}</strong><p>{savedReference?.type === "gps" ? "GPS ativado" : "Endereço definido"}</p></div><button className="nb-edit-location" type="button" onClick={() => { setAddressInput(""); setAddressRequest(""); setLocationEditorOpen(true); }}>Editar</button></div>}
+          {!isGoodForProximity && (addressError || gpsUnavailable) ? <p className="nb-location-error">{addressError ? "Endereço não encontrado. Revise e tente novamente." : "GPS indisponível. Digite um endereço para continuar."}</p> : null}
           {isGoodForProximity ? <div className="nb-radius-control"><LocateFixed /><label htmlFor="nb-radius">Raio de busca<small>Mostrando resultados em até {radiusKm} km.</small></label><div><select id="nb-radius" value={radiusKm} onChange={(event) => handleRadiusChange(Number(event.target.value))}>{RADIUS_OPTIONS.map((radius) => <option key={radius} value={radius}>{radius} km</option>)}</select><ChevronDown /></div></div> : null}
           {isGoodForProximity ? <div className="nb-radius-quick">{RADIUS_OPTIONS.slice(0, 4).map((radius) => <button className={radiusKm === radius ? "is-active" : ""} type="button" key={radius} onClick={() => setRadiusKm(radius)}>{radius < 1 ? `${radius * 1000} m` : `${radius} km`}</button>)}</div> : null}
-          {!hasGpsLocation && locationStatus !== "resolving" ? <button className="nb-gps-button" type="button" onClick={() => { setAddressRequest(""); void resolveLocation(); }}><Navigation /> Usar GPS</button> : null}
+          {!isGoodForProximity && locationStatus !== "resolving" ? <button className="nb-gps-button" type="button" onClick={() => { setAddressInput(""); setAddressRequest(""); void resolveLocation(); }}><Navigation /> Usar GPS</button> : null}
         </section>
+
+        {locationEditorOpen ? <div className="nb-location-overlay" role="presentation" onClick={() => setLocationEditorOpen(false)}><section className="nb-location-sheet" role="dialog" aria-modal="true" aria-labelledby="nb-location-editor-title" onClick={(event) => event.stopPropagation()}><span className="nb-sheet-handle" /><header><div><h2 id="nb-location-editor-title">Alterar localização</h2><p>Digite um novo endereço ou use o GPS.</p></div><button type="button" aria-label="Fechar" onClick={() => setLocationEditorOpen(false)}><X /></button></header><form className="nb-address-picker" onSubmit={(event) => { event.preventDefault(); const nextAddress = addressInput.trim(); if (nextAddress) setAddressRequest(`${nextAddress}, ${locationName}`); }}><label htmlFor="nb-new-address"><MapPin /><input id="nb-new-address" value={addressInput} onChange={(event) => setAddressInput(event.target.value)} placeholder="Digite um novo endereço ou CEP" /></label><button type="submit" disabled={!addressInput.trim() || addressLoading}>{addressLoading ? "Buscando…" : "Usar endereço"}</button></form>{addressError ? <p className="nb-location-error">Endereço não encontrado. Revise e tente novamente.</p> : null}<button className="nb-sheet-gps" type="button" disabled={gpsLoading} onClick={() => { setAddressInput(""); setAddressRequest(""); void resolveLocation(); }}><Navigation />{gpsLoading ? "Obtendo localização…" : "Usar GPS"}</button></section></div> : null}
 
         {isGoodForProximity ? <section className="nb-filter-panel" aria-label="Filtros de proximidade">
           <div className="nb-search-row"><label><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar por perto..." /></label><div className="nb-sort-control"><SlidersHorizontal /><select aria-label="Ordenar resultados" value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)}><option value="distance">Mais próximos</option><option value="rating">Melhor avaliados</option><option value="name">Ordem alfabética</option></select><ChevronDown /></div><button className="nb-filter-trigger" type="button" aria-label="Abrir filtros" onClick={() => setFiltersOpen(true)}><SlidersHorizontal /></button></div>
