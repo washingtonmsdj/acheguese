@@ -1,4 +1,4 @@
-import { lazy, Suspense, type MouseEvent } from "react";
+import { lazy, Suspense, useState, type MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import {
   AlertCircle,
@@ -73,16 +73,17 @@ function BusinessDirectoryCard({
   const hasDistance = Boolean(
     business.distance && business.distance.trim().toLowerCase() !== "n/a",
   );
+  const statusTone = business.isOpen
+    ? "is-open"
+    : status.toLowerCase().includes("inform")
+      ? "is-unknown"
+      : "is-closed";
 
   return (
     <article className="tbd-card">
       <button className="tbd-card-main" type="button" onClick={onOpen}>
         <div className={`tbd-card-cover tbd-cover-${index % 4}`}>
-          <img
-            src={business.logoUrl || "/territory/heroes/complexo-do-nordeste-de-amaralina.jpg"}
-            alt=""
-            loading="lazy"
-          />
+          <BusinessDirectoryImage business={business} />
           <small className={business.isOpen ? "is-open" : ""}>{status}</small>
         </div>
 
@@ -93,17 +94,18 @@ function BusinessDirectoryCard({
             {business.is_verified ? <BadgeCheck aria-label="Empresa verificada" /> : null}
           </h3>
           <p className="tbd-card-location">
-            {hasDistance ? `${business.distance} · ` : ""}{business.category}
+            {hasDistance ? business.distance : "No território"}
           </p>
 
           <div className="tbd-card-meta">
+            <span className={`tbd-card-status ${statusTone}`}>{status}</span>
             {business.rating > 0 ? (
               <span className="tbd-rating">
                 <Star /> {business.rating.toFixed(1)}
                 {business.reviews > 0 ? <small>({business.reviews})</small> : null}
               </span>
             ) : (
-              <span>Informações públicas</span>
+              <span className="tbd-no-rating">Sem avaliações</span>
             )}
           </div>
         </div>
@@ -119,6 +121,27 @@ function BusinessDirectoryCard({
         <Bookmark />
       </button>
     </article>
+  );
+}
+
+function BusinessDirectoryImage({ business }: { business: Business }) {
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (!business.logoUrl || imageFailed) {
+    return (
+      <span className="tbd-card-fallback" aria-hidden="true">
+        <Store />
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={business.logoUrl}
+      alt=""
+      loading="lazy"
+      onError={() => setImageFailed(true)}
+    />
   );
 }
 
@@ -146,6 +169,11 @@ export function TerritoryBusinessDirectory({
   onToggleSave,
 }: TerritoryBusinessDirectoryProps) {
   const hasActiveFilters = activeCategory !== "all" || activeFilters.length > 0;
+  const hasNearbyData = businesses.some(
+    (business) =>
+      typeof business.distanceMeters === "number" ||
+      Boolean(business.distance && business.distance.trim().toLowerCase() !== "n/a"),
+  );
 
   return (
     <div className="tbd-page">
@@ -293,7 +321,7 @@ export function TerritoryBusinessDirectory({
             </div>
           </section>
 
-          <section className="tbd-context-card tbd-nearby-card">
+          {hasNearbyData ? <section className="tbd-context-card tbd-nearby-card">
             <header>
               <div>
                 <h2><Navigation /> Perto de você</h2>
@@ -310,7 +338,7 @@ export function TerritoryBusinessDirectory({
                 </Link>
               ))}
             </div>
-          </section>
+          </section> : null}
 
           <section className="tbd-context-card tbd-register-card">
             <Store />

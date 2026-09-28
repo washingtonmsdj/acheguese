@@ -62,6 +62,10 @@
   .tmh:not(.tmh--home) .tmh-nav__item:nth-child(2){order:3}
   .tmh:not(.tmh--home) .tmh-nav__item:nth-child(3){order:1}
   .tmh:not(.tmh--home) .tmh-nav__item:nth-child(4){order:2}
+  .tmh:not(.tmh--home) .tmh-nav__item{flex:0 0 auto}
+  .tmh:not(.tmh--home) .tmh-nav__item:nth-child(2){min-width:3.8rem}
+  .tmh:not(.tmh--home) .tmh-nav__item:nth-child(3){min-width:4.5rem}
+  .tmh:not(.tmh--home) .tmh-nav__item:nth-child(4){min-width:5.3rem}
   .tmh-nav__item>svg{width:.88rem;height:.88rem}
   .tmh-nav__item strong{font-size:.55rem;line-height:1.1}
   .tmh-nav__item small,.tmh-nav__item b{display:none}
