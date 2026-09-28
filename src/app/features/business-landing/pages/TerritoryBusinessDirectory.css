@@ -945,6 +945,7 @@
 
   .tbd-sort-inline {
     display: flex;
+    position: relative;
     width: 6rem;
     max-width: none;
     min-height: 2.25rem;
@@ -957,7 +958,23 @@
   .tbd-sort-inline select {
     width: auto;
     max-width: 4.4rem;
+    appearance: none;
+    padding-right: 0.7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 0.56rem;
+  }
+
+  .tbd-sort-inline::after {
+    position: absolute;
+    top: 50%;
+    right: 0.45rem;
+    color: #355d60;
+    content: "⌄";
+    font-size: 0.7rem;
+    pointer-events: none;
+    transform: translateY(-55%);
   }
 
   .tbd-sort select {
@@ -986,7 +1003,7 @@
   }
 
   .tbd-filter-row > button:nth-of-type(2) {
-    width: 4.7rem;
+    width: 5.8rem;
     justify-content: center;
   }
 
