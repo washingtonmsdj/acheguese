@@ -724,16 +724,16 @@
 /* Mobile directory: compact discovery density, with horizontal controls only where intentional. */
 @media (max-width: 680px) {
   .tbd-page {
-    padding: 0.35rem 0 1.5rem;
+    padding: 0 0 1.5rem;
   }
 
   .tbd-layout {
     width: min(100% - 1rem, 94rem);
-    gap: 0.55rem;
+    gap: 0.35rem;
   }
 
   .tbd-categories {
-    padding: 0.6rem;
+    padding: 0.45rem 0.6rem;
   }
 
   .tbd-categories h2 {
@@ -753,13 +753,13 @@
     display: flex;
     width: 100%;
     min-width: 0;
-    min-height: 5.15rem;
+    min-height: 4rem;
     flex-direction: column;
     justify-content: center;
     gap: 0.25rem;
     border: 1px solid #e5ece9;
     border-radius: 0.8rem;
-    padding: 0.45rem 0.25rem;
+    padding: 0.3rem 0.25rem;
     font-size: 0.58rem;
     text-align: center;
   }
@@ -792,40 +792,43 @@
   }
 
   .tbd-catalog {
-    padding: 0.6rem;
+    padding: 0.5rem 0.6rem;
   }
 
   .tbd-search-row {
-    grid-template-columns: 1fr;
-    gap: 0.45rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem;
   }
 
   .tbd-search {
-    min-height: 2.75rem;
+    min-width: 0;
+    min-height: 2.65rem;
   }
 
   .tbd-sort {
-    width: max-content;
+    width: 7rem;
     min-width: 0;
-    min-height: 2.5rem;
-    padding-inline: 0.75rem;
+    min-height: 2.65rem;
+    max-width: 7rem;
+    padding-inline: 0.6rem;
   }
 
   .tbd-sort select {
-    width: auto;
-    max-width: 12rem;
+    width: 5rem;
+    max-width: 5rem;
+    font-size: 0.58rem;
   }
 
   .tbd-filter-row {
     gap: 0.4rem;
-    margin-top: 0.1rem;
-    padding-bottom: 0.25rem;
+    margin-top: 0.35rem;
+    padding-bottom: 0.1rem;
     scroll-snap-type: x proximity;
   }
 
   .tbd-filter-row button {
-    min-height: 2.45rem;
-    padding-inline: 0.75rem;
+    min-height: 2.25rem;
+    padding-inline: 0.65rem;
     font-size: 0.62rem;
     scroll-snap-align: start;
   }
@@ -833,7 +836,7 @@
   .tbd-results-heading {
     align-items: center;
     gap: 0.55rem;
-    margin: 0.85rem 0 0.45rem;
+    margin: 0.6rem 0 0.35rem;
   }
 
   .tbd-results-heading h2 {
@@ -854,14 +857,14 @@
 
   .tbd-card {
     display: grid;
-    min-height: 8.5rem;
+    min-height: 7.5rem;
     grid-template-columns: minmax(0, 1fr) 2.75rem;
     align-items: start;
     column-gap: 0.5rem;
     border-radius: 0;
     border-inline: 0;
     box-shadow: none;
-    padding: 1rem 0;
+    padding: 0.7rem 0;
   }
 
   .tbd-card:first-child {

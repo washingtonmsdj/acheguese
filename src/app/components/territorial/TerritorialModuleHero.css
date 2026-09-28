@@ -3,7 +3,7 @@
   --tmh-sea:#087f83;
   --tmh-sun:#ffc83d;
   --tmh-height-desktop:14.5rem;
-  --tmh-height-mobile:13rem;
+  --tmh-height-mobile:11.75rem;
   position:relative;
   min-height:var(--tmh-height-desktop);
   overflow:hidden;
