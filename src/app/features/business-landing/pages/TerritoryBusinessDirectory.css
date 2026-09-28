@@ -898,6 +898,10 @@
     justify-content: center;
   }
 
+  .tbd-filter-row > .tbd-filter-verified {
+    display: none;
+  }
+
   .tbd-results-heading {
     align-items: center;
     gap: 0.55rem;

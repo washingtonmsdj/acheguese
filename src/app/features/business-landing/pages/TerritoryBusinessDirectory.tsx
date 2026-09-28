@@ -280,7 +280,7 @@ export function TerritoryBusinessDirectory({
             {quickFilters.map(({ icon: Icon, ...filter }) => (
               <button
                 type="button"
-                className={activeFilters.includes(filter.id) ? "is-active" : ""}
+                className={`${activeFilters.includes(filter.id) ? "is-active" : ""} ${filter.id === "verified" ? "tbd-filter-verified" : ""}`.trim()}
                 onClick={() => onToggleFilter(filter.id)}
                 aria-pressed={activeFilters.includes(filter.id)}
                 key={filter.id}
