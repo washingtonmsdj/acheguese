@@ -138,6 +138,32 @@ interface MapCategoryOption {
   count: number;
 }
 
+interface MapViewportReference {
+  bounds: BoundingBox;
+  zoom: number;
+}
+
+function hasMeaningfulViewportChange(
+  reference: MapViewportReference,
+  current: MapViewportReference,
+): boolean {
+  const referenceCenter = {
+    longitude: (reference.bounds[0] + reference.bounds[2]) / 2,
+    latitude: (reference.bounds[1] + reference.bounds[3]) / 2,
+  };
+  const currentCenter = {
+    longitude: (current.bounds[0] + current.bounds[2]) / 2,
+    latitude: (current.bounds[1] + current.bounds[3]) / 2,
+  };
+  const longitudeSpan = Math.max(Math.abs(reference.bounds[2] - reference.bounds[0]), 0.0001);
+  const latitudeSpan = Math.max(Math.abs(reference.bounds[3] - reference.bounds[1]), 0.0001);
+  const horizontalMovement = Math.abs(currentCenter.longitude - referenceCenter.longitude) / longitudeSpan;
+  const verticalMovement = Math.abs(currentCenter.latitude - referenceCenter.latitude) / latitudeSpan;
+
+  return Math.max(horizontalMovement, verticalMovement) >= 0.12
+    || Math.abs(current.zoom - reference.zoom) >= 0.35;
+}
+
 function getMarkerCategory(marker: MapMarker): string | null {
   const category = marker.metadata?.category;
   return typeof category === 'string' && category.trim() ? category.trim() : null;
@@ -487,7 +513,11 @@ export default function MapaPageV4({
   const [ratedOnly, setRatedOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [resultsExpanded, setResultsExpanded] = useState(false);
+  const [areaSearchAvailable, setAreaSearchAvailable] = useState(false);
   const resultsListRef = useRef<HTMLDivElement>(null);
+  const areaSearchBaselineRef = useRef<MapViewportReference | null>(null);
+  const sheetDragStartYRef = useRef<number | null>(null);
+  const suppressSheetClickRef = useRef(false);
   const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(() =>
     createFocusedVisibleLayers(initialLayers, runtimeLayerKeys),
   );
@@ -585,6 +615,15 @@ export default function MapaPageV4({
     [canonicalTerritoryCenter, effectiveResolved, fallbackMapLocation, focusTarget],
   );
 
+  useEffect(() => {
+    areaSearchBaselineRef.current = null;
+    setAreaSearchAvailable(false);
+  }, [
+    initialViewport?.center?.latitude,
+    initialViewport?.center?.longitude,
+    initialViewport?.zoom,
+  ]);
+
   const moduleTerritory = useModuleTerritoryFilter({
     routeResolved: effectiveResolved,
     activeMemberIds,
@@ -667,10 +706,32 @@ export default function MapaPageV4({
 
   const handleViewportChange = useCallback(
     (viewport: MapViewport, bounds: BoundingBox) => {
+      const currentViewport = { bounds, zoom: viewport.zoom };
+      const baseline = areaSearchBaselineRef.current;
+
+      if (!baseline) {
+        areaSearchBaselineRef.current = currentViewport;
+        setAreaSearchAvailable(false);
+      } else {
+        setAreaSearchAvailable(hasMeaningfulViewportChange(baseline, currentViewport));
+      }
+
       fetchByBounds(bounds, viewport.zoom);
     },
     [fetchByBounds],
   );
+
+  const handleMapLoad = useCallback(() => {
+    if (areaSearchBaselineRef.current) return;
+    const map = adapterRef.current?.getMap();
+    if (!map) return;
+
+    const bounds = map.getBounds();
+    areaSearchBaselineRef.current = {
+      bounds: [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
+      zoom: map.getZoom(),
+    };
+  }, []);
 
   const focusMarkers = React.useMemo(() => {
     if (!focusTarget) return [] as MapMarker[];
@@ -784,6 +845,7 @@ export default function MapaPageV4({
           ref={adapterRef}
           styleUrl={TILE_STYLE_URL}
           initialViewport={initialViewport}
+          onLoad={handleMapLoad}
           territoryPolygons={territoryPolygons}
           markers={filteredMarkers}
           resolved={effectiveResolved}
@@ -792,6 +854,7 @@ export default function MapaPageV4({
             const marker = filteredMarkers.find((m) => m.id === id);
             if (!marker) return;
             setSelectedMarker(marker);
+            setResultsExpanded(false);
             adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 17 });
           }}
           onViewportChange={handleViewportChange}
@@ -851,15 +914,46 @@ export default function MapaPageV4({
     adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 16 });
   };
 
+  const beginResultsSheetDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    sheetDragStartYRef.current = event.clientY;
+    suppressSheetClickRef.current = false;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveResultsSheetDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const startY = sheetDragStartYRef.current;
+    if (startY !== null && Math.abs(event.clientY - startY) > 10) {
+      suppressSheetClickRef.current = true;
+    }
+  };
+
+  const finishResultsSheetDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const startY = sheetDragStartYRef.current;
+    if (startY === null) return;
+
+    const delta = event.clientY - startY;
+    if (Math.abs(delta) > 10) suppressSheetClickRef.current = true;
+    if (delta <= -42) setResultsExpanded(true);
+    if (delta >= 42) setResultsExpanded(false);
+    sheetDragStartYRef.current = null;
+  };
+
   const refreshCurrentArea = () => {
     const map = adapterRef.current?.getMap();
     const bounds = map?.getBounds();
     if (!map || !bounds) return;
 
-    fetchByBounds(
-      [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()],
-      map.getZoom(),
-    );
+    const currentBounds: BoundingBox = [
+      bounds.getWest(),
+      bounds.getSouth(),
+      bounds.getEast(),
+      bounds.getNorth(),
+    ];
+    const zoom = map.getZoom();
+    areaSearchBaselineRef.current = { bounds: currentBounds, zoom };
+    setAreaSearchAvailable(false);
+    fetchByBounds(currentBounds, zoom);
   };
 
   const clearMapFilters = () => {
@@ -978,6 +1072,31 @@ export default function MapaPageV4({
             data-expanded={resultsExpanded}
             aria-label="Resultados encontrados no mapa"
           >
+            <div className="map-results-drag-handle-wrap">
+              <button
+                type="button"
+                className="map-results-drag-handle"
+                aria-label={resultsExpanded ? 'Recolher lista de lugares' : 'Expandir lista de lugares'}
+                aria-expanded={resultsExpanded}
+                aria-controls="territorial-map-results"
+                onPointerDown={beginResultsSheetDrag}
+                onPointerMove={moveResultsSheetDrag}
+                onPointerUp={finishResultsSheetDrag}
+                onPointerCancel={() => {
+                  sheetDragStartYRef.current = null;
+                  suppressSheetClickRef.current = false;
+                }}
+                onClick={() => {
+                  if (suppressSheetClickRef.current) {
+                    suppressSheetClickRef.current = false;
+                    return;
+                  }
+                  setResultsExpanded((expanded) => !expanded);
+                }}
+              >
+                <span aria-hidden="true" />
+              </button>
+            </div>
             <div className="map-results-header">
               <div className="map-results-title">
                 <span>
@@ -1045,15 +1164,17 @@ export default function MapaPageV4({
             <MapPin aria-hidden="true" />
             <span>{territoryName}</span>
           </div>
-          <button
-            type="button"
-            className="map-refresh-area"
-            onClick={refreshCurrentArea}
-            disabled={loadingLayers.size > 0}
-          >
-            <Search aria-hidden="true" />
-            {loadingLayers.size > 0 ? 'Atualizando…' : 'Buscar nesta área'}
-          </button>
+          {areaSearchAvailable ? (
+            <button
+              type="button"
+              className="map-refresh-area"
+              onClick={refreshCurrentArea}
+              disabled={loadingLayers.size > 0}
+            >
+              <Search aria-hidden="true" />
+              {loadingLayers.size > 0 ? 'Atualizando…' : 'Buscar nesta área'}
+            </button>
+          ) : null}
         </section>
       </div>
 
