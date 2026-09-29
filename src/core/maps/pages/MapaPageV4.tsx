@@ -570,12 +570,19 @@ export default function MapaPageV4({
         };
       }
 
-      const fallbackCenter = readLocationCenter(fallbackMapLocation) ?? canonicalTerritoryCenter;
+      const territorialCenter = canonicalTerritoryCenter;
+      const fallbackCenter = territorialCenter ?? readLocationCenter(fallbackMapLocation);
+      const isNeighborhood = effectiveResolved?.kind === 'location'
+        && parseLocationGeoPath(effectiveResolved.location.geographic_path)?.neighborhood;
+      const zoom = territorialCenter
+        ? effectiveResolved?.kind === 'group' || !isNeighborhood ? 13 : 14
+        : 12;
+
       return fallbackCenter
-        ? { center: fallbackCenter, zoom: 12 }
+        ? { center: fallbackCenter, zoom }
         : undefined;
     },
-    [canonicalTerritoryCenter, fallbackMapLocation, focusTarget],
+    [canonicalTerritoryCenter, effectiveResolved, fallbackMapLocation, focusTarget],
   );
 
   const moduleTerritory = useModuleTerritoryFilter({
