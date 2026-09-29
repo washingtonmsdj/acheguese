@@ -249,10 +249,6 @@ export default function CriarEmpresaPage({
   });
 
   const selectedCategory = form.watch("category");
-  const eligibleVerticals = useMemo(
-    () => getEnabledVerticals(selectedCategory, enabledVerticalKeySet),
-    [enabledVerticalKeySet, selectedCategory],
-  );
 
   useEffect(() => {
     if (!createVertical) return;
@@ -443,20 +439,6 @@ export default function CriarEmpresaPage({
           <ActiveProfileBadge profile={effectiveProfile} action="criando empresa como" />
         )}
 
-        {eligibleVerticals.length > 0 && (
-          <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-muted-foreground">
-            {createVertical
-              ? createVertical.createCopy.subtitle
-              : "Esta categoria ja e elegivel para extensao vertical em"}
-            {!createVertical && (
-              <>
-                <span className="font-medium text-foreground"> {eligibleVerticals.map((vertical) => vertical.label).join(", ")}</span>.
-                {" "}O cadastro base sera reutilizado sem duplicar dados.
-              </>
-            )}
-          </div>
-        )}
-
         {isError && error && (
           <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -594,13 +576,13 @@ export default function CriarEmpresaPage({
               <div className="bcr-photo-grid">
                 <label className="bcr-photo-field">
                   <span>Logo da empresa <small>Opcional · imagem quadrada</small></span>
-                  <span className="bcr-photo-preview">{logoPreview ? <img src={logoPreview} alt="Prévia do logo" /> : <Store aria-hidden="true" />}</span>
+                  <span className="bcr-photo-preview bcr-photo-preview--logo">{logoPreview ? <img src={logoPreview} alt="Prévia do logo" /> : <Store aria-hidden="true" />}</span>
                   <span className="bcr-photo-button"><Upload aria-hidden="true" /> {logoPreview ? "Trocar logo" : "Adicionar logo"}</span>
                   <input type="file" accept="image/*" onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)} />
                 </label>
                 <label className="bcr-photo-field">
                   <span>Imagem de capa <small>Opcional · imagem horizontal</small></span>
-                  <span className="bcr-photo-preview">{bannerPreview ? <img src={bannerPreview} alt="Prévia da capa" /> : <ImagePlus aria-hidden="true" />}</span>
+                  <span className="bcr-photo-preview bcr-photo-preview--banner">{bannerPreview ? <img src={bannerPreview} alt="Prévia da capa" /> : <ImagePlus aria-hidden="true" />}</span>
                   <span className="bcr-photo-button"><Upload aria-hidden="true" /> {bannerPreview ? "Trocar capa" : "Adicionar capa"}</span>
                   <input type="file" accept="image/*" onChange={(event) => setBannerFile(event.target.files?.[0] ?? null)} />
                 </label>
@@ -616,8 +598,17 @@ export default function CriarEmpresaPage({
                 <div><dt>Categoria</dt><dd>{getBusinessCategoryLabel(selectedCategory)}</dd></div>
                 <div><dt>Descrição</dt><dd>{form.watch("description") || "Não informada"}</dd></div>
                 <div><dt>Território</dt><dd>{locationData ? `${locationData.neighborhoodName}, ${locationData.cityName}` : "Território selecionado"}</dd></div>
-                <div><dt>Contato</dt><dd>{form.watch("whatsapp") || form.watch("phone") || form.watch("email")}</dd></div>
-                <div><dt>Endereço</dt><dd>{[form.watch("address_street"), form.watch("address_number")].filter(Boolean).join(", ") || "Não informado"}</dd></div>
+                <div><dt>Contato</dt><dd>{[
+                  form.watch("whatsapp") && `WhatsApp: ${form.watch("whatsapp")}`,
+                  form.watch("phone") && `Telefone: ${form.watch("phone")}`,
+                  form.watch("email") && `E-mail: ${form.watch("email")}`,
+                ].filter(Boolean).join(" · ") || "Não informado"}</dd></div>
+                <div><dt>Endereço</dt><dd>{[
+                  form.watch("address_street"),
+                  form.watch("address_number"),
+                  form.watch("address_complement"),
+                  form.watch("postal_code") && `CEP ${form.watch("postal_code")}`,
+                ].filter(Boolean).join(", ") || "Não informado"}</dd></div>
                 <div><dt>Fotos</dt><dd>{[logoFile && "logo", bannerFile && "capa"].filter(Boolean).join(" e ") || "Nenhuma adicionada"}</dd></div>
               </dl>
               <p className="bcr-review-note">Após a publicação, você poderá atualizar os dados pela Central da empresa.</p>
