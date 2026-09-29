@@ -962,6 +962,7 @@ export default function MapaPageV4({
                   type="button"
                   className="map-results-expand"
                   aria-expanded={resultsExpanded}
+                  aria-controls="territorial-map-results"
                   aria-label={resultsExpanded ? 'Recolher resultados' : 'Expandir resultados'}
                   onClick={() => setResultsExpanded((expanded) => !expanded)}
                 >
@@ -983,7 +984,7 @@ export default function MapaPageV4({
               </label>
             </div>
 
-            <div className="map-results-list" aria-live="polite">
+            <div id="territorial-map-results" className="map-results-list" aria-live="polite">
               {filteredMarkers.map((marker) => (
                 <MapResultItem
                   key={`${marker.type}:${marker.id}`}
