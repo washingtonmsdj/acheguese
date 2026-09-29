@@ -506,6 +506,7 @@ export default function MapaPageV4({
     [providers],
   );
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
+  const selectionCameraRef = useRef<Partial<MapViewport> | null>(null);
   const [mapQuery, setMapQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const [sortMode, setSortMode] = useState<MapSortMode>('relevance');
@@ -725,7 +726,7 @@ export default function MapaPageV4({
         setAreaSearchAvailable(false);
       }
 
-      if (!userInitiated) fetchByBounds(bounds, viewport.zoom);
+      if (!userInitiated && !selectionCameraRef.current) fetchByBounds(bounds, viewport.zoom);
     },
     [fetchByBounds],
   );
@@ -867,6 +868,30 @@ export default function MapaPageV4({
     setSelectedMarker(focusMarkers[0]);
   }, [focusTarget, selectedMarker, focusMarkers]);
 
+  const selectMarker = (marker: MapMarker) => {
+    const map = adapterRef.current?.getMap();
+    if (map && !selectionCameraRef.current) {
+      const center = map.getCenter();
+      selectionCameraRef.current = {
+        center: { latitude: center.lat, longitude: center.lng },
+        zoom: map.getZoom(), bearing: map.getBearing(), pitch: map.getPitch(),
+      };
+    }
+    setSelectedMarker(marker);
+    setSheetState('medium');
+    setAreaSearchAvailable(false);
+    adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 16 });
+  };
+
+  const clearSelection = () => {
+    const camera = selectionCameraRef.current;
+    selectionCameraRef.current = null;
+    setSelectedMarker(null);
+    setSheetState('collapsed');
+    setAreaSearchAvailable(false);
+    if (camera) adapterRef.current?.flyTo(camera);
+  };
+
   const mapCanvas = (
     <div
       className="map-page-canvas relative h-full w-full"
@@ -889,9 +914,7 @@ export default function MapaPageV4({
           onMarkerClick={(id) => {
             const marker = filteredMarkers.find((m) => m.id === id);
             if (!marker) return;
-            setSelectedMarker(marker);
-            setSheetState('medium');
-            adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 17 });
+            selectMarker(marker);
           }}
           onViewportChange={handleViewportChange}
           controls={{
@@ -924,7 +947,7 @@ export default function MapaPageV4({
       {selectedMarker && (
         <MapMarkerPopup
           marker={selectedMarker}
-          onClose={() => setSelectedMarker(null)}
+          onClose={clearSelection}
           onNavigate={(url) => navigate(url)}
         />
       )}
@@ -943,12 +966,6 @@ export default function MapaPageV4({
 
     </div>
   );
-
-  const selectMarker = (marker: MapMarker) => {
-    setSelectedMarker(marker);
-    setSheetState('medium');
-    adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 16 });
-  };
 
   const beginResultsSheetDrag = (event: React.PointerEvent<HTMLButtonElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
@@ -1206,7 +1223,17 @@ export default function MapaPageV4({
             <MapPin aria-hidden="true" />
             <span>{territoryName}</span>
           </div>
-          {areaSearchAvailable ? (
+          {selectedMarker ? (
+            <button
+              type="button"
+              className="map-refresh-area"
+              onClick={clearSelection}
+              aria-label="Limpar seleção e voltar ao mapa"
+            >
+              <X aria-hidden="true" />
+              Voltar ao mapa
+            </button>
+          ) : areaSearchAvailable ? (
             <button
               type="button"
               className="map-refresh-area"
