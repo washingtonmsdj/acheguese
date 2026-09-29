@@ -45,6 +45,9 @@ export function StepIndicator({
           );
         })}
       </div>
+      <p className="bcr-steps__mobile-label" aria-hidden="true">
+        Etapa {currentStep} de {totalSteps} · {STEP_LABELS[currentStep - 1] ?? `Etapa ${currentStep}`}
+      </p>
     </div>
   );
 }

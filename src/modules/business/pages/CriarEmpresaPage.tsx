@@ -191,6 +191,11 @@ export default function CriarEmpresaPage({
 
   useEffect(() => {
     if (!pendingFocus) return;
+    if (pendingFocus === "slug") {
+      const advanced = document.querySelector<HTMLDetailsElement>(".bcr-advanced");
+      advanced?.setAttribute("open", "");
+      advanced?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
     focusFieldById(pendingFocus);
     setPendingFocus(null);
   }, [currentStep, pendingFocus]);
@@ -339,6 +344,7 @@ export default function CriarEmpresaPage({
           message:
             "O link público está muito diferente do nome informado. Para segurança, ajuste o link ou use o modo automático.",
         });
+        setPendingFocus("slug");
         return;
       }
     }
@@ -354,7 +360,7 @@ export default function CriarEmpresaPage({
   ];
 
   const handleNextLocation = () => {
-    if (!form.getValues("location_id")) {
+    if (!form.getValues("location_id") || !locationData) {
       form.setError("location_id", { message: "Selecione o território principal da empresa" });
       focusFieldById("location_id");
       return;
@@ -403,6 +409,11 @@ export default function CriarEmpresaPage({
 
   const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (currentStep === 1) handleNextStep1();
+    else if (currentStep === 2) handleNextLocation();
+    else if (currentStep === 3) handleNextStep2();
+    else if (currentStep === 4) setCurrentStep(5);
+    else if (!isCreating) void handleCreate();
   };
 
   const handleCancel = () => {

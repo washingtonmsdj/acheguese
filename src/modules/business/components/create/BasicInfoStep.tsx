@@ -130,7 +130,7 @@ export function BasicInfoStep({
   const industrySelectValue = manualIndustryMode ? INDUSTRY_CUSTOM_VALUE : industry;
 
   return (
-    <section className="overflow-hidden rounded-[26px] border border-border bg-card">
+    <section className="bcr-step-panel overflow-hidden rounded-[26px] border border-border bg-card">
       <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
