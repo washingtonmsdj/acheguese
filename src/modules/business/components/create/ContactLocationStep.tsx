@@ -23,6 +23,7 @@ interface SelectedLocationData {
 }
 
 interface ContactLocationStepProps {
+  mode?: "all" | "location" | "contact";
   category: string;
   phone: string;
   whatsapp: string;
@@ -68,6 +69,7 @@ const DAY_LABELS: Array<{ key: string; label: string }> = [
 ];
 
 export function ContactLocationStep({
+  mode = "all",
   category,
   phone,
   whatsapp,
@@ -122,20 +124,20 @@ export function ContactLocationStep({
           </span>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
-              Etapa 2
+              Etapa {mode === "contact" ? 3 : 2}
             </p>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
-              Contato, endereço e funcionamento
+              {mode === "location" ? "Localização" : mode === "contact" ? "Contato e horário" : "Contato, endereço e funcionamento"}
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Defina onde a empresa aparece, como as pessoas entram em contato e quando ela funciona.
+              {mode === "location" ? "Selecione o território e informe onde encontrar sua empresa." : mode === "contact" ? "Mostre como as pessoas podem falar com você e quando sua empresa atende." : "Defina onde a empresa aparece, como as pessoas entram em contato e quando ela funciona."}
             </p>
           </div>
         </div>
       </div>
 
       <div className="space-y-6 p-5 sm:p-6">
-        <div className="rounded-[22px] border border-border bg-background/70 p-4 sm:p-5">
+        {mode !== "contact" ? <div className="rounded-[22px] border border-border bg-background/70 p-4 sm:p-5">
           <div className="mb-4 flex items-start gap-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <Route className="h-4 w-4" />
@@ -159,9 +161,9 @@ export function ContactLocationStep({
               Página principal em <span className="font-semibold text-foreground">{locationData.neighborhoodName}</span>, {locationData.cityName} - {locationData.stateName}.
             </div>
           ) : null}
-        </div>
+        </div> : null}
 
-        <div className="border-t border-border pt-6">
+        {mode !== "location" ? <div className="border-t border-border pt-6">
           <div className="mb-4 flex items-center gap-2">
             <Phone className="h-4 w-4 text-primary" />
             <div>
@@ -209,9 +211,9 @@ export function ContactLocationStep({
               {errors.email ? <p className="text-xs text-destructive">{errors.email}</p> : null}
             </div>
           </div>
-        </div>
+        </div> : null}
 
-        <div className="border-t border-border pt-6">
+        {mode !== "contact" ? <div className="border-t border-border pt-6">
           <div className="mb-4 flex items-center gap-2">
             <MapPin className="h-4 w-4 text-primary" />
             <div>
@@ -268,9 +270,10 @@ export function ContactLocationStep({
               {errors.postal_code ? <p className="text-xs text-destructive">{errors.postal_code}</p> : null}
             </div>
           </div>
-        </div>
+        </div> : null}
 
-        <div className="border-t border-border pt-6">
+        {mode !== "location" ? <details className="bcr-hours border-t border-border pt-6">
+          <summary>Adicionar horário de funcionamento (opcional)</summary>
           <div className="mb-4 flex items-center gap-2">
             <Clock3 className="h-4 w-4 text-primary" />
             <div>
@@ -320,9 +323,9 @@ export function ContactLocationStep({
               );
             })}
           </div>
-        </div>
+        </details> : null}
 
-        <div className="border-t border-border pt-6">
+        {mode !== "location" ? <div className="border-t border-border pt-6">
           <div className="mb-3">
             <h3 className="text-sm font-semibold text-foreground">Modos de atendimento</h3>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -353,7 +356,7 @@ export function ContactLocationStep({
               );
             })}
           </div>
-        </div>
+        </div> : null}
 
         <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row">
           <Button type="button" variant="outline" onClick={onBack} className="gap-2 sm:flex-1">

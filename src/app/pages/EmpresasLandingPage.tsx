@@ -356,13 +356,21 @@ export default function EmpresasLandingPage({
     [toggleFavorite],
   );
 
-  const createBusinessHref = useMemo(
-    () => (user ? businessUrls.create : withQueryParams(appUrls.auth.login, { redirect: businessUrls.create })),
-    [appUrls.auth.login, businessUrls.create, user],
-  );
+  const createBusinessHref = useMemo(() => {
+    const registrationPath = "/empresas/cadastrar";
+    const territorySlug = resolved?.kind === "group"
+      ? resolved.group.slug
+      : resolved?.kind === "location"
+        ? resolved.location.geographic_path.split("/").filter(Boolean).at(-1)
+        : undefined;
+    const target = resolved
+      ? withQueryParams(registrationPath, { territory: territoryName, ...(territorySlug ? { territorySlug } : {}), ...(resolved.kind === "location" ? { locationId: resolved.location.id } : {}) })
+      : registrationPath;
+    return user ? target : withQueryParams(appUrls.auth.login, { redirect: target });
+  }, [appUrls.auth.login, resolved, territoryName, user]);
   const nearbyHref = moduleUrls.nearby;
-  const topPrimaryHref = user ? businessUrls.create : appUrls.auth.register;
-  const topPrimaryLabel = user ? "Cadastrar empresa" : "Criar conta";
+  const topPrimaryHref = createBusinessHref;
+  const topPrimaryLabel = "Cadastrar empresa";
   const topSecondaryHref = user ? appUrls.profile.businesses : appUrls.auth.login;
   const topSecondaryLabel = user ? "Central" : "Entrar";
   const topLocationLabel = useMemo(() => {

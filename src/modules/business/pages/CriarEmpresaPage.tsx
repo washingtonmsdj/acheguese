@@ -3,10 +3,10 @@
  */
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
-import { ArrowLeft, AlertCircle, ArrowRight } from "lucide-react";
-import { useSessionContext } from "@/core/session";
+import { ArrowLeft, AlertCircle, ArrowRight, Camera, CheckCircle2, ImagePlus, MapPin, Store, Upload } from "lucide-react";
 import {
   createBusinessSchema,
   createBusinessStep1Schema,
@@ -22,7 +22,6 @@ import type { CreateBusinessInput, BusinessCategory } from "@/core/business/type
 import { StepIndicator } from "@/modules/business/components/create/StepIndicator";
 import { BasicInfoStep } from "@/modules/business/components/create/BasicInfoStep";
 import { ContactLocationStep } from "@/modules/business/components/create/ContactLocationStep";
-import { ExtrasStep } from "@/modules/business/components/create/ExtrasStep";
 import { BusinessSlugSection } from "@/modules/business/components/identity/BusinessSlugSection";
 import { Button } from "@/shared/components/ui/button";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
@@ -36,6 +35,8 @@ import { businessManagementRoutes } from "@/core/business/utils/businessManageme
 import { EntityStatus } from "@/shared/types/enums";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
 import { getRecordValue } from "@/shared/utils/recordLookup";
+import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
+import "./CriarEmpresaPage.css";
 
 interface DayHoursValue {
   open: string;
@@ -140,9 +141,9 @@ export default function CriarEmpresaPage({
   enabledVerticalKeys = [],
 }: CriarEmpresaPageProps) {
   const navigate = useNavigate();
+  const pageLocation = useLocation();
   const { verticalSlug } = useParams<{ verticalSlug?: string }>();
   const [searchParams] = useSearchParams();
-  const { user } = useSessionContext();
   const { setModuleContext, effectiveProfile } = useMultiProfileContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [slugManualMode, setSlugManualMode] = useState(false);
@@ -150,6 +151,7 @@ export default function CriarEmpresaPage({
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [locationData, setLocationData] = useState<SelectedLocationData | null>(null);
   const [step1Attempted, setStep1Attempted] = useState(false);
+  const [pendingFocus, setPendingFocus] = useState<string | null>(null);
 
   const logoPreview = useObjectUrl(logoFile);
   const bannerPreview = useObjectUrl(bannerFile);
@@ -158,6 +160,9 @@ export default function CriarEmpresaPage({
     [enabledVerticalKeys],
   );
   const activeLocation = locationContextStore.getActiveLocation();
+  const territoryLabel = searchParams.get("territory") || activeLocation?.full_name;
+  const territorySlugCandidate = searchParams.get("territorySlug") || activeLocation?.slug;
+  const territorySlug = territorySlugCandidate && /^[a-z0-9-]+$/.test(territorySlugCandidate) ? territorySlugCandidate : null;
   const fallbackTerritory = useMemo<TerritoryFallback | null>(() => {
     const path = activeLocation?.geographic_path;
     if (!path) return null;
@@ -185,10 +190,10 @@ export default function CriarEmpresaPage({
   }, [setModuleContext]);
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-    }
-  }, [navigate, user]);
+    if (!pendingFocus) return;
+    focusFieldById(pendingFocus);
+    setPendingFocus(null);
+  }, [currentStep, pendingFocus]);
 
   const { createBusinessAsync, isLoading: isCreating, isError, error } = useBusinessCreateMultiProfile({
     onSuccess: (result) => {
@@ -212,7 +217,7 @@ export default function CriarEmpresaPage({
       legal_name: "",
       cnpj: "",
       description: "",
-      category: createVertical?.defaultCategory ?? "outros",
+      category: createVertical?.defaultCategory ?? ("" as BusinessCategory),
       subcategoria: "",
       industry: "",
       phone: "",
@@ -224,6 +229,7 @@ export default function CriarEmpresaPage({
       neighborhood: "",
       city: "",
       state: "",
+      location_id: searchParams.get("locationId") || undefined,
       address_street: "",
       address_number: "",
       address_complement: "",
@@ -301,8 +307,9 @@ export default function CriarEmpresaPage({
   const getFirstInvalidStep = (field?: string) => {
     if (!field) return 1;
     if ((STEP1_FIELDS as readonly string[]).includes(field)) return 1;
-    if ((STEP2_FIELDS as readonly string[]).includes(field)) return 2;
-    return 3;
+    if (["location_id", "address_street", "address_number", "address_complement", "postal_code"].includes(field)) return 2;
+    if ((STEP2_FIELDS as readonly string[]).includes(field)) return 3;
+    return 5;
   };
 
   const handleNextStep1 = () => {
@@ -346,18 +353,31 @@ export default function CriarEmpresaPage({
     ...getStepErrorMessages(getErrors(), STEP1_FIELDS),
   ];
 
+  const handleNextLocation = () => {
+    if (!form.getValues("location_id")) {
+      form.setError("location_id", { message: "Selecione o território principal da empresa" });
+      focusFieldById("location_id");
+      return;
+    }
+    form.clearErrors("location_id");
+    setCurrentStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const handleNextStep2 = () => {
     form.clearErrors(STEP2_FIELDS);
 
     const result = createBusinessStep2Schema.safeParse(form.getValues());
     if (!result.success) {
       setSchemaErrors(result.error.issues);
-      focusFieldById(String(result.error.issues[0]?.path[0] ?? ""));
+      const firstInvalidField = String(result.error.issues[0]?.path[0] ?? "");
+      setCurrentStep(getFirstInvalidStep(firstInvalidField));
+      setPendingFocus(firstInvalidField);
       return;
     }
 
     form.clearErrors(["phone", "location_id"]);
-    setCurrentStep(3);
+    setCurrentStep(4);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -370,7 +390,7 @@ export default function CriarEmpresaPage({
       setStep1Attempted(true);
       const firstInvalidField = String(result.error.issues[0]?.path[0] ?? "");
       setCurrentStep(getFirstInvalidStep(firstInvalidField));
-      focusFieldById(firstInvalidField);
+      setPendingFocus(firstInvalidField);
       return;
     }
 
@@ -383,28 +403,30 @@ export default function CriarEmpresaPage({
 
   const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    void handleCreate();
+  };
+
+  const handleCancel = () => {
+    if (pageLocation.key === "default") navigate("/empresas");
+    else navigate(-1);
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-lg">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1 text-sm text-muted-foreground"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-sm font-semibold font-display">
-            {createVertical?.createCopy.title ?? "Criar empresa"}
-          </h1>
-          <div className="w-6" />
+    <div className="bcr-page">
+      <Helmet><title>Cadastrar empresa | Achegue-se</title><meta name="description" content="Cadastre sua empresa no Achegue-se em etapas simples." /></Helmet>
+      <header className="bcr-hero">
+        {territorySlug ? <div className="bcr-hero__territory-image" style={{ backgroundImage: `url(/territory/heroes/${territorySlug}.jpg)` }} aria-hidden="true" /> : null}
+        <div className="bcr-hero__inner">
+          <button type="button" className="bcr-back" onClick={handleCancel}><ArrowLeft aria-hidden="true" /> Voltar</button>
+          <p className="bcr-hero__eyebrow"><Store aria-hidden="true" /> Para quem empreende no bairro</p>
+          <h1>{createVertical?.createCopy.title ?? "Cadastrar empresa"}</h1>
+          <p>Divulgue seu negócio{territoryLabel ? ` em ${territoryLabel}` : " no Achegue-se"} e conecte-se com mais pessoas da sua comunidade.</p>
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-6">
-        <StepIndicator currentStep={currentStep} totalSteps={3} />
+      <div className="bcr-layout">
+        <StepIndicator currentStep={currentStep} totalSteps={5} />
+        <div className="bcr-main">
+        <div className="bcr-form-column">
 
         {effectiveProfile && (
           <ActiveProfileBadge profile={effectiveProfile} action="criando empresa como" />
@@ -446,6 +468,8 @@ export default function CriarEmpresaPage({
                 namePlaceholder={createVertical?.createCopy.namePlaceholder}
                 descriptionPlaceholder={createVertical?.createCopy.descriptionPlaceholder}
                 showNextButton={false}
+                showLogo={false}
+                simpleMode
                 name={form.watch("name") || ""}
                 legalName={form.watch("legal_name") || ""}
                 cnpj={form.watch("cnpj") || ""}
@@ -487,6 +511,8 @@ export default function CriarEmpresaPage({
                 onNext={handleNextStep1}
               />
 
+              <details className="bcr-advanced">
+                <summary>Personalizar link público (opcional)</summary>
               <BusinessSlugSection
                 slug={form.watch("slug") || ""}
                 onSlugChange={handleSlugChange}
@@ -500,6 +526,7 @@ export default function CriarEmpresaPage({
                 onManualModeChange={setSlugManualMode}
                 onResetToAuto={handleResetSlugToAuto}
               />
+              </details>
 
               {step1Attempted && step1ErrorMessages.length > 0 && (
                 <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
@@ -512,15 +539,16 @@ export default function CriarEmpresaPage({
                 </div>
               )}
 
-              <Button type="button" onClick={handleNextStep1} className="w-full gap-2">
-                Continuar
-                <ArrowRight className="h-4 w-4" />
-              </Button>
+              <div className="bcr-actions">
+                <Button type="button" variant="outline" onClick={handleCancel}>Cancelar</Button>
+                <Button type="button" onClick={handleNextStep1}>Continuar <ArrowRight aria-hidden="true" /></Button>
+              </div>
             </>
           )}
 
-          {currentStep === 2 && (
+          {(currentStep === 2 || currentStep === 3) && (
             <ContactLocationStep
+              mode={currentStep === 2 ? "location" : "contact"}
               category={selectedCategory}
               phone={form.watch("phone") || ""}
               whatsapp={form.watch("whatsapp") || ""}
@@ -544,55 +572,54 @@ export default function CriarEmpresaPage({
               onPostalCodeChange={(value) => form.setValue("postal_code", value, { shouldDirty: true })}
               onHoursChange={(value) => form.setValue("horario_funcionamento", value, { shouldDirty: true })}
               onModosChange={(value) => form.setValue("modos_atendimento", value, { shouldDirty: true })}
-              onBack={() => setCurrentStep(1)}
-              onNext={handleNextStep2}
+              onBack={() => setCurrentStep(currentStep === 2 ? 1 : 2)}
+              onNext={currentStep === 2 ? handleNextLocation : handleNextStep2}
             />
           )}
 
-          {currentStep === 3 && (
-            <ExtrasStep
-              category={selectedCategory}
-              capaPreview={bannerPreview}
-              website={form.watch("website") || ""}
-              instagram={form.watch("instagram") || ""}
-              facebook={form.watch("facebook") || ""}
-              selectedPagamentos={form.watch("formas_pagamento") || []}
-              especialidades={(form.watch("especialidades") || []).join(", ")}
-              facilidades={(form.watch("facilidades") || []).join(", ")}
-              status={form.watch("status") || EntityStatus.ACTIVE}
-              errors={getErrors()}
-              isCreating={isCreating}
-              onCapaChange={setBannerFile}
-              onWebsiteChange={(value) => form.setValue("website", value, { shouldDirty: true })}
-              onInstagramChange={(value) => form.setValue("instagram", value, { shouldDirty: true })}
-              onFacebookChange={(value) => form.setValue("facebook", value, { shouldDirty: true })}
-              onPagamentosChange={(value) => form.setValue("formas_pagamento", value, { shouldDirty: true })}
-              onEspecialidadesChange={(value) =>
-                form.setValue(
-                  "especialidades",
-                  value
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter(Boolean),
-                  { shouldDirty: true },
-                )
-              }
-              onFacilidadesChange={(value) =>
-                form.setValue(
-                  "facilidades",
-                  value
-                    .split(",")
-                    .map((item) => item.trim())
-                    .filter(Boolean),
-                  { shouldDirty: true },
-                )
-              }
-              onStatusChange={(value) => form.setValue("status", value as CreateBusinessInput["status"], { shouldDirty: true })}
-              onBack={() => setCurrentStep(2)}
-              onCreate={handleCreate}
-            />
+          {currentStep === 4 && (
+            <section className="bcr-card" aria-labelledby="bcr-photos-title">
+              <div className="bcr-card__heading"><span><Camera aria-hidden="true" /></span><div><h2 id="bcr-photos-title">4. Fotos</h2><p>Escolha imagens reais que ajudem as pessoas a reconhecer sua empresa. Você pode adicioná-las depois.</p></div></div>
+              <div className="bcr-photo-grid">
+                <label className="bcr-photo-field">
+                  <span>Logo da empresa <small>Opcional · imagem quadrada</small></span>
+                  <span className="bcr-photo-preview">{logoPreview ? <img src={logoPreview} alt="Prévia do logo" /> : <Store aria-hidden="true" />}</span>
+                  <span className="bcr-photo-button"><Upload aria-hidden="true" /> {logoPreview ? "Trocar logo" : "Adicionar logo"}</span>
+                  <input type="file" accept="image/*" onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)} />
+                </label>
+                <label className="bcr-photo-field">
+                  <span>Imagem de capa <small>Opcional · imagem horizontal</small></span>
+                  <span className="bcr-photo-preview">{bannerPreview ? <img src={bannerPreview} alt="Prévia da capa" /> : <ImagePlus aria-hidden="true" />}</span>
+                  <span className="bcr-photo-button"><Upload aria-hidden="true" /> {bannerPreview ? "Trocar capa" : "Adicionar capa"}</span>
+                  <input type="file" accept="image/*" onChange={(event) => setBannerFile(event.target.files?.[0] ?? null)} />
+                </label>
+              </div>
+              <div className="bcr-actions"><Button type="button" variant="outline" onClick={() => setCurrentStep(3)}>Voltar</Button><Button type="button" onClick={() => setCurrentStep(5)}>Revisar <ArrowRight aria-hidden="true" /></Button></div>
+            </section>
+          )}
+          {currentStep === 5 && (
+            <section className="bcr-card" aria-labelledby="bcr-review-title">
+              <div className="bcr-card__heading"><span><CheckCircle2 aria-hidden="true" /></span><div><h2 id="bcr-review-title">5. Revisar e publicar</h2><p>Confira as informações antes de cadastrar sua empresa.</p></div></div>
+              <dl className="bcr-review">
+                <div><dt>Empresa</dt><dd>{form.watch("name")}</dd></div>
+                <div><dt>Categoria</dt><dd>{getBusinessCategoryLabel(selectedCategory)}</dd></div>
+                <div><dt>Descrição</dt><dd>{form.watch("description") || "Não informada"}</dd></div>
+                <div><dt>Território</dt><dd>{locationData ? `${locationData.neighborhoodName}, ${locationData.cityName}` : "Território selecionado"}</dd></div>
+                <div><dt>Contato</dt><dd>{form.watch("whatsapp") || form.watch("phone") || form.watch("email")}</dd></div>
+                <div><dt>Endereço</dt><dd>{[form.watch("address_street"), form.watch("address_number")].filter(Boolean).join(", ") || "Não informado"}</dd></div>
+                <div><dt>Fotos</dt><dd>{[logoFile && "logo", bannerFile && "capa"].filter(Boolean).join(" e ") || "Nenhuma adicionada"}</dd></div>
+              </dl>
+              <p className="bcr-review-note">Após a publicação, você poderá atualizar os dados pela Central da empresa.</p>
+              <div className="bcr-actions"><Button type="button" variant="outline" onClick={() => setCurrentStep(4)}>Voltar</Button><Button type="button" disabled={isCreating} onClick={() => void handleCreate()}>{isCreating ? "Publicando..." : "Publicar empresa"} <ArrowRight aria-hidden="true" /></Button></div>
+            </section>
           )}
         </form>
+        </div>
+        <aside className="bcr-aside" aria-label="Sobre o cadastro">
+          <div className="bcr-aside-card"><MapPin aria-hidden="true" /><h2>Seu negócio no território</h2><p>Depois de publicado, seu perfil poderá aparecer na busca, no mapa e na lista de empresas do território selecionado.</p></div>
+          <div className="bcr-aside-card"><CheckCircle2 aria-hidden="true" /><h2>Cadastro gratuito</h2><p>Preencha o essencial agora e complemente sua página depois na Central.</p></div>
+        </aside>
+        </div>
       </div>
     </div>
   );

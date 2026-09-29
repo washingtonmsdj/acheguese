@@ -1,9 +1,11 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { CentralNavigation } from "@/modules/central/components/CentralNavigation";
 import { CentralHeader } from "@/modules/central/components/CentralHeader";
 import { BottomNav } from "@/core/navigation/BottomNav";
+import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 
 /**
  * CentralLayout
@@ -19,6 +21,12 @@ export function CentralLayout({
   businessEnabled,
   billingEnabled,
 }: CentralLayoutProps) {
+  const { pathname } = useLocation();
+
+  if (pathname === businessManagementRoutes.create()) {
+    return <><Helmet><meta name="robots" content="noindex, nofollow" /></Helmet><AuthBrandHeader showBack={false} /><main id="main-content"><Outlet /></main></>;
+  }
+
   return (
     <>
       <Helmet>

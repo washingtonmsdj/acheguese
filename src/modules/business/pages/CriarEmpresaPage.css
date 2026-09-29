@@ -1,0 +1,59 @@
+.bcr-page{--bcr-ink:#0d3639;--bcr-teal:#087f83;--bcr-yellow:#ffc83d;min-width:0;background:#f7f9f8;color:var(--bcr-ink);font-family:"Plus Jakarta Sans",Arial,sans-serif}
+.bcr-page *{box-sizing:border-box}
+.bcr-hero{position:relative;overflow:hidden;background:#12383a url('/images/home/achegue-se-community-hero-v1.webp') center 52%/cover;color:#fff}
+.bcr-hero__territory-image{position:absolute;inset:0;z-index:0;background-position:center 52%;background-size:cover}
+.bcr-hero:before{position:absolute;inset:0;z-index:1;content:"";background:linear-gradient(90deg,rgba(4,29,31,.9),rgba(4,29,31,.55) 60%,rgba(4,29,31,.25))}
+.bcr-hero__inner{position:relative;z-index:2;width:min(100% - 3rem,90rem);margin:auto;padding:1.4rem 0 2rem}
+.bcr-back{display:inline-flex;min-height:2.75rem;align-items:center;gap:.4rem;border:0;background:transparent;color:#fff;font-size:.8rem;font-weight:700;cursor:pointer}
+.bcr-back svg,.bcr-hero__eyebrow svg{width:1rem;height:1rem}
+.bcr-hero__eyebrow{display:flex;align-items:center;gap:.4rem;margin:.55rem 0 .3rem;font-size:.75rem;font-weight:800}
+.bcr-hero h1{margin:0;font-size:clamp(2rem,3.4vw,3rem);font-weight:800;line-height:1.12;letter-spacing:-.04em}
+.bcr-hero__inner>p:last-child{max-width:39rem;margin:.65rem 0 0;color:#edf5f4;font-size:clamp(.875rem,1.2vw,1rem);line-height:1.5}
+.bcr-layout{width:min(100% - 3rem,90rem);margin:auto;padding:1.4rem 0 3rem}
+.bcr-main{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(15rem,.7fr);gap:1.1rem;align-items:start}
+.bcr-form-column,.bcr-form-column form{min-width:0}
+.bcr-steps{margin-bottom:1.4rem}
+.bcr-steps__track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.55rem}
+.bcr-step{min-width:0;color:#60777a}
+.bcr-step__content{display:flex;align-items:center;gap:.55rem}
+.bcr-step__number{display:grid;width:2rem;height:2rem;flex:0 0 auto;place-items:center;border:1px solid #aebfc1;border-radius:50%;background:#fff;color:var(--bcr-ink);font-size:.8rem;font-weight:800}
+.bcr-step.is-current .bcr-step__number,.bcr-step.is-complete .bcr-step__number{border-color:var(--bcr-teal);background:var(--bcr-teal);color:#fff}
+.bcr-step__label{min-width:0}
+.bcr-step__label p{margin:0;font-size:.75rem;font-weight:700;line-height:1.25}
+.bcr-step.is-current .bcr-step__label{color:var(--bcr-ink)}
+.bcr-card,.bcr-aside-card{min-width:0;border:1px solid #dfe6e4;border-radius:1rem;background:#fff;padding:1.25rem;box-shadow:0 .4rem 1.5rem rgba(13,54,57,.04)}
+.bcr-card__heading{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:1.4rem}
+.bcr-card__heading>span{display:grid;width:2.8rem;height:2.8rem;flex:0 0 auto;place-items:center;border-radius:.75rem;background:#e6f3f2;color:var(--bcr-teal)}
+.bcr-card__heading svg{width:1.45rem;height:1.45rem}
+.bcr-card h2,.bcr-aside-card h2{margin:0;font-size:1.15rem;font-weight:800;letter-spacing:-.025em}
+.bcr-card__heading p,.bcr-aside-card p{margin:.3rem 0 0;color:#60777a;font-size:.82rem;line-height:1.5}
+.bcr-aside{display:grid;gap:.8rem}
+.bcr-aside-card>svg{width:1.5rem;height:1.5rem;margin-bottom:.7rem;color:var(--bcr-teal)}
+.bcr-photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.bcr-photo-field{display:flex;min-width:0;flex-direction:column;gap:.65rem;border:1px solid #dfe6e4;border-radius:.8rem;padding:.85rem;font-size:.85rem;font-weight:800;cursor:pointer}
+.bcr-photo-field small{display:block;color:#60777a;font-size:.7rem;font-weight:500}
+.bcr-photo-field input{position:absolute;width:1px;height:1px;opacity:0}
+.bcr-photo-field:focus-within{outline:3px solid var(--bcr-teal);outline-offset:2px}
+.bcr-photo-preview{display:grid;height:10rem;overflow:hidden;place-items:center;border-radius:.65rem;background:#e8f3f1;color:var(--bcr-teal)}
+.bcr-photo-preview>svg{width:2.25rem;height:2.25rem}
+.bcr-photo-preview img{width:100%;height:100%;object-fit:cover}
+.bcr-photo-button{display:inline-flex;align-items:center;gap:.4rem;color:var(--bcr-teal);font-size:.75rem}
+.bcr-photo-button svg{width:1rem;height:1rem}
+.bcr-actions{display:flex;justify-content:space-between;gap:.7rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e4eae8}
+.bcr-actions button{min-height:2.75rem;border-radius:999px;padding-inline:1.2rem}
+.bcr-actions button:last-child{background:var(--bcr-yellow);color:var(--bcr-ink);font-weight:800}
+.bcr-actions button svg{width:1rem;height:1rem;margin-left:.3rem}
+.bcr-review{margin:0}
+.bcr-review>div{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:.8rem;padding:.75rem 0;border-bottom:1px solid #edf1f0}
+.bcr-review dt{color:#60777a;font-size:.75rem}
+.bcr-review dd{min-width:0;margin:0;font-size:.84rem;font-weight:700;overflow-wrap:anywhere}
+.bcr-review-note{margin:1rem 0 0;color:#60777a;font-size:.78rem}
+.bcr-advanced{margin-top:.75rem;border:1px solid #dfe6e4;border-radius:.75rem;background:#fff;padding:.8rem 1rem}
+.bcr-advanced summary{color:var(--bcr-teal);font-size:.78rem;font-weight:800;cursor:pointer}
+.bcr-advanced>div{margin-top:.8rem}
+.bcr-hours summary{margin-bottom:.3rem;color:var(--bcr-teal);font-size:.82rem;font-weight:800;cursor:pointer}
+.bcr-hours[open] summary{margin-bottom:1rem}
+.bcr-form-column form>button{min-height:2.75rem;border-radius:999px;background:var(--bcr-yellow);color:var(--bcr-ink);font-weight:800}
+@media(max-width:900px){.bcr-main{grid-template-columns:minmax(0,1fr)}.bcr-aside{grid-template-columns:1fr 1fr}.bcr-step__label p{font-size:.68rem}}
+@media(max-width:600px){.bcr-hero__inner,.bcr-layout{width:min(100% - 1.5rem,90rem)}.bcr-hero__inner{padding:.65rem 0 1.25rem}.bcr-hero__eyebrow{margin:.35rem 0 .25rem}.bcr-hero h1{font-size:1.75rem}.bcr-layout{padding-top:1rem}.bcr-steps{margin-bottom:1rem}.bcr-steps__track{gap:.25rem}.bcr-step__content{flex-direction:column;gap:.25rem}.bcr-step__number{width:1.75rem;height:1.75rem}.bcr-step__label{display:none}.bcr-step.is-current .bcr-step__label{display:block}.bcr-step.is-current .bcr-step__label p{font-size:.65rem;text-align:center}.bcr-card{padding:1rem}.bcr-card__heading{gap:.6rem}.bcr-photo-grid,.bcr-aside{grid-template-columns:1fr}.bcr-photo-preview{height:8rem}.bcr-review>div{grid-template-columns:5.5rem minmax(0,1fr)}.bcr-actions button{flex:1}}
+@media(max-width:360px){.bcr-step.is-current .bcr-step__label p{font-size:.6rem}.bcr-card__heading>span{width:2.4rem;height:2.4rem}.bcr-card h2{font-size:1rem}}

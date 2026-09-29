@@ -22,6 +22,8 @@ interface BasicInfoStepProps {
   namePlaceholder?: string;
   descriptionPlaceholder?: string;
   showNextButton?: boolean;
+  showLogo?: boolean;
+  simpleMode?: boolean;
   name: string;
   legalName: string;
   cnpj: string;
@@ -83,6 +85,8 @@ export function BasicInfoStep({
   namePlaceholder,
   descriptionPlaceholder,
   showNextButton = true,
+  showLogo = true,
+  simpleMode = false,
   name,
   legalName,
   cnpj,
@@ -137,17 +141,17 @@ export function BasicInfoStep({
               Etapa 1
             </p>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
-              {contextTitle ?? "Identidade da empresa"}
+              {contextTitle ?? "Dados básicos"}
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {contextDescription ?? "Defina como a empresa será reconhecida na busca, no mapa e na página pública."}
+              {contextDescription ?? "Comece com as informações principais da sua empresa."}
             </p>
           </div>
         </div>
       </div>
 
       <div className="space-y-6 p-5 sm:p-6">
-        <div className="rounded-[22px] border border-border bg-background/70 p-4">
+        {showLogo ? <div className="rounded-[22px] border border-border bg-background/70 p-4">
           <Label className="text-sm font-semibold text-foreground">Logo da empresa</Label>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
             <Avatar className="h-20 w-20 rounded-[20px] border border-border bg-muted">
@@ -179,7 +183,7 @@ export function BasicInfoStep({
               </p>
             </div>
           </div>
-        </div>
+        </div> : null}
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2 md:col-span-2">
@@ -198,7 +202,7 @@ export function BasicInfoStep({
             {errors.name ? <p className="text-xs text-destructive">{errors.name}</p> : null}
           </div>
 
-          <div className="space-y-2">
+          {!simpleMode ? <div className="space-y-2">
             <Label htmlFor="legal_name">Razão social</Label>
             <Input
               id="legal_name"
@@ -208,9 +212,9 @@ export function BasicInfoStep({
               className="h-11 rounded-xl"
             />
             {errors.legal_name ? <p className="text-xs text-destructive">{errors.legal_name}</p> : null}
-          </div>
+          </div> : null}
 
-          <div className="space-y-2">
+          {!simpleMode ? <div className="space-y-2">
             <Label htmlFor="cnpj">CNPJ</Label>
             <Input
               id="cnpj"
@@ -220,18 +224,18 @@ export function BasicInfoStep({
               className="h-11 rounded-xl"
             />
             {errors.cnpj ? <p className="text-xs text-destructive">{errors.cnpj}</p> : null}
-          </div>
+          </div> : null}
         </div>
 
         <div className="border-t border-border pt-6">
-          <div className="mb-4">
+          {!simpleMode ? <div className="mb-4">
             <h3 className="text-sm font-semibold text-foreground">Classificação</h3>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
               Essas informações ajudam o Achegue-se a organizar a empresa nos lugares corretos.
             </p>
-          </div>
+          </div> : null}
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className={simpleMode ? "grid gap-4" : "grid gap-4 md:grid-cols-2"}>
             <div className="space-y-2">
               <Label htmlFor="category">
                 Categoria <span className="text-destructive">*</span>
@@ -257,7 +261,7 @@ export function BasicInfoStep({
               {errors.category ? <p className="text-xs text-destructive">{errors.category}</p> : null}
             </div>
 
-            <div className="space-y-2">
+            {!simpleMode ? <div className="space-y-2">
               <Label htmlFor="subcategoria">Subcategoria</Label>
               <Input
                 id="subcategoria"
@@ -267,9 +271,9 @@ export function BasicInfoStep({
                 className="h-11 rounded-xl"
               />
               {errors.subcategoria ? <p className="text-xs text-destructive">{errors.subcategoria}</p> : null}
-            </div>
+            </div> : null}
 
-            <div className="space-y-2">
+            {!simpleMode ? <div className="space-y-2">
               <Label htmlFor="company_type">Tipo societário</Label>
               <select
                 id="company_type"
@@ -285,9 +289,9 @@ export function BasicInfoStep({
                 ))}
               </select>
               {errors.company_type ? <p className="text-xs text-destructive">{errors.company_type}</p> : null}
-            </div>
+            </div> : null}
 
-            <div className="space-y-2">
+            {!simpleMode ? <div className="space-y-2">
               <Label htmlFor="employee_count">Porte da equipe</Label>
               <select
                 id="employee_count"
@@ -303,9 +307,9 @@ export function BasicInfoStep({
                 ))}
               </select>
               {errors.employee_count ? <p className="text-xs text-destructive">{errors.employee_count}</p> : null}
-            </div>
+            </div> : null}
 
-            <div className="space-y-2">
+            {!simpleMode ? <div className="space-y-2">
               <Label htmlFor="founded_year">Ano de fundação</Label>
               <Input
                 id="founded_year"
@@ -318,9 +322,9 @@ export function BasicInfoStep({
                 className="h-11 rounded-xl"
               />
               {errors.founded_year ? <p className="text-xs text-destructive">{errors.founded_year}</p> : null}
-            </div>
+            </div> : null}
 
-            <div className="space-y-2">
+            {!simpleMode ? <div className="space-y-2">
               <Label htmlFor="industry">Segmento</Label>
               <select
                 id="industry"
@@ -354,7 +358,7 @@ export function BasicInfoStep({
                 />
               ) : null}
               {errors.industry ? <p className="text-xs text-destructive">{errors.industry}</p> : null}
-            </div>
+            </div> : null}
           </div>
         </div>
 
@@ -379,7 +383,7 @@ export function BasicInfoStep({
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-border bg-muted/25 p-4 text-sm text-muted-foreground">
+        {!simpleMode ? <div className="rounded-[20px] border border-border bg-muted/25 p-4 text-sm text-muted-foreground">
           <div className="mb-2 flex items-center gap-2 font-semibold text-foreground">
             <FileText className="h-4 w-4 text-primary" />
             Onde essas informações aparecem
@@ -387,7 +391,7 @@ export function BasicInfoStep({
           <p className="leading-6">
             Nome, categoria e descrição alimentam o perfil público, a busca e a Central da empresa. Você poderá revisar tudo depois.
           </p>
-        </div>
+        </div> : null}
 
         {showNextButton ? (
           <div className="border-t border-border pt-6">

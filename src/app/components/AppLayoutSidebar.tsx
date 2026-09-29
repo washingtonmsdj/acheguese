@@ -65,6 +65,7 @@ export function AppLayoutSidebar() {
   const isPublicBusinessLandingRoute =
     pathSegments[0] === MODULE_SLUGS.business &&
     pathSegments[1] !== "cadastrar";
+  const isBusinessRegistrationRoute = pathname === "/empresas/cadastrar";
   const isAccountRoute = pathSegments[0] === "conta";
   const isAccountOverview = pathname === ACCOUNT_PATHS.home;
   const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
@@ -83,7 +84,8 @@ export function AppLayoutSidebar() {
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
     isTerritoryBusinessDetailRoute ||
-    isPublicBusinessLandingRoute;
+    isPublicBusinessLandingRoute ||
+    isBusinessRegistrationRoute;
 
   const isConversationRoute =
     pathSegments[0] === "mensagens" && pathSegments.length >= 3;
@@ -92,13 +94,15 @@ export function AppLayoutSidebar() {
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
     isTerritoryBusinessDetailRoute ||
-    isPublicBusinessLandingRoute;
+    isPublicBusinessLandingRoute ||
+    isBusinessRegistrationRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
     isTerritoryBusinessDetailRoute ||
-    isConversationRoute;
+    isConversationRoute ||
+    isBusinessRegistrationRoute;
 
   const isMessagingRoute = pathSegments[0] === "mensagens";
 
