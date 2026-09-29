@@ -12,7 +12,7 @@
  */
 
 import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   ArrowUpRight,
   Check,
@@ -29,7 +29,6 @@ import {
   X,
 } from 'lucide-react';
 import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/MapLibreAdapter';
-import { MapMarkerPopup } from '../components/v3/MapMarkerPopup';
 import './MapaTerritorialExplorer.css';
 import { useMapViewportFetch, type LayerFetcher } from '../hooks/useMapViewportFetch';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
@@ -527,7 +526,6 @@ export default function MapaPageV4({
   const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(() =>
     createFocusedVisibleLayers(initialLayers, runtimeLayerKeys),
   );
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { active: publicBrowsingCity } = usePublicBrowsingCity();
   const requestedLayers = React.useMemo(
@@ -844,6 +842,7 @@ export default function MapaPageV4({
   useEffect(() => {
     if (!selectedMarker || filteredMarkers.some((marker) => marker.id === selectedMarker.id)) return;
     setSelectedMarker(null);
+    selectionCameraRef.current = null;
   }, [filteredMarkers, selectedMarker]);
 
   useEffect(() => {
@@ -864,9 +863,9 @@ export default function MapaPageV4({
   }, [selectedMarker, filteredMarkers, sheetState]);
 
   useEffect(() => {
-    if (!focusTarget || selectedMarker || focusMarkers.length === 0) return;
+    if (!focusTarget || focusMarkers.length === 0) return;
     setSelectedMarker(focusMarkers[0]);
-  }, [focusTarget, selectedMarker, focusMarkers]);
+  }, [focusTarget, focusMarkers]);
 
   const selectMarker = (marker: MapMarker) => {
     const map = adapterRef.current?.getMap();
@@ -880,7 +879,15 @@ export default function MapaPageV4({
     setSelectedMarker(marker);
     setSheetState('medium');
     setAreaSearchAvailable(false);
-    adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 16 });
+    if (map) {
+      const mobile = window.matchMedia('(max-width: 760px)').matches;
+      map.flyTo({
+        center: [marker.coordinates.longitude, marker.coordinates.latitude],
+        zoom: Math.max(map.getZoom(), 16),
+        offset: mobile ? [0, -map.getContainer().clientHeight * .24] : [0, 0],
+        duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 500,
+      });
+    }
   };
 
   const clearSelection = () => {
@@ -943,14 +950,6 @@ export default function MapaPageV4({
           userLocationMarker={{ enabled: true, autoAdd: false }}
         />
       </div>
-
-      {selectedMarker && (
-        <MapMarkerPopup
-          marker={selectedMarker}
-          onClose={clearSelection}
-          onNavigate={(url) => navigate(url)}
-        />
-      )}
 
       {loadingLayers.size > 0 && (
         <div
@@ -1126,6 +1125,7 @@ export default function MapaPageV4({
             className="map-results-panel"
             data-expanded={resultsExpanded}
             data-sheet-state={sheetState}
+            data-has-selection={Boolean(selectedMarker)}
             data-dragging={sheetDragOffset !== 0}
             style={{ '--sheet-drag-offset': `${sheetDragOffset}px` } as React.CSSProperties}
             aria-label="Resultados encontrados no mapa"
@@ -1134,7 +1134,7 @@ export default function MapaPageV4({
               <button
                 type="button"
                 className="map-results-drag-handle"
-                aria-label={resultsExpanded ? 'Recolher lista de lugares' : 'Expandir lista de lugares'}
+                aria-label={sheetState === 'expanded' ? 'Recolher lista de lugares' : 'Expandir lista de lugares'}
                 aria-expanded={resultsExpanded}
                 aria-controls="territorial-map-results"
                 onPointerDown={beginResultsSheetDrag}
@@ -1156,6 +1156,23 @@ export default function MapaPageV4({
                 <span aria-hidden="true" />
               </button>
             </div>
+            {selectedMarker ? (
+              <section className="map-selection" aria-label="Local selecionado">
+                <header>
+                  <span><MapPin aria-hidden="true" /> Local selecionado</span>
+                  <button type="button" onClick={clearSelection} aria-label="Fechar seleção e ver outros lugares"><X aria-hidden="true" /></button>
+                </header>
+                <h2 aria-live="polite">{selectedMarker.title}</h2>
+                <div className="map-selection-body">
+                  <p>{getMarkerCategoryLabel(selectedMarker)}</p>
+                  {selectedMarker.subtitle ? <p className="map-selection-address">{selectedMarker.subtitle}</p> : null}
+                  <div className="map-selection-actions">
+                    {selectedMarker.url ? <Link to={selectedMarker.url}>Ver detalhes <ArrowUpRight aria-hidden="true" /></Link> : null}
+                    <button type="button" onClick={clearSelection}>Ver outros lugares</button>
+                  </div>
+                </div>
+              </section>
+            ) : null}
             <div className="map-results-header">
               <div className="map-results-title">
                 <span>
@@ -1167,7 +1184,7 @@ export default function MapaPageV4({
                   className="map-results-expand"
                   aria-expanded={resultsExpanded}
                   aria-controls="territorial-map-results"
-                  aria-label={resultsExpanded ? 'Recolher resultados' : 'Expandir resultados'}
+                  aria-label={sheetState === 'expanded' ? 'Recolher resultados' : 'Expandir resultados'}
                   onClick={() => setSheetState((state) => state === 'collapsed' ? 'medium' : state === 'medium' ? 'expanded' : 'collapsed')}
                 >
                   <ChevronDown aria-hidden="true" />
@@ -1197,10 +1214,12 @@ export default function MapaPageV4({
                   onSelect={selectMarker}
                 />
               ))}
-              {filteredMarkers.length === 0 ? (
+              {visibleResults.length === 0 ? (
                 <div className="map-results-empty">
                   {loadingLayers.size > 0 ? (
                     <p role="status">Carregando lugares desta área…</p>
+                  ) : filteredMarkers.length > 0 ? (
+                    <p>Nenhum lugar visível. Mova o mapa para explorar outra área.</p>
                   ) : allMarkers.length > 0 ? (
                     <>
                       <p>Nenhum lugar corresponde à busca e aos filtros.</p>
