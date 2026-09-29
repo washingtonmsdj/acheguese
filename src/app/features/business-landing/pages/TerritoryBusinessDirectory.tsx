@@ -188,7 +188,9 @@ export function TerritoryBusinessDirectory({
   onOpenBusiness,
   onToggleSave,
 }: TerritoryBusinessDirectoryProps) {
-  const [resultView, setResultView] = useState<'list' | 'grid'>('list');
+  const [resultView, setResultView] = useState<'list' | 'grid'>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 761px)').matches ? 'grid' : 'list',
+  );
   const hasActiveFilters = activeCategory !== "all" || activeFilters.length > 0;
   const hasNearbyData = businesses.some(
     (business) =>

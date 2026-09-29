@@ -1,13 +1,10 @@
-/* Mobile result presentation; both modes reuse the same business card and data. */
-.tbd-view-switch { display: none; }
-
-@media (max-width: 760px) {
+/* Result presentation shared across viewport sizes; the card and data stay the same. */
   .tbd-view-switch { display: flex; width: fit-content; gap: .2rem; margin: 0 0 .6rem auto; padding: .2rem; border: 1px solid #dfe6e4; border-radius: .75rem; background: #fff; }
   .tbd-view-switch button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .4rem; padding: .45rem .75rem; border: 0; border-radius: .5rem; background: transparent; color: #345a5d; font: inherit; font-size: .75rem; font-weight: 700; cursor: pointer; }
   .tbd-view-switch button[aria-pressed="true"] { background: #e3f3f1; color: #086c70; }
   .tbd-view-switch svg { width: 18px; height: 18px; }
   .tbd-view-switch button:focus-visible { outline: 2px solid #087f83; outline-offset: 2px; }
-  .tbd-grid[data-view="grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; align-items: stretch; }
+  .tbd-grid[data-view="grid"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr)); gap: .75rem; align-items: stretch; }
   .tbd-grid[data-view="grid"] .tbd-card { display: block; min-height: 0; padding: 0; border: 1px solid #e1e7e5; border-radius: .75rem; }
   .tbd-grid[data-view="grid"] .tbd-card-main { display: flex; height: 100%; flex-direction: column; gap: 0; }
   .tbd-grid[data-view="grid"] .tbd-card-cover { width: 100%; height: auto; aspect-ratio: 4 / 3; align-self: stretch; border-radius: 0; }
@@ -17,5 +14,38 @@
   .tbd-grid[data-view="grid"] .tbd-card-location { white-space: normal; overflow-wrap: anywhere; }
   .tbd-grid[data-view="grid"] .tbd-card-meta { flex-direction: column; align-items: flex-start; gap: .3rem; margin-top: auto; padding-top: .5rem; white-space: normal; }
   .tbd-grid[data-view="grid"] .tbd-card-status { white-space: normal; }
+  .tbd-grid[data-view="grid"] .tbd-card-cover small { display: none; }
+  .tbd-grid[data-view="list"] { grid-template-columns: minmax(0, 1fr); gap: 0; }
+
+@media (min-width: 761px) {
+  .tbd-grid[data-view="grid"] .tbd-card-body { padding: .75rem; }
+  .tbd-grid[data-view="grid"] .tbd-card-body h3 { font-size: .9rem; }
+  .tbd-grid[data-view="grid"] .tbd-card-meta { flex-direction: row; flex-wrap: wrap; gap: .35rem .65rem; }
+  .tbd-grid[data-view="grid"] .tbd-card-status { display: inline; }
+  .tbd-grid[data-view="list"] .tbd-card { border: 0; border-bottom: 1px solid #e1e7e5; border-radius: 0; padding: .85rem 3.25rem .85rem 0; box-shadow: none; }
+  .tbd-grid[data-view="list"] .tbd-card-main { display: grid; grid-template-columns: clamp(5.5rem, 10vw, 8rem) minmax(0, 1fr); gap: 1rem; align-items: center; }
+  .tbd-grid[data-view="list"] .tbd-card-cover { width: 100%; height: auto; aspect-ratio: 1; border-radius: .75rem; }
+  .tbd-grid[data-view="list"] .tbd-card-cover small { display: none; }
+  .tbd-grid[data-view="list"] .tbd-card-body { min-width: 0; padding: 0; }
+  .tbd-grid[data-view="list"] .tbd-card-body h3 { min-height: 0; font-size: 1rem; white-space: normal; overflow-wrap: anywhere; }
+  .tbd-grid[data-view="list"] .tbd-card-location { white-space: normal; }
+  .tbd-grid[data-view="list"] .tbd-card-meta { display: flex; flex-wrap: wrap; gap: .4rem .8rem; justify-content: flex-start; }
+  .tbd-grid[data-view="list"] .tbd-card-status { display: inline; }
+  .tbd-grid[data-view="list"] .tbd-save { top: .85rem; right: .25rem; width: 44px; height: 44px; }
+}
+
+@media (max-width: 760px) {
+  .tbd-grid[data-view="grid"] { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
   .tbd-grid[data-view="grid"] .tbd-save { display: none; }
+}
+
+@media (min-width: 681px) and (max-width: 760px) {
+  .tbd-grid[data-view="list"] .tbd-card { padding: .7rem 3.25rem .7rem 0; border-inline: 0; border-radius: 0; }
+  .tbd-grid[data-view="list"] .tbd-card-main { display: grid; grid-template-columns: 6rem minmax(0, 1fr); gap: .75rem; align-items: center; }
+  .tbd-grid[data-view="list"] .tbd-card-cover { width: 6rem; height: 6rem; border-radius: .75rem; }
+  .tbd-grid[data-view="list"] .tbd-card-body { min-width: 0; padding: 0; }
+}
+
+@media (hover: none) {
+  .tbd-grid[data-view] .tbd-card:hover { transform: none; box-shadow: none; }
 }
