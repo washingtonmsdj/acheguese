@@ -487,6 +487,7 @@ export default function MapaPageV4({
   const [ratedOnly, setRatedOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [resultsExpanded, setResultsExpanded] = useState(false);
+  const resultsListRef = useRef<HTMLDivElement>(null);
   const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(() =>
     createFocusedVisibleLayers(initialLayers, runtimeLayerKeys),
   );
@@ -743,6 +744,23 @@ export default function MapaPageV4({
   }, [filteredMarkers, selectedMarker]);
 
   useEffect(() => {
+    if (!selectedMarker) return;
+    const list = resultsListRef.current;
+    const selectedItem = list?.querySelector<HTMLElement>('[data-selected="true"]');
+    if (!list || !selectedItem) return;
+
+    const listBounds = list.getBoundingClientRect();
+    const itemBounds = selectedItem.getBoundingClientRect();
+    const offset = itemBounds.top < listBounds.top
+      ? itemBounds.top - listBounds.top
+      : itemBounds.bottom > listBounds.bottom
+        ? itemBounds.bottom - listBounds.bottom
+        : 0;
+
+    if (offset) list.scrollTop += offset;
+  }, [selectedMarker, filteredMarkers, resultsExpanded]);
+
+  useEffect(() => {
     if (!focusTarget || selectedMarker || focusMarkers.length === 0) return;
     setSelectedMarker(focusMarkers[0]);
   }, [focusTarget, selectedMarker, focusMarkers]);
@@ -822,6 +840,7 @@ export default function MapaPageV4({
 
   const selectMarker = (marker: MapMarker) => {
     setSelectedMarker(marker);
+    setResultsExpanded(false);
     adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 16 });
   };
 
@@ -984,7 +1003,7 @@ export default function MapaPageV4({
               </label>
             </div>
 
-            <div id="territorial-map-results" className="map-results-list" aria-live="polite">
+            <div ref={resultsListRef} id="territorial-map-results" className="map-results-list" aria-live="polite">
               {filteredMarkers.map((marker) => (
                 <MapResultItem
                   key={`${marker.type}:${marker.id}`}
