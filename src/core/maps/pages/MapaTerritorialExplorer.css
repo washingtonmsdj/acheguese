@@ -270,11 +270,13 @@
   .map-explorer-search { height: 2.75rem; padding-inline: .7rem; border-radius: .8rem; }
   .map-explorer-search input { font-size: 1rem; }
   .map-filter-trigger { width: 2.75rem; height: 2.75rem; border-radius: .8rem; }
-  .map-explorer-layers { margin-top: .5rem; }
+  .map-explorer-layers { margin-top: .25rem; }
   .map-layer-chip,
   .map-category-chip { min-height: 2.75rem; padding-inline: .62rem; font-size: .7rem; }
   .map-layer-chip { min-height: 2.75rem; padding-inline: .62rem; font-size: .7rem; }
-  .map-category-area { margin-top: .5rem; }
+  .map-category-area { margin-top: .25rem; }
+  .map-category-chips { scroll-snap-type: x proximity; }
+  .map-category-chip { flex-shrink: 0; scroll-snap-align: start; }
   .map-category-heading { display: none; }
   .map-category-heading > span:last-child { font-size: .62rem; }
   .map-category-chip { min-height: 2.75rem; font-size: .75rem; }
@@ -295,7 +297,9 @@
     z-index: 20;
     margin: .5rem;
     display: flex;
-    height: var(--map-sheet-min-height);
+    height: clamp(var(--map-sheet-min-height), calc(var(--sheet-height, var(--map-sheet-min-height)) + var(--sheet-drag-offset, 0px)), calc(100% - 1rem));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    transition: height .22s ease;
     max-height: calc(100% - 1rem);
     overflow: hidden;
     border: 1px solid hsl(var(--border));
@@ -303,7 +307,9 @@
     box-shadow: 0 12px 32px rgb(9 40 45 / 20%);
   }
 
-  .map-results-panel[data-expanded="true"] { height: min(82%, 35rem); max-height: calc(100% - 1rem); }
+  .map-results-panel[data-sheet-state="medium"] { --sheet-height: 45%; }
+  .map-results-panel[data-sheet-state="expanded"] { --sheet-height: 85%; }
+  .map-results-panel[data-dragging="true"] { transition: none; }
   .map-results-panel[data-expanded="false"] .map-results-list { display: none; }
   .map-results-panel[data-expanded="true"] .map-results-list { max-height: none; flex: 1 1 auto; }
   .map-results-drag-handle-wrap { display: flex; height: 2.75rem; flex: 0 0 auto; align-items: center; justify-content: center; }
@@ -329,7 +335,7 @@
   .map-territory-label { display: none; }
   .map-refresh-area { top: .5rem; min-height: 2.75rem; padding-inline: .65rem; font-size: .75rem; }
   .map-explorer-map-panel .map-page-canvas > [role="dialog"][aria-label^="Detalhes:"] {
-    display: block;
+    display: none;
     top: 5.95rem;
     right: .65rem;
     bottom: auto;
@@ -351,6 +357,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .map-results-panel { transition: none; }
   .map-results-expand svg { transition: none; }
 }
 

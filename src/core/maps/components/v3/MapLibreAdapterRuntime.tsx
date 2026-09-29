@@ -15,6 +15,8 @@
  */
 import { logger } from '@/shared/utils/logger';
 import React, { useEffect, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { CATEGORY_CONFIGS } from '@/core/business/config/categoryFilters';
 import * as maplibregl from "maplibre-gl";
 import { useViewportBridge } from './useViewportBridge';
 import { getMarkerConfig } from '../../config/markerConfig';
@@ -78,7 +80,7 @@ export interface MapLibreAdapterProps {
   /** Área circular (ex: raio de CEP) */
   circle?: CircleArea;
   /** Callback quando viewport muda (moveend/zoomend) */
-  onViewportChange?: (viewport: MapViewport, bounds: BoundingBox) => void;
+  onViewportChange?: (viewport: MapViewport, bounds: BoundingBox, userInitiated?: boolean) => void;
   /** Callback quando usuário clica no mapa */
   onMapClick?: (coords: { latitude: number; longitude: number }) => void;
   /** Callback quando mapa termina de carregar */
@@ -90,6 +92,7 @@ export interface MapLibreAdapterProps {
   /** Território resolvido (para controle territorial) */
   resolved?: ResolvedTerritory | null;
   fitTerritoryBounds?: boolean;
+  autoCenterTerritory?: boolean;
   territoryFitPadding?: number | maplibregl.PaddingOptions;
   territoryFitMaxZoom?: number;
   /** Habilitar clustering de marcadores */
@@ -179,6 +182,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       userLocationMarker,
       resolved,
       fitTerritoryBounds = false,
+      autoCenterTerritory = true,
       territoryFitPadding,
       territoryFitMaxZoom,
       enableClustering = false,
@@ -199,6 +203,10 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     // Map<markerId, Marker> para diffing eficiente
     const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
     const markerSignaturesRef = useRef<Map<string, string>>(new Map());
+    const viewportCallbackRef = useRef(onViewportChange);
+    viewportCallbackRef.current = onViewportChange;
+    const markerCallbackRef = useRef(onMarkerClick);
+    markerCallbackRef.current = onMarkerClick;
     const { handleMapMove } = useViewportBridge();
 
     // Estado do viewport para clustering
@@ -362,6 +370,9 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       });
 
       // Evento: fim de movimento (pan + zoom)
+      let userMovement = false;
+      map.on('movestart', (event) => { userMovement = Boolean(event.originalEvent); });
+      map.on('move', (event) => { if (event.originalEvent) userMovement = true; });
       map.on('moveend', () => {
         const center = map.getCenter();
         const zoom = map.getZoom();
@@ -383,7 +394,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         handleMapMove(viewport);
 
         // Notificar consumidor externo (para viewport fetch)
-        onViewportChange?.(viewport, bounds);
+        viewportCallbackRef.current?.(viewport, bounds, userMovement);
+        userMovement = false;
 
         // Atualizar __mapState para testes de pan/zoom
         if (typeof window !== 'undefined') {
@@ -460,7 +472,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     }, [resolved]);
 
     useEffect(() => {
-      if (centeredOnTerritory.current || territoryPolygons.length === 0) return;
+      if (!autoCenterTerritory || centeredOnTerritory.current || territoryPolygons.length === 0) return;
       const map = mapRef.current;
       if (!map) return;
       centeredOnTerritory.current = true;
@@ -527,7 +539,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
       if (map.isStyleLoaded()) fly();
       else map.once('load', fly);
-    }, [territoryPolygons, resolved, fitTerritoryBounds, territoryFitPadding, territoryFitMaxZoom]);
+    }, [territoryPolygons, resolved, autoCenterTerritory, fitTerritoryBounds, territoryFitPadding, territoryFitMaxZoom]);
 
     // ── Camada de território (polígonos de bairro/cidade) ──────────────────────
     // Renderiza os polígonos do território ativo sobre o mapa base.
@@ -892,6 +904,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             isTerritoryReference ? `${marker.title}|${marker.subtitle ?? ''}` : '',
             isCluster ? pointCount : '',
             markerPresentation,
+            String(metadata.category ?? ''),
+            metadata.selected === true ? 'selected' : '',
           ].join('|');
           const currentMarker = current.get(marker.id);
 
@@ -977,11 +991,23 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             const inner = document.createElement('span');
             inner.style.cssText = `transform:rotate(45deg);font-size:${markerSizing.markerFont}px;line-height:1;font-weight:800;color:white;font-family:Arial,sans-serif;`;
             inner.textContent = cfg.abbr;
+            const category = typeof metadata.category === 'string'
+              ? Object.values(CATEGORY_CONFIGS).find((config) => config.slug === metadata.category)
+              : undefined;
+            if (category) {
+              el.className = category.color;
+              el.style.background = 'currentColor';
+              inner.style.transform = 'none';
+              inner.textContent = '';
+              const svg = new DOMParser().parseFromString(renderToStaticMarkup(React.createElement(category.icon, { size: 18, color: 'white', 'aria-hidden': true })), 'image/svg+xml').documentElement;
+              inner.appendChild(document.importNode(svg, true));
+            }
+            if (metadata.selected === true) el.style.boxShadow = '0 0 0 4px #ffca38,0 3px 12px rgba(0,0,0,.4)';
             el.appendChild(inner);
           }
 
           if (onMarkerClick && !isUserLocation && !isCluster) {
-            el.addEventListener('click', () => onMarkerClick(marker.id));
+            el.addEventListener('click', () => markerCallbackRef.current?.(marker.id));
           }
 
           const m = new maplibregl.Marker({

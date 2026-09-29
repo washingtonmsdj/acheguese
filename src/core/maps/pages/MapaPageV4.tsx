@@ -512,7 +512,12 @@ export default function MapaPageV4({
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [ratedOnly, setRatedOnly] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [resultsExpanded, setResultsExpanded] = useState(false);
+  const [sheetState, setSheetState] = useState<'collapsed' | 'medium' | 'expanded'>('collapsed');
+  const resultsExpanded = sheetState !== 'collapsed';
+  const [sheetDragOffset, setSheetDragOffset] = useState(0);
+  const [mapReady, setMapReady] = useState(false);
+  const [visibleBounds, setVisibleBounds] = useState<BoundingBox | null>(null);
+  const fittedTerritoryRef = useRef<string | null>(null);
   const [areaSearchAvailable, setAreaSearchAvailable] = useState(false);
   const resultsListRef = useRef<HTMLDivElement>(null);
   const areaSearchBaselineRef = useRef<MapViewportReference | null>(null);
@@ -705,23 +710,28 @@ export default function MapaPageV4({
   }, [territoryPolygons, fetchByBounds]);
 
   const handleViewportChange = useCallback(
-    (viewport: MapViewport, bounds: BoundingBox) => {
+    (viewport: MapViewport, bounds: BoundingBox, userInitiated = false) => {
       const currentViewport = { bounds, zoom: viewport.zoom };
+      setVisibleBounds(bounds);
       const baseline = areaSearchBaselineRef.current;
 
       if (!baseline) {
         areaSearchBaselineRef.current = currentViewport;
         setAreaSearchAvailable(false);
-      } else {
+      } else if (userInitiated) {
         setAreaSearchAvailable(hasMeaningfulViewportChange(baseline, currentViewport));
+      } else {
+        areaSearchBaselineRef.current = currentViewport;
+        setAreaSearchAvailable(false);
       }
 
-      fetchByBounds(bounds, viewport.zoom);
+      if (!userInitiated) fetchByBounds(bounds, viewport.zoom);
     },
     [fetchByBounds],
   );
 
   const handleMapLoad = useCallback(() => {
+    setMapReady(true);
     if (areaSearchBaselineRef.current) return;
     const map = adapterRef.current?.getMap();
     if (!map) return;
@@ -806,6 +816,30 @@ export default function MapaPageV4({
     });
   }, [activeCategory, allMarkers, mapQuery, ratedOnly, sortMode, verifiedOnly]);
 
+  const visibleResults = React.useMemo(() => filteredMarkers.filter((marker) => !visibleBounds || (
+    marker.coordinates.longitude >= visibleBounds[0] && marker.coordinates.longitude <= visibleBounds[2]
+    && marker.coordinates.latitude >= visibleBounds[1] && marker.coordinates.latitude <= visibleBounds[3]
+  )), [filteredMarkers, visibleBounds]);
+  const renderedMarkers = React.useMemo(() => filteredMarkers.map((marker) => ({
+    ...marker, metadata: { ...marker.metadata, selected: selectedMarker?.id === marker.id },
+  })), [filteredMarkers, selectedMarker?.id]);
+
+  useEffect(() => {
+    const map = adapterRef.current?.getMap();
+    if (!initialViewport?.center) return;
+    const scopeKey = `${initialViewport.center.latitude}:${initialViewport.center.longitude}`;
+    if (!mapReady || !map || loadingLayers.size > 0 || !filteredMarkers.length || fittedTerritoryRef.current === scopeKey) return;
+    const points = filteredMarkers.map((marker) => marker.coordinates)
+      .filter((point) => Number.isFinite(point.longitude) && Number.isFinite(point.latitude));
+    if (!points.length) return;
+    fittedTerritoryRef.current = scopeKey;
+    const mobile = map.getContainer().clientWidth <= 760;
+    map.fitBounds([
+      [Math.min(...points.map((p) => p.longitude)), Math.min(...points.map((p) => p.latitude))],
+      [Math.max(...points.map((p) => p.longitude)), Math.max(...points.map((p) => p.latitude))],
+    ], { padding: { top: 64, right: 48, bottom: mobile ? 150 : 64, left: 48 }, maxZoom: 16, duration: 0 });
+  }, [mapReady, filteredMarkers, loadingLayers.size, initialViewport]);
+
   useEffect(() => {
     if (!selectedMarker || filteredMarkers.some((marker) => marker.id === selectedMarker.id)) return;
     setSelectedMarker(null);
@@ -826,7 +860,7 @@ export default function MapaPageV4({
         : 0;
 
     if (offset) list.scrollTop += offset;
-  }, [selectedMarker, filteredMarkers, resultsExpanded]);
+  }, [selectedMarker, filteredMarkers, sheetState]);
 
   useEffect(() => {
     if (!focusTarget || selectedMarker || focusMarkers.length === 0) return;
@@ -847,14 +881,16 @@ export default function MapaPageV4({
           initialViewport={initialViewport}
           onLoad={handleMapLoad}
           territoryPolygons={territoryPolygons}
-          markers={filteredMarkers}
+          autoCenterTerritory={false}
+          markers={renderedMarkers}
           resolved={effectiveResolved}
-          enableClustering={false}
+          enableClustering={filteredMarkers.length > 20}
+          customAttribution={false}
           onMarkerClick={(id) => {
             const marker = filteredMarkers.find((m) => m.id === id);
             if (!marker) return;
             setSelectedMarker(marker);
-            setResultsExpanded(false);
+            setSheetState('medium');
             adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 17 });
           }}
           onViewportChange={handleViewportChange}
@@ -910,7 +946,7 @@ export default function MapaPageV4({
 
   const selectMarker = (marker: MapMarker) => {
     setSelectedMarker(marker);
-    setResultsExpanded(false);
+    setSheetState('medium');
     adapterRef.current?.flyTo({ center: marker.coordinates, zoom: 16 });
   };
 
@@ -925,6 +961,7 @@ export default function MapaPageV4({
     const startY = sheetDragStartYRef.current;
     if (startY !== null && Math.abs(event.clientY - startY) > 10) {
       suppressSheetClickRef.current = true;
+      setSheetDragOffset(startY - event.clientY);
     }
   };
 
@@ -934,8 +971,9 @@ export default function MapaPageV4({
 
     const delta = event.clientY - startY;
     if (Math.abs(delta) > 10) suppressSheetClickRef.current = true;
-    if (delta <= -42) setResultsExpanded(true);
-    if (delta >= 42) setResultsExpanded(false);
+    if (delta <= -42) setSheetState((state) => state === 'collapsed' ? 'medium' : 'expanded');
+    if (delta >= 42) setSheetState((state) => state === 'expanded' ? 'medium' : 'collapsed');
+    setSheetDragOffset(0);
     sheetDragStartYRef.current = null;
   };
 
@@ -1070,6 +1108,9 @@ export default function MapaPageV4({
           <section
             className="map-results-panel"
             data-expanded={resultsExpanded}
+            data-sheet-state={sheetState}
+            data-dragging={sheetDragOffset !== 0}
+            style={{ '--sheet-drag-offset': `${sheetDragOffset}px` } as React.CSSProperties}
             aria-label="Resultados encontrados no mapa"
           >
             <div className="map-results-drag-handle-wrap">
@@ -1084,6 +1125,7 @@ export default function MapaPageV4({
                 onPointerUp={finishResultsSheetDrag}
                 onPointerCancel={() => {
                   sheetDragStartYRef.current = null;
+                  setSheetDragOffset(0);
                   suppressSheetClickRef.current = false;
                 }}
                 onClick={() => {
@@ -1091,7 +1133,7 @@ export default function MapaPageV4({
                     suppressSheetClickRef.current = false;
                     return;
                   }
-                  setResultsExpanded((expanded) => !expanded);
+                  setSheetState((state) => state === 'collapsed' ? 'medium' : state === 'medium' ? 'expanded' : 'collapsed');
                 }}
               >
                 <span aria-hidden="true" />
@@ -1100,7 +1142,7 @@ export default function MapaPageV4({
             <div className="map-results-header">
               <div className="map-results-title">
                 <span>
-                  <strong>{filteredMarkers.length} {filteredMarkers.length === 1 ? 'lugar' : 'lugares'}</strong>
+                  <strong>{visibleResults.length} {visibleResults.length === 1 ? 'lugar' : 'lugares'}</strong>
                   <small>visíveis no mapa</small>
                 </span>
                 <button
@@ -1109,7 +1151,7 @@ export default function MapaPageV4({
                   aria-expanded={resultsExpanded}
                   aria-controls="territorial-map-results"
                   aria-label={resultsExpanded ? 'Recolher resultados' : 'Expandir resultados'}
-                  onClick={() => setResultsExpanded((expanded) => !expanded)}
+                  onClick={() => setSheetState((state) => state === 'collapsed' ? 'medium' : state === 'medium' ? 'expanded' : 'collapsed')}
                 >
                   <ChevronDown aria-hidden="true" />
                 </button>
@@ -1130,7 +1172,7 @@ export default function MapaPageV4({
             </div>
 
             <div ref={resultsListRef} id="territorial-map-results" className="map-results-list" aria-live="polite">
-              {filteredMarkers.map((marker) => (
+              {visibleResults.map((marker) => (
                 <MapResultItem
                   key={`${marker.type}:${marker.id}`}
                   marker={marker}

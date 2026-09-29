@@ -287,7 +287,6 @@ export default function TerritoryPortalPage({
           <details className="pt-mobile-menu">
             <summary aria-label="Abrir menu">
               <Menu />
-              <span>Menu</span>
             </summary>
             <nav aria-label="Navegação mobile">
               <Link to={urls.nearby}>Por perto</Link>
