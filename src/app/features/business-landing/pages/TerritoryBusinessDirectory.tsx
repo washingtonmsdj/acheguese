@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Grid2X2,
   Info,
+  List,
   MapPin,
   Menu,
   Navigation,
@@ -29,6 +30,7 @@ import type {
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 
 import "./TerritoryBusinessDirectory.css";
+import "./TerritoryBusinessView.css";
 
 const BUSINESS_SORT_OPTIONS: readonly { value: BusinessSortOption; label: string }[] = [
   { value: "relevance", label: "Mais relevantes" },
@@ -186,6 +188,7 @@ export function TerritoryBusinessDirectory({
   onOpenBusiness,
   onToggleSave,
 }: TerritoryBusinessDirectoryProps) {
+  const [resultView, setResultView] = useState<'list' | 'grid'>('list');
   const hasActiveFilters = activeCategory !== "all" || activeFilters.length > 0;
   const hasNearbyData = businesses.some(
     (business) =>
@@ -337,6 +340,11 @@ export function TerritoryBusinessDirectory({
             <Link to={mapHref}><MapPin /> Ver no mapa</Link>
           </div>
 
+          <div className="tbd-view-switch" role="group" aria-label="Formato dos resultados">
+            <button type="button" aria-pressed={resultView === 'list'} aria-controls="territory-business-results" onClick={() => setResultView('list')}><List aria-hidden="true" /> Lista</button>
+            <button type="button" aria-pressed={resultView === 'grid'} aria-controls="territory-business-results" onClick={() => setResultView('grid')}><Grid2X2 aria-hidden="true" /> Grade</button>
+          </div>
+
           {isLoading ? <div className="tbd-state" role="status">Carregando empresas…</div> : null}
 
           {isError && !isLoading ? (
@@ -356,7 +364,7 @@ export function TerritoryBusinessDirectory({
           ) : null}
 
           {!isLoading && !isError && businesses.length > 0 ? (
-            <div className="tbd-grid">
+            <div id="territory-business-results" className="tbd-grid" data-view={resultView}>
               {businesses.map((business, index) => (
                 <BusinessDirectoryCard
                   key={business.id}
