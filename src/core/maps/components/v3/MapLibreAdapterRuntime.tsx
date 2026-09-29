@@ -719,6 +719,8 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     const {
       coords: userLocation,
       loading: loadingLocation,
+      error: locationError,
+      permissionState: locationPermission,
       requestLocation: handleRequestLocation,
       isHighAccuracy,
     } = useRobustGeolocation({
@@ -808,7 +810,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
     // Adicionar marcador de localização do usuário se configurado
     const allMarkers = React.useMemo(() => {
       const result = [...filteredMarkers];
-      if (userLocationMarker?.enabled && userLocationMarker?.autoAdd && userLocation) {
+      if (userLocationMarker?.enabled && userLocation) {
         result.push(
           createUserLocationMarker(
             {
@@ -824,7 +826,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
     // ── Clustering de marcadores ─────────────────────────────────────────────
     const { clusters, isReady: clusteringReady } = useMapClustering({
-      markers: allMarkers,
+      markers: filteredMarkers,
       bounds: currentBounds,
       zoom: currentZoom,
       enabled: enableClustering,
@@ -842,7 +844,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       }
 
       // Converter clusters para marcadores
-      return clusters.flatMap((cluster) => {
+      const clusteredMarkers = clusters.flatMap((cluster) => {
         if (cluster.properties.cluster) {
           const [longitude, latitude] = cluster.geometry.coordinates;
           const normalized = toFiniteMapCoordinates(latitude, longitude);
@@ -859,6 +861,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
 
         return cluster.properties.marker ? [cluster.properties.marker] : [];
       });
+      return [...clusteredMarkers, ...allMarkers.filter((marker) => marker.metadata?.isUserLocation === true)];
     }, [enableClustering, clusteringReady, clusters, allMarkers, currentZoom, clusterMaxZoom]);
 
     // ── Marcadores com diffing por ID ─────────────────────────────────────────
@@ -938,7 +941,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           } else if (isUserLocation) {
             el.style.cssText = 'width:60px;height:60px;display:flex;align-items:center;justify-content:center;position:relative;pointer-events:auto;';
             // ✅ SEGURO - Usa DOM API ao invés de innerHTML
-            const svg = createUserLocationSvg();
+            const svg = createUserLocationSvg('#2563eb');
             el.appendChild(svg);
           } else if (isCluster) {
             // Renderizar cluster
@@ -1054,8 +1057,10 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             {controls?.location?.enabled && (
               <MapLocationControl
                 {...controls.location}
-                onRequestLocation={handleRequestLocation}
+                onRequestLocation={() => handleRequestLocation({ useCache: false })}
                 isLoading={loadingLocation}
+                error={locationError}
+                permissionDenied={locationPermission === 'denied'}
                 accuracy={locationAccuracy}
                 hasLocation={!!userLocation}
                 isHighAccuracy={isHighAccuracy}

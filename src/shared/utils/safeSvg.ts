@@ -70,7 +70,7 @@ export function createSvgAnimate(attrs: Record<string, string | number>): SVGAni
  * Cria marcador de localização do usuário (SVG animado)
  * ✅ SEGURO - Usa DOM API ao invés de innerHTML
  */
-export function createUserLocationSvg(): SVGSVGElement {
+export function createUserLocationSvg(color = '#10b981'): SVGSVGElement {
   const svg = createSafeSvg({
     width: 60,
     height: 60,
@@ -83,7 +83,7 @@ export function createUserLocationSvg(): SVGSVGElement {
     cx: 30,
     cy: 30,
     r: 28,
-    fill: '#10b981',
+    fill: color,
     opacity: 0.2
   });
   
@@ -111,7 +111,7 @@ export function createUserLocationSvg(): SVGSVGElement {
     cx: 30,
     cy: 30,
     r: 16,
-    fill: '#10b981',
+    fill: color,
     stroke: 'white',
     'stroke-width': 4
   });
