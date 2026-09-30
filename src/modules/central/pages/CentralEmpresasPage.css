@@ -1,4 +1,4 @@
-.central-business-page{width:100%;max-width:92rem;min-width:0;margin-inline:auto;color:#0d3639;font-family:"Plus Jakarta Sans",Arial,sans-serif}
+.central-business-page{container:business-central / inline-size;width:100%;max-width:92rem;min-width:0;margin-inline:auto;color:#0d3639;font-family:"Plus Jakarta Sans",Arial,sans-serif}
 .central-business-heading{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.5rem;padding:clamp(1rem,2.5vw,2rem);border:1px solid #dfe6e4;border-radius:1.25rem;background:linear-gradient(120deg,#e6f3f2,#f7f9f8)}
 .central-business-heading>div{flex:1;min-width:0}
 .central-business-eyebrow{display:block;margin-bottom:.4rem;color:#087f83;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
@@ -10,16 +10,15 @@
 .central-business-page .business-management-summary{grid-template-columns:repeat(4,minmax(0,1fr))}
 .central-business-page .business-management-stat{min-width:0;background:#f7f9f8;border-color:#dfe6e4;border-radius:.85rem}
 .central-business-page .business-management-stat p{overflow-wrap:anywhere}
-.central-business-page .business-management-list{display:grid;grid-template-columns:minmax(0,1fr);gap:1rem}
+.central-business-page .business-management-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,30rem),1fr));gap:1rem}
 .central-business-page .business-management-list>*+*{margin-top:0}
 .central-business-page .business-management-card{min-width:0;border-color:#dfe6e4;border-radius:1rem;box-shadow:0 3px 14px #0d363906}
-.central-business-page .business-management-card__body{flex-direction:column;height:100%}
+.central-business-page .business-management-card__body{flex-direction:column;align-items:stretch;height:100%}
 .central-business-page .business-management-card h3{width:100%;overflow-wrap:anywhere;line-height:1.45}
-.central-business-page .business-management-actions{justify-content:flex-start;padding-top:1rem;border-top:1px solid #e4eae8}
+.central-business-page .business-management-actions{width:100%;justify-content:flex-start;margin-top:auto;padding-top:1rem;border-top:1px solid #e4eae8}
 .central-business-page .business-management-actions button{min-height:2.75rem;height:auto;border-radius:.7rem;white-space:normal;line-height:1.35}
 .central-business-page .business-management-actions button:first-child{background:#087f83;color:#fff}
-@media(min-width:1600px){.central-business-page .business-management-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){
+@container business-central (max-width:640px){
  .central-business-heading{gap:.85rem;margin-bottom:1rem;border-radius:1rem}
  .central-business-heading .central-business-create{width:100%}
  .central-business-heading p{font-size:.83rem}

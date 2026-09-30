@@ -244,7 +244,7 @@ function BusinessModuleCard({
               className="gap-1.5"
               onClick={() => onCopy(business.shareUrl!, "link da empresa")}
             >
-              Compartilhar
+            Copiar link
             </Button>
           ) : null}
         </div>
