@@ -75,7 +75,7 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
           attributionControl: false,
         });
 
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
         map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
         map.on('load', () => {
@@ -136,12 +136,12 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
         </SheetHeader>
 
         <div className="relative flex-1 h-[calc(85vh-140px)]">
-          <div ref={containerRef} className="absolute inset-0" />
+          <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
 
           <Button
             size="icon"
             variant="secondary"
-            className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-lg"
+            className="absolute top-3 right-3 z-10 h-11 w-11 rounded-full shadow-lg"
             onClick={centerOnUser}
             disabled={locatingUser}
             aria-label="Usar minha localização atual"
