@@ -6,6 +6,17 @@ import { cn } from "@/shared/utils/cn";
 import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
 import type { BusinessHours } from "@/core/business/types/Business";
 import { getScheduleError } from "@/core/business/utils/openingHoursPresentation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/components/ui/alert-dialog";
 import "./OpeningHoursEditor.css";
 
 type DaySchedule = Partial<BusinessHours[string]>;
@@ -113,23 +124,51 @@ export function OpeningHoursEditor({
                     {error}
                   </p>
                 )}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={!complete}
-                  className="opening-hours-editor__copy"
-                  onClick={() => {
-                    const next = { ...hours };
-                    WEEK_DAYS.forEach((target) => {
-                      next[target] = { ...schedule };
-                    });
-                    onChange(next);
-                  }}
-                >
-                  <Copy size={16} aria-hidden="true" /> Aplicar este horário a
-                  todos os dias
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={!complete}
+                      className="opening-hours-editor__copy"
+                    >
+                      <Copy size={16} aria-hidden="true" /> Aplicar este horário
+                      a todos os dias
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="w-[calc(100%-2rem)] rounded-xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>
+                        Aplicar a todos os dias?
+                      </AlertDialogTitle>
+                      <AlertDialogDescription>
+                        O horário de {WEEK_DAY_LABELS[day]} ({schedule?.open} –{" "}
+                        {schedule?.close}) substituirá os demais dias, inclusive
+                        os marcados como fechados. Você ainda precisará salvar
+                        as alterações.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="min-h-11">
+                        Manter horários
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        className="min-h-11"
+                        onClick={() => {
+                          if (!complete) return;
+                          const next = { ...hours };
+                          WEEK_DAYS.forEach((target) => {
+                            next[target] = { ...schedule };
+                          });
+                          onChange(next);
+                        }}
+                      >
+                        Aplicar a todos
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
           </section>

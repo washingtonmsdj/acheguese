@@ -81,6 +81,14 @@
   height: auto;
   white-space: normal;
 }
+@media (max-width: 359px) {
+  .business-hours-page__actions {
+    flex-direction: column-reverse;
+  }
+  .business-hours-page__actions button {
+    width: 100%;
+  }
+}
 .business-hours-page__preview h2 {
   margin: 0;
   font-size: 16px;

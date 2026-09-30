@@ -8,6 +8,17 @@ import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/
 import { useBusinessEdit } from "@/modules/business/hooks/useBusinessEdit";
 import { Button } from "@/shared/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/components/ui/alert-dialog";
+import {
   getScheduleError,
   getSchedulePreview,
 } from "@/core/business/utils/openingHoursPresentation";
@@ -91,14 +102,37 @@ export default function BusinessOpeningHoursPage() {
             </p>
           )}
           <footer className="business-hours-page__actions">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!changed || edit.isLoading}
-              onClick={() => setDraft(null)}
-            >
-              Descartar alterações
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!changed || edit.isLoading}
+                >
+                  Descartar alterações
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="w-[calc(100%-2rem)] rounded-xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Os horários voltarão à última versão salva. Suas alterações
+                    nesta tela serão perdidas.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="min-h-11">
+                    Continuar editando
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="min-h-11"
+                    onClick={() => setDraft(null)}
+                  >
+                    Descartar alterações
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button
               type="submit"
               disabled={!changed || !valid || edit.isLoading}
