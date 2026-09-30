@@ -109,7 +109,7 @@ export default function BusinessOverviewPage() {
     .join(" · ");
   const quickActions = [
     { label: "Editar dados", detail: "Atualize as informações públicas", icon: Pencil, to: businessManagementRoutes.edit(businessId) },
-    { label: "Capa e logo", detail: "Atualize as imagens do perfil", icon: ImageIcon, to: businessManagementRoutes.edit(businessId) },
+    { label: "Fotos", detail: "Organize a galeria da empresa", icon: ImageIcon, to: businessManagementRoutes.photos(businessId) },
     { label: "Contato e localização", detail: "Confira os dados cadastrados", icon: MapPin, to: businessManagementRoutes.dados(businessId) },
     { label: "Configurações", detail: "Gerencie o acesso à empresa", icon: Settings, to: businessManagementRoutes.configuracoes(businessId) },
   ];

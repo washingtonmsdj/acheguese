@@ -1084,7 +1084,9 @@ export async function getGallery(businessId: string): Promise<string[]> {
       .from("business_gallery")
       .select("image_url")
       .eq("business_id", businessId)
-      .order("created_at", { ascending: false });
+      .order("is_featured", { ascending: false })
+      .order("display_order", { ascending: true })
+      .order("created_at", { ascending: true });
 
     if (error) {
       logger.error("Error fetching business gallery:", error);
@@ -1108,7 +1110,9 @@ export async function getGallery(businessId: string): Promise<string[]> {
       .from("business_gallery")
       .select("image_url")
       .eq("business_id", businessDataId)
-      .order("created_at", { ascending: false });
+      .order("is_featured", { ascending: false })
+      .order("display_order", { ascending: true })
+      .order("created_at", { ascending: true });
 
     if (fallbackError) {
       logger.error(
