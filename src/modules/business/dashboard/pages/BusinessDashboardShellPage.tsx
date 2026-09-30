@@ -6,7 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { ArrowLeft, Building2, Settings, Store } from "lucide-react";
+import { Building2, Settings, Store } from "lucide-react";
 
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
@@ -16,9 +16,6 @@ import {
 } from "@/core/business/utils/businessManagementRoutes";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import type { ActiveBusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
 interface NavItem {
@@ -58,7 +55,7 @@ export default function BusinessDashboardShellPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-7xl space-y-4 px-4 py-6">
+      <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-6 sm:px-6 xl:px-8">
         <Skeleton className="h-8 w-80" />
         <Skeleton className="h-28 w-full" />
         <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
@@ -97,64 +94,31 @@ export default function BusinessDashboardShellPage() {
   };
 
   return (
-    <div className="container mx-auto max-w-7xl space-y-4 px-4 py-6">
-      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <button className="hover:text-foreground" onClick={() => navigate("/conta")}>
+    <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-5 sm:px-6 xl:px-8">
+      <nav aria-label="Caminho da central" className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-muted-foreground sm:text-sm">
+        <button className="shrink-0 hover:text-foreground" onClick={() => navigate("/conta")}>
           Conta
         </button>
         <span>/</span>
         <button
-          className="hover:text-foreground"
+          className="shrink-0 hover:text-foreground"
           onClick={() => navigate(businessManagementRoutes.list())}
         >
           Empresas
         </button>
         <span>/</span>
-        <span className="text-foreground">{business.name}</span>
-        <span>/</span>
-        <span>{sectionLabel}</span>
-      </div>
+        <span className="truncate text-foreground">{business.name}</span>
+        <span className="hidden sm:inline">/</span>
+        <span className="hidden shrink-0 sm:inline">{sectionLabel}</span>
+      </nav>
 
-      <Card className="border">
-        <CardContent className="space-y-4 p-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold text-foreground">
-                  {business.name}
-                </h1>
-                <Badge variant="outline">{business.status}</Badge>
-              </div>
-              <p className="text-sm capitalize text-muted-foreground">
-                {business.category}
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => navigate(businessManagementRoutes.list())}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Voltar para empresas
-            </Button>
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
+        <aside aria-label="Navegação da empresa" className="min-w-0 self-start rounded-2xl border border-border bg-card p-2 lg:sticky lg:top-4">
+          <div className="hidden px-3 pb-3 pt-2 lg:block">
+            <p className="text-sm font-bold text-foreground">Central da empresa</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Gerencie sua presença no território.</p>
           </div>
-          {publicUrl ? (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate(publicUrl)}
-              >
-                Página pública
-              </Button>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
-        <Card>
-          <CardContent className="space-y-2 p-3">
+          <nav className="flex gap-1 overflow-x-auto overscroll-x-contain pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -162,19 +126,19 @@ export default function BusinessDashboardShellPage() {
                 end={item.to === basePath}
                 className={({ isActive }) =>
                   [
-                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
+                    "flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium lg:w-full",
                     isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                      ? "bg-primary/10 text-primary"
+                      : "text-foreground hover:bg-muted",
                   ].join(" ")
                 }
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-4 w-4 shrink-0" />
                 {item.label}
               </NavLink>
             ))}
-          </CardContent>
-        </Card>
+          </nav>
+        </aside>
 
         <div className="min-w-0">
           <Outlet context={outletContext} />
