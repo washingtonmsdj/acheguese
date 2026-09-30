@@ -3,12 +3,10 @@ import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
-  ChevronDown,
   Home,
   Info,
   Map,
   MapPin,
-  Menu,
   Navigation,
   Search,
   Star,
@@ -16,7 +14,7 @@ import {
   UsersRound,
 } from "lucide-react";
 
-import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { BrandMark, PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { TerritorialModuleHero, type TerritorialHeroBreadcrumb, type TerritoryModuleNavItem, type TerritoryModuleNavMoreItem } from "@/app/components/territorial";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
@@ -60,17 +58,6 @@ export interface TerritoryPortalPageProps {
   activeMemberIds: string[];
   urls: TerritoryPortalUrls;
   activeView?: TerritoryPortalView;
-}
-
-function BrandMark() {
-  return (
-    <span className="pt-brand-mark" aria-hidden="true">
-      <i />
-      <i />
-      <i />
-      <i />
-    </span>
-  );
 }
 
 export default function TerritoryPortalPage({
@@ -250,54 +237,7 @@ export default function TerritoryPortalPage({
         Pular para o conteúdo
       </a>
 
-      <header className="pt-header">
-        <div className="pt-container pt-header-inner">
-          <Link className="pt-brand" to="/">
-            <BrandMark />
-            <strong>achegue-se</strong>
-          </Link>
-
-          <nav>
-            <Link to={urls.nearby}>Por perto</Link>
-            <Link to="/como-funciona">Como funciona</Link>
-            <Link to={urls.business}>Para negócios</Link>
-          </nav>
-
-          <form
-            className="pt-search"
-            action={urls.search}
-            onSubmit={handleSearchSubmit}
-          >
-            <Search />
-            <input
-              name="q"
-              aria-label="Buscar no território"
-              placeholder="Buscar empresas e lugares..."
-            />
-          </form>
-
-          <Link className="pt-location" to={urls.map}>
-            <MapPin /> {contextLabel} <ChevronDown />
-          </Link>
-
-          <Link className="pt-login" to={AUTH_PATHS.login}>
-            Entrar <ArrowRight />
-          </Link>
-
-          <details className="pt-mobile-menu">
-            <summary aria-label="Abrir menu">
-              <Menu />
-            </summary>
-            <nav aria-label="Navegação mobile">
-              <Link to={urls.nearby}>Por perto</Link>
-              <Link to="/como-funciona">Como funciona</Link>
-              <Link to={urls.business}>Empresas</Link>
-              <Link to={urls.map}>Mapa do território</Link>
-              <Link to={urls.search}>Busca</Link>
-            </nav>
-          </details>
-        </div>
-      </header>
+      <PublicBrandHeader urls={urls} contextLabel={contextLabel} onSearchSubmit={handleSearchSubmit} />
 
       <main id="pt-content" tabIndex={-1}>
         <TerritorialModuleHero

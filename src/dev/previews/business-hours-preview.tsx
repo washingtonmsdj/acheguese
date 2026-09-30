@@ -12,6 +12,7 @@ import {
 import { BusinessOpeningHoursView } from "@/modules/business/dashboard/pages/BusinessOpeningHoursPage";
 import { WEEK_DAYS, WEEKDAYS } from "@/core/business/constants/weekDays";
 import { getScheduleError } from "@/core/business/utils/openingHoursPresentation";
+import { PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
 import "@/index.css";
 import "@/modules/business/dashboard/pages/BusinessDashboardNav.css";
 
@@ -49,20 +50,15 @@ export function Preview() {
     );
   };
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="flex h-16 items-center justify-between border-b bg-card px-4 sm:px-8">
-        <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap text-lg font-bold text-primary">
-          <img
-            src="/images/logo-icon.png"
-            alt=""
-            className="h-7 w-7 object-contain"
-          />
-          achegue-se
-        </span>
-        <span className="max-w-32 text-right text-xs text-muted-foreground sm:max-w-none">
-          Central da empresa · demonstração
-        </span>
-      </header>
+    <div className="pt-page min-h-screen bg-background text-foreground">
+      <PublicBrandHeader
+        urls={{
+          nearby: "/",
+          business: "/central/empresas",
+          map: "/",
+          search: "/busca",
+        }}
+      />
       <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 xl:px-8">
         <p className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-5">
           Dados de exemplo. Alterações ficam apenas nesta prévia.
