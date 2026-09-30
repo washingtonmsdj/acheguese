@@ -69,11 +69,49 @@ export default function BusinessOpeningHoursPage() {
     }
   };
   return (
+    <BusinessOpeningHoursView
+      businessName={business.name}
+      publicUrl={publicUrl}
+      hours={hours}
+      changed={changed}
+      isSaving={edit.isLoading}
+      onChange={setDraft}
+      onSubmit={submit}
+      onDiscard={() => setDraft(null)}
+    />
+  );
+}
+
+interface BusinessOpeningHoursViewProps {
+  businessName: string;
+  publicUrl: string | null;
+  hours: DraftHours;
+  changed: boolean;
+  isSaving: boolean;
+  onChange: (hours: DraftHours) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onDiscard: () => void;
+}
+
+/** Shared presentation used by the authenticated page and the isolated dev preview. */
+export function BusinessOpeningHoursView({
+  businessName,
+  publicUrl,
+  hours,
+  changed,
+  isSaving,
+  onChange,
+  onSubmit,
+  onDiscard,
+}: BusinessOpeningHoursViewProps) {
+  const invalidDays = WEEK_DAYS.filter((day) => getScheduleError(hours[day]));
+  const valid = invalidDays.length === 0;
+  return (
     <div className="business-hours-page">
       <header className="business-hours-page__heading">
         <Clock aria-hidden="true" />
         <div>
-          <p>{business.name}</p>
+          <p>{businessName}</p>
           <h1>Horário de funcionamento</h1>
           <p>
             Defina quando sua empresa atende. Revise a prévia antes de salvar.
@@ -87,13 +125,13 @@ export default function BusinessOpeningHoursPage() {
       </header>
       <div className="business-hours-page__layout">
         <form
-          onSubmit={submit}
+          onSubmit={onSubmit}
           className="business-hours-page__form"
-          aria-busy={edit.isLoading}
+          aria-busy={isSaving}
         >
-          <fieldset disabled={edit.isLoading}>
+          <fieldset disabled={isSaving}>
             <legend className="sr-only">Horários semanais</legend>
-            <OpeningHoursEditor hours={hours} onChange={setDraft} />
+            <OpeningHoursEditor hours={hours} onChange={onChange} />
           </fieldset>
           {!valid && (
             <p role="status" className="business-hours-page__error">
@@ -107,7 +145,7 @@ export default function BusinessOpeningHoursPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!changed || edit.isLoading}
+                  disabled={!changed || isSaving}
                 >
                   Descartar alterações
                 </Button>
@@ -124,21 +162,15 @@ export default function BusinessOpeningHoursPage() {
                   <AlertDialogCancel className="min-h-11">
                     Continuar editando
                   </AlertDialogCancel>
-                  <AlertDialogAction
-                    className="min-h-11"
-                    onClick={() => setDraft(null)}
-                  >
+                  <AlertDialogAction className="min-h-11" onClick={onDiscard}>
                     Descartar alterações
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button
-              type="submit"
-              disabled={!changed || !valid || edit.isLoading}
-            >
-              {edit.isLoading && <Loader2 className="animate-spin" size={16} />}{" "}
-              {edit.isLoading ? "Salvando…" : "Salvar horários"}
+            <Button type="submit" disabled={!changed || !valid || isSaving}>
+              {isSaving && <Loader2 className="animate-spin" size={16} />}{" "}
+              {isSaving ? "Salvando…" : "Salvar horários"}
             </Button>
           </footer>
         </form>
