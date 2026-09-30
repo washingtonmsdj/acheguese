@@ -40,7 +40,7 @@
  .business-edit-heading__logo{width:2.8rem;height:2.8rem;border-radius:.85rem}
  .business-edit-heading h1{font-size:1.16rem}
  .business-edit-heading .business-edit-business-name{font-size:.75rem}
- .business-edit-public-link{min-height:40px;padding:.55rem .7rem;font-size:0}
+ .business-edit-public-link{min-height:40px;padding:.55rem .7rem;font-size:.7rem}
  .business-edit-public-link svg{width:1.05rem;height:1.05rem}
  .business-edit-progress__item{flex-direction:column;gap:.4rem;text-align:center}
  .business-edit-progress__item p:first-child{display:none}
@@ -49,4 +49,7 @@
  .business-edit-content form>section>div{padding:1rem}
  .business-edit-content input:not([type=file]),.business-edit-content textarea,.business-edit-content select{min-width:0;max-width:100%;font-size:1rem}
  .business-edit-content button{min-height:44px}
+ .business-edit-actions{position:sticky;z-index:5;bottom:0;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);margin-inline:-1rem;margin-bottom:-1rem;padding:.75rem 1rem calc(.75rem + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);box-shadow:0 -10px 24px rgba(13,54,57,.08);backdrop-filter:blur(10px)}
+ .business-edit-actions button{width:100%}
 }
+@media(max-width:400px){.business-edit-public-link span{display:none}}

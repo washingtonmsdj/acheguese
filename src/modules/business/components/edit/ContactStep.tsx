@@ -243,7 +243,7 @@ export function ContactStep({
           ) : null}
         </div>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-between">
+        <div className="business-edit-actions flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-between">
           <Button type="button" variant="outline" onClick={onBack} className="gap-2 rounded-xl sm:min-w-32">
             <ArrowLeft className="h-4 w-4" />
             Voltar

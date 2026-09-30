@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, ImagePlus, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, ImagePlus, Upload } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -23,6 +23,7 @@ interface BasicInfoStepProps {
   onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   uploading?: boolean;
   errors: Record<string, string>;
+  onCancel: () => void;
   onNext: () => void;
 }
 
@@ -38,6 +39,7 @@ export function BasicInfoStep({
   onLogoChange,
   uploading = false,
   errors,
+  onCancel,
   onNext,
 }: BasicInfoStepProps) {
   const categoryOptions = Object.values(CATEGORY_CONFIGS);
@@ -162,7 +164,11 @@ export function BasicInfoStep({
           </div>
         </div>
 
-        <div className="flex justify-end border-t border-border pt-5">
+        <div className="business-edit-actions flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-between">
+          <Button type="button" variant="outline" onClick={onCancel} className="gap-2 rounded-xl sm:min-w-32">
+            <ArrowLeft className="h-4 w-4" />
+            Cancelar
+          </Button>
           <Button type="button" onClick={onNext} className="w-full gap-2 rounded-xl sm:w-auto sm:min-w-36">
             Próximo
             <ArrowRight className="h-4 w-4" />

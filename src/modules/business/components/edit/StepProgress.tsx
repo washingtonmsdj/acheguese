@@ -10,7 +10,7 @@ const STEP_LABELS = ["Identidade", "Contato e local", "Apresentação"] as const
 export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
   return (
     <div
-      className="business-edit-progress mb-6 rounded-[24px] border border-border bg-card p-3 sm:p-4"
+      className="business-edit-progress rounded-[24px] border border-border bg-card p-3 sm:p-4"
       aria-label={`Etapa ${currentStep} de ${totalSteps}`}
     >
       <div className="grid grid-cols-3 gap-2 sm:gap-3">

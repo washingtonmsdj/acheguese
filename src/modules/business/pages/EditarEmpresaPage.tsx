@@ -303,8 +303,14 @@ export default function EditarEmpresaPage() {
           </div>
         </div>
         {publicUrl ? (
-          <Link className="business-edit-public-link" to={publicUrl} target="_blank">
-            Ver página pública
+          <Link
+            aria-label="Abrir página pública da empresa"
+            className="business-edit-public-link"
+            to={publicUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span>Ver página pública</span>
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
           </Link>
         ) : null}
@@ -338,6 +344,7 @@ export default function EditarEmpresaPage() {
                 onLogoChange={handleLogoChange}
                 uploading={uploading}
                 errors={getErrors()}
+                onCancel={() => navigate(businessManagementRoutes.overview(businessId))}
                 onNext={handleNextStep1}
               />
               <BusinessSlugSection
