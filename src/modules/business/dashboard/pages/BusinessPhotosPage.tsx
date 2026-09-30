@@ -1,4 +1,4 @@
-import { useRef, type ChangeEvent, type DragEvent } from "react";
+import { useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -24,6 +24,7 @@ import { useBusinessGallery } from "@/modules/business/dashboard/hooks/useBusine
 import type { BusinessGalleryPhoto } from "@/modules/business/dashboard/services/businessGalleryService";
 import { resolveMediaAssetSource } from "@/shared/media/mediaAssetReference";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/components/ui/dialog";
 import "./BusinessPhotosPage.css";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -31,6 +32,7 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export default function BusinessPhotosPage() {
   const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
   const inputRef = useRef<HTMLInputElement>(null);
+  const [viewingPhoto, setViewingPhoto] = useState<BusinessGalleryPhoto | null>(null);
   const businessDataId = business.business_data_id;
   const gallery = useBusinessGallery(businessDataId, business.profile_id);
   const photos = gallery.query.data ?? [];
@@ -86,6 +88,11 @@ export default function BusinessPhotosPage() {
 
   return (
     <div className="business-photos-page">
+      <div className="business-photos-context">
+        <div className="business-photos-context__logo">{logoSource ? <img src={logoSource} alt="" /> : <Store aria-hidden="true" />}</div>
+        <div><strong>{business.name}</strong><span>{getBusinessCategoryLabel(business.category)}{locationLabel ? ` · ${locationLabel}` : ""}</span></div>
+        {publicUrl ? <Link to={publicUrl}>Ver página pública <ArrowUpRight aria-hidden="true" /></Link> : null}
+      </div>
       <header className="business-photos-heading">
         <div className="business-photos-heading__icon"><Images aria-hidden="true" /></div>
         <div className="business-photos-heading__copy">
@@ -93,7 +100,7 @@ export default function BusinessPhotosPage() {
           <p>Mostre ambientes, produtos e detalhes reais que ajudam as pessoas a reconhecer seu negócio.</p>
         </div>
         <div className="business-photos-heading__count" aria-label={`${photos.length} de ${gallery.maxPhotos} fotos`}>
-          <strong>{photos.length} de {gallery.maxPhotos}</strong>
+          <strong>{gallery.query.isPending ? "…" : photos.length} de {gallery.maxPhotos}</strong>
           <span>fotos</span>
           <div><i style={{ width: `${progress}%` }} /></div>
         </div>
@@ -117,7 +124,9 @@ export default function BusinessPhotosPage() {
                 Selecionar fotos
               </button>
             </div>
-          ) : null}
+          ) : <p className="business-photo-capacity" role="status">Galeria completa: {gallery.maxPhotos} fotos. Remova uma imagem para adicionar outra.</p>}
+
+          {busy ? <p className="business-photo-status" role="status"><Loader2 className="animate-spin" aria-hidden="true" />{gallery.upload.isPending ? "Enviando fotos…" : "Salvando alterações…"}</p> : null}
 
           {gallery.query.isPending ? (
             <div className="business-photo-loading"><Loader2 className="animate-spin" aria-hidden="true" /> Carregando galeria…</div>
@@ -138,6 +147,7 @@ export default function BusinessPhotosPage() {
                   index={index}
                   total={photos.length}
                   busy={busy}
+                  onView={setViewingPhoto}
                   onMove={movePhoto}
                   onFeature={(id) => gallery.feature.mutate(id)}
                   onRemove={(id) => {
@@ -183,11 +193,18 @@ export default function BusinessPhotosPage() {
           {publicUrl ? <Link to={publicUrl}>Ver página pública <ArrowUpRight aria-hidden="true" /></Link> : null}
         </aside>
       </div>
+      <Dialog open={Boolean(viewingPhoto)} onOpenChange={(open) => { if (!open) setViewingPhoto(null); }}>
+        <DialogContent className="business-photo-dialog">
+          <DialogTitle>Foto da empresa</DialogTitle>
+          <DialogDescription>{viewingPhoto?.caption || business.name}</DialogDescription>
+          {resolveMediaAssetSource(viewingPhoto?.image_url) ? <img src={resolveMediaAssetSource(viewingPhoto?.image_url)!} alt={viewingPhoto?.caption || `Foto de ${business.name}`} /> : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
-function PhotoTile({ photo, index, total, busy, onMove, onFeature, onRemove }: {
+function PhotoTile({ photo, index, total, busy, onMove, onFeature, onRemove, onView }: {
   photo: BusinessGalleryPhoto;
   index: number;
   total: number;
@@ -195,16 +212,17 @@ function PhotoTile({ photo, index, total, busy, onMove, onFeature, onRemove }: {
   onMove: (index: number, direction: -1 | 1) => void;
   onFeature: (id: string) => void;
   onRemove: (id: string) => void;
+  onView: (photo: BusinessGalleryPhoto) => void;
 }) {
   const source = resolveMediaAssetSource(photo.image_url);
   return (
     <article className={`business-photo-tile ${photo.is_featured ? "is-featured" : ""}`}>
-      <div className="business-photo-tile__media">
-      {source ? <img src={source} alt={photo.caption || `Foto ${index + 1} da empresa`} /> : <div className="business-photo-tile__fallback"><Images aria-hidden="true" /></div>}
+      <button type="button" className="business-photo-tile__media" onClick={() => onView(photo)} disabled={!source} aria-label={`Ampliar foto ${index + 1}${photo.caption ? `: ${photo.caption}` : ""}`}>
+      {source ? <img src={source} loading="lazy" alt={photo.caption || `Foto ${index + 1} da empresa`} /> : <div className="business-photo-tile__fallback"><Images aria-hidden="true" /></div>}
       <div className="business-photo-tile__shade" />
       {photo.is_featured ? <span className="business-photo-tile__badge"><Check aria-hidden="true" /> Capa</span> : null}
       <span className="business-photo-tile__position">{index + 1}</span>
-      </div>
+      </button>
       <div className="business-photo-tile__actions">
         {!photo.is_featured ? <button type="button" disabled={busy} onClick={() => onFeature(photo.id)} aria-label="Usar como foto de capa" title="Usar como capa"><Star aria-hidden="true" /></button> : null}
         <button type="button" disabled={busy || index === 0} onClick={() => onMove(index, -1)} aria-label="Mover foto para trás" title="Mover para trás"><ArrowLeft aria-hidden="true" /></button>
