@@ -46,9 +46,9 @@ export function CentralRoutes() {
                 path="empresas/:businessId"
                 element={<P.BusinessAdminGuard />}
               >
-                <Route path="editar" element={<P.EditarEmpresaPage />} />
                 <Route element={<P.BusinessDashboardShellPage />}>
                   <Route index element={<P.BusinessOverviewPage />} />
+                  <Route path="editar" element={<P.EditarEmpresaPage />} />
                   <Route path="dados" element={<P.BusinessDetailsPage />} />
                   <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
                   <Route

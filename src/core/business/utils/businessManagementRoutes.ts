@@ -44,6 +44,7 @@ export const businessManagementRoutes = {
 };
 
 export function getBusinessManagementSectionLabel(pathname: string) {
+  if (/\/editar$/.test(pathname)) return "Editar empresa";
   if (/\/dados$/.test(pathname)) return "Dados da empresa";
   if (/\/gastronomia(\/|$)/.test(pathname)) return "Gastronomia";
   if (/\/educacao(\/|$)/.test(pathname)) return "Educação";

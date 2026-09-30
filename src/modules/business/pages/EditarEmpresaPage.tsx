@@ -3,20 +3,18 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Building2, ExternalLink, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
-import { useBusinessById } from "@/core/business/hooks/useBusinessById";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useBusinessEdit, useBusinessImageUpload } from "@/modules/business/hooks/useBusinessEdit";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import type {
   UpdateBusinessInput,
   BusinessCategory,
-  Business,
 } from "@/core/business/types";
 import { StepProgress } from "@/modules/business/components/edit/StepProgress";
 import { BasicInfoStep } from "@/modules/business/components/edit/BasicInfoStep";
@@ -35,6 +33,8 @@ import {
   evaluateBusinessSlugSafety,
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
+import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
+import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 
 function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
   const value = String(rawCategory ?? "").trim().toLowerCase();
@@ -70,9 +70,9 @@ function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
 
 export default function EditarEmpresaPage() {
   const navigate = useNavigate();
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
   const { user } = useSessionContext();
-  const { setModuleContext, effectiveProfile } = useMultiProfileContext();
+  const { effectiveProfile } = useMultiProfileContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [slug, setSlug] = useState("");
   const [originalSlug, setOriginalSlug] = useState("");
@@ -84,17 +84,6 @@ export default function EditarEmpresaPage() {
   // Estados para preview de imagens
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [capaPreview, setCapaPreview] = useState<string>("");
-
-  useEffect(() => {
-    setModuleContext('business');
-    return () => setModuleContext(null);
-  }, [setModuleContext]);
-
-  const {
-    business,
-    isLoading: loadingBusiness,
-    isError,
-  } = useBusinessById(businessId);
 
   const { updateBusiness, isLoading: saving } = useBusinessEdit({
     onSuccess: () => {
@@ -165,7 +154,7 @@ export default function EditarEmpresaPage() {
       setCapaPreview(business.banner_url || "");
 
       // Inicializar slug com valor existente ou derivado do nome
-      const businessSlug = (business as Business & { slug?: string }).slug;
+      const businessSlug = business.slug;
       if (businessSlug) {
         setSlug(businessSlug);
         setOriginalSlug(businessSlug);
@@ -296,49 +285,32 @@ export default function EditarEmpresaPage() {
     );
   };
 
-  if (loadingBusiness) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (isError || !business) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Empresa não encontrada</h2>
-          <button
-            onClick={() => navigate(businessManagementRoutes.list())}
-            className="text-primary hover:underline"
-          >
-            Voltar para empresas
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="business-edit-page">
+    <div className="business-edit-page space-y-4">
       <header className="business-edit-heading">
-        <div className="business-edit-heading__inner">
-          <button
-            onClick={() => navigate(-1)}
-            type="button"
-            className="business-edit-back"
-            aria-label="Voltar"
-          >
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" /> Voltar
-          </button>
-          <p className="business-edit-context">{business.name}</p>
-          <h1>Editar empresa</h1>
-          <p>Atualize as informações que seus clientes encontram no Achegue-se.</p>
+        <div className="business-edit-heading__identity">
+          <span className="business-edit-heading__logo">
+            {business.logo_url ? (
+              <img src={business.logo_url} alt="" />
+            ) : (
+              <Building2 aria-hidden="true" />
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="business-edit-context">Editando</p>
+            <h1>Editar empresa</h1>
+            <p className="business-edit-business-name">{business.name}</p>
+          </div>
         </div>
+        {publicUrl ? (
+          <Link className="business-edit-public-link" to={publicUrl} target="_blank">
+            Ver página pública
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        ) : null}
       </header>
 
-      <div className="business-edit-content space-y-6">
+      <div className="business-edit-content space-y-4">
         <StepProgress currentStep={currentStep} totalSteps={3} />
 
         {/* Autoria explícita */}
@@ -346,8 +318,9 @@ export default function EditarEmpresaPage() {
           <ActiveProfileBadge profile={effectiveProfile} action="editando como" />
         )}
 
-        <form onSubmit={handleSave}>
-          {currentStep === 1 && (
+        <div className="business-edit-layout">
+          <form onSubmit={handleSave}>
+            {currentStep === 1 && (
             <>
               <BasicInfoStep
                 name={form.watch("name") || ""}
@@ -377,9 +350,9 @@ export default function EditarEmpresaPage() {
               />
               <IdentityChangeConfirmDialog {...slugConfirmProps} />
             </>
-          )}
+            )}
 
-          {currentStep === 2 && (
+            {currentStep === 2 && (
             <ContactStep
               phone={form.watch("phone") || ""}
               onPhoneChange={(value) => form.setValue("phone", value)}
@@ -401,9 +374,9 @@ export default function EditarEmpresaPage() {
               onBack={() => setCurrentStep(1)}
               onNext={handleNextStep2}
             />
-          )}
+            )}
 
-          {currentStep === 3 && (
+            {currentStep === 3 && (
             <>
               <ExtrasStep
                 category={form.watch("category")}
@@ -463,8 +436,45 @@ export default function EditarEmpresaPage() {
                 )}
               </div>
             </>
-          )}
-        </form>
+            )}
+          </form>
+
+          <aside className="business-edit-preview" aria-label="Pré-visualização da empresa">
+            <div className="business-edit-preview__title">
+              <Eye className="h-4 w-4" aria-hidden="true" />
+              <div>
+                <h2>Pré-visualização</h2>
+                <p>Como as informações principais aparecem para o público.</p>
+              </div>
+            </div>
+            <div className="business-edit-preview__card">
+              <div className="business-edit-preview__cover">
+                {capaPreview ? <img src={capaPreview} alt="" /> : null}
+              </div>
+              <div className="business-edit-preview__body">
+                <span className="business-edit-preview__avatar">
+                  {logoPreview ? <img src={logoPreview} alt="" /> : <Building2 aria-hidden="true" />}
+                </span>
+                <div className="min-w-0">
+                  <p className="business-edit-preview__category">
+                    {getBusinessCategoryLabel(form.watch("category") || business.category)}
+                  </p>
+                  <h3>{form.watch("name") || business.name}</h3>
+                </div>
+                <p className="business-edit-preview__description">
+                  {form.watch("description") || "Adicione uma descrição para apresentar a empresa."}
+                </p>
+                <div className="business-edit-preview__location">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  <span>{form.watch("address") || business.business_address || "Endereço não informado"}</span>
+                </div>
+              </div>
+            </div>
+            <p className="business-edit-preview__note">
+              A página pública é atualizada somente depois de salvar as alterações.
+            </p>
+          </aside>
+        </div>
       </div>
     </div>
   );
