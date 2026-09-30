@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Clock, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowRight, Clock, ExternalLink, Loader2 } from "lucide-react";
 import type { BusinessHours } from "@/core/business/types/Business";
 import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
 import { OpeningHoursEditor } from "@/core/business/components/settings/OpeningHoursEditor";
@@ -168,9 +168,14 @@ export function BusinessOpeningHoursView({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button type="submit" disabled={!changed || !valid || isSaving}>
+            <Button
+              type="submit"
+              className="business-hours-page__save"
+              disabled={!changed || !valid || isSaving}
+            >
               {isSaving && <Loader2 className="animate-spin" size={16} />}{" "}
               {isSaving ? "Salvando…" : "Salvar horários"}
+              {!isSaving && <ArrowRight size={16} aria-hidden="true" />}
             </Button>
           </footer>
         </form>

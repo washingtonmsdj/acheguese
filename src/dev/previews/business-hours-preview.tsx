@@ -79,7 +79,7 @@ export function Preview() {
                   type="button"
                   disabled={name !== "Horário"}
                   aria-current={name === "Horário" ? "page" : undefined}
-                  className={`business-dashboard-nav__item ${name === "Horário" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  className={`business-dashboard-nav__item ${name === "Horário" ? "bg-primary/10 text-primary ring-1 ring-primary/10" : "text-muted-foreground"}`}
                 >
                   <Icon size={18} aria-hidden="true" />
                   {name}
