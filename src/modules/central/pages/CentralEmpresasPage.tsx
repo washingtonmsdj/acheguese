@@ -6,6 +6,7 @@ import { BusinessModulesSection } from "@/core/profiles/components/hub/BusinessM
 import { useProfileHub } from "@/core/profiles/hooks/useProfileHub";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { navigateToSafeRedirect } from "@/shared/utils/safeRedirect";
+import "./CentralEmpresasPage.css";
 
 /**
  * CentralEmpresasPage
@@ -47,7 +48,7 @@ export default function CentralEmpresasPage({
 
   if (profileHub.loading) {
     return (
-      <div className="space-y-4">
+      <div className="central-business-page space-y-4" role="status" aria-label="Carregando suas empresas">
         <div className="space-y-2">
           <div className="h-7 w-40 animate-pulse rounded-md bg-muted" />
           <div className="h-4 w-72 max-w-full animate-pulse rounded-md bg-muted" />
@@ -65,19 +66,20 @@ export default function CentralEmpresasPage({
 
   if (!profileHub.loading && profileHub.businessModules.length === 0) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <Card className="max-w-md w-full rounded-lg">
+      <div className="central-business-page">
+        <header className="central-business-heading"><div><span className="central-business-eyebrow">Sua central</span><h1>Minhas empresas</h1><p>Cuide da presença do seu negócio no território.</p></div></header>
+        <Card className="central-business-empty">
           <CardContent className="space-y-4 p-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
               <Building2 className="h-8 w-8 text-primary" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Nenhuma empresa ativa</h3>
+              <h2 className="text-lg font-semibold">Seu negócio começa aqui</h2>
               <p className="text-sm text-muted-foreground">
                 Você ainda não possui empresas administradas. Crie sua primeira empresa para começar a usar o painel empresarial.
               </p>
             </div>
-            <Button onClick={handleCreateBusiness} className="w-full gap-2 sm:w-auto">
+            <Button onClick={handleCreateBusiness} className="central-business-create w-full gap-2 sm:w-auto">
               <Sparkles className="h-4 w-4" />
               Criar empresa
             </Button>
@@ -88,19 +90,21 @@ export default function CentralEmpresasPage({
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="central-business-page">
+      <header className="central-business-heading">
         <div>
-          <h1 className="text-2xl font-bold">Empresas</h1>
-          <p className="text-muted-foreground">Gerencie suas empresas e acesse os painéis operacionais.</p>
+          <span className="central-business-eyebrow">Sua central</span>
+          <h1>Minhas empresas</h1>
+          <p>Atualize seus dados, acompanhe seus negócios e veja suas páginas públicas.</p>
         </div>
-        <Button onClick={handleCreateBusiness} className="w-full gap-2 sm:w-auto">
+        <Button onClick={handleCreateBusiness} className="central-business-create gap-2">
           <Sparkles className="h-4 w-4" />
           Nova empresa
         </Button>
-      </div>
+      </header>
 
       <BusinessModulesSection
+        showCreateAction={false}
         businessModules={profileHub.businessModules}
         billingEnabled={billingEnabled}
         showOnboarding={profileHub.showBusinessOnboarding}

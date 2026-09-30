@@ -572,7 +572,7 @@ export default function CriarEmpresaPage({
 
           {currentStep === 4 && (
             <section className="bcr-card" aria-labelledby="bcr-photos-title">
-              <div className="bcr-card__heading"><span><Camera aria-hidden="true" /></span><div><h2 id="bcr-photos-title">4. Fotos</h2><p>Escolha imagens reais que ajudem as pessoas a reconhecer sua empresa. Você pode adicioná-las depois.</p></div></div>
+              <div className="bcr-card__heading"><span><Camera aria-hidden="true" /></span><div><small className="bcr-card__eyebrow">Etapa 4</small><h2 id="bcr-photos-title">Fotos</h2><p>Escolha imagens reais que ajudem as pessoas a reconhecer sua empresa. Você pode adicioná-las depois.</p></div></div>
               <div className="bcr-photo-grid">
                 <label className="bcr-photo-field">
                   <span>Logo da empresa <small>Opcional · imagem quadrada</small></span>
@@ -592,7 +592,7 @@ export default function CriarEmpresaPage({
           )}
           {currentStep === 5 && (
             <section className="bcr-card" aria-labelledby="bcr-review-title">
-              <div className="bcr-card__heading"><span><CheckCircle2 aria-hidden="true" /></span><div><h2 id="bcr-review-title">5. Revisar e publicar</h2><p>Confira as informações antes de cadastrar sua empresa.</p></div></div>
+              <div className="bcr-card__heading"><span><CheckCircle2 aria-hidden="true" /></span><div><small className="bcr-card__eyebrow">Etapa 5</small><h2 id="bcr-review-title">Revisar e publicar</h2><p>Confira as informações antes de cadastrar sua empresa.</p></div></div>
               <dl className="bcr-review">
                 <div><dt>Empresa</dt><dd>{form.watch("name")}</dd></div>
                 <div><dt>Categoria</dt><dd>{getBusinessCategoryLabel(selectedCategory)}</dd></div>

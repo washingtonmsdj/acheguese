@@ -16,6 +16,7 @@ import { businessManagementRoutes } from "@/core/business/utils/businessManageme
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface BusinessModulesSectionProps {
+  showCreateAction?: boolean;
   businessModules: readonly ProfileBusinessModuleSnapshot[];
   billingEnabled: boolean;
   showOnboarding: boolean;
@@ -44,6 +45,7 @@ function formatPlanLabel(value?: string | null): string {
 }
 
 export function BusinessModulesSection({
+  showCreateAction = true,
   businessModules,
   billingEnabled,
   showOnboarding,
@@ -60,10 +62,10 @@ export function BusinessModulesSection({
       title="Empresas e gestão"
       description="Gestão das empresas vinculadas, páginas públicas e recursos já habilitados."
       action={
-        <Button className="gap-2" onClick={onCreateBusiness}>
+        showCreateAction ? <Button className="gap-2" onClick={onCreateBusiness}>
           <Sparkles className="h-4 w-4" />
           Nova empresa
-        </Button>
+        </Button> : null
       }
     >
       {businessModules.length === 0 ? (
@@ -81,14 +83,14 @@ export function BusinessModulesSection({
         )
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="business-management-summary grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <SummaryCard label="Empresas" value={businessModules.length} description="Vinculadas ao perfil" />
             <SummaryCard label="Verificadas" value={verifiedCount} description="Com verificação ativa" />
             <SummaryCard label="Premium" value={premiumCount} description="Recursos já habilitados" />
             <SummaryCard label="QR pronto" value={qrReadyCount} description="Empresas com QR ativo" />
           </div>
 
-          <div className="space-y-4">
+          <div className="business-management-list space-y-4">
             {businessModules.map((business) => (
               <BusinessModuleCard
                 key={business.businessId}
@@ -115,7 +117,7 @@ function SummaryCard({
   description: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-background p-4">
+    <div className="business-management-stat rounded-2xl border border-border bg-background p-4">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-2 text-xl font-semibold text-foreground">{value}</p>
       <p className="mt-1 text-xs text-muted-foreground">{description}</p>
@@ -143,11 +145,11 @@ function BusinessModuleCard({
   ].filter(Boolean) as string[];
 
   return (
-    <div className="rounded-2xl border border-border bg-background p-4">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+    <div className="business-management-card rounded-2xl border border-border bg-background p-4">
+      <div className="business-management-card__body flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-base font-semibold text-foreground">{business.name}</h3>
+            <h3 className="break-words text-base font-semibold text-foreground">{business.name}</h3>
             {business.verified ? (
               <Badge
                 variant="outline"
@@ -193,7 +195,7 @@ function BusinessModuleCard({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 xl:justify-end">
+        <div className="business-management-actions flex flex-wrap gap-2 xl:justify-end">
           <Button size="sm" className="gap-1.5" onClick={() => onNavigate(business.dashboardUrl)}>
             Gerenciar empresa
           </Button>

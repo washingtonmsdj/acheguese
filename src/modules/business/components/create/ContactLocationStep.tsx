@@ -120,7 +120,7 @@ export function ContactLocationStep({
       <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <MapPin className="h-5 w-5" />
+            {mode === "contact" ? <Phone className="h-5 w-5" /> : <MapPin className="h-5 w-5" />}
           </span>
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
@@ -358,12 +358,12 @@ export function ContactLocationStep({
           </div>
         </div> : null}
 
-        <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row">
-          <Button type="button" variant="outline" onClick={onBack} className="gap-2 sm:flex-1">
+        <div className={mode === "all" ? "flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row" : "bcr-actions"}>
+          <Button type="button" variant="outline" onClick={onBack} className="flex-1 gap-2">
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
-          <Button type="button" onClick={onNext} className="gap-2 sm:flex-1">
+          <Button type="button" onClick={onNext} className="flex-1 gap-2">
             Continuar
             <ArrowRight className="h-4 w-4" />
           </Button>

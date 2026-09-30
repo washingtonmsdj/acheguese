@@ -227,7 +227,7 @@ export function BasicInfoStep({
           </div> : null}
         </div>
 
-        <div className="border-t border-border pt-6">
+        <div className={simpleMode ? "" : "border-t border-border pt-6"}>
           {!simpleMode ? <div className="mb-4">
             <h3 className="text-sm font-semibold text-foreground">Classificação</h3>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -362,7 +362,7 @@ export function BasicInfoStep({
           </div>
         </div>
 
-        <div className="border-t border-border pt-6">
+        <div className={simpleMode ? "" : "border-t border-border pt-6"}>
           <Label htmlFor="description">
             Descrição <span className="text-destructive">*</span>
           </Label>
@@ -372,8 +372,8 @@ export function BasicInfoStep({
             onChange={(event) => onDescriptionChange(event.target.value)}
             placeholder={effectiveDescriptionPlaceholder}
             maxLength={1000}
-            rows={5}
-            className="mt-2 min-h-32 rounded-xl"
+            rows={simpleMode ? 4 : 5}
+            className={`mt-2 rounded-xl ${simpleMode ? "min-h-24" : "min-h-32"}`}
           />
           <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
             <span className={errors.description ? "text-destructive" : ""}>
