@@ -8,10 +8,12 @@ import {
   BarChart3,
   Building2,
   CheckCircle2,
+  CircleAlert,
   Clock3,
   ImageIcon,
   MapPin,
   MessageCircle,
+  MinusCircle,
   Pencil,
   Settings,
   Star,
@@ -63,9 +65,21 @@ export default function BusinessOverviewPage() {
     staleTime: 30 * 1000,
     retry: false,
   });
-  const recentMessages = messagesQuery.data?.items
-    .filter((thread) => thread.participant_role === "business" && thread.business_profile_id === business.profile_id)
-    .slice(0, 3) ?? [];
+  const businessThreads = messagesQuery.data?.items.filter(
+    (thread) => thread.participant_role === "business" && thread.business_profile_id === business.profile_id,
+  ) ?? [];
+  const recentMessages = businessThreads.slice(0, 3);
+  const messageSummary = !isBusinessProfileActive
+    ? "Ative o perfil"
+    : messagesQuery.isPending
+      ? "Carregando…"
+      : messagesQuery.isError
+        ? "Indisponível"
+        : businessThreads.length === 0
+          ? "Nenhuma conversa"
+          : `${businessThreads.length}${messagesQuery.data?.nextCursor ? "+" : ""} ${businessThreads.length === 1 ? "conversa" : "conversas"}`;
+  const isPublic = business.status === "active" && Boolean(publicUrl);
+  const StatusIcon = business.status === "active" ? CheckCircle2 : business.status === "pending" ? Clock3 : business.status === "suspended" ? CircleAlert : MinusCircle;
 
   const openBusinessInbox = async () => {
     if (switchingProfile) return;
@@ -92,6 +106,12 @@ export default function BusinessOverviewPage() {
     { label: "Dados da empresa", detail: "Confira contato e localização", icon: Building2, to: businessManagementRoutes.dados(businessId) },
     { label: "Configurações", detail: "Gerencie o acesso à empresa", icon: Settings, to: businessManagementRoutes.configuracoes(businessId) },
   ];
+  const profileSuggestions = [
+    !business.description && "Adicione uma descrição do negócio",
+    !(business.business_address || business.address?.street) && "Informe o endereço da empresa",
+    !business.banner_url && "Adicione uma capa",
+    !business.logo_url && "Adicione um logo",
+  ].filter((suggestion): suggestion is string => Boolean(suggestion));
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-5">
@@ -119,8 +139,8 @@ export default function BusinessOverviewPage() {
               <span className="rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
                 {getBusinessCategoryLabel(business.category)}
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 font-semibold text-foreground">
-                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${business.status === "active" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : business.status === "pending" ? "bg-amber-500/10 text-amber-800 dark:text-amber-300" : "bg-muted text-foreground"}`}>
+                <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
                 {getStatusLabel(business.status)}
               </span>
             </div>
@@ -131,18 +151,22 @@ export default function BusinessOverviewPage() {
               </p>
             ) : null}
           </div>
-          {publicUrl ? (
-            <Link to={publicUrl} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/30 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5">
+          {isPublic ? (
+            <Link to={publicUrl!} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/30 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5">
               Ver página pública <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-          ) : null}
+          ) : <p className="max-w-52 text-xs leading-5 text-muted-foreground">{business.status === "active" ? "Link público ainda não disponível." : "A página pública ficará disponível quando a empresa estiver ativa."}</p>}
         </div>
       </section>
 
       <section aria-label="Resumo da empresa" className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
-        <SummaryCard icon={CheckCircle2} label="Situação" value={getStatusLabel(business.status)} />
+        <SummaryCard icon={StatusIcon} label="Situação" value={getStatusLabel(business.status)} />
         <SummaryCard icon={Star} label="Avaliações" value={hasReviews ? `${business.rating.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} · ${business.total_reviews}` : "Sem avaliações"} />
-        <SummaryCard icon={ImageIcon} label="Capa e logo" value={`${media.length} ${media.length === 1 ? "imagem" : "imagens"}`} />
+        {messagingAvailable && canActivateBusinessProfile ? (
+          <SummaryCard icon={MessageCircle} label="Mensagens" value={messageSummary} />
+        ) : (
+          <SummaryCard icon={ImageIcon} label="Capa e logo" value={`${media.length} ${media.length === 1 ? "imagem" : "imagens"}`} />
+        )}
         <SummaryCard icon={BarChart3} label="Visualizações · 30 dias" value={!businessDataId ? "Indisponível" : analyticsQuery.isPending ? "Carregando…" : analyticsQuery.isError ? "Indisponível" : String(analyticsQuery.data.views)} />
       </section>
 
@@ -151,21 +175,20 @@ export default function BusinessOverviewPage() {
           <h2 className="text-base font-bold text-foreground sm:text-lg">Ações rápidas</h2>
           <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">Mantenha sua presença no território atualizada.</p>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {quickActions.map((action) => (
-            <Link key={action.to} to={action.to} className="group flex min-h-20 items-center gap-3 rounded-xl border border-border bg-background p-3 transition-colors hover:border-primary/30 hover:bg-primary/[0.03] sm:min-h-28 sm:flex-col sm:items-start sm:p-4">
+            <Link key={action.to} to={action.to} className="group flex min-h-24 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background p-2 text-center transition-colors hover:border-primary/30 hover:bg-primary/[0.03] sm:min-h-28 sm:items-start sm:justify-start sm:p-4 sm:text-left">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><action.icon className="h-5 w-5" aria-hidden="true" /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-foreground">{action.label}</span>
-                <span className="mt-0.5 block text-xs leading-4 text-muted-foreground">{action.detail}</span>
+              <span className="min-w-0">
+                <span className="block text-xs font-semibold leading-4 text-foreground sm:text-sm">{action.label}</span>
+                <span className="mt-0.5 hidden text-xs leading-4 text-muted-foreground sm:block">{action.detail}</span>
               </span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-primary sm:hidden" aria-hidden="true" />
             </Link>
           ))}
         </div>
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-2">
+      <div className={`grid gap-4 ${profileSuggestions.length ? "xl:grid-cols-2" : ""}`}>
         <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
           <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><Building2 className="h-5 w-5 text-primary" aria-hidden="true" /> Informações principais</h2>
           <dl className="mt-4 space-y-3 text-sm">
@@ -175,13 +198,15 @@ export default function BusinessOverviewPage() {
           </dl>
           <Link to={businessManagementRoutes.dados(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-primary">Ver dados <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
         </section>
-        <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-          <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><Clock3 className="h-5 w-5 text-primary" aria-hidden="true" /> Próximos cuidados</h2>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            {business.description ? "Revise seus dados sempre que houver mudanças no negócio." : "Adicione uma descrição para ajudar as pessoas a conhecerem seu negócio."}
-          </p>
-          <Link to={businessManagementRoutes.edit(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-primary">Editar empresa <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
-        </section>
+        {profileSuggestions.length ? (
+          <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><CircleAlert className="h-5 w-5 text-primary" aria-hidden="true" /> Complete seu perfil</h2>
+            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+              {profileSuggestions.slice(0, 3).map((suggestion) => <li key={suggestion} className="flex items-start gap-2"><span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />{suggestion}</li>)}
+            </ul>
+            <Link to={businessManagementRoutes.edit(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-primary">Completar dados <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          </section>
+        ) : null}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -189,7 +214,7 @@ export default function BusinessOverviewPage() {
           <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
               <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><MessageCircle className="h-5 w-5 text-primary" aria-hidden="true" /> Mensagens recentes</h2>
-              <button type="button" onClick={() => void openBusinessInbox()} disabled={switchingProfile} className="min-h-10 shrink-0 text-xs font-semibold text-primary disabled:opacity-50 sm:text-sm">Ver todas <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></button>
+              <button type="button" onClick={() => void openBusinessInbox()} disabled={switchingProfile} className="min-h-10 shrink-0 text-xs font-semibold text-primary disabled:opacity-50 sm:text-sm">{isBusinessProfileActive ? "Ver todas" : "Ativar perfil"} <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></button>
             </div>
             {!isBusinessProfileActive ? (
               <p className="mt-3 text-sm leading-5 text-muted-foreground">Ative o perfil da empresa para ver e responder às conversas.</p>
