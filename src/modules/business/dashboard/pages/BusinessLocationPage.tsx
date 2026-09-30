@@ -6,6 +6,7 @@ import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/
 import { useBusinessEdit } from "@/modules/business/hooks/useBusinessEdit";
 import { BusinessManagementIdentity } from "../components/BusinessManagementIdentity";
 import { Button } from "@/shared/components/ui/button";
+import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import "./BusinessLocationPage.css";
 import type { BusinessManagementIdentityData } from "../components/BusinessManagementIdentity";
 
@@ -47,10 +48,18 @@ interface BusinessLocationViewProps {
 }
 
 export function BusinessLocationView({ business, publicUrl, address, changed, isSaving, error, onChange, onDiscard, onSave }: BusinessLocationViewProps) {
-  const [picker, setPicker] = useState(false);
   const hasPin = address.latitude !== undefined && address.longitude !== undefined;
+  const updateAddress = (next: Address) => {
+    const locatorChanged = ["street", "number", "postal_code", "neighborhood", "city", "state"]
+      .some((field) => next[field as keyof Address] !== address[field as keyof Address]);
+    const coordinatesChanged = next.latitude !== address.latitude || next.longitude !== address.longitude;
+    onChange(locatorChanged && !coordinatesChanged ? { ...next, latitude: undefined, longitude: undefined } : next);
+  };
   return <div className="business-location">
     <BusinessManagementIdentity business={business} publicUrl={publicUrl} />
+    <ol className="business-location__steps" aria-label="Etapas de edição da empresa">
+      {[{ label: "Dados básicos", mobile: "Dados" }, { label: "Fotos", mobile: "Fotos" }, { label: "Horário", mobile: "Horário" }, { label: "Localização", mobile: "Local" }, { label: "Produtos e serviços", mobile: "Serviços" }].map(({ label, mobile }, index) => <li key={label} aria-current={index === 3 ? "step" : undefined}><span>{index + 1}</span><small className="business-location__step-label">{label}</small><small className="business-location__step-label--mobile">{mobile}</small></li>)}
+    </ol>
     <div className="business-location__grid">
       <form className="business-location__panel" onSubmit={async (event) => {
         event.preventDefault();
@@ -59,18 +68,17 @@ export function BusinessLocationView({ business, publicUrl, address, changed, is
           await onSave();
         } catch { /* Existing mutation reports the error; retain the draft. */ }
       }}>
-        <header><MapPin aria-hidden="true" /><div><h1>Localização da empresa</h1><p>Confira o endereço e confirme o ponto exato para ajudar as pessoas a encontrar sua empresa.</p></div></header>
-        <AddressEditor className="business-location__fields" showHeading={false} address={address} onChange={onChange} features={{ cepLookup: true, coordinates: false }} />
+        <header><MapPin aria-hidden="true" /><div><h1>4. Localização</h1><p>Defina o endereço da sua empresa. Ele será exibido no mapa e ajudará as pessoas a encontrá-la.</p></div></header>
+        <AddressEditor className="business-location__fields" showHeading={false} showCompleteness={false} compactCepButton address={address} onChange={updateAddress} features={{ cepLookup: true, coordinates: false }} />
         <section className="business-location__pin">
-          <h2>Ponto no mapa</h2>
-          <p>{hasPin ? "Localização definida. Abra o mapa para conferir ou ajustar o marcador." : "O ponto da empresa ainda não foi confirmado. A referência territorial não será usada como localização precisa."}</p>
-          <Button type="button" variant="outline" onClick={() => setPicker(true)}><MapPin className="h-4 w-4 mr-2" />{hasPin ? "Ajustar ponto no mapa" : "Marcar localização"}</Button>
+          <h2>Ajuste o ponto no mapa</h2>
+          <p className="business-location__pin-note"><MapPin aria-hidden="true" /><span>{hasPin ? "Arraste o marcador ou toque no mapa para ajustar o local." : "O mapa inicia pela referência do território. Mova o pin para o endereço correto antes de confirmar."}</span></p>
+          <LocationPickerSheet open={false} onOpenChange={() => undefined} inline requireAdjustment={!hasPin} initialLat={address.latitude ?? business.location?.canonical_lat ?? undefined} initialLng={address.longitude ?? business.location?.canonical_lng ?? undefined} initialZoom={13.5} onConfirm={(latitude, longitude) => onChange({ ...address, latitude, longitude })} />
         </section>
         {error && <p role="alert">{error}</p>}
         <footer><Button type="button" variant="outline" disabled={!changed || isSaving} onClick={() => { if (window.confirm("Descartar as alterações de localização?")) onDiscard(); }}>Cancelar</Button><Button disabled={!changed || isSaving || !address.street?.trim()}>{isSaving ? "Salvando…" : "Salvar alterações"}</Button></footer>
       </form>
-      <aside className="business-location__panel"><header><Eye aria-hidden="true" /><div><h2>Prévia do endereço público</h2><p>Confira as informações antes de salvar.</p></div></header><strong>{business.name}</strong><p>{[address.street, address.number, address.complement].filter(Boolean).join(", ") || "Endereço não informado"}</p><p>{[address.neighborhood, address.city, address.state].filter(Boolean).join(" · ")}</p>{address.postal_code && <p>CEP {address.postal_code}</p>}<p className="business-location__note">{hasPin ? "Ponto definido no mapa." : "Sem ponto preciso confirmado."} As alterações só serão publicadas ao salvar.</p>{business.location?.name && <p>Território vinculado: {business.location.name}</p>}</aside>
+      <aside className="business-location__panel business-location__preview"><header><Eye aria-hidden="true" /><div><h2>Pré-visualização da página pública</h2><p>Veja como suas informações aparecem no mapa.</p></div></header><div className="business-location__preview-map"><LocationPickerSheet open={false} onOpenChange={() => undefined} inline readOnly compact initialLat={address.latitude ?? business.location?.canonical_lat ?? undefined} initialLng={address.longitude ?? business.location?.canonical_lng ?? undefined} initialZoom={13.5} onConfirm={() => undefined} /><div className="business-location__public-card"><span className="business-location__public-icon"><MapPin aria-hidden="true" /></span><div className="business-location__public-copy"><strong>{business.name}</strong>{business.category && <span className="business-location__preview-label">{getBusinessCategoryLabel(business.category)}</span>}<p>{[address.street, address.number].filter(Boolean).join(", ") || "Endereço não informado"}</p><p>{[address.neighborhood, address.city, address.state].filter(Boolean).join(" · ")}</p><small>{hasPin ? "Ponto confirmado no mapa" : "Prévia pela referência territorial"}</small></div></div></div><p className="business-location__preview-note">A prévia acompanha o ponto e o endereço confirmados antes de salvar.</p></aside>
     </div>
-    <LocationPickerSheet open={picker} onOpenChange={setPicker} initialLat={address.latitude ?? business.location?.canonical_lat ?? undefined} initialLng={address.longitude ?? business.location?.canonical_lng ?? undefined} onConfirm={(latitude, longitude) => onChange({ ...address, latitude, longitude })} />
   </div>;
 }

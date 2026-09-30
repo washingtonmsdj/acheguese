@@ -38,6 +38,8 @@ interface AddressEditorProps {
   };
   className?: string;
   showHeading?: boolean;
+  showCompleteness?: boolean;
+  compactCepButton?: boolean;
 }
 
 export function AddressEditor({
@@ -50,6 +52,8 @@ export function AddressEditor({
   },
   className,
   showHeading = true,
+  showCompleteness = true,
+  compactCepButton = false,
 }: AddressEditorProps) {
   const [loading, setLoading] = useState(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -204,14 +208,16 @@ export function AddressEditor({
               type="button"
               onClick={searchCEP}
               disabled={loading || !address.postal_code}
-              className="gap-2"
+              aria-label="Buscar CEP"
+              variant={compactCepButton ? "outline" : undefined}
+              className={cn("gap-2", compactCepButton && "business-address-editor__cep-button")}
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <Search className="h-4 w-4" />
               )}
-              Buscar
+              <span>Buscar CEP</span>
             </Button>
           </div>
           {cepError && (
@@ -358,7 +364,7 @@ export function AddressEditor({
         </div>
       )}
 
-      {isAddressComplete ? (
+      {showCompleteness && (isAddressComplete ? (
         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-xs text-emerald-600 flex items-center gap-2">
           <Check className="h-4 w-4" />
           <span className="font-medium">Endereço completo</span>
@@ -370,7 +376,7 @@ export function AddressEditor({
             CEP, Rua, Número, Bairro, Cidade e Estado são obrigatórios
           </p>
         </div>
-      )}
+      ))}
     </div>
   );
 }

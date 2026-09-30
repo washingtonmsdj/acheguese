@@ -20,6 +20,11 @@ interface LocationPickerSheetProps {
   onConfirm: (lat: number, lng: number) => void;
   initialLat?: number;
   initialLng?: number;
+  inline?: boolean;
+  requireAdjustment?: boolean;
+  readOnly?: boolean;
+  compact?: boolean;
+  initialZoom?: number;
 }
 
 function resolvePickerPosition(initialLat?: number, initialLng?: number): [number, number] {
@@ -30,18 +35,20 @@ function resolvePickerPosition(initialLat?: number, initialLng?: number): [numbe
   return [MAP_DEFAULT_CENTER_LNGLAT[1], MAP_DEFAULT_CENTER_LNGLAT[0]];
 }
 
-export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat, initialLng }: LocationPickerSheetProps) {
+export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat, initialLng, inline = false, requireAdjustment = false, readOnly = false, compact = false, initialZoom = 16 }: LocationPickerSheetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<MapLibreMarker | null>(null);
   const [position, setPosition] = useState<[number, number]>(() => resolvePickerPosition(initialLat, initialLng));
   const [ready, setReady] = useState(false);
+  const [adjusted, setAdjusted] = useState(false);
 
   const handleGeolocationSuccess = useCallback((coords: GeolocationCoords) => {
     const { latitude: lat, longitude: lng } = coords;
     mapRef.current?.flyTo({ center: [lng, lat], zoom: 17, duration: 800 });
     markerRef.current?.setLngLat([lng, lat]);
     setPosition([lat, lng]);
+    setAdjusted(true);
   }, []);
 
   const { loading: locatingUser, requestLocation } = useRobustGeolocation({
@@ -50,7 +57,7 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
   });
 
   useEffect(() => {
-    if (!open) {
+    if (!open && !inline) {
       mapRef.current?.remove();
       mapRef.current = null;
       markerRef.current = null;
@@ -71,11 +78,12 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
           container: containerRef.current,
           style: DEFAULT_TILE_STYLE.styleUrl,
           center: [startLng, startLat],
-          zoom: 16,
+          zoom: initialZoom,
+          interactive: !readOnly,
           attributionControl: false,
         });
 
-        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+        if (!readOnly) map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
         map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
         map.on('load', () => {
@@ -88,21 +96,25 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
             'background:#0f766e',
             'border:3px solid #ffffff',
             'box-shadow:0 10px 24px rgba(15,118,110,0.35)',
-            'cursor:grab',
+            `cursor:${readOnly ? 'default' : 'grab'}`,
           ].join(';');
-          const marker = new maplibregl.Marker({ element: el, draggable: true, anchor: 'bottom' })
+          const marker = new maplibregl.Marker({ element: el, draggable: !readOnly, anchor: 'bottom' })
             .setLngLat([startLng, startLat])
             .addTo(map);
 
-          marker.on('dragend', () => {
-            const { lat, lng } = marker.getLngLat();
-            setPosition([lat, lng]);
-          });
+          if (!readOnly) {
+            marker.on('dragend', () => {
+              const { lat, lng } = marker.getLngLat();
+              setPosition([lat, lng]);
+              setAdjusted(true);
+            });
 
-          map.on('click', (event) => {
-            marker.setLngLat(event.lngLat);
-            setPosition([event.lngLat.lat, event.lngLat.lng]);
-          });
+            map.on('click', (event) => {
+              marker.setLngLat(event.lngLat);
+              setPosition([event.lngLat.lat, event.lngLat.lng]);
+              setAdjusted(true);
+            });
+          }
 
           markerRef.current = marker;
           setPosition([startLat, startLng]);
@@ -121,11 +133,29 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
       mapRef.current = null;
       markerRef.current = null;
     };
-  }, [open, initialLat, initialLng]);
+  }, [open, inline, initialLat, initialLng, readOnly, initialZoom]);
 
   const centerOnUser = useCallback(() => {
     void requestLocation({ useCache: false });
   }, [requestLocation]);
+
+  const mapSurface = (
+    <>
+      <div className={`relative w-full ${compact ? "h-[220px] min-h-[200px]" : "h-[220px] min-h-[210px] sm:h-[240px] lg:h-[260px]"}`}>
+        <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
+        {!readOnly && <Button size="icon" variant="secondary" className="absolute top-3 right-3 z-10 h-11 w-11 rounded-full shadow-lg" onClick={centerOnUser} disabled={locatingUser} aria-label="Usar minha localização atual">
+          {locatingUser ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Navigation className="h-4 w-4" aria-hidden="true" />}
+        </Button>}
+        {!ready && <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 z-20"><p className="text-sm text-muted-foreground animate-pulse">Carregando mapa...</p></div>}
+      </div>
+      {!readOnly && <div className="flex items-center gap-3 border-t bg-card px-4 py-3">
+        <p className="flex-1 min-w-0 truncate text-xs text-muted-foreground"><MapPin className="mr-1 inline h-3 w-3" />{position[0].toFixed(5)}, {position[1].toFixed(5)}</p>
+        <Button disabled={!ready || (requireAdjustment && !adjusted)} onClick={() => { onConfirm(position[0], position[1]); if (!inline) onOpenChange(false); }} size="sm" className="min-h-11 rounded-full px-5"><Check className="mr-1.5 h-4 w-4" />{inline ? "Confirmar ponto" : "Confirmar local"}</Button>
+      </div>}
+    </>
+  );
+
+  if (inline) return <section className="overflow-hidden rounded-xl border bg-card" aria-label={readOnly ? "Prévia da localização da empresa no mapa" : "Ajuste o ponto da empresa no mapa"}>{mapSurface}</section>;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -135,40 +165,7 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
           <SheetDescription className="text-xs">Arraste o pin ou toque no mapa para posicionar</SheetDescription>
         </SheetHeader>
 
-        <div className="relative flex-1 h-[calc(85vh-140px)]">
-          <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
-
-          <Button
-            size="icon"
-            variant="secondary"
-            className="absolute top-3 right-3 z-10 h-11 w-11 rounded-full shadow-lg"
-            onClick={centerOnUser}
-            disabled={locatingUser}
-            aria-label="Usar minha localização atual"
-          >
-            {locatingUser ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Navigation className="h-4 w-4" aria-hidden="true" />
-            )}
-          </Button>
-
-          {!ready && (
-            <div className="absolute inset-0 flex items-center justify-center bg-secondary/50 z-20">
-              <p className="text-sm text-muted-foreground animate-pulse">Carregando mapa...</p>
-            </div>
-          )}
-        </div>
-
-        <div className="px-4 py-3 border-t bg-card flex items-center gap-3">
-          <p className="flex-1 text-xs text-muted-foreground flex items-center gap-1 min-w-0 truncate">
-            <MapPin className="h-3 w-3 flex-shrink-0" />
-            {position[0].toFixed(5)}, {position[1].toFixed(5)}
-          </p>
-          <Button disabled={!ready} onClick={() => { onConfirm(position[0], position[1]); onOpenChange(false); }} size="sm" className="rounded-full gap-1.5 px-5">
-            <Check className="h-4 w-4" />Confirmar local
-          </Button>
-        </div>
+        {mapSurface}
       </SheetContent>
     </Sheet>
   );
