@@ -88,7 +88,7 @@ export default function BusinessDashboardShellPage() {
     },
     {
       label: "Desempenho",
-      mobileLabel: "Desempenho",
+      mobileLabel: "Métricas",
       to: businessManagementRoutes.analytics(businessId),
       icon: BarChart3,
     },
@@ -137,12 +137,12 @@ export default function BusinessDashboardShellPage() {
       </nav>
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
-        <aside aria-label="Navegação da empresa" className="min-w-0 self-start rounded-2xl border border-border bg-card p-2 lg:sticky lg:top-4">
+        <aside aria-label="Navegação da empresa" className="min-w-0 self-start rounded-2xl border border-border bg-card p-1.5 shadow-sm sm:p-2 lg:sticky lg:top-4 lg:shadow-none">
           <div className="hidden px-3 pb-3 pt-2 lg:block">
             <p className="text-sm font-bold text-foreground">Central da empresa</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">Gerencie sua presença no território.</p>
           </div>
-          <nav className="flex snap-x snap-mandatory gap-1 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+          <nav className="flex snap-x snap-mandatory gap-1.5 overflow-x-auto overscroll-x-contain scroll-px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -150,14 +150,14 @@ export default function BusinessDashboardShellPage() {
                 end={item.to === basePath}
                 className={({ isActive }) =>
                   [
-                    "flex min-h-14 w-[5.35rem] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-semibold sm:min-h-11 sm:w-auto sm:flex-row sm:gap-2 sm:px-3 sm:text-sm lg:w-full lg:justify-start",
+                    "flex min-h-14 w-[5rem] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-xl px-1.5 py-2 text-[11px] font-bold transition-all sm:min-h-11 sm:w-auto sm:flex-row sm:gap-2 sm:px-3 sm:text-sm lg:w-full lg:justify-start",
                     isActive
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/15"
-                      : "text-foreground hover:bg-muted",
+                      ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/20 lg:bg-primary/10 lg:text-primary lg:shadow-none"
+                      : "text-foreground hover:bg-muted active:bg-muted",
                   ].join(" ")
                 }
               >
-                <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <item.icon className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
                 <span className="sm:hidden">{item.mobileLabel}</span>
                 <span className="hidden sm:inline">{item.label}</span>
               </NavLink>
