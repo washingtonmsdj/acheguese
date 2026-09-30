@@ -3,16 +3,17 @@
 .bcr-hero{position:relative;overflow:hidden;background:#12383a url('/images/home/achegue-se-community-hero-v1.webp') center 52%/cover;color:#fff}
 .bcr-hero__territory-image{position:absolute;inset:0;z-index:0;background-position:center 52%;background-size:cover}
 .bcr-hero:before{position:absolute;inset:0;z-index:1;content:"";background:linear-gradient(90deg,rgba(4,29,31,.9),rgba(4,29,31,.55) 60%,rgba(4,29,31,.25))}
-.bcr-hero__inner{position:relative;z-index:2;width:min(100% - 3rem,104rem);margin:auto;padding:1.4rem 0 2rem}
-.bcr-back{display:inline-flex;min-height:2.75rem;align-items:center;gap:.4rem;border:0;background:transparent;color:#fff;font-size:.8rem;font-weight:700;cursor:pointer}
+.bcr-hero__inner{position:relative;z-index:2;width:min(100% - 3rem,82rem);margin:auto;padding:1.2rem 0 1.7rem}
+.bcr-back{display:inline-flex;max-width:100%;min-height:2.75rem;align-items:center;gap:.4rem;border:0;background:transparent;color:#fff;font-size:.8rem;font-weight:700;text-align:left;cursor:pointer}
+.bcr-back span{min-width:0;overflow-wrap:anywhere}
 .bcr-back svg,.bcr-hero__eyebrow svg{width:1rem;height:1rem}
 .bcr-hero__eyebrow{display:flex;align-items:center;gap:.4rem;margin:.55rem 0 .3rem;font-size:.75rem;font-weight:800}
 .bcr-hero h1{margin:0;font-size:clamp(2rem,3.4vw,3rem);font-weight:800;line-height:1.12;letter-spacing:-.04em}
 .bcr-hero__inner>p:last-child{max-width:39rem;margin:.65rem 0 0;color:#edf5f4;font-size:clamp(.875rem,1.2vw,1rem);line-height:1.5}
-.bcr-layout{width:min(100% - 3rem,104rem);margin:auto;padding:1.4rem 0 3rem}
-.bcr-main{display:grid;max-width:92rem;grid-template-columns:minmax(0,1fr) minmax(17rem,21rem);gap:clamp(1rem,2vw,1.75rem);align-items:start;margin-inline:auto}
+.bcr-layout{width:min(100% - 3rem,82rem);margin:auto;padding:1.25rem 0 3rem}
+.bcr-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(17rem,21rem);gap:clamp(1rem,2vw,1.5rem);align-items:start}
 .bcr-form-column,.bcr-form-column form{min-width:0}
-.bcr-steps{max-width:92rem;margin:0 auto 1.4rem}
+.bcr-steps{margin:0 0 1.25rem}
 .bcr-steps__mobile-label{display:none}
 .bcr-steps__track{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.55rem}
 .bcr-step{min-width:0;color:#60777a}
@@ -47,13 +48,13 @@
 .bcr-photo-button{display:inline-flex;align-items:center;gap:.4rem;color:var(--bcr-teal);font-size:.75rem}
 .bcr-photo-button svg{width:1rem;height:1rem}
 .bcr-actions{display:flex;justify-content:space-between;gap:.7rem;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e4eae8}
-.bcr-actions button{min-width:0;min-height:2.75rem;border-radius:999px;padding-inline:1.2rem}
+.bcr-actions button{min-width:0;min-height:2.75rem;height:auto;border-radius:999px;padding:.65rem 1.2rem;line-height:1.3;white-space:normal}
 .bcr-actions button:last-child{background:var(--bcr-yellow);color:var(--bcr-ink);font-weight:800}
 .bcr-actions button svg{width:1rem;height:1rem;margin-left:.3rem}
 .bcr-review{margin:0}
 .bcr-review>div{display:grid;grid-template-columns:8.5rem minmax(0,1fr);gap:.8rem;padding:.75rem 0;border-bottom:1px solid #edf1f0}
 .bcr-review dt{color:#60777a;font-size:.75rem}
-.bcr-review dd{min-width:0;margin:0;font-size:.84rem;font-weight:700;overflow-wrap:anywhere}
+.bcr-review dd{min-width:0;margin:0;font-size:.84rem;font-weight:700;line-height:1.55;overflow-wrap:anywhere}
 .bcr-review-note{margin:1rem 0 0;color:#60777a;font-size:.78rem}
 .bcr-advanced{margin-top:.75rem;border:1px solid #dfe6e4;border-radius:.75rem;background:#fff;padding:.8rem 1rem}
 .bcr-advanced summary{color:var(--bcr-teal);font-size:.78rem;font-weight:800;cursor:pointer}
@@ -82,13 +83,14 @@
   .bcr-photo-grid{grid-template-columns:1fr}
   .bcr-review>div{grid-template-columns:5.5rem minmax(0,1fr)}
   .bcr-actions button{flex:1}
+  .bcr-back{font-size:.76rem}
   .bcr-step-panel>div:first-child,.bcr-step-panel>div:last-child{padding:1rem}
 }
 @media(max-width:360px){
   .bcr-card__heading>span{width:2.4rem;height:2.4rem}
   .bcr-card h2{font-size:1rem}
   .bcr-actions button{padding-inline:.6rem;font-size:.8rem}
-  .bcr-actions button:last-child{flex:1.35;white-space:nowrap}
+  .bcr-actions button:last-child{flex:1.35}
   .bcr-actions button:last-child svg{display:none}
   .bcr-review>div{grid-template-columns:4.8rem minmax(0,1fr);gap:.5rem}
 }

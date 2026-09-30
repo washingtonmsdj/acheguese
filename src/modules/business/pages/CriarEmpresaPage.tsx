@@ -3,7 +3,7 @@
  */
 
 import { type FormEvent, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import { ArrowLeft, AlertCircle, ArrowRight, Camera, CheckCircle2, ImagePlus, MapPin, Store, Upload } from "lucide-react";
@@ -141,7 +141,6 @@ export default function CriarEmpresaPage({
   enabledVerticalKeys = [],
 }: CriarEmpresaPageProps) {
   const navigate = useNavigate();
-  const pageLocation = useLocation();
   const { verticalSlug } = useParams<{ verticalSlug?: string }>();
   const [searchParams] = useSearchParams();
   const { setModuleContext, effectiveProfile } = useMultiProfileContext();
@@ -413,8 +412,7 @@ export default function CriarEmpresaPage({
   };
 
   const handleCancel = () => {
-    if (pageLocation.key === "default") navigate("/empresas");
-    else navigate(-1);
+    navigate(businessManagementRoutes.list());
   };
 
   return (
@@ -423,8 +421,11 @@ export default function CriarEmpresaPage({
       <header className="bcr-hero">
         {territorySlug ? <div className="bcr-hero__territory-image" style={{ backgroundImage: `url(/territory/heroes/${territorySlug}.jpg)` }} aria-hidden="true" /> : null}
         <div className="bcr-hero__inner">
-          <button type="button" className="bcr-back" onClick={handleCancel}><ArrowLeft aria-hidden="true" /> Voltar</button>
-          <p className="bcr-hero__eyebrow"><Store aria-hidden="true" /> Para quem empreende no bairro</p>
+          <button type="button" className="bcr-back" onClick={handleCancel}>
+            <ArrowLeft aria-hidden="true" />
+            <span>Voltar às empresas</span>
+          </button>
+          <p className="bcr-hero__eyebrow"><Store aria-hidden="true" /> {territoryLabel ? "Seu negócio no território" : "Para quem empreende"}</p>
           <h1>{createVertical?.createCopy.title ?? "Cadastrar empresa"}</h1>
           <p>Divulgue seu negócio{territoryLabel ? ` em ${territoryLabel}` : " no Achegue-se"} e conecte-se com mais pessoas da sua comunidade.</p>
         </div>
@@ -453,7 +454,7 @@ export default function CriarEmpresaPage({
           {currentStep === 1 && (
             <>
               <BasicInfoStep
-                contextTitle={createVertical ? "Identidade da instituicao" : undefined}
+                contextTitle={createVertical ? "Identidade da instituição" : undefined}
                 contextDescription={createVertical?.createCopy.subtitle}
                 categoryLocked={Boolean(createVertical)}
                 categoryLockedHelp={createVertical?.createCopy.categoryLockedHelp}
