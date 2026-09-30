@@ -5,6 +5,7 @@ import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
 import type { BusinessHours } from "@/core/business/types/Business";
+import { getScheduleError } from "@/core/business/utils/openingHoursPresentation";
 import "./OpeningHoursEditor.css";
 
 type DaySchedule = Partial<BusinessHours[string]>;
@@ -13,8 +14,6 @@ interface OpeningHoursEditorProps {
   onChange: (hours: OpeningHoursEditorProps["hours"]) => void;
   className?: string;
 }
-const validTime = (value?: string) =>
-  Boolean(value && /^([01]\d|2[0-3]):[0-5]\d$/.test(value));
 
 export function OpeningHoursEditor({
   hours,
@@ -35,8 +34,8 @@ export function OpeningHoursEditor({
           : schedule.closed
             ? "closed"
             : "hours";
-        const complete =
-          validTime(schedule?.open) && validTime(schedule?.close);
+        const error = getScheduleError(schedule);
+        const complete = Boolean(schedule && !schedule.closed && !error);
         const changeTime = (field: "open" | "close", value: string) =>
           onChange({
             ...hours,
@@ -79,6 +78,10 @@ export function OpeningHoursEditor({
                       type="time"
                       value={schedule?.open ?? ""}
                       required
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={
+                        error ? `${id}-${day}-error` : undefined
+                      }
                       onChange={(event) =>
                         changeTime("open", event.target.value)
                       }
@@ -91,15 +94,23 @@ export function OpeningHoursEditor({
                       type="time"
                       value={schedule?.close ?? ""}
                       required
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={
+                        error ? `${id}-${day}-error` : undefined
+                      }
                       onChange={(event) =>
                         changeTime("close", event.target.value)
                       }
                     />
                   </label>
                 </div>
-                {!complete && (
-                  <p className="opening-hours-editor__hint">
-                    Preencha abertura e fechamento.
+                {error && (
+                  <p
+                    id={`${id}-${day}-error`}
+                    className="opening-hours-editor__hint opening-hours-editor__error"
+                    role="status"
+                  >
+                    {error}
                   </p>
                 )}
                 <Button

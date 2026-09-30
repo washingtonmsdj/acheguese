@@ -7,10 +7,13 @@ import { OpeningHoursEditor } from "@/core/business/components/settings/OpeningH
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { useBusinessEdit } from "@/modules/business/hooks/useBusinessEdit";
 import { Button } from "@/shared/components/ui/button";
+import {
+  getScheduleError,
+  getSchedulePreview,
+} from "@/core/business/utils/openingHoursPresentation";
 import "./BusinessOpeningHoursPage.css";
 
 type DraftHours = Parameters<typeof OpeningHoursEditor>[0]["hours"];
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 // Normalize order only; do not fabricate schedules for missing days.
 function scheduleKey(hours: DraftHours) {
@@ -31,16 +34,8 @@ export default function BusinessOpeningHoursPage() {
   const hours = draft ?? business.horario_funcionamento ?? {};
   const changed =
     scheduleKey(hours) !== scheduleKey(business.horario_funcionamento ?? {});
-  const valid = WEEK_DAYS.every((day) => {
-    const value = hours[day];
-    return (
-      !value ||
-      value.closed ||
-      (timePattern.test(value.open ?? "") &&
-        timePattern.test(value.close ?? "") &&
-        value.open !== value.close)
-    );
-  });
+  const invalidDays = WEEK_DAYS.filter((day) => getScheduleError(hours[day]));
+  const valid = invalidDays.length === 0;
   const edit = useBusinessEdit({ onSuccess: () => setDraft(null) });
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -80,14 +75,19 @@ export default function BusinessOpeningHoursPage() {
         )}
       </header>
       <div className="business-hours-page__layout">
-        <form onSubmit={submit} className="business-hours-page__form">
+        <form
+          onSubmit={submit}
+          className="business-hours-page__form"
+          aria-busy={edit.isLoading}
+        >
           <fieldset disabled={edit.isLoading}>
             <legend className="sr-only">Horários semanais</legend>
             <OpeningHoursEditor hours={hours} onChange={setDraft} />
           </fieldset>
           {!valid && (
             <p role="status" className="business-hours-page__error">
-              Preencha horários válidos e diferentes para abertura e fechamento.
+              Revise:{" "}
+              {invalidDays.map((day) => WEEK_DAY_LABELS[day]).join(", ")}.
             </p>
           )}
           <footer className="business-hours-page__actions">
@@ -124,15 +124,7 @@ export default function BusinessOpeningHoursPage() {
               return (
                 <div key={day}>
                   <dt>{WEEK_DAY_LABELS[day]}</dt>
-                  <dd>
-                    {!value
-                      ? "Não informado"
-                      : value.closed
-                        ? "Fechado"
-                        : value.open && value.close
-                          ? `${value.open} – ${value.close}`
-                          : "Em edição"}
-                  </dd>
+                  <dd>{getSchedulePreview(value)}</dd>
                 </div>
               );
             })}

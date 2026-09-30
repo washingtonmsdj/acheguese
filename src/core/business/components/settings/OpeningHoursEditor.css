@@ -63,6 +63,13 @@
   text-align: left;
   justify-content: flex-start;
 }
+.opening-hours-editor__error {
+  color: hsl(var(--destructive));
+}
+.opening-hours-editor__heading select:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
 @container (min-width: 560px) {
   .opening-hours-editor__day {
     display: grid;
