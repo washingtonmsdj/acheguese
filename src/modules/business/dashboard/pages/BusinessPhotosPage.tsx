@@ -11,6 +11,7 @@ import {
   Images,
   Loader2,
   MapPin,
+  MoreHorizontal,
   ShieldCheck,
   Sparkles,
   Star,
@@ -25,6 +26,7 @@ import type { BusinessGalleryPhoto } from "@/modules/business/dashboard/services
 import { resolveMediaAssetSource } from "@/shared/media/mediaAssetReference";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
 import "./BusinessPhotosPage.css";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -139,6 +141,8 @@ export default function BusinessPhotosPage() {
               <span>Adicione fotos reais da empresa. A primeira imagem será usada como capa da galeria.</span>
             </div>
           ) : (
+            <>
+            <p className="business-photo-help">Toque na imagem para ampliar. Use Organizar para definir a capa ou alterar a ordem.</p>
             <section aria-label="Galeria da empresa" className="business-photo-grid">
               {photos.map((photo, index) => (
                 <PhotoTile
@@ -156,6 +160,7 @@ export default function BusinessPhotosPage() {
                 />
               ))}
             </section>
+            </>
           )}
 
           <section className="business-photo-tips" aria-labelledby="photo-tips-title">
@@ -225,10 +230,15 @@ function PhotoTile({ photo, index, total, busy, onMove, onFeature, onRemove, onV
       <span className="business-photo-tile__position">{index + 1}</span>
       </button>
       <div className="business-photo-tile__actions">
-        {!photo.is_featured ? <button type="button" disabled={busy} onClick={() => onFeature(photo.id)} aria-label="Usar como foto de capa" title="Usar como capa"><Star aria-hidden="true" /></button> : null}
-        <button type="button" disabled={busy || index === 0} onClick={() => onMove(index, -1)} aria-label="Mover foto para trás" title="Mover para trás"><ArrowLeft aria-hidden="true" /></button>
-        <button type="button" disabled={busy || index === total - 1} onClick={() => onMove(index, 1)} aria-label="Mover foto para frente" title="Mover para frente"><ArrowRight aria-hidden="true" /></button>
-        <button type="button" disabled={busy} onClick={() => onRemove(photo.id)} aria-label="Remover foto" title="Remover foto"><Trash2 aria-hidden="true" /></button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild><button type="button" disabled={busy} aria-label={`Organizar foto ${index + 1}`}><MoreHorizontal aria-hidden="true" /><span>Organizar</span></button></DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="business-photo-menu">
+            <DropdownMenuItem disabled={busy || photo.is_featured} onSelect={() => onFeature(photo.id)}><Star aria-hidden="true" />{photo.is_featured ? "Esta é a capa" : "Usar como capa"}</DropdownMenuItem>
+            <DropdownMenuItem disabled={busy || index === 0} onSelect={() => onMove(index, -1)}><ArrowLeft aria-hidden="true" />Mover para antes</DropdownMenuItem>
+            <DropdownMenuItem disabled={busy || index === total - 1} onSelect={() => onMove(index, 1)}><ArrowRight aria-hidden="true" />Mover para depois</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <button type="button" disabled={busy} onClick={() => onRemove(photo.id)} aria-label={`Remover foto ${index + 1}`} title="Remover foto"><Trash2 aria-hidden="true" /></button>
       </div>
     </article>
   );
