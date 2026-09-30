@@ -100,7 +100,7 @@ export default function BusinessPhotosPage() {
           <p>Mostre ambientes, produtos e detalhes reais que ajudam as pessoas a reconhecer seu negócio.</p>
         </div>
         <div className="business-photos-heading__count" aria-label={`${photos.length} de ${gallery.maxPhotos} fotos`}>
-          <strong>{gallery.query.isPending ? "…" : photos.length} de {gallery.maxPhotos}</strong>
+          <strong>{gallery.query.isPending ? "…" : gallery.query.isError ? "—" : photos.length} de {gallery.maxPhotos}</strong>
           <span>fotos</span>
           <div><i style={{ width: `${progress}%` }} /></div>
         </div>
@@ -218,9 +218,10 @@ function PhotoTile({ photo, index, total, busy, onMove, onFeature, onRemove, onV
   return (
     <article className={`business-photo-tile ${photo.is_featured ? "is-featured" : ""}`}>
       <button type="button" className="business-photo-tile__media" onClick={() => onView(photo)} disabled={!source} aria-label={`Ampliar foto ${index + 1}${photo.caption ? `: ${photo.caption}` : ""}`}>
-      {source ? <img src={source} loading="lazy" alt={photo.caption || `Foto ${index + 1} da empresa`} /> : <div className="business-photo-tile__fallback"><Images aria-hidden="true" /></div>}
-      <div className="business-photo-tile__shade" />
+      {source ? <img src={source} loading="lazy" alt={photo.caption || `Foto ${index + 1} da empresa`} /> : <span className="business-photo-tile__fallback"><Images aria-hidden="true" /></span>}
+      <span className="business-photo-tile__shade" />
       {photo.is_featured ? <span className="business-photo-tile__badge"><Check aria-hidden="true" /> Capa</span> : null}
+      {photo.caption ? <span className="business-photo-tile__caption">{photo.caption}</span> : null}
       <span className="business-photo-tile__position">{index + 1}</span>
       </button>
       <div className="business-photo-tile__actions">
