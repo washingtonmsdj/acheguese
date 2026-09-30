@@ -10,7 +10,6 @@ import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
 import {
-  AUTH_PATHS,
   AUTH_QUERY_KEYS,
   buildLoginPath,
 } from "@/core/auth/constants/authFlow";
@@ -21,6 +20,7 @@ import {
   prepareGoogleSignup,
 } from "@/core/auth/utils/authJourney";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
   COMMUNITY_GUIDELINES_PATH,
   TERMS_OF_SERVICE_PATH,
@@ -83,6 +83,7 @@ export default function CadastroPage() {
   }, [location.state, searchParams]);
 
   const { form, loading, submit } = useCadastroForm(redirectTo);
+  const returnContext = useMemo(() => getAuthReturnContext(redirectTo), [redirectTo]);
   const turnstile = useAuthTurnstile();
   const usernameAvailability = useIdentityAvailability({
     entityType: "profile",
@@ -169,13 +170,13 @@ export default function CadastroPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <div className="auth-concept-canvas min-h-[100dvh]">
-        <AuthBrandHeader secondaryHref={AUTH_PATHS.login} secondaryLabel="Entrar" />
+      <div className="auth-concept-canvas flex min-h-[100dvh] flex-col">
+        <AuthBrandHeader secondaryHref={buildLoginPath(redirectTo)} secondaryLabel="Entrar" />
 
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[430px] px-6 pb-4 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
+          className="mx-auto w-full max-w-[430px] flex-1 px-6 pb-4 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
         >
           <section className="hidden lg:block" aria-label="Sobre o cadastro">
             <div className="max-w-[430px]">
@@ -212,6 +213,18 @@ export default function CadastroPage() {
             <h2 className="hidden font-heading text-[24px] font-extrabold tracking-[-0.035em] text-foreground lg:block">
               Criar minha conta
             </h2>
+
+            {redirectTo !== "/" ? (
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-muted px-3.5 py-2.5" role="status">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <AuthConceptIcon name="store" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] text-muted-foreground">Após concluir o acesso, você volta para</p>
+                  <p className="text-[13px] font-bold leading-snug text-foreground">{returnContext.label}</p>
+                </div>
+              </div>
+            ) : null}
 
             {googleAuthAvailable ? (
               <div className="hidden lg:block">

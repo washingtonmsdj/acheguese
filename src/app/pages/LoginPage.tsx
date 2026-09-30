@@ -316,16 +316,16 @@ export default function LoginPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <div className="auth-concept-canvas min-h-[100dvh]">
+      <div className="auth-concept-canvas flex min-h-[100dvh] flex-col">
         <AuthBrandHeader
-          secondaryHref={AUTH_PATHS.signup}
+          secondaryHref={buildSignupPath(redirectTo)}
           secondaryLabel="Criar conta"
         />
 
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto w-full max-w-[430px] px-6 pb-3 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
+          className="mx-auto w-full max-w-[430px] flex-1 px-6 pb-3 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
         >
           <section className="hidden lg:block" aria-label="Sobre sua conta">
             <div className="max-w-[430px]">
@@ -363,13 +363,13 @@ export default function LoginPage() {
             </div>
 
             {hasReturnContext ? (
-              <div className="mt-4 flex min-h-[58px] items-center gap-3 rounded-xl bg-muted px-3.5 py-2.5 lg:hidden">
+              <div className="mt-4 flex min-h-[58px] items-center gap-3 rounded-xl bg-muted px-3.5 py-2.5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <AuthConceptIcon name={returnContextIcon} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] text-muted-foreground">Você voltará para</p>
-                  <p className="truncate text-[13px] font-bold text-foreground">
+                  <p className="text-[13px] font-bold leading-snug text-foreground">
                     {returnContext.label}
                   </p>
                 </div>

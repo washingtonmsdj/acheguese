@@ -50,6 +50,10 @@ export function getAuthReturnContext(path: string): AuthReturnContext {
     return { label: "Comunidade", kind: "community" };
   }
 
+  if (pathname === "/empresas/cadastrar") {
+    return { label: "Cadastro da empresa", kind: "business" };
+  }
+
   const premiumBusinessMatch = pathname.match(/^\/p\/([^/]+)/);
   if (premiumBusinessMatch?.[1]) {
     const label = titleCaseSlug(premiumBusinessMatch[1]);
