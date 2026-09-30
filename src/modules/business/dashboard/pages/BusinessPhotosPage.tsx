@@ -1,4 +1,4 @@
-import { useMemo, useRef, type ChangeEvent, type DragEvent } from "react";
+import { useRef, type ChangeEvent, type DragEvent } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -71,7 +71,7 @@ export default function BusinessPhotosPage() {
     [reordered[index], reordered[target]] = [reordered[target], reordered[index]];
     gallery.reorder.mutate(reordered.map((photo) => photo.id));
   };
-  const previewThumbs = useMemo(() => photos.filter((photo) => photo.id !== featuredPhoto?.id).slice(0, 3), [featuredPhoto?.id, photos]);
+  const previewThumbs = photos.filter((photo) => photo.id !== featuredPhoto?.id).slice(0, 3);
 
   if (!businessDataId) {
     return (
