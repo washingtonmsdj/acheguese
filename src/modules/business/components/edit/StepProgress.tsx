@@ -10,10 +10,10 @@ const STEP_LABELS = ["Identidade", "Contato e local", "Apresentação"] as const
 export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
   return (
     <div
-      className="mb-6 rounded-[24px] border border-border bg-card p-3 sm:p-4"
+      className="business-edit-progress mb-6 rounded-[24px] border border-border bg-card p-3 sm:p-4"
       aria-label={`Etapa ${currentStep} de ${totalSteps}`}
     >
-      <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {Array.from({ length: totalSteps }, (_, index) => index + 1).map((step) => {
           const isCurrent = step === currentStep;
           const isCompleted = step < currentStep;
@@ -32,7 +32,7 @@ export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
               ].join(" ")}
               aria-current={isCurrent ? "step" : undefined}
             >
-              <div className="flex items-center gap-3">
+              <div className="business-edit-progress__item flex items-center gap-3">
                 <span
                   className={[
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold",
@@ -52,7 +52,7 @@ export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
                   </p>
                   <p
                     className={[
-                      "mt-0.5 truncate text-sm font-semibold",
+                      "mt-0.5 text-sm font-semibold",
                       isCurrent || isCompleted ? "text-foreground" : "text-muted-foreground",
                     ].join(" ")}
                   >

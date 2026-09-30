@@ -30,6 +30,7 @@ import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadg
 import { useIdentitySaveLogger } from "@/core/public-identity/hooks/useIdentitySaveLogger";
 import { BusinessCoverageSettings } from "@/modules/business/components/coverage";
 import { CATEGORY_CONFIGS } from "@/modules/business/config/categoryFilters";
+import "./EditarEmpresaPage.css";
 import {
   evaluateBusinessSlugSafety,
   isBusinessSlugSafetyBypassAllowed,
@@ -320,21 +321,24 @@ export default function EditarEmpresaPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-lg border-b">
-        <div className="flex items-center justify-between px-4 py-3">
+    <div className="business-edit-page">
+      <header className="business-edit-heading">
+        <div className="business-edit-heading__inner">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-1 text-sm text-muted-foreground"
+            type="button"
+            className="business-edit-back"
+            aria-label="Voltar"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" /> Voltar
           </button>
-          <h1 className="text-sm font-semibold font-display">Editar Empresa</h1>
-          <div className="w-6" />
+          <p className="business-edit-context">{business.name}</p>
+          <h1>Editar empresa</h1>
+          <p>Atualize as informações que seus clientes encontram no Achegue-se.</p>
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="business-edit-content space-y-6">
         <StepProgress currentStep={currentStep} totalSteps={3} />
 
         {/* Autoria explícita */}
