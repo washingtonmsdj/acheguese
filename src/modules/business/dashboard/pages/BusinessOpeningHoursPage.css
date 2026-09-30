@@ -1,0 +1,124 @@
+.business-hours-page {
+  min-width: 0;
+  color: hsl(var(--foreground));
+}
+.business-hours-page__heading {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  background: hsl(var(--card));
+}
+.business-hours-page__heading > svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 4px;
+  color: hsl(var(--primary));
+}
+.business-hours-page__heading > div {
+  flex: 1;
+  min-width: 0;
+}
+.business-hours-page__heading h1 {
+  margin: 4px 0;
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.business-hours-page__heading p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+  overflow-wrap: anywhere;
+}
+.business-hours-page__heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  color: hsl(var(--primary));
+  font-size: 13px;
+  font-weight: 600;
+}
+.business-hours-page__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+  margin-top: 16px;
+}
+.business-hours-page__form,
+.business-hours-page__preview {
+  min-width: 0;
+  padding: 16px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+}
+.business-hours-page__form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.business-hours-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid hsl(var(--border));
+}
+.business-hours-page__actions button {
+  min-height: 44px;
+  flex: 1;
+  height: auto;
+  white-space: normal;
+}
+.business-hours-page__preview h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.business-hours-page__preview p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+.business-hours-page__preview dl {
+  margin: 16px 0;
+}
+.business-hours-page__preview dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 13px;
+}
+.business-hours-page__preview dd {
+  margin: 0;
+  text-align: right;
+}
+.business-hours-page__error {
+  color: hsl(var(--destructive));
+  font-size: 13px;
+}
+@media (min-width: 1280px) {
+  .business-hours-page__layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+@media (max-width: 359px) {
+  .business-hours-page__form,
+  .business-hours-page__preview,
+  .business-hours-page__heading {
+    padding: 12px;
+  }
+}

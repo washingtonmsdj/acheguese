@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ComponentType } from "react";
+import { useEffect, useMemo, type ComponentType, type CSSProperties } from "react";
 import {
   NavLink,
   Outlet,
@@ -6,7 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { ArrowLeft, BarChart3, Images, Pencil, Settings, Store } from "lucide-react";
+import { ArrowLeft, BarChart3, Clock, Images, Pencil, Settings, Store } from "lucide-react";
 
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
@@ -87,6 +87,7 @@ export default function BusinessDashboardShellPage() {
       to: businessManagementRoutes.photos(businessId),
       icon: Images,
     },
+    { label: "Horário de funcionamento", mobileLabel: "Horário", to: businessManagementRoutes.hours(businessId), icon: Clock },
     {
       label: "Desempenho",
       mobileLabel: "Métricas",
@@ -143,7 +144,7 @@ export default function BusinessDashboardShellPage() {
             <p className="text-sm font-bold text-foreground">Central da empresa</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">Gerencie sua presença no território.</p>
           </div>
-          <nav aria-label="Seções da empresa" className="business-dashboard-nav">
+          <nav aria-label="Seções da empresa" className="business-dashboard-nav" style={{ "--business-nav-count": navItems.length } as CSSProperties}>
             {navItems.map((item) => (
               <NavLink
                 key={item.to}

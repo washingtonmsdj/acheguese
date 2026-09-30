@@ -110,6 +110,7 @@ export default function BusinessOverviewPage() {
   const quickActions = [
     { label: "Editar dados", detail: "Atualize as informações públicas", icon: Pencil, to: businessManagementRoutes.edit(businessId) },
     { label: "Fotos", detail: "Organize a galeria da empresa", icon: ImageIcon, to: businessManagementRoutes.photos(businessId) },
+    { label: "Horários", detail: "Defina os dias e horários de atendimento", icon: Clock3, to: businessManagementRoutes.hours(businessId) },
     { label: "Contato e localização", detail: "Confira os dados cadastrados", icon: MapPin, to: businessManagementRoutes.dados(businessId) },
     { label: "Configurações", detail: "Gerencie o acesso à empresa", icon: Settings, to: businessManagementRoutes.configuracoes(businessId) },
   ];
