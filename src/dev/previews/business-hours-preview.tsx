@@ -51,15 +51,21 @@ export function Preview() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex h-16 items-center justify-between border-b bg-card px-4 sm:px-8">
-        <span className="text-lg font-bold text-primary">achegue-se</span>
-        <span className="text-xs text-muted-foreground">
+        <span className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap text-lg font-bold text-primary">
+          <img
+            src="/images/logo-icon.png"
+            alt=""
+            className="h-7 w-7 object-contain"
+          />
+          achegue-se
+        </span>
+        <span className="max-w-32 text-right text-xs text-muted-foreground sm:max-w-none">
           Central da empresa · demonstração
         </span>
       </header>
       <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 xl:px-8">
         <p className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-5">
-          Prévia isolada com dados de exemplo. Usa o editor e o layout reais.
-          Alterações ficam apenas em memória e desaparecem ao recarregar.
+          Dados de exemplo. Alterações ficam apenas nesta prévia.
         </p>
         <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="min-w-0 self-start rounded-2xl border bg-card p-1.5 sm:p-2">

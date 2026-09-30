@@ -132,9 +132,10 @@ export function OpeningHoursEditor({
                       size="sm"
                       disabled={!complete}
                       className="opening-hours-editor__copy"
+                      aria-label="Aplicar este horário a todos os dias"
+                      title={`Copiar horário de ${WEEK_DAY_LABELS[day]} para todos os dias`}
                     >
-                      <Copy size={16} aria-hidden="true" /> Aplicar este horário
-                      a todos os dias
+                      <Copy size={18} aria-hidden="true" />
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="w-[calc(100%-2rem)] rounded-xl">

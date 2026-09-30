@@ -1,15 +1,20 @@
 .opening-hours-editor {
   display: grid;
-  gap: 12px;
+  gap: 4px;
   min-width: 0;
   container-type: inline-size;
 }
 .opening-hours-editor__day {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  column-gap: 8px;
+  row-gap: 10px;
   min-width: 0;
   padding: 12px 0;
   border-bottom: 1px solid hsl(var(--border));
 }
 .opening-hours-editor__heading {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,10 +36,10 @@
   font-size: 13px;
 }
 .opening-hours-editor__times {
+  grid-column: 1;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 10px;
+  gap: 8px;
 }
 .opening-hours-editor__times label {
   display: grid;
@@ -56,32 +61,48 @@
   color: hsl(var(--muted-foreground));
 }
 .opening-hours-editor__copy {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  width: 44px;
+  padding: 0;
   min-height: 44px;
   height: auto;
-  margin-top: 4px;
+  margin: 0;
   white-space: normal;
   text-align: left;
-  justify-content: flex-start;
+  justify-content: center;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-md);
+  color: hsl(var(--primary));
 }
 .opening-hours-editor__error {
+  grid-column: 1 / -1;
   color: hsl(var(--destructive));
 }
 .opening-hours-editor__heading select:focus-visible {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
 }
-@container (min-width: 560px) {
+@container (min-width: 640px) {
   .opening-hours-editor__day {
     display: grid;
-    grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr);
-    column-gap: 20px;
+    grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr) 44px;
+    column-gap: 16px;
     align-items: center;
   }
+  .opening-hours-editor__heading {
+    grid-column: 1;
+  }
   .opening-hours-editor__times {
+    grid-column: 2;
     margin-top: 0;
   }
-  .opening-hours-editor__copy,
+  .opening-hours-editor__copy {
+    grid-column: 3;
+    grid-row: 1;
+  }
   .opening-hours-editor__day > .opening-hours-editor__hint {
-    grid-column: 2;
+    grid-column: 2 / -1;
   }
 }
