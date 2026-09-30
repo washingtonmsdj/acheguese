@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, ExternalLink, Eye, MapPin } from "lucide-react";
+import { Building2, CheckCircle2, Clock3, ExternalLink, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
@@ -68,6 +68,19 @@ function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
   }
 }
 
+function getBusinessPublicationStatus(status: string) {
+  switch (status) {
+    case "active":
+      return { label: "Publicada", className: "is-published", Icon: CheckCircle2 };
+    case "pending":
+      return { label: "Em análise", className: "is-pending", Icon: Clock3 };
+    case "suspended":
+      return { label: "Suspensa", className: "is-pending", Icon: Clock3 };
+    default:
+      return { label: "Inativa", className: "is-pending", Icon: Clock3 };
+  }
+}
+
 export default function EditarEmpresaPage() {
   const navigate = useNavigate();
   const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
@@ -76,6 +89,8 @@ export default function EditarEmpresaPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [slug, setSlug] = useState("");
   const [originalSlug, setOriginalSlug] = useState("");
+  const publicationStatus = getBusinessPublicationStatus(business.status);
+  const PublicationStatusIcon = publicationStatus.Icon;
 
   // Refs para upload de imagens
   const logoRef = useRef<HTMLInputElement>(null);
@@ -297,9 +312,15 @@ export default function EditarEmpresaPage() {
             )}
           </span>
           <div className="min-w-0">
-            <p className="business-edit-context">Editando</p>
-            <h1>Editar empresa</h1>
-            <p className="business-edit-business-name">{business.name}</p>
+            <p className="business-edit-context">Editar empresa</p>
+            <h1>{business.name}</h1>
+            <div className="business-edit-heading__meta">
+              <span>{getBusinessCategoryLabel(business.category)}</span>
+              <span className={publicationStatus.className}>
+                <PublicationStatusIcon aria-hidden="true" />
+                {publicationStatus.label}
+              </span>
+            </div>
           </div>
         </div>
         {publicUrl ? (
