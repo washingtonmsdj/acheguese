@@ -10,6 +10,16 @@
     @media(max-width:980px){.shell{grid-template-columns:1fr}.side{display:none}.layout{grid-template-columns:1fr}.preview{display:none}.mobile-nav{display:flex;gap:6px;overflow:auto;margin-bottom:12px;padding:6px;background:#fff;border:1px solid #dfe8e6;border-radius:16px;box-shadow:0 4px 14px rgba(9,49,52,.05);scroll-snap-type:x mandatory;scroll-padding-inline:6px;scrollbar-width:none}.mobile-nav::-webkit-scrollbar{display:none}.mobile-nav a{display:flex;min-width:78px;min-height:56px;flex:0 0 auto;scroll-snap-align:start;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:7px 8px;border-radius:11px;color:#254f53;text-align:center;text-decoration:none;font-size:11px;font-weight:800;transition:.2s}.mobile-nav a span{font-size:17px;line-height:1}.mobile-nav a small{font-size:10px}.mobile-nav .active{background:#087f83;color:#fff;box-shadow:0 4px 12px rgba(8,127,131,.2)}}
     @media(max-width:600px){.topbar{height:58px;padding:0 14px}.brand{font-size:18px}.top-actions .pill{padding:9px 14px}.notice{margin:8px 12px 0}.shell{margin-top:8px;padding:0 10px 24px;gap:10px}.crumb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.identity{padding:11px 12px;border-radius:16px}.identity h1{font-size:19px}.identity .name{max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.identity>.secondary{width:42px;height:42px;padding:0;font-size:0}.identity>.secondary:after{content:'↗';font-size:18px}.steps{gap:5px;margin:10px 0;padding:7px;border-radius:15px}.step{flex-direction:column;gap:5px;padding:8px 4px;text-align:center;font-size:10px}.step b{width:28px;height:28px}.card{border-radius:16px}.form-head{padding:14px}.form-head h2{font-size:17px}.form-head p{font-size:11px}.fields{padding:14px;gap:14px}.upload{align-items:flex-start}.upload .logo{width:54px;height:54px}.field textarea{min-height:104px}.form-actions{position:sticky;bottom:0;margin:0 -14px -14px;padding:11px 14px calc(11px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);box-shadow:0 -8px 22px rgba(9,49,52,.08)}.primary,.secondary{min-height:44px}.mobile-nav{scroll-snap-type:x mandatory}.mobile-nav a{scroll-snap-align:start}}
   </style>
+  <link rel="stylesheet" href="/src/modules/business/dashboard/pages/BusinessDashboardNav.css" />
+  <style>
+    .central-mobile-navigation { display:none; }
+    @media(max-width:1023px) {
+      .central-mobile-navigation { display:block; margin-bottom:12px; padding:6px; border:1px solid #dfe8e6; border-radius:16px; background:#fff; }
+      .central-mobile-navigation a { color:#254f53; }
+      .central-mobile-navigation a[aria-current="page"] { background:#087f83; color:#fff; }
+      .central-mobile-navigation svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    }
+  </style>
 </head>
 <body>
   <div class="app">
@@ -19,7 +29,15 @@
       <aside class="side"><div class="side-head"><strong>Central da empresa</strong><span>Gerencie sua presença no território.</span></div><a href="#">⌂ Visão geral</a><a class="active" href="#">✎ Editar empresa</a><a href="#">▣ Dados da empresa</a><a href="#">▥ Desempenho</a><a href="#">⚙ Configurações</a></aside>
       <section class="content">
         <div class="crumb">← Minhas empresas / Escola Municipal Artur de Sales / Editar empresa</div>
-        <nav class="mobile-nav"><a href="#"><span>⌂</span><small>Visão</small></a><a class="active" href="#"><span>✎</span><small>Editar</small></a><a href="#"><span>▣</span><small>Dados</small></a><a href="#"><span>▥</span><small>Métricas</small></a><a href="#"><span>⚙</span><small>Ajustes</small></a></nav>
+        <div class="central-mobile-navigation">
+          <nav class="business-dashboard-nav" aria-label="Seções da empresa">
+            <a class="business-dashboard-nav__item" href="central-empresa-preview.html" aria-label="Visão geral"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/></svg><span>Visão</span></a>
+            <a class="business-dashboard-nav__item" href="editar-empresa-preview.html" aria-current="page" aria-label="Editar empresa"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-12 12-6 1 1-6zM13 6l5 5"/></svg><span>Editar</span></a>
+            <a class="business-dashboard-nav__item" href="#" aria-label="Dados da empresa"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span>Dados</span></a>
+            <a class="business-dashboard-nav__item" href="#" aria-label="Desempenho"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3v18h17M9 16v-5M14 16V7M19 16V4"/></svg><span>Métricas</span></a>
+            <a class="business-dashboard-nav__item" href="#" aria-label="Configurações"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>Ajustes</span></a>
+          </nav>
+        </div>
         <header class="identity"><div class="id-main"><span class="logo">▣</span><div><p class="eyebrow">Editar empresa</p><h1>Escola Municipal Artur de Sales</h1><p class="name">Educação · ✓ Publicada</p></div></div><button class="secondary">Ver página pública ↗</button></header>
         <div class="steps"><div class="step active"><b>1</b> Identidade</div><div class="step"><b>2</b> Contato e local</div><div class="step"><b>3</b> Apresentação</div></div>
         <div class="layout">
