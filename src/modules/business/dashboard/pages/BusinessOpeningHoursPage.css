@@ -12,6 +12,7 @@
   border: 1px solid hsl(var(--border));
   border-radius: 16px;
   background: hsl(var(--card));
+  margin-top: 16px;
 }
 .business-hours-page__heading > svg {
   flex: none;
@@ -161,6 +162,18 @@
   }
 }
 @media (max-width: 639px) {
+  .business-hours-page__heading {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    padding: 8px 0;
+    margin-top: 12px;
+  }
+  .business-hours-page__heading > svg {
+    background: transparent;
+    padding: 0;
+    margin-top: 2px;
+  }
   .business-hours-page__preview-heading button {
     display: grid;
     place-items: center;
@@ -187,8 +200,7 @@
   .business-hours-page__heading > svg {
     width: 20px;
     height: 20px;
-    padding: 10px;
-    margin: 0;
+    padding: 0;
   }
   .business-hours-page__heading p {
     font-size: var(--type-caption);
@@ -200,7 +212,7 @@
   }
   .business-hours-page__heading {
     gap: 10px;
-    padding: 14px;
+    padding: 8px 0;
   }
   .business-hours-page__form,
   .business-hours-page__preview {
@@ -222,8 +234,7 @@
 }
 @media (max-width: 359px) {
   .business-hours-page__form,
-  .business-hours-page__preview,
-  .business-hours-page__heading {
+  .business-hours-page__preview {
     padding: 12px;
   }
 }

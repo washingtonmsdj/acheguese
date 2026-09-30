@@ -1,13 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  ChevronDown,
-  Clock,
-  ExternalLink,
-  Eye,
-  Loader2,
-} from "lucide-react";
+import { ArrowRight, ChevronDown, Clock, Eye, Loader2 } from "lucide-react";
 import type { BusinessHours } from "@/core/business/types/Business";
 import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
 import { OpeningHoursEditor } from "@/core/business/components/settings/OpeningHoursEditor";
@@ -30,6 +22,10 @@ import {
   getSchedulePreview,
 } from "@/core/business/utils/openingHoursPresentation";
 import "./BusinessOpeningHoursPage.css";
+import {
+  BusinessManagementIdentity,
+  type BusinessManagementIdentityData,
+} from "@/modules/business/dashboard/components/BusinessManagementIdentity";
 
 type DraftHours = Parameters<typeof OpeningHoursEditor>[0]["hours"];
 
@@ -78,6 +74,7 @@ export default function BusinessOpeningHoursPage() {
   return (
     <BusinessOpeningHoursView
       businessName={business.name}
+      businessIdentity={business}
       publicUrl={publicUrl}
       hours={hours}
       changed={changed}
@@ -91,6 +88,7 @@ export default function BusinessOpeningHoursPage() {
 
 interface BusinessOpeningHoursViewProps {
   businessName: string;
+  businessIdentity?: BusinessManagementIdentityData;
   publicUrl: string | null;
   hours: DraftHours;
   changed: boolean;
@@ -103,6 +101,7 @@ interface BusinessOpeningHoursViewProps {
 /** Shared presentation used by the authenticated page and the isolated dev preview. */
 export function BusinessOpeningHoursView({
   businessName,
+  businessIdentity,
   publicUrl,
   hours,
   changed,
@@ -117,20 +116,18 @@ export function BusinessOpeningHoursView({
   const valid = invalidDays.length === 0;
   return (
     <div className="business-hours-page">
+      <BusinessManagementIdentity
+        business={businessIdentity ?? { name: businessName }}
+        publicUrl={publicUrl}
+      />
       <header className="business-hours-page__heading">
         <Clock aria-hidden="true" />
         <div>
-          <p>{businessName}</p>
           <h1>Horário de funcionamento</h1>
           <p>
             Defina quando sua empresa atende. Revise a prévia antes de salvar.
           </p>
         </div>
-        {publicUrl && (
-          <Link to={publicUrl}>
-            Ver página pública <ExternalLink size={16} aria-hidden="true" />
-          </Link>
-        )}
       </header>
       <div className="business-hours-page__layout">
         <form

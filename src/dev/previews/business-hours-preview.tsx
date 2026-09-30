@@ -100,6 +100,11 @@ export function Preview() {
             )}
             <BusinessOpeningHoursView
               businessName="Empresa de demonstração"
+              businessIdentity={{
+                name: "Empresa de demonstração",
+                category: "servicos",
+                status: "active",
+              }}
               publicUrl={null}
               hours={hours}
               changed={changed}

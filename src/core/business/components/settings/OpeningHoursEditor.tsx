@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { Copy } from "lucide-react";
+import { Copy, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
@@ -56,10 +56,56 @@ export function OpeningHoursEditor({
           <section
             key={day}
             className="opening-hours-editor__day"
+            data-mode={mode}
             aria-labelledby={`${id}-${day}`}
           >
             <div className="opening-hours-editor__heading">
               <h3 id={`${id}-${day}`}>{WEEK_DAY_LABELS[day]}</h3>
+              {schedule ? (
+                <div className="opening-hours-editor__mobile-state">
+                  {schedule.closed ? <span>Fechado</span> : null}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={!schedule.closed}
+                    aria-label={`Atende em ${WEEK_DAY_LABELS[day]}`}
+                    className="opening-hours-editor__switch"
+                    onClick={() =>
+                      onChange({
+                        ...hours,
+                        [day]: {
+                          open:
+                            schedule.closed &&
+                            schedule.open === "00:00" &&
+                            schedule.close === "00:00"
+                              ? ""
+                              : (schedule.open ?? ""),
+                          close:
+                            schedule.closed &&
+                            schedule.open === "00:00" &&
+                            schedule.close === "00:00"
+                              ? ""
+                              : (schedule.close ?? ""),
+                          closed: !schedule.closed,
+                        },
+                      })
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="opening-hours-editor__unset"
+                    aria-label={`Marcar ${WEEK_DAY_LABELS[day]} como não informado`}
+                    title="Marcar como não informado"
+                    onClick={() => {
+                      const next = { ...hours };
+                      delete next[day];
+                      onChange(next);
+                    }}
+                  >
+                    <X size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              ) : null}
               <select
                 aria-label={`Funcionamento de ${WEEK_DAY_LABELS[day]}`}
                 value={mode}
@@ -83,7 +129,9 @@ export function OpeningHoursEditor({
               <>
                 <div className="opening-hours-editor__times">
                   <label htmlFor={`${id}-${day}-open`}>
-                    <span className="opening-hours-editor__time-label">Abre às</span>
+                    <span className="opening-hours-editor__time-label">
+                      Abre às
+                    </span>
                     <Input
                       id={`${id}-${day}-open`}
                       type="time"
@@ -99,7 +147,9 @@ export function OpeningHoursEditor({
                     />
                   </label>
                   <label htmlFor={`${id}-${day}-close`}>
-                    <span className="opening-hours-editor__time-label">Fecha às</span>
+                    <span className="opening-hours-editor__time-label">
+                      Fecha às
+                    </span>
                     <Input
                       id={`${id}-${day}-close`}
                       type="time"
