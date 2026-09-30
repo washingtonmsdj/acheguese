@@ -50,7 +50,7 @@ export function getBusinessManagementSectionLabel(pathname: string) {
   if (/\/planos$/.test(pathname)) return "Planos";
   if (/\/anuncios$/.test(pathname)) return "Anuncios";
   if (/\/link-premium$/.test(pathname)) return "Link premium";
-  if (/\/analytics$/.test(pathname)) return "Analytics";
+  if (/\/analytics$/.test(pathname)) return "Desempenho";
   if (/\/configuracoes$/.test(pathname)) return "Configurações";
   return "Visão geral";
 }

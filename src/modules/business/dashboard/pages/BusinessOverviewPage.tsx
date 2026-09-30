@@ -174,7 +174,7 @@ export default function BusinessOverviewPage() {
         ) : (
           <SummaryCard icon={ImageIcon} label="Capa e logo" value={`${media.length} ${media.length === 1 ? "imagem" : "imagens"}`} />
         )}
-        <SummaryCard icon={BarChart3} label="Visualizações · 30 dias" value={!businessDataId ? "Indisponível" : analyticsQuery.isPending ? "Carregando…" : analyticsQuery.isError ? "Indisponível" : String(analyticsQuery.data.views)} />
+        <SummaryCard icon={BarChart3} label="Visualizações · 30 dias" value={!businessDataId ? "Indisponível" : analyticsQuery.isPending ? "Carregando…" : analyticsQuery.isError ? "Indisponível" : String(analyticsQuery.data.views)} to={businessManagementRoutes.analytics(businessId)} />
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
@@ -276,12 +276,14 @@ export default function BusinessOverviewPage() {
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, className = "" }: { icon: typeof Store; label: string; value: string; className?: string }) {
-  return <div className={`min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4 ${className}`}>
+function SummaryCard({ icon: Icon, label, value, className = "", to }: { icon: typeof Store; label: string; value: string; className?: string; to?: string }) {
+  const content = <>
     <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
     <p className="mt-2 text-xs text-muted-foreground">{label}</p>
     <p className="mt-0.5 break-words text-base font-bold leading-tight text-foreground sm:text-lg">{value}</p>
-  </div>;
+  </>;
+  const classes = `min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4 ${className}`;
+  return to ? <Link to={to} className={`${classes} transition-colors hover:border-primary/30 hover:bg-primary/[0.03]`}>{content}</Link> : <div className={classes}>{content}</div>;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {

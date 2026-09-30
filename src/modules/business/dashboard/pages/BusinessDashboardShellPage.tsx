@@ -6,7 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { Building2, Pencil, Settings, Store } from "lucide-react";
+import { BarChart3, Building2, Pencil, Settings, Store } from "lucide-react";
 
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
@@ -82,6 +82,11 @@ export default function BusinessDashboardShellPage() {
       label: "Dados da empresa",
       to: businessManagementRoutes.dados(businessId),
       icon: Building2,
+    },
+    {
+      label: "Desempenho",
+      to: businessManagementRoutes.analytics(businessId),
+      icon: BarChart3,
     },
     {
       label: "Configurações",
