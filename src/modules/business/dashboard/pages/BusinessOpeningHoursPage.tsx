@@ -195,7 +195,7 @@ export function BusinessOpeningHoursView({
               return (
                 <div key={day}>
                   <dt>{WEEK_DAY_LABELS[day]}</dt>
-                  <dd>{getSchedulePreview(value)}</dd>
+                  <dd data-state={!value ? "unknown" : value.closed ? "closed" : "open"}>{getSchedulePreview(value)}</dd>
                 </div>
               );
             })}

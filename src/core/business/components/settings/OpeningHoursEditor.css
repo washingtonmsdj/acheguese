@@ -8,9 +8,9 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 44px;
   column-gap: 8px;
-  row-gap: 10px;
+  row-gap: 8px;
   min-width: 0;
-  padding: 12px 0;
+  padding: 8px 0;
   border-bottom: 1px solid hsl(var(--border));
 }
 .opening-hours-editor__heading {
@@ -23,7 +23,8 @@
 .opening-hours-editor__heading h3 {
   margin: 0;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.35;
 }
 .opening-hours-editor__heading select {
   min-height: 44px;
@@ -31,8 +32,10 @@
   padding: 6px 8px;
   border: 1px solid hsl(var(--border));
   border-radius: 8px;
-  background: hsl(var(--background));
+  background: hsl(var(--card));
   color: hsl(var(--foreground));
+  border-radius: var(--radius-md);
+  background: hsl(var(--card));
   font-size: 13px;
 }
 .opening-hours-editor__times {
@@ -84,11 +87,11 @@
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
 }
-@container (min-width: 640px) {
+@container (min-width: 580px) {
   .opening-hours-editor__day {
     display: grid;
-    grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr) 44px;
-    column-gap: 16px;
+    grid-template-columns: minmax(240px, 1fr) minmax(200px, 1fr) 44px;
+    column-gap: 12px;
     align-items: center;
   }
   .opening-hours-editor__heading {
