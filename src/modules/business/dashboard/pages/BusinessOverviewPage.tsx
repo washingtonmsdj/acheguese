@@ -28,6 +28,7 @@ import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { getActiveMessagingProviderIds } from "@/app/config/messagingProviderScope";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
+import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
 
 function getStatusLabel(status: string) {
   switch (status) {
@@ -97,13 +98,19 @@ export default function BusinessOverviewPage() {
     navigate(messagingRoutes.inbox());
   };
   const media = [...new Set([business.banner_url, business.logo_url].filter((url): url is string => Boolean(url)))];
+  const businessHours = WEEK_DAYS.flatMap((day) => {
+    const schedule = business.horario_funcionamento?.[day];
+    if (!schedule) return [];
+    return [{ day, schedule }];
+  });
   const hasReviews = business.total_reviews > 0 && business.rating > 0;
   const locationLabel = [business.location?.name, business.business_city, business.business_state]
     .filter(Boolean)
     .join(" · ");
   const quickActions = [
     { label: "Editar dados", detail: "Atualize as informações públicas", icon: Pencil, to: businessManagementRoutes.edit(businessId) },
-    { label: "Dados da empresa", detail: "Confira contato e localização", icon: Building2, to: businessManagementRoutes.dados(businessId) },
+    { label: "Capa e logo", detail: "Atualize as imagens do perfil", icon: ImageIcon, to: businessManagementRoutes.edit(businessId) },
+    { label: "Contato e localização", detail: "Confira os dados cadastrados", icon: MapPin, to: businessManagementRoutes.dados(businessId) },
     { label: "Configurações", detail: "Gerencie o acesso à empresa", icon: Settings, to: businessManagementRoutes.configuracoes(businessId) },
   ];
   const profileSuggestions = [
@@ -175,7 +182,7 @@ export default function BusinessOverviewPage() {
           <h2 className="text-base font-bold text-foreground sm:text-lg">Ações rápidas</h2>
           <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">Mantenha sua presença no território atualizada.</p>
         </div>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {quickActions.map((action) => (
             <Link key={action.to} to={action.to} className="group flex min-h-24 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background p-2 text-center transition-colors hover:border-primary/30 hover:bg-primary/[0.03] sm:min-h-28 sm:items-start sm:justify-start sm:p-4 sm:text-left">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><action.icon className="h-5 w-5" aria-hidden="true" /></span>
@@ -243,13 +250,27 @@ export default function BusinessOverviewPage() {
             <Link to={businessManagementRoutes.edit(businessId)} className="inline-flex min-h-10 shrink-0 items-center gap-1 text-xs font-semibold text-primary sm:text-sm">Editar <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
           </div>
           {media.length ? (
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {media.map((photo, index) => <img key={photo} src={photo} alt={`${index === 0 && business.banner_url ? "Capa" : "Logo"} de ${business.name}`} className="aspect-[4/3] w-full rounded-xl object-cover" loading="lazy" />)}
+            <div className="mt-2 grid min-h-28 grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2">
+              {business.banner_url ? <img src={business.banner_url} alt={`Capa de ${business.name}`} className="aspect-[16/9] h-full w-full rounded-xl object-cover" loading="lazy" /> : <div className="flex min-h-28 items-center justify-center rounded-xl bg-muted text-xs text-muted-foreground">Sem capa</div>}
+              {business.logo_url ? <img src={business.logo_url} alt={`Logo de ${business.name}`} className="aspect-square h-full w-full rounded-xl bg-muted object-contain" loading="lazy" /> : <div className="flex min-h-28 items-center justify-center rounded-xl bg-muted text-xs text-muted-foreground">Sem logo</div>}
             </div>
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">Adicione capa e logo para identificar sua empresa.</p>
           )}
         </section>
+        {businessHours.length > 0 ? (
+          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
+            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><Clock3 className="h-5 w-5 text-primary" aria-hidden="true" /> Horário de funcionamento</h2>
+            <dl className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[minmax(0,1fr)_auto]">
+              {businessHours.map(({ day, schedule }) => (
+                <div key={day} className="flex min-w-0 items-center justify-between gap-3 border-b border-border/60 py-1 last:border-0 sm:col-span-2">
+                  <dt className="text-muted-foreground">{WEEK_DAY_LABELS[day]}</dt>
+                  <dd className="shrink-0 font-medium text-foreground">{schedule.closed ? "Fechado" : schedule.open && schedule.close ? `${schedule.open}–${schedule.close}` : "Não informado"}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ) : null}
       </div>
     </div>
   );
