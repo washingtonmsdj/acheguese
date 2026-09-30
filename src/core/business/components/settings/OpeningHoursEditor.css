@@ -1,0 +1,15 @@
+.opening-hours-editor { display: grid; gap: 12px; min-width: 0; container-type: inline-size; }
+.opening-hours-editor__day { min-width: 0; padding: 12px 0; border-bottom: 1px solid hsl(var(--border)); }
+.opening-hours-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.opening-hours-editor__heading h3 { margin: 0; font-size: 14px; font-weight: 600; }
+.opening-hours-editor__heading select { min-height: 44px; max-width: 160px; padding: 6px 8px; border: 1px solid hsl(var(--border)); border-radius: 8px; background: hsl(var(--background)); color: hsl(var(--foreground)); font-size: 13px; }
+.opening-hours-editor__times { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.opening-hours-editor__times label { display: grid; gap: 4px; min-width: 0; font-size: 12px; color: hsl(var(--muted-foreground)); }
+.opening-hours-editor__times input { width: 100%; min-width: 0; min-height: 44px; color: hsl(var(--foreground)); }
+.opening-hours-editor__hint { margin: 4px 0; font-size: 12px; line-height: 1.5; color: hsl(var(--muted-foreground)); }
+.opening-hours-editor__copy { min-height: 44px; height: auto; margin-top: 4px; white-space: normal; text-align: left; justify-content: flex-start; }
+@container (min-width: 560px) {
+  .opening-hours-editor__day { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr); column-gap: 20px; align-items: center; }
+  .opening-hours-editor__times { margin-top: 0; }
+  .opening-hours-editor__copy, .opening-hours-editor__day > .opening-hours-editor__hint { grid-column: 2; }
+}
