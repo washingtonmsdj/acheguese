@@ -302,7 +302,16 @@ export default function EditarEmpresaPage() {
 
   return (
     <div className="business-edit-page space-y-4">
-      <header className="business-edit-heading">
+      <header
+        className={`business-edit-heading${business.banner_url ? " has-cover" : ""}`}
+        style={
+          business.banner_url
+            ? {
+                backgroundImage: `linear-gradient(90deg, rgba(6, 43, 46, 0.9), rgba(6, 43, 46, 0.46)), url("${business.banner_url}")`,
+              }
+            : undefined
+        }
+      >
         <div className="business-edit-heading__identity">
           <span className="business-edit-heading__logo">
             {business.logo_url ? (
