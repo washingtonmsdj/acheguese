@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, Store } from "lucide-react";
@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import BusinessSEO from "@/core/business/components/seo/BusinessSEO";
 import { BusinessService } from "@/core/business/services/BusinessService";
+import { AnalyticsService } from "@/core/analytics/AnalyticsService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
 import { BusinessHoursService } from "@/core/business";
@@ -73,6 +74,16 @@ export default function EmpresaDetailLandingPage(
   });
   const snapshotBusiness = (snapshot?.institutional.business as BusinessExtended | undefined) ?? null;
   const institutionalBusinessDataId = snapshot?.identity.businessId ?? undefined;
+  const trackedBusinessViews = useRef(new Set<string>());
+
+  useEffect(() => {
+    if (!institutionalBusinessDataId || !snapshotBusiness) return;
+    if (activeProfile?.id === snapshotBusiness.profile_id) return;
+    if (trackedBusinessViews.current.has(institutionalBusinessDataId)) return;
+
+    trackedBusinessViews.current.add(institutionalBusinessDataId);
+    void AnalyticsService.trackPageView("business", institutionalBusinessDataId);
+  }, [activeProfile?.id, institutionalBusinessDataId, snapshotBusiness]);
   const { isFavorite, toggleFavorite } = useCanonicalBusinessFavorite(
     institutionalBusinessDataId,
   );

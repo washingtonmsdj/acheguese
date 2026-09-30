@@ -1,12 +1,17 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   ArrowRight,
   ArrowUpRight,
+  BarChart3,
   Building2,
   CheckCircle2,
   Clock3,
   ImageIcon,
   MapPin,
+  MessageCircle,
   Pencil,
   Settings,
   Star,
@@ -14,6 +19,11 @@ import {
 } from "lucide-react";
 
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { getBusinessAnalyticsSummary } from "@/core/business/services/business-analytics.service";
+import { businessDirectMessagingService } from "@/core/messaging/services/BusinessDirectMessagingService";
+import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
+import { getActiveMessagingProviderIds } from "@/app/config/messagingProviderScope";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 
@@ -29,7 +39,50 @@ function getStatusLabel(status: string) {
 
 export default function BusinessOverviewPage() {
   const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
-  const photos = business.fotos?.filter(Boolean) ?? [];
+  const navigate = useNavigate();
+  const { activeProfile, profiles, switchProfile } = useSessionContext();
+  const [switchingProfile, setSwitchingProfile] = useState(false);
+  const businessDataId = business.business_data_id;
+  const messagingAvailable = getActiveMessagingProviderIds().includes("business");
+  const isBusinessProfileActive = activeProfile?.id === business.profile_id;
+  const canActivateBusinessProfile = profiles.some((profile) => profile.id === business.profile_id);
+  const analyticsQuery = useQuery({
+    queryKey: ["business-overview-analytics", businessDataId, "month"],
+    queryFn: () => getBusinessAnalyticsSummary(businessDataId!, "month"),
+    enabled: Boolean(businessDataId),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const messagesQuery = useQuery({
+    queryKey: ["business-overview-messages", business.profile_id],
+    queryFn: () => businessDirectMessagingService.listConversationPreviews({
+      profileId: business.profile_id,
+      limit: 20,
+    }),
+    enabled: messagingAvailable && isBusinessProfileActive,
+    staleTime: 30 * 1000,
+    retry: false,
+  });
+  const recentMessages = messagesQuery.data?.items
+    .filter((thread) => thread.participant_role === "business" && thread.business_profile_id === business.profile_id)
+    .slice(0, 3) ?? [];
+
+  const openBusinessInbox = async () => {
+    if (switchingProfile) return;
+    if (!isBusinessProfileActive) {
+      setSwitchingProfile(true);
+      try {
+        await switchProfile(business.profile_id);
+      } catch {
+        toast.error("Não foi possível ativar o perfil da empresa.");
+        setSwitchingProfile(false);
+        return;
+      }
+      setSwitchingProfile(false);
+    }
+    navigate(messagingRoutes.inbox());
+  };
+  const media = [...new Set([business.banner_url, business.logo_url].filter((url): url is string => Boolean(url)))];
   const hasReviews = business.total_reviews > 0 && business.rating > 0;
   const locationLabel = [business.location?.name, business.business_city, business.business_state]
     .filter(Boolean)
@@ -86,10 +139,11 @@ export default function BusinessOverviewPage() {
         </div>
       </section>
 
-      <section aria-label="Resumo da empresa" className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-3">
+      <section aria-label="Resumo da empresa" className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
         <SummaryCard icon={CheckCircle2} label="Situação" value={getStatusLabel(business.status)} />
         <SummaryCard icon={Star} label="Avaliações" value={hasReviews ? `${business.rating.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} · ${business.total_reviews}` : "Sem avaliações"} />
-        <SummaryCard icon={ImageIcon} label="Fotos" value={`${photos.length} ${photos.length === 1 ? "foto" : "fotos"}`} className="col-span-2 xl:col-span-1" />
+        <SummaryCard icon={ImageIcon} label="Capa e logo" value={`${media.length} ${media.length === 1 ? "imagem" : "imagens"}`} />
+        <SummaryCard icon={BarChart3} label="Visualizações · 30 dias" value={!businessDataId ? "Indisponível" : analyticsQuery.isPending ? "Carregando…" : analyticsQuery.isError ? "Indisponível" : String(analyticsQuery.data.views)} />
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
@@ -127,6 +181,49 @@ export default function BusinessOverviewPage() {
             {business.description ? "Revise seus dados sempre que houver mudanças no negócio." : "Adicione uma descrição para ajudar as pessoas a conhecerem seu negócio."}
           </p>
           <Link to={businessManagementRoutes.edit(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-primary">Editar empresa <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+        </section>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        {messagingAvailable && canActivateBusinessProfile ? (
+          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><MessageCircle className="h-5 w-5 text-primary" aria-hidden="true" /> Mensagens recentes</h2>
+              <button type="button" onClick={() => void openBusinessInbox()} disabled={switchingProfile} className="min-h-10 shrink-0 text-xs font-semibold text-primary disabled:opacity-50 sm:text-sm">Ver todas <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></button>
+            </div>
+            {!isBusinessProfileActive ? (
+              <p className="mt-3 text-sm leading-5 text-muted-foreground">Ative o perfil da empresa para ver e responder às conversas.</p>
+            ) : messagesQuery.isPending ? (
+              <p className="mt-3 text-sm text-muted-foreground">Carregando conversas…</p>
+            ) : messagesQuery.isError ? (
+              <p className="mt-3 text-sm text-muted-foreground">Não foi possível carregar as conversas agora.</p>
+            ) : recentMessages.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">Nenhuma conversa recebida ainda.</p>
+            ) : (
+              <div className="mt-2 divide-y divide-border">
+                {recentMessages.map((thread) => (
+                  <Link key={thread.id} to={messagingRoutes.thread("business", thread.id)} className="flex min-w-0 items-center gap-3 py-3 hover:text-primary">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">{thread.counterparty_name.charAt(0).toLocaleUpperCase("pt-BR")}</span>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-foreground">{thread.counterparty_name}</span><span className="block truncate text-xs text-muted-foreground">{thread.last_message_text}</span></span>
+                    {thread.unread_count > 0 ? <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">{thread.unread_count}</span> : null}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        ) : null}
+        <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><ImageIcon className="h-5 w-5 text-primary" aria-hidden="true" /> Capa e logo</h2>
+            <Link to={businessManagementRoutes.edit(businessId)} className="inline-flex min-h-10 shrink-0 items-center gap-1 text-xs font-semibold text-primary sm:text-sm">Editar <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          </div>
+          {media.length ? (
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {media.map((photo, index) => <img key={photo} src={photo} alt={`${index === 0 && business.banner_url ? "Capa" : "Logo"} de ${business.name}`} className="aspect-[4/3] w-full rounded-xl object-cover" loading="lazy" />)}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">Adicione capa e logo para identificar sua empresa.</p>
+          )}
         </section>
       </div>
     </div>

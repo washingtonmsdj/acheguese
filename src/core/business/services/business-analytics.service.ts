@@ -70,8 +70,8 @@ async function getCounters(
   const result = await AnalyticsService.getMetrics(
     "business",
     businessId,
-    start.toISOString(),
-    end.toISOString(),
+    start.toISOString().slice(0, 10),
+    end.toISOString().slice(0, 10),
   );
 
   if (result.error) {
