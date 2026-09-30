@@ -6,7 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { ArrowLeft, BarChart3, Clock, Images, Pencil, Settings, Store } from "lucide-react";
+import { ArrowLeft, BarChart3, Clock, Images, MapPin, Pencil, Settings, Store } from "lucide-react";
 
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
@@ -88,6 +88,7 @@ export default function BusinessDashboardShellPage() {
       icon: Images,
     },
     { label: "Horário de funcionamento", mobileLabel: "Horário", to: businessManagementRoutes.hours(businessId), icon: Clock },
+    { label: "Localização", mobileLabel: "Local", to: businessManagementRoutes.location(businessId), icon: MapPin },
     {
       label: "Desempenho",
       mobileLabel: "Métricas",

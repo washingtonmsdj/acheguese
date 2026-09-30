@@ -76,6 +76,7 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
         });
 
         map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+        map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
         map.on('load', () => {
           if (disposed) return;
@@ -164,7 +165,7 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
             <MapPin className="h-3 w-3 flex-shrink-0" />
             {position[0].toFixed(5)}, {position[1].toFixed(5)}
           </p>
-          <Button onClick={() => { onConfirm(position[0], position[1]); onOpenChange(false); }} size="sm" className="rounded-full gap-1.5 px-5">
+          <Button disabled={!ready} onClick={() => { onConfirm(position[0], position[1]); onOpenChange(false); }} size="sm" className="rounded-full gap-1.5 px-5">
             <Check className="h-4 w-4" />Confirmar local
           </Button>
         </div>

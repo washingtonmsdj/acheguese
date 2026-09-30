@@ -5,6 +5,11 @@
   min-width: 0;
 }
 
+@media (max-width: 1023px) {
+  .business-dashboard-nav { display: flex; overflow-x: auto; scroll-snap-type: x proximity; }
+  .business-dashboard-nav__item { flex: 0 0 60px; scroll-snap-align: start; }
+}
+
 .business-dashboard-nav__item {
   display: flex;
   min-width: 0;
