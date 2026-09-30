@@ -83,7 +83,7 @@ export function OpeningHoursEditor({
               <>
                 <div className="opening-hours-editor__times">
                   <label htmlFor={`${id}-${day}-open`}>
-                    Abre às
+                    <span className="opening-hours-editor__time-label">Abre às</span>
                     <Input
                       id={`${id}-${day}-open`}
                       type="time"
@@ -99,7 +99,7 @@ export function OpeningHoursEditor({
                     />
                   </label>
                   <label htmlFor={`${id}-${day}-close`}>
-                    Fecha às
+                    <span className="opening-hours-editor__time-label">Fecha às</span>
                     <Input
                       id={`${id}-${day}-close`}
                       type="time"

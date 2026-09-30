@@ -91,6 +91,46 @@
   outline: 2px solid hsl(var(--primary));
   outline-offset: 2px;
 }
+@container (max-width: 579px) {
+  .opening-hours-editor__day {
+    row-gap: 6px;
+    padding-block: 10px;
+  }
+  .opening-hours-editor__heading h3 {
+    font-size: 13px;
+  }
+  .opening-hours-editor__heading select {
+    flex-basis: 145px;
+    max-width: 52%;
+    font-size: 12px;
+  }
+  .opening-hours-editor__times {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+  }
+  .opening-hours-editor__times::before {
+    content: "às";
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 12px;
+    color: hsl(var(--muted-foreground));
+  }
+  .opening-hours-editor__times label:first-child { grid-column: 1; grid-row: 1; }
+  .opening-hours-editor__times label:last-child { grid-column: 3; grid-row: 1; }
+  .opening-hours-editor__time-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .opening-hours-editor__times input {
+    padding-inline: 6px;
+    font-size: 13px;
+  }
+}
 @container (min-width: 580px) {
   .opening-hours-editor__day {
     display: grid;
