@@ -39,6 +39,9 @@ export default function BusinessAnalyticsPage() {
   });
 
   const metrics = metricsQuery.data;
+  const hasActivity = metrics
+    ? metrics.views + metrics.whatsappClicks + metrics.phoneClicks + metrics.routeClicks + metrics.favorites + metrics.shares > 0
+    : false;
   const cards = metrics ? [
     { label: "Visualizações", value: metrics.views, previous: metrics.previous.views, icon: Eye },
     { label: "Cliques no WhatsApp", value: metrics.whatsappClicks, previous: metrics.previous.whatsappClicks, icon: MessageCircle },
@@ -88,6 +91,10 @@ export default function BusinessAnalyticsPage() {
           {cards.map((card) => <MetricCard key={card.label} {...card} />)}
         </section>
       )}
+
+      {metrics && !hasActivity ? (
+        <p className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">Ainda não há interações registradas neste período.</p>
+      ) : null}
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
         <h2 className="text-base font-bold text-foreground">Como interpretar</h2>

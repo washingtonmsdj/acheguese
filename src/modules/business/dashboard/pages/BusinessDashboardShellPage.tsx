@@ -6,7 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { BarChart3, Building2, Pencil, Settings, Store } from "lucide-react";
+import { ArrowLeft, BarChart3, Building2, Pencil, Settings, Store } from "lucide-react";
 
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
@@ -20,6 +20,7 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 
 interface NavItem {
   label: string;
+  mobileLabel: string;
   to: string;
   icon: ComponentType<{ className?: string }>;
 }
@@ -72,24 +73,28 @@ export default function BusinessDashboardShellPage() {
 
   const basePath = businessManagementRoutes.overview(businessId);
   const navItems: NavItem[] = [
-    { label: "Visão geral", to: basePath, icon: Store },
+    { label: "Visão geral", mobileLabel: "Visão", to: basePath, icon: Store },
     {
       label: "Editar empresa",
+      mobileLabel: "Editar",
       to: businessManagementRoutes.edit(businessId),
       icon: Pencil,
     },
     {
       label: "Dados da empresa",
+      mobileLabel: "Dados",
       to: businessManagementRoutes.dados(businessId),
       icon: Building2,
     },
     {
       label: "Desempenho",
+      mobileLabel: "Desempenho",
       to: businessManagementRoutes.analytics(businessId),
       icon: BarChart3,
     },
     {
       label: "Configurações",
+      mobileLabel: "Ajustes",
       to: businessManagementRoutes.configuracoes(businessId),
       icon: Settings,
     },
@@ -106,18 +111,27 @@ export default function BusinessDashboardShellPage() {
   return (
     <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-5 sm:px-6 xl:px-8">
       <nav aria-label="Caminho da central" className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-muted-foreground sm:text-sm">
-        <button className="shrink-0 hover:text-foreground" onClick={() => navigate("/conta")}>
+        <button
+          type="button"
+          aria-label="Voltar para minhas empresas"
+          className="inline-flex min-h-10 shrink-0 items-center gap-1.5 font-semibold text-foreground hover:text-primary sm:hidden"
+          onClick={() => navigate(businessManagementRoutes.list())}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        </button>
+        <button type="button" className="hidden shrink-0 hover:text-foreground sm:inline" onClick={() => navigate("/conta")}>
           Conta
         </button>
-        <span>/</span>
+        <span className="hidden sm:inline">/</span>
         <button
-          className="shrink-0 hover:text-foreground"
+          type="button"
+          className="hidden shrink-0 hover:text-foreground sm:inline"
           onClick={() => navigate(businessManagementRoutes.list())}
         >
           Empresas
         </button>
-        <span>/</span>
-        <span className="truncate text-foreground">{business.name}</span>
+        <span className="hidden sm:inline">/</span>
+        <span className="truncate font-medium text-foreground">{business.name}</span>
         <span className="hidden sm:inline">/</span>
         <span className="hidden shrink-0 sm:inline">{sectionLabel}</span>
       </nav>
@@ -128,7 +142,7 @@ export default function BusinessDashboardShellPage() {
             <p className="text-sm font-bold text-foreground">Central da empresa</p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">Gerencie sua presença no território.</p>
           </div>
-          <nav className="flex gap-1 overflow-x-auto overscroll-x-contain pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+          <nav className="flex snap-x snap-mandatory gap-1 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -136,15 +150,16 @@ export default function BusinessDashboardShellPage() {
                 end={item.to === basePath}
                 className={({ isActive }) =>
                   [
-                    "flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium lg:w-full",
+                    "flex min-h-14 w-[5.35rem] shrink-0 snap-start flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-xs font-semibold sm:min-h-11 sm:w-auto sm:flex-row sm:gap-2 sm:px-3 sm:text-sm lg:w-full lg:justify-start",
                     isActive
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/15"
                       : "text-foreground hover:bg-muted",
                   ].join(" ")
                 }
               >
-                <item.icon className="h-4 w-4 shrink-0" />
-                {item.label}
+                <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="sm:hidden">{item.mobileLabel}</span>
+                <span className="hidden sm:inline">{item.label}</span>
               </NavLink>
             ))}
           </nav>

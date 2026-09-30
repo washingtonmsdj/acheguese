@@ -5,6 +5,7 @@ import { Building2, Mail, MapPin, Phone, Pencil, Store, Globe2 } from "lucide-re
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { Button } from "@/shared/components/ui/button";
+import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 
 function getStatusLabel(status: string) {
   switch (status) {
@@ -57,7 +58,7 @@ export default function BusinessDetailsPage() {
           description="Como a empresa aparece para quem encontra seu perfil."
         >
           <Field label="Nome" value={business.name} />
-          <Field label="Categoria" value={business.category} capitalize />
+          <Field label="Categoria" value={getBusinessCategoryLabel(business.category)} />
           <Field label="Situação" value={getStatusLabel(business.status)} />
           <Field
             label="Endereço da página"
@@ -124,12 +125,10 @@ function SectionCard({
 function Field({
   label,
   value,
-  capitalize = false,
   icon: Icon,
 }: {
   label: string;
   value: string;
-  capitalize?: boolean;
   icon?: typeof Mail;
 }) {
   return (
@@ -139,7 +138,7 @@ function Field({
       </p>
       <div className="mt-1.5 flex min-w-0 items-center gap-2">
         {Icon ? <Icon className="h-4 w-4 shrink-0 text-muted-foreground" /> : null}
-        <p className={`min-w-0 break-words text-sm font-medium text-foreground ${capitalize ? "capitalize" : ""}`}>
+        <p className="min-w-0 break-words text-sm font-medium text-foreground">
           {value}
         </p>
       </div>
