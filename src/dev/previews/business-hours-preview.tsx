@@ -59,9 +59,9 @@ export function Preview() {
           search: "/busca",
         }}
       />
-      <div className="mx-auto max-w-[1440px] px-4 py-4 sm:px-6 xl:px-8">
-        <p className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-5">
-          Dados de exemplo. Alterações ficam apenas nesta prévia.
+      <div className="mx-auto grid max-w-[1440px] gap-3 px-4 py-4 sm:px-6 xl:px-8">
+        <p className="text-xs leading-5 text-muted-foreground">
+          Prévia com dados de exemplo · alterações não são publicadas.
         </p>
         <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="min-w-0 self-start rounded-2xl border bg-card p-1.5 sm:p-2">

@@ -1,6 +1,13 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Clock, ExternalLink, Loader2 } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  Clock,
+  ExternalLink,
+  Eye,
+  Loader2,
+} from "lucide-react";
 import type { BusinessHours } from "@/core/business/types/Business";
 import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
 import { OpeningHoursEditor } from "@/core/business/components/settings/OpeningHoursEditor";
@@ -104,6 +111,8 @@ export function BusinessOpeningHoursView({
   onSubmit,
   onDiscard,
 }: BusinessOpeningHoursViewProps) {
+  const [previewExpanded, setPreviewExpanded] = useState(false);
+  const previewId = useId();
   const invalidDays = WEEK_DAYS.filter((day) => getScheduleError(hours[day]));
   const valid = invalidDays.length === 0;
   return (
@@ -145,9 +154,10 @@ export function BusinessOpeningHoursView({
                 <Button
                   type="button"
                   variant="outline"
+                  aria-label="Descartar alterações"
                   disabled={!changed || isSaving}
                 >
-                  Descartar alterações
+                  Descartar
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="w-[calc(100%-2rem)] rounded-xl">
@@ -183,27 +193,54 @@ export function BusinessOpeningHoursView({
           className="business-hours-page__preview"
           aria-label="Prévia dos horários"
         >
-          <h2>Como aparece na página pública</h2>
+          <div className="business-hours-page__preview-heading">
+            <Eye size={20} aria-hidden="true" />
+            <h2>Prévia dos horários</h2>
+            <button
+              type="button"
+              aria-label={
+                previewExpanded
+                  ? "Recolher prévia dos horários"
+                  : "Expandir prévia dos horários"
+              }
+              aria-expanded={previewExpanded}
+              aria-controls={previewId}
+              onClick={() => setPreviewExpanded((expanded) => !expanded)}
+            >
+              <ChevronDown size={20} aria-hidden="true" />
+            </button>
+          </div>
           <p>
             {changed
               ? "Prévia — alterações ainda não salvas."
               : "Horários cadastrados."}
           </p>
-          <dl>
-            {WEEK_DAYS.map((day) => {
-              const value = hours[day];
-              return (
-                <div key={day}>
-                  <dt>{WEEK_DAY_LABELS[day]}</dt>
-                  <dd data-state={!value ? "unknown" : value.closed ? "closed" : "open"}>{getSchedulePreview(value)}</dd>
-                </div>
-              );
-            })}
-          </dl>
-          <p>
-            Não informe horários estimados. Dias sem informação permanecem sem
-            horário publicado.
-          </p>
+          <div
+            id={previewId}
+            className={`business-hours-page__preview-content${previewExpanded ? " is-expanded" : ""}`}
+          >
+            <dl>
+              {WEEK_DAYS.map((day) => {
+                const value = hours[day];
+                return (
+                  <div key={day}>
+                    <dt>{WEEK_DAY_LABELS[day]}</dt>
+                    <dd
+                      data-state={
+                        !value ? "unknown" : value.closed ? "closed" : "open"
+                      }
+                    >
+                      {getSchedulePreview(value)}
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+            <p>
+              Não informe horários estimados. Dias sem informação permanecem sem
+              horário publicado.
+            </p>
+          </div>
         </aside>
       </div>
     </div>
