@@ -60,7 +60,7 @@ export function BusinessLocationView({ business, publicUrl, address, changed, is
         } catch { /* Existing mutation reports the error; retain the draft. */ }
       }}>
         <header><MapPin aria-hidden="true" /><div><h1>Localização da empresa</h1><p>Confira o endereço e confirme o ponto exato para ajudar as pessoas a encontrar sua empresa.</p></div></header>
-        <AddressEditor address={address} onChange={onChange} features={{ cepLookup: true, coordinates: false }} />
+        <AddressEditor className="business-location__fields" showHeading={false} address={address} onChange={onChange} features={{ cepLookup: true, coordinates: false }} />
         <section className="business-location__pin">
           <h2>Ponto no mapa</h2>
           <p>{hasPin ? "Localização definida. Abra o mapa para conferir ou ajustar o marcador." : "O ponto da empresa ainda não foi confirmado. A referência territorial não será usada como localização precisa."}</p>

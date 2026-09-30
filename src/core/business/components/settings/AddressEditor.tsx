@@ -37,6 +37,7 @@ interface AddressEditorProps {
     coordinates?: boolean;
   };
   className?: string;
+  showHeading?: boolean;
 }
 
 export function AddressEditor({
@@ -48,6 +49,7 @@ export function AddressEditor({
     coordinates: true,
   },
   className,
+  showHeading = true,
 }: AddressEditorProps) {
   const [loading, setLoading] = useState(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -167,7 +169,7 @@ export function AddressEditor({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div>
+      {showHeading && <div>
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <MapPin className="h-4 w-4 text-primary" />
           Endereço
@@ -175,7 +177,7 @@ export function AddressEditor({
         <p className="text-xs text-muted-foreground mt-0.5">
           Preencha o endereço completo da empresa
         </p>
-      </div>
+      </div>}
 
       {features.cepLookup && (
         <div className="space-y-2">
