@@ -8,7 +8,6 @@ import {
 } from "react-router-dom";
 import {
   ArrowLeft,
-  BarChart3,
   Clock,
   Images,
   MapPin,
@@ -115,12 +114,6 @@ export default function BusinessDashboardShellPage() {
       mobileLabel: "Catálogo",
       to: businessManagementRoutes.catalog(businessId),
       icon: Package,
-    },
-    {
-      label: "Desempenho",
-      mobileLabel: "Métricas",
-      to: businessManagementRoutes.analytics(businessId),
-      icon: BarChart3,
     },
     {
       label: "Configurações",
