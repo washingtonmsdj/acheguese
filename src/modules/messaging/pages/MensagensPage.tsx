@@ -394,10 +394,10 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                     aria-pressed={selectedThread?.threadId === thread.threadId && selectedThread.providerId === thread.providerId}
                     onClick={() => navigate(messagingRoutes.thread(thread.providerId, thread.threadId))}
                     className={cn(
-                      "flex w-full gap-3 p-3 text-left transition hover:bg-accent/60 sm:p-4",
+                      "flex w-full gap-3 p-3 text-left transition hover:bg-muted sm:p-4",
                       selectedThread?.threadId === thread.threadId &&
                         selectedThread.providerId === thread.providerId &&
-                        "bg-accent",
+                        "bg-primary/10",
                     )}
                   >
                     <Avatar className="h-11 w-11">
