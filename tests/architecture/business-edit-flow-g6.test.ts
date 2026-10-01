@@ -97,7 +97,7 @@ describe("Business edit flow (G6)", () => {
       '<Link to={businessManagementRoutes.dados(businessId)}>\n              <Button variant="outline" size="sm">\n                Editar dados',
     );
     expect(settings).toContain(
-      "navigate(businessManagementRoutes.edit(businessId))",
+      "to={businessManagementRoutes.edit(businessId)}",
     );
   });
 });
