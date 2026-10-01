@@ -1,0 +1,73 @@
+{
+  "$schema": "acheguese.ordax-first-party-integration/1",
+  "status": "boundary-defined-runtime-disabled",
+  "positioning": {
+    "ordax": "platform",
+    "acheguese": "first-party-vertical-product",
+    "acheguese_remains_independently_usable": true
+  },
+  "identity": {
+    "account_merge": false,
+    "password_sync": false,
+    "link_explicit": true,
+    "oauth_2_1_pkce_required": true,
+    "ordax_actor": "space",
+    "acheguese_actor": "user-profile-or-business-owner",
+    "tokens_server_side_only": true
+  },
+  "persistence": {
+    "shared_database": false,
+    "shared_service_role": false,
+    "cross_database_foreign_keys": false,
+    "direct_ordax_supabase_access": false,
+    "dual_write_master": false
+  },
+  "ownership": {
+    "acheguese": [
+      "business",
+      "education-institution-public-page",
+      "territory",
+      "local-discovery",
+      "acheguese-notification-inbox"
+    ],
+    "ordax": [
+      "account",
+      "space",
+      "network",
+      "intelligence",
+      "platform-entitlements",
+      "ordax-notification-center"
+    ]
+  },
+  "sync": {
+    "automatic_all_fields": false,
+    "approved_public_projection_only": true,
+    "immutable_event_id": true,
+    "monotonic_revision": true,
+    "idempotency_required": true,
+    "stale_revision_rejected": true,
+    "unlink_stops_future_projection": true,
+    "unlink_does_not_delete_product_owned_data": true
+  },
+  "publications": {
+    "mirror_every_ordax_post": false,
+    "explicit_target_required": true,
+    "publisher_space_link_required": true,
+    "write_scope_required": true,
+    "acheguese_server_ingest_required": true,
+    "update_and_revoke_required": true
+  },
+  "notifications": {
+    "shared_table": false,
+    "acheguese_uses_own_inbox_outbox": true,
+    "ordax_uses_own_notification_center": true,
+    "cross_product_delivery_via_authorized_event_adapter": true
+  },
+  "runtime_gate": {
+    "enabled": false,
+    "requires_ordax_network_multitenant_proof": true,
+    "requires_ordax_product_oauth_api": true,
+    "requires_two_account_e2e": true,
+    "fake_adapter_forbidden": true
+  }
+}
