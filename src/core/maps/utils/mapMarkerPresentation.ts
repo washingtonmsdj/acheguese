@@ -7,14 +7,14 @@ export function getMapMarkerCategory(marker: MapMarker): string | null {
 }
 
 export function getMapCategoryLabel(category: string): string {
-  return getMapCategoryLabel(category);
+  return getBusinessCategoryLabel(category);
 }
 
 export function getMapMarkerCategoryLabel(marker: MapMarker): string {
   const category = getMapMarkerCategory(marker);
 
   if (marker.type === "business" && category) {
-    return getBusinessCategoryLabel(category);
+    return getMapCategoryLabel(category);
   }
 
   const label = category ?? marker.type.replace(/_/g, " ");
