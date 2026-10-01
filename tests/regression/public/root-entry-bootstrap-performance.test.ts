@@ -80,7 +80,11 @@ describe("anonymous root bootstrap performance", () => {
 
     expect(rootPage).not.toContain('from "react-router-dom"');
     expect(rootPage).not.toContain("<Link");
-    expect(rootPage).toContain('href={LAUNCH_URLS.community}');
+    expect(rootPage).toContain("const launchBusinessUrl = LAUNCH_URLS.business");
+    expect(rootPage).toContain("const launchMapUrl = LAUNCH_URLS.map");
+    expect(rootPage).toContain("const launchNearbyUrl = LAUNCH_URLS.nearby");
+    expect(rootPage).toContain("const launchSearchUrl = LAUNCH_URLS.search");
+    expect(rootPage).not.toContain('href={LAUNCH_URLS.community}');
 
     expect(routedRuntime).toContain('from "react-router-dom"');
     expect(routedRuntime).toContain("<BrowserRouter>");
@@ -126,7 +130,7 @@ describe("anonymous root bootstrap performance", () => {
     expect(preferences).toContain("export function applyAccessibilityPreferences");
   });
 
-  it("mounts provider-free, router-free public overlays after load and first-map readiness", () => {
+  it("mounts provider-free, router-free public overlays after load and idle time", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const overlays = read("src/app/components/PublicRootOverlays.tsx");
     const routedBanner = read("src/app/components/privacy/ConsentBanner.tsx");
@@ -135,10 +139,10 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).toContain("shouldMountOverlays");
     expect(runtime).toContain('document.readyState === "complete"');
     expect(runtime).toContain('window.addEventListener("load", scheduleOverlays');
-    expect(runtime).toContain("scheduleAfterPublicRootMap");
-    expect(runtime).toContain("maxWaitMs: 2600");
-    expect(runtime).toContain("idleTimeoutMs: 2500");
-    expect(runtime).toContain("idleFallbackDelayMs: 1200");
+    expect(runtime).toContain("scheduleBrowserIdleWork");
+    expect(runtime).toContain("timeoutMs: 1800");
+    expect(runtime).toContain("fallbackDelayMs: 300");
+    expect(runtime).not.toContain("scheduleAfterPublicRootMap");
 
     expect(overlays).toContain("<ConsentBannerContent pathname={pathname} />");
     expect(overlays).not.toContain("BrowserRouter");
@@ -158,7 +162,7 @@ describe("anonymous root bootstrap performance", () => {
     expect(bannerContent).not.toContain("useLocation");
   });
 
-  it("keeps optional font networking behind the first-map priority window", () => {
+  it("keeps optional font networking after load and map networking off the shared root", () => {
     const html = read("index.html");
     const main = read("src/main.tsx");
 
@@ -170,11 +174,12 @@ describe("anonymous root bootstrap performance", () => {
     expect(html).not.toContain("font-bootstrap.js");
     expect(main).toContain('meta[data-public-font-stylesheet]');
     expect(main).toContain('stylesheet.rel = "stylesheet"');
-    expect(main).toContain("scheduleAfterPublicRootMap(loadOptionalFontStylesheet");
-    expect(main).toContain("maxWaitMs: 2400");
+    expect(main).toContain("deferLoad(loadOptionalFontStylesheet)");
+    expect(main).not.toContain("scheduleAfterPublicRootMap(loadOptionalFontStylesheet");
     expect(fs.existsSync(path.join(ROOT, "public/font-bootstrap.js"))).toBe(false);
-    expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
-    expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
+    expect(html).not.toContain("tiles.openfreemap.org");
+    expect(main).not.toContain("DEFAULT_TILE_STYLE");
+    expect(main).not.toContain("OPENFREEMAP_TILEJSON_URL");
   });
 
   it("keeps router, query and state libraries in separate vendor chunks", () => {
@@ -221,7 +226,8 @@ describe("anonymous root bootstrap performance", () => {
     expect(reporter).toContain("setWebVitalsReporter");
     expect(main).toContain("initializeObservability");
     expect(main).toContain("installWebVitalsSentryReporter");
-    expect(main).toContain("scheduleAfterPublicRootMap(initializeObservability");
+    expect(main).toContain("deferLoad(initializeObservability)");
+    expect(main).not.toContain("scheduleAfterPublicRootMap(initializeObservability");
   });
 
   it("does not run the obsolete service-worker bootstrap before React", () => {

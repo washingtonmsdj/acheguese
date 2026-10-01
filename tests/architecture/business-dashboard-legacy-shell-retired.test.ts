@@ -37,7 +37,10 @@ describe("MVP Business dashboard legacy shell retirement", () => {
     expect(centralRoutes).toContain('element={<P.BusinessAdminGuard />}');
     expect(centralRoutes).not.toContain("launchElement");
     expect(centralRoutes).toContain("<P.BusinessDashboardShellPage />");
-    expect(centralRoutes).toContain("<P.BusinessOverviewPage />");
+    expect(centralRoutes).toContain("<P.BusinessOverviewPage");
+    expect(centralRoutes).toContain(
+      "messagingAvailable={businessMessagingAvailable}",
+    );
     expect(activeCentralLazyImports).toContain(
       'import("@/modules/business/dashboard/pages/BusinessDashboardShellPage")',
     );

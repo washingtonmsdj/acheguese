@@ -6,7 +6,7 @@ const ROOT = process.cwd();
 const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
-describe("root official boundary priority", () => {
+describe("official boundary priority", () => {
   it("keeps the four launch neighborhoods pinned to GeoSalvador ids", () => {
     const fallback = read("src/core/routing/utils/publicTerritoryFallbacks.ts");
 
@@ -16,7 +16,7 @@ describe("root official boundary priority", () => {
     }
   });
 
-  it("prefers the official metadata source before canonical database lookup", () => {
+  it("prefers official metadata before canonical database fallback", () => {
     const service = read("src/core/geospatial/services/BoundaryService.ts");
     const fallbackBranchStart = service.indexOf(
       "if (isPublicFallbackLocation(location))",
@@ -35,11 +35,11 @@ describe("root official boundary priority", () => {
     expect(canonicalLookup).toBeGreaterThan(sourceLookup);
   });
 
-  it("preconnects both basemap and official boundary hosts", () => {
+  it("does not preconnect map or official-boundary hosts on every SPA route", () => {
     const html = read("index.html");
 
-    expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
-    expect(html).toContain('rel="preconnect" href="https://services6.arcgis.com" crossorigin');
-    expect(html).toContain('rel="dns-prefetch" href="//services6.arcgis.com"');
+    expect(html).not.toContain('rel="preconnect" href="https://tiles.openfreemap.org"');
+    expect(html).not.toContain('rel="preconnect" href="https://services6.arcgis.com"');
+    expect(html).not.toContain('rel="dns-prefetch" href="//services6.arcgis.com"');
   });
 });

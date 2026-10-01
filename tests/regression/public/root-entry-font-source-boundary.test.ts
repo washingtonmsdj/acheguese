@@ -29,9 +29,11 @@ describe("public root font source boundary", () => {
     expect(html.match(/wght@400;500;600;700;800&display=optional/g)).toHaveLength(2);
     expect(main).toContain('meta[data-public-font-stylesheet]');
     expect(main).toContain('stylesheet.rel = "stylesheet"');
-    expect(main).toContain(
+    expect(main).toContain("deferLoad(loadOptionalFontStylesheet)");
+    expect(main).not.toContain(
       "scheduleAfterPublicRootMap(loadOptionalFontStylesheet",
     );
-    expect(main).toContain("maxWaitMs: 2400");
+    expect(main).not.toContain("DEFAULT_TILE_STYLE");
+    expect(main).not.toContain("OPENFREEMAP_TILEJSON_URL");
   });
 });

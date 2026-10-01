@@ -8,7 +8,7 @@ import {
   readAccessibilityPreferences,
 } from "@/shared/accessibility/preferences";
 import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
-import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
+import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 
 const RoutedAppRuntime = lazy(() =>
   import("@/app/components/RoutedAppRuntime"),
@@ -40,15 +40,14 @@ function LeanPublicRootRuntime() {
   }, []);
 
   useEffect(() => {
-    let cancelReadinessWork: (() => void) | null = null;
+    let cancelIdleWork: (() => void) | null = null;
 
     const scheduleOverlays = () => {
-      cancelReadinessWork = scheduleAfterPublicRootMap(
+      cancelIdleWork = scheduleBrowserIdleWork(
         () => setShouldMountOverlays(true),
         {
-          maxWaitMs: 2600,
-          idleTimeoutMs: 2500,
-          idleFallbackDelayMs: 1200,
+          timeoutMs: 1800,
+          fallbackDelayMs: 300,
         },
       );
     };
@@ -61,7 +60,7 @@ function LeanPublicRootRuntime() {
 
     return () => {
       window.removeEventListener("load", scheduleOverlays);
-      cancelReadinessWork?.();
+      cancelIdleWork?.();
     };
   }, []);
 

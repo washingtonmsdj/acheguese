@@ -20,16 +20,19 @@ const normalize = (value) => value.replaceAll("\\", "/");
 
 function findKeyBySrc(sourcePath) {
   const expected = normalize(sourcePath);
-  return Object.entries(manifest).find(([, entry]) => {
-    const src = typeof entry.src === "string" ? normalize(entry.src) : "";
-    return src === expected || src.endsWith(`/${expected}`);
-  })?.[0] ?? null;
+  return (
+    Object.entries(manifest).find(([, entry]) => {
+      const src = typeof entry.src === "string" ? normalize(entry.src) : "";
+      return src === expected || src.endsWith(`/${expected}`);
+    })?.[0] ?? null
+  );
 }
 
 function findKeysByFileFragment(fragment) {
   return Object.entries(manifest)
-    .filter(([, entry]) =>
-      typeof entry.file === "string" && entry.file.includes(fragment),
+    .filter(
+      ([, entry]) =>
+        typeof entry.file === "string" && entry.file.includes(fragment),
     )
     .map(([key]) => key);
 }
@@ -64,6 +67,7 @@ function sizeFile(relativePath) {
   if (!fs.existsSync(absolutePath) || fs.statSync(absolutePath).isDirectory()) {
     return null;
   }
+
   const bytes = fs.readFileSync(absolutePath);
   return {
     file: normalize(relativePath),
@@ -100,6 +104,12 @@ function isKeyOutsideClosure(key, closureKeys) {
   return key ? !closureKeys.has(key) : null;
 }
 
+function areKeysOutsideClosure(keys, closureKeys) {
+  return keys.length > 0
+    ? keys.every((key) => !closureKeys.has(key))
+    : null;
+}
+
 const mainKey =
   findKeyBySrc("src/main.tsx") ??
   Object.entries(manifest).find(([, entry]) => entry.isEntry)?.[0] ??
@@ -110,6 +120,9 @@ if (!mainKey) {
   process.exit(1);
 }
 
+const routedAppRuntimeKey = findKeyBySrc(
+  "src/app/components/RoutedAppRuntime.tsx",
+);
 const mapRuntimeKey = findKeyBySrc(
   "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
 );
@@ -122,13 +135,11 @@ const fullMapRuntimeKey = findKeyBySrc(
 const boundaryKey = findKeyBySrc(
   "src/core/geospatial/data/officialFeatureServerBoundary.ts",
 );
-const routedAppRuntimeKey = findKeyBySrc(
-  "src/app/components/RoutedAppRuntime.tsx",
-);
 const sentryKeys = findKeysByFileFragment("vendor-sentry");
 const mapLibreVendorKeys = findKeysByFileFragment("vendor-maplibre");
 
 const initial = groupFromStartKeys("initial-bootstrap", [mainKey]);
+const routedApp = groupFromStartKeys("routed-app-runtime", [routedAppRuntimeKey]);
 const mapShell = groupFromStartKeys("territory-map-runtime", [mapRuntimeKey]);
 const passiveMap = groupFromStartKeys("passive-map-runtime", [passiveRuntimeKey]);
 const mapEngine = groupFromStartKeys("maplibre-engine", mapLibreVendorKeys);
@@ -136,41 +147,41 @@ const boundary = groupFromStartKeys("official-boundary", [boundaryKey]);
 const sentry = groupFromStartKeys("deferred-sentry", sentryKeys);
 
 const initialManifestKeys = new Set(initial.manifestKeys);
-const firstUsableMapManifestKeys = new Set([
-  ...initial.manifestKeys,
-  ...mapShell.manifestKeys,
-  ...passiveMap.manifestKeys,
-  ...mapEngine.manifestKeys,
-]);
-const firstUsableMapFiles = new Set([
-  ...initial.files,
-  ...mapShell.files,
-  ...passiveMap.files,
-  ...mapEngine.files,
-]);
 
 const invariants = {
-  fullMapRuntimeDeferredFromFirstUsableMap: isKeyOutsideClosure(
-    fullMapRuntimeKey,
-    firstUsableMapManifestKeys,
-  ),
-  officialBoundaryDeferredFromFirstUsableMap: isKeyOutsideClosure(
-    boundaryKey,
-    firstUsableMapManifestKeys,
-  ),
-  routedAppRuntimeDeferredFromInitialBootstrap: isKeyOutsideClosure(
+  routedAppRuntimeDeferredFromLandingBootstrap: isKeyOutsideClosure(
     routedAppRuntimeKey,
     initialManifestKeys,
   ),
-  sentryDeferredFromInitialBootstrap:
-    sentryKeys.length > 0
-      ? sentryKeys.every((key) => !initialManifestKeys.has(key))
-      : null,
+  mapRuntimeDeferredFromLandingBootstrap: isKeyOutsideClosure(
+    mapRuntimeKey,
+    initialManifestKeys,
+  ),
+  passiveMapDeferredFromLandingBootstrap: isKeyOutsideClosure(
+    passiveRuntimeKey,
+    initialManifestKeys,
+  ),
+  fullMapRuntimeDeferredFromLandingBootstrap: isKeyOutsideClosure(
+    fullMapRuntimeKey,
+    initialManifestKeys,
+  ),
+  mapLibreDeferredFromLandingBootstrap: areKeysOutsideClosure(
+    mapLibreVendorKeys,
+    initialManifestKeys,
+  ),
+  officialBoundaryDeferredFromLandingBootstrap: isKeyOutsideClosure(
+    boundaryKey,
+    initialManifestKeys,
+  ),
+  sentryDeferredFromLandingBootstrap: areKeysOutsideClosure(
+    sentryKeys,
+    initialManifestKeys,
+  ),
 };
 
 const groups = {
   initialBootstrap: summarizeFiles(initial.files),
-  firstUsableMap: summarizeFiles(firstUsableMapFiles),
+  routedAppRuntime: summarizeFiles(routedApp.files),
   mapRuntime: summarizeFiles(new Set([...mapShell.files, ...passiveMap.files])),
   mapLibreEngine: summarizeFiles(mapEngine.files),
   officialBoundary: summarizeFiles(boundary.files),
@@ -182,11 +193,11 @@ const report = {
   commitSha: process.env.GITHUB_SHA ?? null,
   entry: mainKey,
   sourcesFound: {
+    routedAppRuntime: Boolean(routedAppRuntimeKey),
     mapRuntime: Boolean(mapRuntimeKey),
     passiveRuntime: Boolean(passiveRuntimeKey),
     fullMapRuntime: Boolean(fullMapRuntimeKey),
     officialBoundary: Boolean(boundaryKey),
-    routedAppRuntime: Boolean(routedAppRuntimeKey),
     mapLibreVendorChunks: mapLibreVendorKeys.length,
     sentryVendorChunks: sentryKeys.length,
   },
@@ -215,12 +226,32 @@ const invariantRows = Object.entries(invariants)
   .map(([name, value]) => `| ${name} | ${invariantLabel(value)} |`)
   .join("\n");
 
-const largestFirstMapFiles = groups.firstUsableMap.files
+const largestLandingFiles = groups.initialBootstrap.files
   .slice(0, 12)
-  .map((file) => `- \`${file.file}\` — ${kib(file.raw)} raw / ${kib(file.brotli)} brotli`)
+  .map(
+    (file) =>
+      `- \`${file.file}\` — ${kib(file.raw)} raw / ${kib(file.brotli)} brotli`,
+  )
   .join("\n");
 
-const markdown = `# Root bundle report\n\nSHA: \`${report.commitSha ?? "local"}\`\n\n| Group | Raw | Gzip | Brotli | Files |\n|---|---:|---:|---:|---:|\n${tableRows}\n\n## Separation invariants\n\n| Invariant | Result |\n|---|---|\n${invariantRows}\n\n## Largest files in first usable map closure\n\n${largestFirstMapFiles || "- none"}\n`;
+const markdown = `# Root bundle report
+
+SHA: \`${report.commitSha ?? "local"}\`
+
+| Group | Raw | Gzip | Brotli | Files |
+|---|---:|---:|---:|---:|
+${tableRows}
+
+## Landing separation invariants
+
+| Invariant | Result |
+|---|---|
+${invariantRows}
+
+## Largest files in landing bootstrap closure
+
+${largestLandingFiles || "- none"}
+`;
 
 fs.writeFileSync(JSON_REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
 fs.writeFileSync(MARKDOWN_REPORT_PATH, markdown);

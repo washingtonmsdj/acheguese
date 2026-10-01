@@ -24,20 +24,21 @@ describe("public home real-data boundary", () => {
   });
 
   it("advertises only Business plus active territorial capabilities", () => {
-    expect(page).toContain('label: "Empresas"');
-    expect(page).toContain('label: "Mapa"');
-    expect(page).toContain('label: "Perto de mim"');
-    expect(page).toContain('label: "Busca"');
-
-    for (const pausedCopy of [
-      "Agenda do bairro",
-      "Vagas e oportunidades",
-      "Classificados",
-      "Gastronomia",
-      "Serviços",
-      "Comunidade",
+    for (const active of [
+      '{ id: "map", label: "Mapa", href: urls.map }',
+      '{ id: "business", label: "Empresas", href: urls.business }',
+      '{ id: "nearby", label: "Perto de mim", href: urls.nearby }',
+      '{ id: "search", label: "Busca", href: urls.search }',
     ]) {
-      expect(page).not.toContain(pausedCopy);
+      expect(page.replace(/\s+/g, " ")).toContain(active);
+    }
+
+    for (const paused of [
+      'label: "Comunidade", disabled: true',
+      'label: "Serviços", disabled: true',
+      'label: "Eventos", disabled: true',
+    ]) {
+      expect(page.replace(/\s+/g, " ")).toContain(paused);
     }
 
     for (const fabricated of [

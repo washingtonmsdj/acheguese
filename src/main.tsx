@@ -2,12 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import {
-  DEFAULT_TILE_STYLE,
-  OPENFREEMAP_TILEJSON_URL,
-} from "./shared/config/mapDefaults.ts";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
-import { scheduleAfterPublicRootMap } from "./shared/utils/publicRootReadiness.ts";
 
 // In local development, remove any previously registered SW/caches that can
 // intercept Vite assets and break HMR/WebSocket.
@@ -44,34 +39,6 @@ if (isPublicRootAtBoot && !document.querySelector('link[rel="canonical"]')) {
   }
 }
 
-// The root map is a primary surface. Discover the style and its vector-source
-// TileJSON before React renders, cutting the otherwise sequential
-// style -> TileJSON -> vector-tile network cascade. Both URLs remain owned by
-// the canonical map defaults SSOT.
-if (isPublicRootAtBoot) {
-  if (!document.querySelector("link[data-entry-map-style-preload]")) {
-    const mapStylePreload = document.createElement("link");
-    mapStylePreload.rel = "preload";
-    mapStylePreload.as = "fetch";
-    mapStylePreload.href = DEFAULT_TILE_STYLE.styleUrl;
-    mapStylePreload.crossOrigin = "anonymous";
-    mapStylePreload.setAttribute("fetchpriority", "high");
-    mapStylePreload.dataset.entryMapStylePreload = "true";
-    document.head.appendChild(mapStylePreload);
-  }
-
-  if (!document.querySelector("link[data-entry-map-tilejson-preload]")) {
-    const tileJsonPreload = document.createElement("link");
-    tileJsonPreload.rel = "preload";
-    tileJsonPreload.as = "fetch";
-    tileJsonPreload.href = OPENFREEMAP_TILEJSON_URL;
-    tileJsonPreload.crossOrigin = "anonymous";
-    tileJsonPreload.setAttribute("fetchpriority", "high");
-    tileJsonPreload.dataset.entryMapTilejsonPreload = "true";
-    document.head.appendChild(tileJsonPreload);
-  }
-}
-
 // Critical path: render the app before starting non-critical services.
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
@@ -92,15 +59,10 @@ function loadOptionalFontStylesheet(): void {
   document.head.appendChild(stylesheet);
 }
 
-// Typography is optional on the community-first root. Let hero + map own the
-// first network window; display=optional keeps the system fallback stable if
-// the webfont arrives too late to improve this navigation.
+// Typography is optional on the lean public root. Start it after document
+// load so it never competes with the first contentful render.
 if (isPublicRootAtBoot) {
-  scheduleAfterPublicRootMap(loadOptionalFontStylesheet, {
-    maxWaitMs: 2400,
-    idleTimeoutMs: 1600,
-    idleFallbackDelayMs: 650,
-  });
+  deferLoad(loadOptionalFontStylesheet);
 } else {
   deferFrame(loadOptionalFontStylesheet);
 }
@@ -164,16 +126,10 @@ const initializeObservability = () => {
   });
 };
 
-// Error reporting is useful on every surface, but on `/` it must not compete
-// with the first usable map. A safety timeout prevents indefinite deferral.
+// Error reporting is useful on every surface, but on `/` it should start only
+// after the lean landing has completed its critical load path.
 if (isPublicRootAtBoot) {
-  deferLoad(() => {
-    scheduleAfterPublicRootMap(initializeObservability, {
-      maxWaitMs: 2800,
-      idleTimeoutMs: 2200,
-      idleFallbackDelayMs: 900,
-    });
-  });
+  deferLoad(initializeObservability);
 } else {
   deferIdle(initializeObservability);
 }

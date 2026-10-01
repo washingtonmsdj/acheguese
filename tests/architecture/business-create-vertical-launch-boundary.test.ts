@@ -37,6 +37,10 @@ describe("MVP Business create vertical launch boundary", () => {
       "getEnabledVerticals(category, enabledVerticalKeySet)",
     );
     expect(createPage).toContain(
+      "getEnabledVerticals(category, enabledVerticalKeySet)",
+    );
+    expect(createPage).toContain("const category = form.getValues(\"category\")");
+    expect(createPage).not.toContain(
       "getEnabledVerticals(selectedCategory, enabledVerticalKeySet)",
     );
   });

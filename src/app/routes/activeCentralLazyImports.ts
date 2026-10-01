@@ -52,9 +52,6 @@ export const BusinessOpeningHoursPage = lazy(() =>
 export const BusinessDetailsPage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessDetailsPage"),
 );
-export const BusinessAnalyticsPage = lazy(() =>
-  import("@/modules/business/dashboard/pages/BusinessAnalyticsPage"),
-);
 export const BusinessSettingsPage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessSettingsPage"),
 );

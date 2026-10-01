@@ -176,9 +176,14 @@ describe("active AppLayout route boundary", () => {
     expect(routeRegistry).toContain("isPlatformCapabilityEnabled");
   });
 
-  it("keeps active territorial wrappers free of post-MVP imports", () => {
+  it("keeps active territorial wrappers on the canonical Territory portal owner", () => {
     expect(activeTerritorialPages).toContain("CategoryBusinessPage");
-    expect(activeTerritorialPages).toContain("@/app/pages/MapaPage");
+    expect(activeTerritorialPages).toContain("@/app/pages/TerritoryHomePage");
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="map" />');
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="business" />');
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="nearby" />');
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="search" />');
+    expect(activeTerritorialPages).not.toContain("@/app/pages/MapaPage");
 
     for (const pausedImport of [
       "community-feed",
