@@ -895,6 +895,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           const [safeLat, safeLng] = normalized;
 
           const metadata = (marker.metadata ?? {}) as Record<string, unknown>;
+          const markerSubtitle = "subtitle" in marker ? marker.subtitle : undefined;
           const isUserLocation = metadata.isUserLocation === true;
           const isTerritoryReference = metadata.isTerritoryReference === true;
           const isCluster = metadata.isCluster === true;
@@ -904,7 +905,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             safeLat.toFixed(6),
             safeLng.toFixed(6),
             isUserLocation ? 'user' : 'poi',
-            isTerritoryReference ? `${marker.title}|${marker.subtitle ?? ''}` : '',
+            isTerritoryReference ? `${marker.title}|${markerSubtitle ?? ''}` : '',
             isCluster ? pointCount : '',
             markerPresentation,
             String(metadata.category ?? ''),
@@ -934,7 +935,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
             const title = document.createElement('span');
             title.textContent = marker.title;
             const subtitle = document.createElement('small');
-            subtitle.textContent = marker.subtitle ?? 'Referência territorial';
+            subtitle.textContent = markerSubtitle ?? 'Referência territorial';
             subtitle.style.cssText = 'font:500 9px/1.2 Arial,sans-serif;color:#587276;';
             label.append(title, subtitle);
             el.append(point, label);
