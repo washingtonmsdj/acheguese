@@ -102,7 +102,7 @@ export default function BusinessOverviewPage({
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-5">
-      <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Visão geral</h1>
+      <h1 className="business-management-title">Visão geral</h1>
 
       <section aria-label="Resumo da empresa" className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
         <SummaryCard icon={StatusIcon} label="Situação" value={statusPresentation.label} />
@@ -124,12 +124,12 @@ export default function BusinessOverviewPage({
         />
       </section>
 
-      <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+      <section className="business-management-panel">
         <div className="mb-3">
           <h2 className="text-base font-bold text-foreground sm:text-lg">Ações rápidas</h2>
           <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">Mantenha sua presença no território atualizada.</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 2xl:grid-cols-5">
           {quickActions.map((action) => (
             <Link key={action.to} to={action.to} className="group flex min-h-24 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background p-2 text-center transition-colors hover:border-primary/30 hover:bg-primary/[0.03] sm:min-h-28 sm:items-start sm:justify-start sm:p-4 sm:text-left">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><action.icon className="h-5 w-5" aria-hidden="true" /></span>

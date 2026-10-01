@@ -287,7 +287,7 @@ export default function EditarEmpresaPage() {
 
   return (
     <div className="business-edit-page space-y-4">
-      <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Editar empresa</h1>
+      <h1 className="business-management-title">Editar empresa</h1>
 
       <div className="business-edit-content space-y-4">
         <StepProgress currentStep={currentStep} totalSteps={3} />

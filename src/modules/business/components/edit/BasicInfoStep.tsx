@@ -46,8 +46,8 @@ export function BasicInfoStep({
   const copy = getBusinessCreateFieldCopy(category);
 
   return (
-    <section className="overflow-hidden rounded-[26px] border border-border bg-card">
-      <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
+    <section className="business-edit-section overflow-hidden border border-border bg-card">
+      <div className="border-b border-border bg-primary/5 p-4 sm:p-5">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Building2 className="h-5 w-5" />
@@ -56,7 +56,7 @@ export function BasicInfoStep({
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
               Etapa 1
             </p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+            <h2 className="business-management-title mt-1">
               Identidade da empresa
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
@@ -66,7 +66,7 @@ export function BasicInfoStep({
         </div>
       </div>
 
-      <div className="space-y-6 p-5 sm:p-6">
+      <div className="space-y-4 p-4 sm:space-y-6 sm:p-5">
         <div className="rounded-[22px] border border-border bg-background/70 p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <Avatar className="h-20 w-20 shrink-0 rounded-[22px] border border-border bg-card">

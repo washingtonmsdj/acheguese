@@ -10,6 +10,9 @@
   --business-panel-radius: 16px;
   --business-panel-padding: 16px;
   --business-section-gap: 16px;
+  --business-heading-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
+  --business-heading-weight: 650;
+  --business-heading-line-height: 1.3;
   display: grid;
   min-width: 0;
   gap: var(--business-section-gap);
@@ -42,9 +45,9 @@
   background: hsl(var(--card));
 }
 .business-management-title {
-  font-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
-  font-weight: 650;
-  line-height: 1.3;
+  font-size: var(--business-heading-size, 1.25rem);
+  font-weight: var(--business-heading-weight, 650);
+  line-height: var(--business-heading-line-height, 1.3);
   letter-spacing: -0.025em;
 }
 .business-management-fields {

@@ -60,3 +60,11 @@ Limite: navegação visual usa dados simulados autorizados pelo usuário. Login,
 Dados passou a usar lista semântica de rótulos/valores com divisores discretos, substituindo cards internos repetidos. Tipografia do título e identidade foi suavizada; thumbnail mobile compactada sem truncar o nome. Navegação mobile tem texto maior; sidebar desktop respeita a altura do header fixo. Configurações usa ícones e texto lado a lado, reduzindo altura sem esconder informações. Espaçamentos do shell mobile foram compactados. Breakpoints 320/360/390/430/768/1440/2560px novamente conferidos sem overflow; seis testes focados de shell/navegação aprovados, typecheck e lint aprovados.
 
 Prévia: `npx vite --config tests/visual/vite.central-audit.config.ts --host 127.0.0.1 --port 5176 --strictPort`, URL `/tests/visual/central-audit.html`. Não integra o build/runtime público.
+
+### Refinamento das oito superfícies de gestão
+
+- Tokens comuns de tamanho, peso e altura de linha dos títulos aplicados à Visão geral, Editar, Fotos, Horários, Localização e Catálogo, mantendo Dados e Configurações na mesma família.
+- Painéis, estados vazios de fotos, seção inicial de edição e ações rápidas compactados; prévias fixas de edição, fotos e horários respeitam o header. Filtros de catálogo se reorganizam nas larguras intermediárias, sem comprimir busca e selects.
+- Harness isolado ampliado para as oito seções, reutilizando o shell e componentes reais. Fotos valida o estado vazio; catálogo usa itens simulados e mutações somente em memória; Editar valida apenas a primeira seção real, não o fluxo completo de envio. Localização não recebe coordenadas fictícias. Nenhuma fixture faz parte do runtime de produção.
+- 56 verificações de layout: oito superfícies em 320/360/390/430/768/1440/2560px, sem overflow horizontal e com exatamente um H1. Catálogo conferido visualmente em mobile e desktop; filtros e diálogo de criação conferidos em 320px. Horários inclui estados definido, fechado e não informado na fixture.
+- Typecheck da aplicação aprovado; ESLint dos componentes de produção alterados sem erros; oito arquivos de testes focados, 25 testes aprovados. Os arquivos do harness são excluídos pelo lint padrão. Persistência/backend real continuam fora da certificação visual.
