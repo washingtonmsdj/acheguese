@@ -48,7 +48,7 @@ export default function BusinessSettingsPage() {
     <div className="grid min-w-0 gap-4">
       <section className="business-management-panel">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
             <Settings className="h-5 w-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
@@ -85,7 +85,7 @@ export default function BusinessSettingsPage() {
             <div className="mt-4 grid min-w-0 gap-3">
               <a
                 href={publicUrl}
-                className="break-all text-sm text-primary underline underline-offset-4"
+                className="break-all text-sm text-territory-brand underline underline-offset-4"
               >
                 {publicUrl}
               </a>
@@ -145,7 +145,7 @@ export default function BusinessSettingsPage() {
         >
           <div className="mb-4 flex items-start gap-3">
             <Users
-              className="mt-0.5 h-5 w-5 shrink-0 text-primary"
+              className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand"
               aria-hidden="true"
             />
             <p className="text-sm leading-5 text-muted-foreground">
