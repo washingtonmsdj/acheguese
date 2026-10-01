@@ -130,6 +130,11 @@ const BUSINESS_SEMANTIC_TOKEN_FILES = [
   'src/core/business/components/settings/PaymentMethodsSelector.tsx',
   'src/core/business/components/settings/ServiceModesSelector.tsx',
   'src/modules/business/dashboard/components/BusinessManagementIdentity.css',
+  'src/modules/business/dashboard/presentation/businessStatusPresentation.ts',
+  'src/modules/business/dashboard/pages/BusinessOverviewPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessCatalogPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessDetailsPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessSettingsPage.tsx',
 ] as const;
 
 const LEGACY_BUSINESS_PALETTE_RE =
