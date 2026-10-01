@@ -138,6 +138,9 @@ jobs:
         env:
           VERCEL_ENV: preview
           VERCEL_GIT_COMMIT_SHA: ${{ github.sha }}
+          # Match Vercel's release resilience: only source errors already
+          # classified as transient may fall back to the deterministic static sitemap.
+          SITEMAP_ALLOW_TRANSIENT_SOURCE_FALLBACK: "1"
         run: node tools/release/run-vercel-production-build.mjs
 
   maps-architecture-enforcement:
