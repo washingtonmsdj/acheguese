@@ -105,6 +105,8 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/business/dashboard/pages/BusinessOverviewPage.tsx',
   'src/modules/business/pages/EditarEmpresaPage.tsx',
   'src/modules/business/pages/EditarEmpresaPage.css',
+  'src/modules/business/pages/CriarEmpresaPage.tsx',
+  'src/modules/business/pages/CriarEmpresaPage.css',
   'src/modules/business/dashboard/pages/BusinessPhotosPage.tsx',
   'src/modules/business/dashboard/pages/BusinessPhotosPage.css',
   'src/modules/business/dashboard/pages/BusinessOpeningHoursPage.tsx',
@@ -286,7 +288,11 @@ function main(): void {
       relative.startsWith('src/modules/business/dashboard/') ||
       relative === 'src/modules/central/pages/CentralEmpresasPage.tsx' ||
       relative === 'src/modules/central/pages/CentralEmpresasPage.css' ||
-      relative === 'src/core/profiles/components/hub/BusinessModulesSection.tsx';
+      relative === 'src/core/profiles/components/hub/BusinessModulesSection.tsx' ||
+      relative === 'src/modules/business/pages/EditarEmpresaPage.tsx' ||
+      relative === 'src/modules/business/pages/EditarEmpresaPage.css' ||
+      relative === 'src/modules/business/pages/CriarEmpresaPage.tsx' ||
+      relative === 'src/modules/business/pages/CriarEmpresaPage.css';
     if (RAW_RUNTIME_COLOR_RE.test(content)) {
       violations.push(
         `${relative}: raw runtime color found after SSOT migration; use semantic CSS/Tailwind tokens.`,
