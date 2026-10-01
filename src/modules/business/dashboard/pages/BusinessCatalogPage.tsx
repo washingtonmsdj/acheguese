@@ -204,7 +204,7 @@ export function BusinessCatalogView({
           <header className="business-catalog__heading">
             <Package aria-hidden="true" />
             <div>
-              <h1>Produtos e serviços</h1>
+              <h1 className="business-management-title">Produtos e serviços</h1>
               <p>Gerencie os produtos e serviços que sua empresa oferece.</p>
             </div>
             <Button
