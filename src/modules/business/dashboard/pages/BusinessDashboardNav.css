@@ -102,7 +102,7 @@
   padding: 8px;
   color: hsl(var(--primary));
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
 }
 .business-dashboard-navigation__toggle svg:last-child {
   margin-left: auto;
