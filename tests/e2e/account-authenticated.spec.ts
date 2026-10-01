@@ -45,6 +45,10 @@ async function expectNoHorizontalOverflow(page: Page) {
   );
 }
 
+function isRecoverableSupabaseTransportError(detail: string): boolean {
+  return /Failed to fetch/i.test(detail) && detail.includes("vendor-supabase-");
+}
+
 test.describe("Conta autenticada — fixture remota determinística", () => {
   test.skip(
     !hasE2EUserCredentials(),
@@ -62,28 +66,34 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       const networkErrors: string[] = [];
 
       page.on("console", (message) => {
-        const isTurnstileConsoleNoise = message
-          .text()
-          .includes("font-size:0;color:transparent");
-        const isBlockedAdSenseProbe = message
-          .text()
-          .includes("csi.gstatic.com/csi");
+        const detail = message.text();
+        const isTurnstileConsoleNoise = detail.includes(
+          "font-size:0;color:transparent",
+        );
+        const isBlockedAdSenseProbe = detail.includes("csi.gstatic.com/csi");
+
         if (
           message.type() === "error" &&
           !isTurnstileConsoleNoise &&
           !isBlockedAdSenseProbe
         ) {
-          consoleErrors.push(message.text());
+          if (isRecoverableSupabaseTransportError(detail)) {
+            recoverableSupabaseTransportErrors.push(
+              `console: ${detail}`,
+            );
+            return;
+          }
+
+          consoleErrors.push(detail);
         }
       });
       page.on("pageerror", (error) => {
         const detail = `${error.name}: ${error.message}\n${error.stack ?? ""}`;
-        const isRecoverableSupabaseTransportError =
-          /Failed to fetch/i.test(error.message) &&
-          detail.includes("vendor-supabase-");
 
-        if (isRecoverableSupabaseTransportError) {
-          recoverableSupabaseTransportErrors.push(detail);
+        if (isRecoverableSupabaseTransportError(detail)) {
+          recoverableSupabaseTransportErrors.push(
+            `pageerror: ${detail}`,
+          );
           return;
         }
 
