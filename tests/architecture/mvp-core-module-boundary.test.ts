@@ -464,7 +464,7 @@ describe("MVP core module boundary", () => {
     expect(publicMvpE2e).toContain("/ba/salvador/pituba/perto-de-mim");
     expect(publicMvpE2e).toContain("/ba/salvador/pituba/busca");
     expect(publicMvpE2e).toContain("HOME_BUSINESS");
-    expect(publicMvpE2e).toContain("430m");
+    expect(publicMvpE2e).toContain("430 m");
 
     for (const stale of [
       "Explorar o Complexo do Nordeste de Amaralina",
