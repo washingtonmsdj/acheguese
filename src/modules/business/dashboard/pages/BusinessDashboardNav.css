@@ -175,7 +175,7 @@
 }
 
 .business-dashboard-nav__item:focus-visible {
-  outline: 2px solid #087f83;
+  outline: 2px solid hsl(var(--territory-focus));
   outline-offset: -2px;
 }
 
@@ -190,7 +190,7 @@
 }
 
 .business-dashboard-nav__item[aria-current="page"]:focus-visible {
-  outline-color: #ffcc43;
+  outline-color: hsl(var(--territory-sun));
 }
 
 @media (min-width: 360px) {
