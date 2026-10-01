@@ -60,6 +60,7 @@ Database -> Service -> Hook -> Component
 - `core/*`: contratos, capacidades compartilhadas e servicos canonicos.
 - `modules/*`: composicao de telas e casos de uso do dominio, consumindo servicos canonicos.
 - `integrations/*`: detalhes de infraestrutura, nunca regra de negocio de dominio.
+- `integrations/ordax`: boundary first-party versionado; nunca importa o banco/Supabase da OrdaX e permanece fail-closed ate OAuth/API real e prova multi-tenant.
 
 ## Taxonomia oficial
 - No lifecycle de produto, `business`/`empresas` é um domínio/módulo vertical ativo. Ele não é capability horizontal.
