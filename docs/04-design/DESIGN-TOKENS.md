@@ -302,6 +302,8 @@ Na cobertura atual estão, entre outras:
 - chat e sidebars de mobilidade já migrados;
 - shell do Admin, cupons, eventos, mensagens, moderação, operações,
   analytics/realtime de mobilidade, reivindicações, serviços e pontos de embarque;
+- shell ativo da Central de Empresas, identidade da empresa, navegação, visão geral,
+  dados, configurações, edição, fotos, horários, localização e catálogo;
 - gestão de motoristas e as abas de detalhe administrativo já migradas;
 - **Central ativa de Empresas**: shell, identidade, visão geral, editar, fotos, horários, localização, produtos/serviços, dados e configurações.
 
