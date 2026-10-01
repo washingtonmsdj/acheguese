@@ -27,6 +27,9 @@ export function BusinessManagementIdentity({
   publicUrl?: string | null;
 }) {
   const image = resolveMediaAssetSource(business.logo_url);
+  const statusPresentation = business.status
+    ? getBusinessStatusPresentation(business.status)
+    : null;
   const location = [
     business.location?.name,
     business.business_city,
@@ -48,9 +51,9 @@ export function BusinessManagementIdentity({
           {business.category ? (
             <span>{getBusinessCategoryLabel(business.category)}</span>
           ) : null}
-          {business.status ? (
-            <span data-status={business.status}>
-              {getBusinessStatusPresentation(business.status).label}
+          {statusPresentation ? (
+            <span className={statusPresentation.badgeClassName}>
+              {statusPresentation.label}
             </span>
           ) : null}
         </div>
