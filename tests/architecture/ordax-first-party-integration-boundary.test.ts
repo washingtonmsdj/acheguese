@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -10,6 +10,15 @@ import {
 
 const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
+
+function filesUnder(path: string): string[] {
+  const absolute = resolve(root, path);
+  return readdirSync(absolute).flatMap((name) => {
+    const child = resolve(absolute, name);
+    const relative = `${path}/${name}`;
+    return statSync(child).isDirectory() ? filesUnder(relative) : [relative];
+  });
+}
 
 describe("OrdaX first-party integration boundary", () => {
   const boundary = read("src/integrations/ordax/boundary.ts");
@@ -31,9 +40,14 @@ describe("OrdaX first-party integration boundary", () => {
     expect(contract.persistence.direct_ordax_supabase_access).toBe(false);
     expect(contract.runtime_gate.fake_adapter_forbidden).toBe(true);
 
-    expect(boundary).not.toContain("@/integrations/supabase");
-    expect(boundary).not.toContain("service_role");
-    expect(boundary).not.toContain("SUPABASE_SERVICE_ROLE");
+    for (const path of filesUnder("src/integrations/ordax")) {
+      const source = read(path);
+      expect(source, path).not.toContain("@/integrations/supabase");
+      expect(source, path).not.toContain("supabase.co");
+      expect(source, path).not.toContain("service_role");
+      expect(source, path).not.toContain("SUPABASE_SERVICE_ROLE");
+    }
+    expect(boundary).not.toContain("createClient(");
     expect(docs).toContain("OAuth 2.1 + PKCE");
   });
 
