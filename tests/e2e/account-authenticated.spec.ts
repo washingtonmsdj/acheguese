@@ -201,6 +201,9 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       });
 
       await page.goto("/conta", { waitUntil: "domcontentloaded" });
+      await expect(
+        page.getByRole("heading", { name: "Minha conta", exact: true }).first(),
+      ).toBeVisible({ timeout: 30_000 });
       const visibleNavigation = page.locator(
         `[data-territory-navigation="${viewport.navigation}"]:visible`,
       );
