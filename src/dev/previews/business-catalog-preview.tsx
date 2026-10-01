@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "sonner";
 import { Store, Pencil, Images, Clock, MapPin, Package } from "lucide-react";
 import { PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
+import { ActiveProfileIdentity } from "@/shared/components/ActiveProfileIdentity";
 import { BusinessDashboardNavigation } from "@/modules/business/dashboard/components/BusinessDashboardNavigation";
 import { BusinessCatalogView } from "@/modules/business/dashboard/pages/BusinessCatalogPage";
 import type { BusinessCatalogItem } from "@/core/business/services/businessCatalogService";
@@ -87,6 +88,7 @@ export function Preview() {
   return (
     <div className="light pt-page min-h-screen bg-background text-foreground">
       <PublicBrandHeader
+        accountHref="/conta"
         contextLabel="Salvador, BA"
         urls={{
           nearby: "/",
@@ -96,6 +98,7 @@ export function Preview() {
         }}
       />
       <main className="mx-auto max-w-[1440px] space-y-4 px-4 py-4 sm:px-6 xl:px-8">
+        <ActiveProfileIdentity profile={{ id: "preview-business", displayName: "Perfil da empresa (demonstração)" }} />
         <nav
           aria-label="Caminho da central"
           className="flex gap-2 text-xs text-muted-foreground"

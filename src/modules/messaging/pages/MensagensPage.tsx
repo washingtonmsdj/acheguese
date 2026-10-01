@@ -31,6 +31,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import { logger } from "@/shared/utils/logger";
+import { ActiveProfileIdentity, type ActiveProfileIdentityData } from "@/shared/components/ActiveProfileIdentity";
 import "./MensagensPage.css";
 
 function formatTimestamp(value: string): string {
@@ -74,7 +75,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
 /** Shared screen; real and isolated preview adapters supply the same contract. */
 export function MessagingInboxScreen({ providers, activeProfile, sessionLoading = false }: {
   providers: readonly MessagingScreenProvider[];
-  activeProfile: { id: string; displayName: string; avatarUrl?: string | null; username?: string | null } | null;
+  activeProfile: ActiveProfileIdentityData | null;
   sessionLoading?: boolean;
 }) {
   const navigate = useNavigate();
@@ -338,15 +339,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
       className="messaging-inbox min-h-0 bg-background text-foreground"
     >
       <header className="messaging-inbox__profile" aria-label="Perfil usado nesta caixa de mensagens">
-        <Avatar className="h-10 w-10 shrink-0">
-          <AvatarImage src={activeProfile.avatarUrl ?? undefined} alt="" />
-          <AvatarFallback>{initials(activeProfile.displayName)}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">Perfil ativo · conversando como</p>
-          <p className="break-words text-sm font-semibold">{activeProfile.displayName}</p>
-          {activeProfile.username ? <p className="break-words text-xs text-muted-foreground">@{activeProfile.username}</p> : null}
-        </div>
+        <ActiveProfileIdentity profile={activeProfile} context="conversando como" />
       </header>
       <div className="mx-auto grid h-full w-full max-w-7xl md:grid-cols-[22rem_minmax(0,1fr)]">
         <aside

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import {
@@ -13,6 +13,8 @@ import { BusinessOpeningHoursView } from "@/modules/business/dashboard/pages/Bus
 import { WEEK_DAYS, WEEKDAYS } from "@/core/business/constants/weekDays";
 import { getScheduleError } from "@/core/business/utils/openingHoursPresentation";
 import { PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
+import { ActiveProfileIdentity } from "@/shared/components/ActiveProfileIdentity";
+import { BusinessDashboardNavigation } from "@/modules/business/dashboard/components/BusinessDashboardNavigation";
 import "@/index.css";
 import "@/modules/business/dashboard/pages/BusinessDashboardNav.css";
 
@@ -52,6 +54,7 @@ export function Preview() {
   return (
     <div className="light pt-page min-h-screen bg-background text-foreground">
       <PublicBrandHeader
+        accountHref="/conta"
         urls={{
           nearby: "/",
           business: "/central/empresas",
@@ -60,21 +63,12 @@ export function Preview() {
         }}
       />
       <div className="mx-auto grid max-w-[1440px] gap-3 px-4 py-4 sm:px-6 xl:px-8">
+        <ActiveProfileIdentity profile={{ id: "preview-business", displayName: "Perfil da empresa (demonstração)" }} />
         <p className="text-xs leading-5 text-muted-foreground">
           Prévia com dados de exemplo · alterações não são publicadas.
         </p>
         <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-          <aside className="min-w-0 self-start rounded-2xl border bg-card p-1.5 sm:p-2">
-            <p className="hidden px-3 py-3 text-sm font-bold lg:block">
-              Central da empresa
-            </p>
-            <nav
-              aria-label="Seções demonstrativas"
-              className="business-dashboard-nav"
-              style={
-                { "--business-nav-count": sections.length } as CSSProperties
-              }
-            >
+          <BusinessDashboardNavigation count={sections.length}>
               {sections.map(({ name, icon: Icon }) => (
                 <button
                   key={name}
@@ -87,8 +81,7 @@ export function Preview() {
                   {name}
                 </button>
               ))}
-            </nav>
-          </aside>
+          </BusinessDashboardNavigation>
           <main className="min-w-0">
             {message && (
               <p

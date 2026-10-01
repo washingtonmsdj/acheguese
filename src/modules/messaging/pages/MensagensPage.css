@@ -37,6 +37,10 @@
   background: hsl(var(--card));
 }
 
+.messaging-inbox__profile > section {
+  width: 100%;
+}
+
 .messaging-inbox > div {
   flex: 1;
   height: auto;

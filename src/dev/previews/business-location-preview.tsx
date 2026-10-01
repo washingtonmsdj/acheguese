@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { BusinessLocationView } from "@/modules/business/dashboard/pages/BusinessLocationPage";
 import { PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
+import { ActiveProfileIdentity } from "@/shared/components/ActiveProfileIdentity";
 import "@/index.css";
 import { BusinessDashboardNavigation } from "@/modules/business/dashboard/components/BusinessDashboardNavigation";
 
@@ -43,6 +44,7 @@ export function Preview() {
   return (
     <div className="light pt-page min-h-screen bg-background text-foreground">
       <PublicBrandHeader
+        accountHref="/conta"
         contextLabel={[saved.city, saved.state].filter(Boolean).join(", ")}
         urls={{
           nearby: "/",
@@ -52,6 +54,7 @@ export function Preview() {
         }}
       />
       <div className="mx-auto max-w-[1440px] space-y-3 px-4 py-4 sm:px-6 xl:px-8">
+        <ActiveProfileIdentity profile={{ id: "preview-business", displayName: "Perfil da empresa (demonstração)" }} />
         <nav
           aria-label="Caminho da central"
           className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-muted-foreground sm:text-sm"
