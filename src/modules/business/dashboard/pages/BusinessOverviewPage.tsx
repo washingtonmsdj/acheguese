@@ -105,7 +105,12 @@ export default function BusinessOverviewPage({
       <h1 className="business-management-title">Visão geral</h1>
 
       <section aria-label="Resumo da empresa" className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
-        <SummaryCard icon={StatusIcon} label="Situação" value={statusPresentation.label} />
+        <SummaryCard
+          icon={StatusIcon}
+          label="Situação"
+          value={statusPresentation.label}
+          tone={statusPresentation.tone}
+        />
         <SummaryCard icon={Star} label="Avaliações" value={hasReviews ? `${business.rating.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} · ${business.total_reviews}` : "Sem avaliações"} />
         {messagingAvailable && canActivateBusinessProfile ? (
           <SummaryCard icon={MessageCircle} label="Mensagens" value={messageSummary} />
@@ -223,13 +228,43 @@ export default function BusinessOverviewPage({
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, className = "", to }: { icon: typeof Store; label: string; value: string; className?: string; to?: string }) {
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  className = "",
+  to,
+  tone = "brand",
+}: {
+  icon: typeof Store;
+  label: string;
+  value: string;
+  className?: string;
+  to?: string;
+  tone?: "brand" | "success" | "warning" | "neutral";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "bg-success/10 text-success"
+      : tone === "warning"
+        ? "bg-warning/10 text-warning"
+        : tone === "neutral"
+          ? "bg-muted text-muted-foreground"
+          : "bg-primary/10 text-primary";
+  const borderClass =
+    tone === "success"
+      ? "border-success/20"
+      : tone === "warning"
+        ? "border-warning/20"
+        : "border-border";
   const content = <>
-    <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
+    <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${toneClass}`}>
+      <Icon className="h-5 w-5" aria-hidden="true" />
+    </span>
     <p className="mt-2 text-xs text-muted-foreground">{label}</p>
     <p className="mt-0.5 break-words text-base font-bold leading-tight text-foreground sm:text-lg">{value}</p>
   </>;
-  const classes = `min-w-0 rounded-2xl border border-border bg-card p-3 sm:p-4 ${className}`;
+  const classes = `min-w-0 rounded-2xl border ${borderClass} bg-card p-3 sm:p-4 ${className}`;
   return to ? <Link to={to} className={`${classes} transition-colors hover:border-primary/30 hover:bg-primary/[0.03]`}>{content}</Link> : <div className={classes}>{content}</div>;
 }
 
