@@ -1,3 +1,21 @@
+.messaging-shell {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.messaging-shell > header {
+  flex-shrink: 0;
+}
+
+.messaging-shell > main {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+}
+
 .messaging-inbox {
   height: 100dvh;
   min-width: 0;

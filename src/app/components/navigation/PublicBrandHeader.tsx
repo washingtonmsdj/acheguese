@@ -18,6 +18,7 @@ export function BrandMark() {
 interface PublicBrandHeaderProps {
   urls: { nearby: string; business: string; map: string; search: string };
   contextLabel?: string;
+  accountHref?: string;
   onSearchSubmit?: (event: FormEvent<HTMLFormElement>) => void;
 }
 
@@ -25,6 +26,7 @@ interface PublicBrandHeaderProps {
 export function PublicBrandHeader({
   urls,
   contextLabel,
+  accountHref,
   onSearchSubmit,
 }: PublicBrandHeaderProps) {
   return (
@@ -59,8 +61,8 @@ export function PublicBrandHeader({
             <ChevronDown aria-hidden="true" />
           </Link>
         ) : null}
-        <Link className="pt-login" to={AUTH_PATHS.login}>
-          Entrar <ArrowRight aria-hidden="true" />
+        <Link className="pt-login" to={accountHref ?? AUTH_PATHS.login}>
+          {accountHref ? "Minha conta" : "Entrar"} <ArrowRight aria-hidden="true" />
         </Link>
         <details className="pt-mobile-menu">
           <summary aria-label="Abrir menu">
