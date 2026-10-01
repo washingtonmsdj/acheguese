@@ -35,7 +35,7 @@ const sampleItems: BusinessCatalogItem[] = [
     active: true,
     category: "",
     image: null,
-    createdAt: "2026-01-03",
+    createdAt: "2026-01-05",
   },
   {
     id: "demo-2",
@@ -46,7 +46,7 @@ const sampleItems: BusinessCatalogItem[] = [
     active: true,
     category: "",
     image: null,
-    createdAt: "2026-01-02",
+    createdAt: "2026-01-03",
   },
   {
     id: "demo-3",
@@ -58,6 +58,28 @@ const sampleItems: BusinessCatalogItem[] = [
     category: "",
     image: null,
     createdAt: "2026-01-01",
+  },
+  {
+    id: "demo-4",
+    kind: "service",
+    name: "Ensino fundamental",
+    description: "Exemplo de serviço com descrição curta e preço gratuito.",
+    price: 0,
+    active: true,
+    category: "",
+    image: null,
+    createdAt: "2026-01-04",
+  },
+  {
+    id: "demo-5",
+    kind: "service",
+    name: "Biblioteca",
+    description: "Exemplo de item cuja disponibilidade pode ser alterada.",
+    price: null,
+    active: true,
+    category: "",
+    image: null,
+    createdAt: "2026-01-02",
   },
 ];
 export function Preview() {
@@ -105,7 +127,9 @@ export function Preview() {
                   key={label}
                   type="button"
                   disabled={label === "Fotos"}
-                  aria-current={label === "Produtos e serviços" ? "page" : undefined}
+                  aria-current={
+                    label === "Produtos e serviços" ? "page" : undefined
+                  }
                   className={`business-dashboard-nav__item ${label === "Produtos e serviços" ? "bg-primary/10 text-primary" : "text-muted-foreground"}`}
                 >
                   <Icon size={18} />

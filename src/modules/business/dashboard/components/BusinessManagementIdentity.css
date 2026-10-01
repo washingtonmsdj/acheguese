@@ -1,5 +1,6 @@
 .business-management-identity {
-  display: flex;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
   align-items: center;
   gap: 16px;
   min-width: 0;
@@ -12,8 +13,8 @@
 .business-management-identity__image {
   display: grid;
   flex: none;
-  width: 88px;
-  aspect-ratio: 1;
+  width: 100%;
+  aspect-ratio: 4 / 3;
   place-items: center;
   overflow: hidden;
   border-radius: 12px;
@@ -38,7 +39,7 @@
   font-size: clamp(1rem, 1.5vw, 1.35rem);
   font-weight: 750;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   letter-spacing: -0.025em;
 }
 .business-management-identity__badges {
@@ -89,16 +90,16 @@
 }
 @media (max-width: 639px) {
   .business-management-identity {
-    flex-wrap: wrap;
+    grid-template-columns: 76px minmax(0, 1fr);
     gap: 12px;
     padding: 12px;
   }
   .business-management-identity__image {
-    width: 64px;
+    width: 76px;
     border-radius: 10px;
   }
   .business-management-identity__copy {
-    flex-basis: calc(100% - 76px);
+    min-width: 0;
   }
   .business-management-identity__copy strong {
     font-size: 15px;
@@ -107,6 +108,7 @@
     display: none;
   }
   .business-management-identity > a {
+    grid-column: 1 / -1;
     width: 100%;
     justify-content: center;
   }
