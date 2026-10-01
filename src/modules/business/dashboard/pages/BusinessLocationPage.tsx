@@ -6,6 +6,17 @@ import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/
 import { useBusinessEdit } from "@/modules/business/hooks/useBusinessEdit";
 import { BusinessManagementIdentity } from "../components/BusinessManagementIdentity";
 import { Button } from "@/shared/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/components/ui/alert-dialog";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import { resolveMediaAssetSource } from "@/shared/media/mediaAssetReference";
 import "./BusinessLocationPage.css";
@@ -64,6 +75,7 @@ export default function BusinessLocationPage() {
 
 interface BusinessLocationViewProps {
   showIdentity?: boolean;
+  showSteps?: boolean;
   business: BusinessManagementIdentityData;
   publicUrl?: string | null;
   address: Address;
@@ -77,6 +89,7 @@ interface BusinessLocationViewProps {
 
 export function BusinessLocationView({
   showIdentity = true,
+  showSteps = showIdentity,
   business,
   publicUrl,
   address,
@@ -114,30 +127,32 @@ export function BusinessLocationView({
   return (
     <div className="business-location">
       {showIdentity ? <BusinessManagementIdentity business={business} publicUrl={publicUrl} /> : null}
-      <ol
-        className="business-location__steps"
-        aria-label="Etapas de edição da empresa"
-      >
-        {[
-          { label: "Dados básicos", mobile: "Dados" },
-          { label: "Fotos", mobile: "Fotos" },
-          { label: "Horário", mobile: "Horário" },
-          { label: "Localização", mobile: "Localização" },
-          { label: "Produtos e serviços", mobile: "Serviços" },
-        ].map(({ label, mobile }, index) => (
-          <li
-            key={label}
-            aria-label={`Etapa ${index + 1}: ${label}`}
-            aria-current={index === 3 ? "step" : undefined}
-          >
-            <span>{index + 1}</span>
-            <small className="business-location__step-label">{label}</small>
-            <small className="business-location__step-label--mobile">
-              {mobile}
-            </small>
-          </li>
-        ))}
-      </ol>
+      {showSteps ? (
+        <ol
+          className="business-location__steps"
+          aria-label="Etapas de edição da empresa"
+        >
+          {[
+            { label: "Dados básicos", mobile: "Dados" },
+            { label: "Fotos", mobile: "Fotos" },
+            { label: "Horário", mobile: "Horário" },
+            { label: "Localização", mobile: "Localização" },
+            { label: "Produtos e serviços", mobile: "Serviços" },
+          ].map(({ label, mobile }, index) => (
+            <li
+              key={label}
+              aria-label={`Etapa ${index + 1}: ${label}`}
+              aria-current={index === 3 ? "step" : undefined}
+            >
+              <span>{index + 1}</span>
+              <small className="business-location__step-label">{label}</small>
+              <small className="business-location__step-label--mobile">
+                {mobile}
+              </small>
+            </li>
+          ))}
+        </ol>
+      ) : null}
       <div className="business-location__grid">
         <form
           className="business-location__panel"
@@ -154,7 +169,7 @@ export function BusinessLocationView({
           <header>
             <MapPin aria-hidden="true" />
             <div>
-              <h1>4. Localização</h1>
+              <h1 className="business-management-title">Localização</h1>
               <p>
                 Defina o endereço da sua empresa. Ele será exibido no mapa e
                 ajudará as pessoas a encontrá-la.
@@ -205,17 +220,34 @@ export function BusinessLocationView({
           </section>
           {error && <p role="alert">{error}</p>}
           <footer>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!changed || isSaving}
-              onClick={() => {
-                if (window.confirm("Descartar as alterações de localização?"))
-                  onDiscard();
-              }}
-            >
-              Cancelar
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!changed || isSaving}
+                >
+                  Descartar
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="w-[calc(100%-2rem)] rounded-xl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    O endereço e o ponto do mapa voltarão à última versão salva.
+                    As alterações desta tela serão perdidas.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="min-h-11">
+                    Continuar editando
+                  </AlertDialogCancel>
+                  <AlertDialogAction className="min-h-11" onClick={onDiscard}>
+                    Descartar alterações
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <Button disabled={!changed || isSaving || !address.street?.trim()}>
               {isSaving ? "Salvando…" : "Salvar alterações"}
               <ArrowRight size={16} aria-hidden="true" />
