@@ -138,7 +138,7 @@
   font-size: 14px;
   font-weight: 700;
   line-height: 1.4;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 .business-catalog__copy p {
   display: -webkit-box;
@@ -342,10 +342,16 @@
     height: 56px;
   }
   .business-catalog__actions {
-    grid-column: 2;
+    grid-column: 1 / -1;
     display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
     justify-content: space-between;
     align-items: center;
+  }
+  .business-catalog__actions > div {
+    margin-left: auto;
+    flex-shrink: 0;
   }
   .business-catalog__actions > label {
     flex-direction: row-reverse;
