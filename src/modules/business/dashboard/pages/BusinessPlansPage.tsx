@@ -201,7 +201,7 @@ export default function BusinessPlansPage() {
           {entitledFeatures.map(([label, allowed]) => (
             <div key={label} className="flex items-center gap-2 rounded-md border p-2 text-sm">
               {allowed ? (
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                <CheckCircle2 className="h-4 w-4 text-success" />
               ) : (
                 <Lock className="h-4 w-4 text-muted-foreground" />
               )}
