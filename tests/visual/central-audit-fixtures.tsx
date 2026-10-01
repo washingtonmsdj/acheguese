@@ -57,6 +57,8 @@ function useProfile() {
   return useSyncExternalStore(subscribe, () => current);
 }
 export const useBusiness = () => ({ business, isLoading: false });
+// No destructive operation is exposed by this isolated layout fixture.
+export const useDashboardAccess = () => ({ permissions: { role: "admin", hasAccess: true }, loading: false, error: null, checkedProfileId: business.profile_id });
 export const useResolvedBusinessPublicUrl = () => ({ url: null });
 export function useSessionContext() {
   const active = useProfile();

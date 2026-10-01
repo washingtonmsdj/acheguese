@@ -228,11 +228,11 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold">Pessoas e acesso</h3>
           <p className="text-sm text-muted-foreground">
-            Proprietario, gestores e membros deste perfil {profileType}.
+            Proprietário, gestores e membros deste perfil.
           </p>
         </div>
         {canManageAccess ? (
@@ -320,11 +320,11 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
           {members.map(member => (
             <div
               key={member.id}
-              className="flex items-center gap-4 p-4 bg-card rounded-lg border"
+              className="flex min-w-0 flex-wrap items-center gap-3 p-3 bg-card rounded-lg border sm:p-4"
             >
               {getRoleIcon(member.role)}
               
-              <div className="flex-1">
+              <div className="min-w-0 flex-1 basis-36 break-words [overflow-wrap:anywhere]">
                 <p className="font-medium">
                   {member.display_name || member.email || 'Pessoa da equipe'}
                 </p>
@@ -342,7 +342,7 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
                       handleUpdateRole(member.user_id, value as EditableProfileRole)
                     }
                   >
-                    <SelectTrigger className="w-40">
+                    <SelectTrigger className="min-h-11 w-full sm:w-40">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -357,6 +357,7 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
                     type="button"
                     variant="outline"
                     size="sm"
+                    className="min-h-11 whitespace-normal text-left"
                     disabled={transferringOwnerId !== null}
                     onClick={() =>
                       handleTransferOwnership(
@@ -386,7 +387,7 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
                   </Button>
                 </>
               ) : (
-                <span className="min-w-24 rounded-md border px-3 py-2 text-center text-sm">
+                <span className="rounded-md border px-3 py-2 text-center text-sm">
                   {getRoleLabel(member.role)}
                 </span>
               )}

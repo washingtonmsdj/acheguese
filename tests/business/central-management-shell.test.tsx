@@ -2,6 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { getActiveBusinessManagementNavigation } from "../../src/app/config/businessManagementSurfaceScope";
 import BusinessDashboardShellPage from "../../src/modules/business/dashboard/pages/BusinessDashboardShellPage";
 import BusinessDetailsPage from "../../src/modules/business/dashboard/pages/BusinessDetailsPage";
@@ -18,6 +19,9 @@ const fixture = vi.hoisted(() => ({
 }));
 vi.mock("@/core/business/hooks/useBusiness", () => ({
   useBusiness: () => ({ business: fixture.business, isLoading: false }),
+}));
+vi.mock("@/core/business/hooks/useDashboardAccess", () => ({
+  useDashboardAccess: () => ({ permissions: { role: "admin" }, loading: false, error: null, checkedProfileId: "real-id" }),
 }));
 vi.mock("@/core/business/hooks/useResolvedBusinessPublicUrl", () => ({
   useResolvedBusinessPublicUrl: () => ({ url: "/ba/cidade/territorio/empresas/empresa-de-teste" }),
@@ -40,14 +44,14 @@ vi.mock("@/core/auth/services/AuthService", () => ({
 
 function open(section: string) {
   render(
-    <MemoryRouter initialEntries={[`/central/empresas/real-id/${section}`]}>
+    <QueryClientProvider client={new QueryClient()}><MemoryRouter initialEntries={[`/central/empresas/real-id/${section}`]}>
       <Routes>
         <Route path="/central/empresas/:businessId" element={<BusinessDashboardShellPage navigationItems={getActiveBusinessManagementNavigation()} />}>
           <Route path="dados" element={<BusinessDetailsPage />} />
           <Route path="configuracoes" element={<BusinessSettingsPage />} />
         </Route>
       </Routes>
-    </MemoryRouter>,
+    </MemoryRouter></QueryClientProvider>,
   );
 }
 

@@ -27,6 +27,7 @@ export default defineConfig({
     alias: [
       ...[
         "@/core/business/hooks/useBusiness",
+        "@/core/business/hooks/useDashboardAccess",
         "@/core/business/hooks/useResolvedBusinessPublicUrl",
         "@/core/session/hooks/useSessionContext",
         "@/core/profiles/contexts/multi-profile-runtime-context",

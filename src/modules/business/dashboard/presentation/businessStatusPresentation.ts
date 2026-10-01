@@ -29,8 +29,7 @@ export function getBusinessStatusPresentation(
       return {
         icon: Clock3,
         label: "Em análise",
-        badgeClassName:
-          "bg-amber-500/10 text-amber-800 dark:text-amber-300",
+        badgeClassName: "bg-amber-500/10 text-amber-800 dark:text-amber-300",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
@@ -41,6 +40,14 @@ export function getBusinessStatusPresentation(
         badgeClassName: "bg-muted text-foreground",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
+      };
+    case "deleted":
+      return {
+        icon: MinusCircle,
+        label: "Desativada",
+        badgeClassName: "bg-muted text-foreground",
+        unavailablePublicMessage:
+          "Esta empresa foi desativada e não está disponível publicamente.",
       };
     case "inactive":
       return {
