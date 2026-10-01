@@ -11,6 +11,10 @@ const contextualRuntime = readFileSync(
   resolve(root, "src/app/components/ContextualProfileTerritoryRuntime.tsx"),
   "utf8",
 );
+const authRequiredRuntimeRoutes = readFileSync(
+  resolve(root, "src/core/routing/config/authRequiredRuntimeRoutes.ts"),
+  "utf8",
+);
 
 describe("auth route runtime isolation", () => {
   it("keeps public auth routes on session-only runtime", () => {
@@ -40,6 +44,32 @@ describe("auth route runtime isolation", () => {
     expect(contextualRuntime).toContain("<MultiProfileProvider>");
     expect(contextualRuntime).toContain("<TerritoryModeInitializer />");
     expect(contextualRuntime).toContain("<ModuleContextSync />");
+  });
+
+  it("resolves anonymous protected routes before loading contextual runtime", () => {
+    expect(shell).toContain("requiresPreContextAuthentication(location.pathname)");
+    expect(shell).toContain("const { user, isLoading } = useSessionContext()");
+    expect(shell).toContain("if (isLoading)");
+    expect(shell).toContain("if (!user)");
+    expect(shell).toContain("to={buildLoginPath(redirectPath)}");
+
+    const preContextGate = shell.indexOf(
+      "requiresPreContextAuthentication(location.pathname)",
+    );
+    const contextualRuntimeMount = shell.indexOf(
+      "<ContextualProfileTerritoryRuntime>",
+    );
+    expect(preContextGate).toBeGreaterThanOrEqual(0);
+    expect(contextualRuntimeMount).toBeGreaterThan(preContextGate);
+
+    expect(authRequiredRuntimeRoutes).toContain("ACCOUNT_PATHS.home");
+    expect(authRequiredRuntimeRoutes).toContain("messagingRoutes.inbox()");
+    expect(authRequiredRuntimeRoutes).toContain('"/central"');
+    expect(authRequiredRuntimeRoutes).toContain('"/notificacoes"');
+    expect(authRequiredRuntimeRoutes).toContain('"/empresas/cadastrar"');
+    expect(authRequiredRuntimeRoutes).toContain(
+      "ProtectedRoute/CentralAccessGuard",
+    );
   });
 
   it("keeps SessionProvider above the route split so auth-to-app navigation does not restart session ownership", () => {

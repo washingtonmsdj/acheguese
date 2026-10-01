@@ -1,8 +1,10 @@
 import { lazy, Suspense } from "react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 import { AppRoutes } from "@/app/routes/AppRoutes";
-import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { requiresPreContextAuthentication } from "@/core/routing/config/authRequiredRuntimeRoutes";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { SessionProvider } from "@/core/session/providers/SessionProvider";
 import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
 
@@ -39,21 +41,48 @@ function RoutedPageContent() {
  * a autenticacao pode depender de perfil/territorio. SessionProvider fica fora
  * da bifurcacao para a navegacao auth -> app nao reinicializar a sessao.
  */
-export default function SessionProfileRuntimeShell() {
-  const { pathname } = useLocation();
-  const sessionOnlyRoute = AUTH_SESSION_ONLY_PATHS.has(pathname);
+function SessionAwareRuntimeBranch() {
+  const location = useLocation();
+  const { user, isLoading } = useSessionContext();
+  const sessionOnlyRoute = AUTH_SESSION_ONLY_PATHS.has(location.pathname);
+
+  if (sessionOnlyRoute) {
+    return <RoutedPageContent />;
+  }
+
+  if (requiresPreContextAuthentication(location.pathname)) {
+    // Protected routes do not need profile/territory runtime until the session
+    // owner has decided whether an authenticated user exists.
+    if (isLoading) {
+      return <PassivePageFallback />;
+    }
+
+    if (!user) {
+      const redirectPath =
+        `${location.pathname}${location.search}${location.hash}`;
+      return (
+        <Navigate
+          to={buildLoginPath(redirectPath)}
+          replace
+          state={{ redirectTo: redirectPath }}
+        />
+      );
+    }
+  }
 
   return (
-    <SessionProvider>
-      {sessionOnlyRoute ? (
+    <Suspense fallback={<PassivePageFallback />}>
+      <ContextualProfileTerritoryRuntime>
         <RoutedPageContent />
-      ) : (
-        <Suspense fallback={<PassivePageFallback />}>
-          <ContextualProfileTerritoryRuntime>
-            <RoutedPageContent />
-          </ContextualProfileTerritoryRuntime>
-        </Suspense>
-      )}
+      </ContextualProfileTerritoryRuntime>
+    </Suspense>
+  );
+}
+
+export default function SessionProfileRuntimeShell() {
+  return (
+    <SessionProvider>
+      <SessionAwareRuntimeBranch />
     </SessionProvider>
   );
 }
