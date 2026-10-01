@@ -85,7 +85,10 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
   const [threads, setThreads] = useState<MessagingInboxThread[]>([]);
   const [messages, setMessages] = useState<MessagingInboxMessage[]>([]);
   const [search, setSearch] = useState("");
-  const [draft, setDraft] = useState("");
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const draftKey = `${activeProfile?.id ?? ""}:${providerId ?? ""}:${threadId ?? ""}`;
+  const draft = drafts[draftKey] ?? "";
+  const setDraft = (value: string) => setDrafts((current) => ({ ...current, [draftKey]: value }));
   const [inboxLoading, setInboxLoading] = useState(true);
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
@@ -234,7 +237,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
       !activeProvider ||
       !threadId ||
       !draft.trim() ||
-      sending
+      sending || threadLoading
     ) {
       return;
     }
@@ -529,13 +532,15 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                   </p>
                 ) : null}
                 <div className="mx-auto flex max-w-3xl items-end gap-2">
-                  <Input
+                  <textarea
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     placeholder="Escreva uma mensagem"
+                    rows={2}
+                    className="messaging-inbox__draft"
                     maxLength={4000}
                     disabled={
-                      sending ||
+                      sending || threadLoading ||
                       selectedThread?.blockedByMe ||
                       selectedThread?.blockedByOther ||
                       Boolean(selectedThread?.closedAt)
@@ -546,7 +551,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                     type="submit"
                     size="icon"
                     disabled={
-                      sending ||
+                      sending || threadLoading ||
                       !draft.trim() ||
                       selectedThread?.blockedByMe ||
                       selectedThread?.blockedByOther ||
