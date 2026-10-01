@@ -57,6 +57,7 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(account).toContain("data.allProfiles");
     expect(account).toContain('title="Mensagens"');
     expect(account).toContain("navigate(data.appUrls.messages)");
+    expect(account).not.toContain("data.appUrls.auth.login");
   });
 
   it("keeps global Messaging navigation owned by the horizontal capability", () => {

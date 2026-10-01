@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell,
@@ -101,12 +101,6 @@ function ContaHubLivePage() {
     data.activeProfile ??
     null;
   const editorProfileId = personalProfile?.id ?? resolvedProfile?.id ?? null;
-
-  useEffect(() => {
-    if (!data.loading && !data.user) {
-      navigate(data.appUrls.auth.login);
-    }
-  }, [data.loading, data.user, navigate, data.appUrls.auth.login]);
 
   if (data.loading && !resolvedProfile) {
     return (

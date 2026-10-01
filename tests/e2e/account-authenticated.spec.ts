@@ -110,7 +110,9 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       await page.context().clearCookies();
       await bootstrapProtectedPreviewAccess(page);
       await page.goto("/conta", { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/);
+      await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/, {
+        timeout: 30_000,
+      });
       await expect(page.locator("#login-identifier")).toBeVisible({
         timeout: 30_000,
       });
