@@ -18,6 +18,7 @@ export const businessManagementRoutes = {
   photos: (businessId: string) => `/central/empresas/${cleanRouteSegment(businessId, "business id")}/fotos`,
   hours: (businessId: string) => `/central/empresas/${cleanRouteSegment(businessId, "business id")}/horarios`,
   location: (businessId: string) => `/central/empresas/${cleanRouteSegment(businessId, "business id")}/localizacao`,
+  catalog: (businessId: string) => `/central/empresas/${cleanRouteSegment(businessId, "business id")}/produtos-servicos`,
   dados: (businessId: string) => `/central/empresas/${businessId}/dados`,
   gastronomia: (businessId: string) => `/central/empresas/${businessId}/gastronomia`,
   planos: (businessId: string) => `/central/empresas/${businessId}/planos`,
@@ -51,6 +52,7 @@ export function getBusinessManagementSectionLabel(pathname: string) {
   if (/\/fotos$/.test(pathname)) return "Fotos da empresa";
   if (/\/horarios$/.test(pathname)) return "Horário de funcionamento";
   if (/\/localizacao$/.test(pathname)) return "Localização";
+  if (/\/produtos-servicos$/.test(pathname)) return "Produtos e serviços";
   if (/\/dados$/.test(pathname)) return "Dados da empresa";
   if (/\/gastronomia(\/|$)/.test(pathname)) return "Gastronomia";
   if (/\/educacao(\/|$)/.test(pathname)) return "Educação";

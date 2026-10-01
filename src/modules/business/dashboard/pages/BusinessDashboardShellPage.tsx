@@ -13,6 +13,7 @@ import {
   Images,
   MapPin,
   Pencil,
+  Package,
   Settings,
   Store,
 } from "lucide-react";
@@ -108,6 +109,12 @@ export default function BusinessDashboardShellPage() {
       mobileLabel: "Local",
       to: businessManagementRoutes.location(businessId),
       icon: MapPin,
+    },
+    {
+      label: "Produtos e serviços",
+      mobileLabel: "Catálogo",
+      to: businessManagementRoutes.catalog(businessId),
+      icon: Package,
     },
     {
       label: "Desempenho",

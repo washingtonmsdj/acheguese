@@ -64,6 +64,7 @@ export function CentralRoutes() {
                   <Route path="fotos" element={<P.BusinessPhotosPage />} />
                   <Route path="horarios" element={<P.BusinessOpeningHoursPage />} />
                   <Route path="localizacao" element={<P.BusinessLocationPage />} />
+                  <Route path="produtos-servicos" element={<P.BusinessCatalogPage />} />
                   <Route path="dados" element={<P.BusinessDetailsPage />} />
                   <Route path="analytics" element={<P.BusinessAnalyticsPage />} />
                   <Route

@@ -45,6 +45,7 @@ export const BusinessPhotosPage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessPhotosPage"),
 );
 export const BusinessLocationPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessLocationPage"));
+export const BusinessCatalogPage = lazy(() => import("@/modules/business/dashboard/pages/BusinessCatalogPage"));
 export const BusinessOpeningHoursPage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessOpeningHoursPage"),
 );
