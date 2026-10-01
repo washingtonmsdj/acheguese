@@ -123,6 +123,7 @@ const MIGRATED_RUNTIME_FILES = [
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:emerald|green|lime|rose|red|amber|yellow)-\d{2,3}(?:\/\d+)?\b/;
+const BUSINESS_DIRECT_BRAND_PRIMITIVE_RE = /var\(--brand-[a-z0-9-]+\)/;
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
 const APPROVED_FONT_WEIGHTS = new Set(['400', '500', '600', '700', '800']);
@@ -292,6 +293,14 @@ function main(): void {
     ) {
       violations.push(
         `${relative}: non-semantic status color found in Business dashboard; use success, warning or destructive tokens.`,
+      );
+    }
+    if (
+      relative.startsWith('src/modules/business/dashboard/') &&
+      BUSINESS_DIRECT_BRAND_PRIMITIVE_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: direct brand primitive found in Business dashboard; consume semantic tokens or shared design-system components instead.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);
