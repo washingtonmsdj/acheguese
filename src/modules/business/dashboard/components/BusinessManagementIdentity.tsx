@@ -49,10 +49,10 @@ export function BusinessManagementIdentity({
         <strong>{business.name}</strong>
         <div className="business-management-identity__badges">
           {business.category ? (
-            <span>{getBusinessCategoryLabel(business.category)}</span>
+            <span className="business-management-identity__category">{getBusinessCategoryLabel(business.category)}</span>
           ) : null}
           {statusPresentation ? (
-            <span className={statusPresentation.badgeClassName}>
+            <span className={`business-management-identity__status ${statusPresentation.badgeClassName}`}>
               {statusPresentation.label}
             </span>
           ) : null}
