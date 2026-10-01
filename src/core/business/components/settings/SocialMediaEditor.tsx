@@ -95,7 +95,7 @@ export function SocialMediaEditor({
             <div key={platform.id} className="space-y-2">
               {/* Platform label */}
               <div className="flex items-center gap-2">
-                <div className={cn("rounded-lg p-1.5 bg-secondary")}>
+                <div className={cn("rounded-lg p-1.5 bg-territory-raised")}>
                   <Icon className={cn("h-4 w-4", platform.color)} />
                 </div>
                 <label className="text-sm font-medium text-foreground">
@@ -175,7 +175,7 @@ export function SocialMediaEditor({
       </div>
 
       {/* Help text */}
-      <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground">
+      <div className="bg-territory-raised/50 rounded-lg p-3 text-xs text-muted-foreground">
         <p className="mb-1 flex items-center gap-1.5 font-medium">
           <Lightbulb className="h-3.5 w-3.5" />
           Dicas:
