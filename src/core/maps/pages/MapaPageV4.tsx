@@ -51,12 +51,16 @@ import { boundaryService } from '@/core/geospatial';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import { EntityStatus } from '@/shared/types/enums';
 import { LocationStatus, type Location } from '@/core/location/types';
-import { getBusinessCategoryLabel } from '@/shared/taxonomy/businessCategories';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type {
   MapLayerProviderRuntime,
   MapProviderBrowseLink,
 } from '../providers/types';
+import {
+  getMapCategoryLabel,
+  getMapMarkerCategory,
+  getMapMarkerCategoryLabel,
+} from '../utils/mapMarkerPresentation';
 
 export interface MapaPageV4Props {
   resolved?: ResolvedTerritory | null;
@@ -163,18 +167,6 @@ function hasMeaningfulViewportChange(
     || Math.abs(current.zoom - reference.zoom) >= 0.35;
 }
 
-function getMarkerCategory(marker: MapMarker): string | null {
-  const category = marker.metadata?.category;
-  return typeof category === 'string' && category.trim() ? category.trim() : null;
-}
-
-function getMarkerCategoryLabel(marker: MapMarker): string {
-  const category = getMarkerCategory(marker);
-  if (marker.type === 'business' && category) return getBusinessCategoryLabel(category);
-  const label = category ?? marker.type.replace(/_/g, ' ');
-  return label.charAt(0).toLocaleUpperCase('pt-BR') + label.slice(1);
-}
-
 function MapResultItem({
   marker,
   selected,
@@ -205,7 +197,7 @@ function MapResultItem({
           {marker.type === 'business' ? <Store /> : <MapPin />}
         </span>
         <span className="map-result-copy">
-          <span className="map-result-category">{getMarkerCategoryLabel(marker)}</span>
+          <span className="map-result-category">{getMapMarkerCategoryLabel(marker)}</span>
           <strong>{marker.title}</strong>
           <span className="map-result-meta">
             {isVerified ? (
@@ -768,7 +760,7 @@ export default function MapaPageV4({
   const categoryOptions = React.useMemo<MapCategoryOption[]>(() => {
     const counts = new Map<string, number>();
     allMarkers.forEach((marker) => {
-      const category = getMarkerCategory(marker);
+      const category = getMapMarkerCategory(marker);
       if (!category) return;
       counts.set(category, (counts.get(category) ?? 0) + 1);
     });
@@ -777,7 +769,7 @@ export default function MapaPageV4({
       .map(([key, count]) => ({
         key,
         count,
-        label: getBusinessCategoryLabel(key),
+        label: getMapCategoryLabel(key),
       }))
       .sort((left, right) => left.label.localeCompare(right.label, 'pt-BR'));
   }, [allMarkers]);
@@ -794,7 +786,7 @@ export default function MapaPageV4({
   const filteredMarkers = React.useMemo(() => {
     const normalizedQuery = mapQuery.trim().toLocaleLowerCase('pt-BR');
     const filtered = allMarkers.filter((marker) => {
-      const category = getMarkerCategory(marker);
+      const category = getMapMarkerCategory(marker);
       if (activeCategory !== 'all' && category !== activeCategory) return false;
       if (verifiedOnly && marker.metadata?.is_verified !== true) return false;
       if (ratedOnly && !(typeof marker.metadata?.rating === 'number' && marker.metadata.rating > 0)) return false;
@@ -1164,7 +1156,7 @@ export default function MapaPageV4({
                 </header>
                 <h2 aria-live="polite">{selectedMarker.title}</h2>
                 <div className="map-selection-body">
-                  <p>{getMarkerCategoryLabel(selectedMarker)}</p>
+                  <p>{getMapMarkerCategoryLabel(selectedMarker)}</p>
                   {selectedMarker.subtitle ? <p className="map-selection-address">{selectedMarker.subtitle}</p> : null}
                   <div className="map-selection-actions">
                     {selectedMarker.url ? <Link to={selectedMarker.url}>Ver detalhes <ArrowUpRight aria-hidden="true" /></Link> : null}

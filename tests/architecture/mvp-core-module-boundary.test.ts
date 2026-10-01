@@ -358,7 +358,9 @@ describe("MVP core module boundary", () => {
     expect(nearby).toContain("buildLocationModuleUrl");
     expect(nearby).toContain("MODULE_SLUGS.business");
     expect(nearby).toContain("MODULE_SLUGS.map");
-    expect(nearby).toContain('seeAllLabel="Abrir mapa"');
+    expect(nearby).toContain("const mapUrl =");
+    expect(nearby).toContain("MODULE_SLUGS.map");
+    expect(nearby).toContain("navigate(mapUrl)");
     expect(nearby).not.toContain("useFriendlyModuleUrls");
 
     for (const forbidden of [

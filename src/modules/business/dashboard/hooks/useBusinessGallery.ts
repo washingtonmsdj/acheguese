@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import { businessGalleryService } from "@/modules/business/dashboard/services/businessGalleryService";
+import { businessGalleryService } from "@/core/business/services/BusinessGalleryService";
 
 const key = (businessDataId?: string) => ["business-gallery-management", businessDataId] as const;
 

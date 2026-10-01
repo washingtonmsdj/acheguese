@@ -20,8 +20,8 @@ import {
   businessCatalogService,
   type BusinessCatalogItem,
   type CatalogInput,
-} from "../services/businessCatalogService";
-import { businessGalleryService } from "../services/businessGalleryService";
+} from "@/core/business/services/businessCatalogService";
+import { businessGalleryService } from "@/core/business/services/BusinessGalleryService";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";

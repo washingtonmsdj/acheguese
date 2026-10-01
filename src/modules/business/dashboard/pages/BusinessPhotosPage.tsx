@@ -22,7 +22,8 @@ import {
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { useBusinessGallery } from "@/modules/business/dashboard/hooks/useBusinessGallery";
-import type { BusinessGalleryPhoto } from "@/modules/business/dashboard/services/businessGalleryService";
+import { BusinessPhotoMutationStatus } from "@/modules/business/dashboard/components/BusinessPhotoMutationStatus";
+import type { BusinessGalleryPhoto } from "@/core/business/services/BusinessGalleryService";
 import { resolveMediaAssetSource } from "@/shared/media/mediaAssetReference";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/components/ui/dialog";
@@ -128,7 +129,9 @@ export default function BusinessPhotosPage() {
             </div>
           ) : <p className="business-photo-capacity" role="status">Galeria completa: {gallery.maxPhotos} fotos. Remova uma imagem para adicionar outra.</p>}
 
-          {busy ? <p className="business-photo-status" role="status"><Loader2 className="animate-spin" aria-hidden="true" />{gallery.upload.isPending ? "Enviando fotos…" : "Salvando alterações…"}</p> : null}
+          {busy ? (
+            <BusinessPhotoMutationStatus uploading={gallery.upload.isPending} />
+          ) : null}
 
           {gallery.query.isPending ? (
             <div className="business-photo-loading"><Loader2 className="animate-spin" aria-hidden="true" /> Carregando galeria…</div>

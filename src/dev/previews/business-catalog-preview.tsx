@@ -6,7 +6,7 @@ import { Store, Pencil, Images, Clock, MapPin, Package } from "lucide-react";
 import { PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
 import { BusinessDashboardNavigation } from "@/modules/business/dashboard/components/BusinessDashboardNavigation";
 import { BusinessCatalogView } from "@/modules/business/dashboard/pages/BusinessCatalogPage";
-import type { BusinessCatalogItem } from "@/modules/business/dashboard/services/businessCatalogService";
+import type { BusinessCatalogItem } from "@/core/business/services/businessCatalogService";
 import "@/index.css";
 
 const sections = [
