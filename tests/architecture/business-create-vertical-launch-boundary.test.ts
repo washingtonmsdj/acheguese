@@ -45,7 +45,7 @@ describe("MVP Business create vertical launch boundary", () => {
     );
   });
 
-  it("certifies Business through the generic Business flow instead of Education", () => {
+  it("certifies Business through the canonical generic Business flow instead of Education", () => {
     for (const source of [businessLifecycle, businessCreateForm]) {
       expect(source).toContain('page.goto("/central/empresas/nova"');
       expect(source).not.toContain("/central/empresas/nova/educacao");
@@ -55,7 +55,7 @@ describe("MVP Business create vertical launch boundary", () => {
       "/educacao/setup",
     );
     expect(businessLifecycle).toContain(
-      'page.getByRole("heading", { name: /^Criar empresa$/i })',
+      'page.getByRole("heading", { name: /^Cadastrar empresa$/i })',
     );
   });
 });

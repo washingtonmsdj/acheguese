@@ -12,6 +12,7 @@
 import { logger } from '@/shared/utils/logger';
 import { QueryClient, DefaultOptions, QueryCache, MutationCache } from '@tanstack/react-query';
 import { captureSentryMessage, addSentryBreadcrumb } from '@/shared/config/sentry.config';
+import { serializeTelemetryValue } from '@/shared/config/queryTelemetrySerialization';
 
 type AppErrorLike = {
   status?: number;
@@ -198,15 +199,17 @@ const queryCache = new QueryCache({
     const queryKey = query.queryKey;
     const dataUpdatedAt = query.state?.dataUpdatedAt || Date.now();
     const duration = Date.now() - dataUpdatedAt;
+    const serializedQueryKey = serializeTelemetryValue(queryKey);
+    const serializedData = serializeTelemetryValue(data);
     
     if (duration > 3000) {
-      const message = `Slow query detected: ${JSON.stringify(queryKey).substring(0, 100)}`;
+      const message = `Slow query detected: ${serializedQueryKey.slice(0, 100)}`;
       
       if (import.meta.env.PROD) {
         captureSentryMessage(message, 'warning', {
-          queryKey: JSON.stringify(queryKey),
+          queryKey: serializedQueryKey,
           duration,
-          dataSize: JSON.stringify(data).length,
+          dataSize: serializedData.length,
         });
       } else if (import.meta.env.VITE_DEBUG_PERFORMANCE === 'true') {
         logger.warn(message, { queryKey, duration });
@@ -215,10 +218,10 @@ const queryCache = new QueryCache({
     
     if (import.meta.env.PROD && duration > 1000) {
       addSentryBreadcrumb(
-        `Query completed: ${JSON.stringify(queryKey).substring(0, 50)}`,
+        `Query completed: ${serializedQueryKey.slice(0, 50)}`,
         'query',
         'info',
-        { duration, dataSize: JSON.stringify(data).length }
+        { duration, dataSize: serializedData.length }
       );
     }
   },
@@ -247,13 +250,14 @@ const mutationCache = new MutationCache({
   onSuccess: (_data: unknown, _variables: unknown, _context: unknown, mutation) => {
     const mutationKey = mutation.options?.mutationKey;
     const duration = Date.now() - (mutation.state?.submittedAt || Date.now());
+    const serializedMutationKey = serializeTelemetryValue(mutationKey);
     
     if (duration > 5000) {
-      const message = `Slow mutation detected: ${JSON.stringify(mutationKey).substring(0, 100)}`;
+      const message = `Slow mutation detected: ${serializedMutationKey.slice(0, 100)}`;
       
       if (import.meta.env.PROD) {
         captureSentryMessage(message, 'warning', {
-          mutationKey: JSON.stringify(mutationKey),
+          mutationKey: serializedMutationKey,
           duration,
         });
       } else if (import.meta.env.VITE_DEBUG_PERFORMANCE === 'true') {
@@ -263,7 +267,7 @@ const mutationCache = new MutationCache({
     
     if (import.meta.env.PROD && duration > 2000) {
       addSentryBreadcrumb(
-        `Mutation completed: ${JSON.stringify(mutationKey).substring(0, 50)}`,
+        `Mutation completed: ${serializedMutationKey.slice(0, 50)}`,
         'mutation',
         'info',
         { duration }

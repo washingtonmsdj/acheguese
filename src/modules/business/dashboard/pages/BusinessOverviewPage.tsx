@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import {
   ArrowRight,
   ArrowUpRight,
-  BarChart3,
   Building2,
   CircleAlert,
   Clock3,
@@ -19,7 +18,6 @@ import {
 } from "lucide-react";
 
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { getBusinessAnalyticsSummary } from "@/core/business/services/business-analytics.service";
 import { businessDirectMessagingService } from "@/core/messaging/services/BusinessDirectMessagingService";
 import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
@@ -39,16 +37,8 @@ export default function BusinessOverviewPage({
   const navigate = useNavigate();
   const { activeProfile, profiles, switchProfile } = useSessionContext();
   const [switchingProfile, setSwitchingProfile] = useState(false);
-  const businessDataId = business.business_data_id;
   const isBusinessProfileActive = activeProfile?.id === business.profile_id;
   const canActivateBusinessProfile = profiles.some((profile) => profile.id === business.profile_id);
-  const analyticsQuery = useQuery({
-    queryKey: ["business-overview-analytics", businessDataId, "month"],
-    queryFn: () => getBusinessAnalyticsSummary(businessDataId!, "month"),
-    enabled: Boolean(businessDataId),
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  });
   const messagesQuery = useQuery({
     queryKey: ["business-overview-messages", business.profile_id],
     queryFn: () => businessDirectMessagingService.listConversationPreviews({
@@ -169,7 +159,16 @@ export default function BusinessOverviewPage({
         ) : (
           <SummaryCard icon={ImageIcon} label="Capa e logo" value={`${media.length} ${media.length === 1 ? "imagem" : "imagens"}`} />
         )}
-        <SummaryCard icon={BarChart3} label="Visualizações · 30 dias" value={!businessDataId ? "Indisponível" : analyticsQuery.isPending ? "Carregando…" : analyticsQuery.isError ? "Indisponível" : String(analyticsQuery.data.views)} to={businessManagementRoutes.analytics(businessId)} />
+        <SummaryCard
+          icon={Clock3}
+          label="Horários"
+          value={
+            businessHours.length === 0
+              ? "Não informado"
+              : `${businessHours.length} ${businessHours.length === 1 ? "dia configurado" : "dias configurados"}`
+          }
+          to={businessManagementRoutes.hours(businessId)}
+        />
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">

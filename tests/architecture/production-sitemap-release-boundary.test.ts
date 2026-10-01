@@ -67,6 +67,29 @@ describe("production sitemap release boundary", () => {
     expect(vercel).toContain('"no-cache, no-store, must-revalidate"');
   });
 
+  it("keeps canonical CI release build aligned with Vercel transient sitemap resilience", () => {
+    const workflow = read(".github/workflows/security-check.yml");
+    const generator = read("src/core/routing/seo/generateSitemap.ts");
+
+    const preflightStart = workflow.indexOf("release-build-preflight:");
+    const preflightEnd = workflow.indexOf(
+      "\n  maps-architecture-enforcement:",
+      preflightStart,
+    );
+    const preflight = workflow.slice(preflightStart, preflightEnd);
+
+    expect(preflightStart).toBeGreaterThanOrEqual(0);
+    expect(preflightEnd).toBeGreaterThan(preflightStart);
+    expect(preflight).toContain("VERCEL_ENV: preview");
+    expect(preflight).toContain(
+      'SITEMAP_ALLOW_TRANSIENT_SOURCE_FALLBACK: "1"',
+    );
+
+    expect(generator).toContain("isTransientSitemapSourceError(error)");
+    expect(generator).toContain("!options.allowTransientSourceFallback");
+    expect(generator).toContain("throw error");
+  });
+
   it("keeps robots pointing at the same production sitemap origin", () => {
     const robots = read("public/robots.txt");
     const generator = read("tools/release/generate-sitemap.ts");
