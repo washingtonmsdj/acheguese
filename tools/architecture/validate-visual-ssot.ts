@@ -112,6 +112,9 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/business/dashboard/pages/BusinessCatalogPage.css',
   'src/modules/business/dashboard/pages/BusinessDetailsPage.tsx',
   'src/modules/business/dashboard/pages/BusinessSettingsPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessAnalyticsPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessPlansPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessAdsPage.tsx',
   'src/modules/business/dashboard/components/BusinessSettingsRiskAction.tsx',
   'src/styles/theme.ts',
 ] as const;
@@ -280,6 +283,14 @@ function main(): void {
     }
     if (LEGACY_FONT_RE.test(content)) {
       violations.push(`${relative}: legacy font found after Plus Jakarta Sans migration.`);
+    }
+    if (
+      relative.startsWith('src/modules/business/dashboard/') &&
+      NON_SEMANTIC_STATUS_COLOR_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: non-semantic status color found in Business dashboard; use success, warning or destructive tokens.`,
+      );
     }
     validateApprovedFontWeights(relative, content, violations);
   }
