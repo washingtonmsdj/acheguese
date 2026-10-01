@@ -87,4 +87,36 @@ describe("Business Central shared presentation", () => {
     expect(screen.queryByText("Entrar")).not.toBeInTheDocument();
     expect(screen.queryByText("Planos")).not.toBeInTheDocument();
   });
+
+  it("returns focus to the menu toggle when Escape closes its sections", () => {
+    open("dados");
+    const toggle = screen.getByRole("button", { name: "Dados da empresa" });
+    fireEvent.click(toggle);
+    const link = screen.getByRole("link", { name: "Configurações" });
+    link.focus();
+    fireEvent.keyDown(link, { key: "Escape" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveFocus();
+  });
+
+  it("closes the section menu with Escape while its toggle has focus", () => {
+    open("dados");
+    const toggle = screen.getByRole("button", { name: "Dados da empresa" });
+    fireEvent.click(toggle);
+    toggle.focus();
+    fireEvent.keyDown(toggle, { key: "Escape" });
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveFocus();
+  });
+
+  it("does not move desktop focus to a hidden mobile toggle", () => {
+    open("dados");
+    const toggle = screen.getByRole("button", { name: "Dados da empresa" });
+    fireEvent.click(toggle);
+    toggle.style.display = "none";
+    const link = screen.getByRole("link", { name: "Configurações" });
+    link.focus();
+    fireEvent.keyDown(link, { key: "Escape" });
+    expect(link).toHaveFocus();
+  });
 });

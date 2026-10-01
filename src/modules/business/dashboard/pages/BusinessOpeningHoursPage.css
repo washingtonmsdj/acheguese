@@ -1,5 +1,7 @@
 .business-hours-page {
   min-width: 0;
+  display: grid;
+  gap: var(--business-section-gap, 16px);
   font-family: var(--font-sans);
   color: hsl(var(--foreground));
 }
@@ -12,7 +14,6 @@
   border: 1px solid hsl(var(--border));
   border-radius: var(--business-panel-radius, 16px);
   background: hsl(var(--card));
-  margin-top: 16px;
 }
 .business-hours-page__heading > svg {
   flex: none;
@@ -61,7 +62,6 @@
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 16px;
-  margin-top: 16px;
 }
 .business-hours-page__form,
 .business-hours-page__preview {
@@ -167,7 +167,6 @@
     border-radius: 0;
     background: transparent;
     padding: 8px 0;
-    margin-top: 12px;
   }
   .business-hours-page__heading > svg {
     background: transparent;
@@ -219,7 +218,6 @@
   }
   .business-hours-page__layout {
     gap: 12px;
-    margin-top: 12px;
   }
   .business-hours-page__actions button {
     flex: 1;

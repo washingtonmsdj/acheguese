@@ -1,4 +1,4 @@
-import { useId, useState, type CSSProperties, type ReactNode } from "react";
+import { useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ChevronDown, Menu } from "lucide-react";
 import "../pages/BusinessDashboardNav.css";
 
@@ -14,22 +14,33 @@ export function BusinessDashboardNavigation({
 }) {
   const [expanded, setExpanded] = useState(false);
   const navigationId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
   return (
     <aside
       className="business-dashboard-navigation"
       aria-label="Navegação da empresa"
       data-expanded={expanded}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !expanded) return;
+        const toggle = toggleRef.current;
+        if (!toggle || getComputedStyle(toggle).display === "none") return;
+        event.preventDefault();
+        event.stopPropagation();
+        setExpanded(false);
+        toggle.focus();
+      }}
     >
       <div className="business-dashboard-navigation__heading">
         <strong>Central da empresa</strong>
         <p>Gerencie sua presença no território.</p>
       </div>
       <button
+        ref={toggleRef}
         className="business-dashboard-navigation__toggle"
         type="button"
         aria-expanded={expanded}
         aria-controls={navigationId}
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setExpanded((value) => !value)}
       >
         <Menu size={18} aria-hidden="true" />
         {sectionLabel ?? "Gerenciar empresa"}
@@ -41,9 +52,6 @@ export function BusinessDashboardNavigation({
         className="business-dashboard-nav"
         onClick={(event) => {
           if (event.target instanceof Element && event.target.closest("a")) setExpanded(false);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") setExpanded(false);
         }}
         style={{ "--business-nav-count": count } as CSSProperties}
       >

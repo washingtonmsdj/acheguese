@@ -65,6 +65,8 @@ Prévia: `npx vite --config tests/visual/vite.central-audit.config.ts --host 127
 
 Complemento mobile: campos de Localização e busca do Catálogo usam fonte de 16px nas telas pequenas; ações de Localização usam duas colunas flexíveis e alvos de 44px. As duas superfícies foram conferidas em 320/360/390/430/768/1440/2560px sem overflow; botões de localização sem conteúdo cortado. Alteração restrita a CSS, sem modificar contratos de dados ou ações.
 
+Complemento de navegação: Escape fecha o menu mobile e devolve o foco ao botão que o abriu, inclusive quando o próprio botão tem foco. Em desktop, não direciona foco ao botão mobile oculto. Três testes de regressão adicionados; nove testes de shell/navegação aprovados. Horários usa grid com o token de espaçamento de seção em vez de margens acumuladas; sete larguras conferidas sem overflow.
+
 - Tokens comuns de tamanho, peso e altura de linha dos títulos aplicados à Visão geral, Editar, Fotos, Horários, Localização e Catálogo, mantendo Dados e Configurações na mesma família.
 - Painéis, estados vazios de fotos, seção inicial de edição e ações rápidas compactados; prévias fixas de edição, fotos e horários respeitam o header. Filtros de catálogo se reorganizam nas larguras intermediárias, sem comprimir busca e selects.
 - Harness isolado ampliado para as oito seções, reutilizando o shell e componentes reais. Fotos valida o estado vazio; catálogo usa itens simulados e mutações somente em memória; Editar valida apenas a primeira seção real, não o fluxo completo de envio. Localização não recebe coordenadas fictícias. Nenhuma fixture faz parte do runtime de produção.
