@@ -32,7 +32,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: heavy-exact-sha-${{ github.event.pull_request.number || github.sha }}
+  group: heavy-certification-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
