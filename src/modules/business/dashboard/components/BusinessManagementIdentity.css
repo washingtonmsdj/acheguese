@@ -58,8 +58,8 @@
   color: hsl(var(--primary));
 }
 .business-management-identity__badges [data-status="active"] {
-  background: #e0f5e9;
-  color: #08734c;
+  background: hsl(var(--success) / 0.12);
+  color: hsl(var(--success));
 }
 .business-management-identity__copy p {
   display: flex;
