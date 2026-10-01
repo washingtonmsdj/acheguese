@@ -96,6 +96,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/central/pages/CentralEmpresasPage.tsx',
   'src/modules/central/pages/CentralEmpresasPage.css',
   'src/core/profiles/components/hub/BusinessModulesSection.tsx',
+  'src/core/profiles/components/ProfileMembersManager.tsx',
   'src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx',
   'src/modules/business/dashboard/pages/BusinessDashboardNav.css',
   'src/modules/business/dashboard/components/BusinessDashboardNavigation.tsx',
