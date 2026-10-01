@@ -183,7 +183,7 @@ export function LocationPickerSheet({
             type="button"
             size="icon"
             variant="secondary"
-            className={`absolute ${inline ? "bottom-8 left-3" : "top-3 right-3"} z-10 h-11 w-11 rounded-xl shadow-lg`}
+            className={`absolute top-3 ${inline ? "left-3" : "right-3"} z-10 h-11 w-11 rounded-xl shadow-lg`}
             onClick={centerOnUser}
             disabled={locatingUser}
             aria-label="Usar minha localização atual"
@@ -204,10 +204,13 @@ export function LocationPickerSheet({
         )}
       </div>
       {!readOnly && (
-        <div className="flex items-center gap-3 border-t bg-card px-4 py-3">
-          <p className="flex-1 min-w-0 truncate text-xs text-muted-foreground">
-            <MapPin className="mr-1 inline h-3 w-3" />
-            {position[0].toFixed(5)}, {position[1].toFixed(5)}
+        <div className="flex flex-wrap items-center gap-3 border-t bg-card px-3 py-3 sm:px-4">
+          <p className="flex flex-[1_0_80px] items-center gap-1 text-xs text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="tabular-nums">
+              <span className="block">{position[0].toFixed(5)}</span>
+              <span className="block">{position[1].toFixed(5)}</span>
+            </span>
           </p>
           <Button
             type="button"
@@ -217,7 +220,7 @@ export function LocationPickerSheet({
               if (!inline) onOpenChange(false);
             }}
             size="sm"
-            className="min-h-11 rounded-full px-5"
+            className="min-h-11 shrink-0 rounded-full px-3 text-xs sm:px-5 sm:text-sm"
           >
             <Check className="mr-1.5 h-4 w-4" />
             {inline ? "Confirmar ponto" : "Confirmar local"}
