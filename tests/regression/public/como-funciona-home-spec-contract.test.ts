@@ -15,9 +15,12 @@ describe("como funciona public experience contract", () => {
     expect(page).toContain("Comece pelo território");
     expect(page).toContain("Descubra o que está perto");
     expect(page).toContain("Participe quando quiser");
-    expect(page).toContain("LAUNCH_URLS.community");
     expect(page).toContain("LAUNCH_URLS.business");
+    expect(page).toContain("LAUNCH_URLS.map");
+    expect(page).toContain("LAUNCH_URLS.nearby");
+    expect(page).toContain("LAUNCH_URLS.search");
     expect(page).toContain("AUTH_PATHS.signup");
+    expect(page).not.toContain("LAUNCH_URLS.community");
   });
 
   it("keeps the page accessible and responsive in its own visual scope", () => {
