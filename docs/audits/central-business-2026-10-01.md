@@ -55,4 +55,8 @@ Código pós-MVP preservado, sem itens de navegação/rotas novas: Community, Ga
 
 Limite: navegação visual usa dados simulados autorizados pelo usuário. Login, persistência, upload e alterações de acesso com backend real não foram certificados nesta execução. Não há alegação de validação autenticada end-to-end.
 
+### Refinamento visual complementar
+
+Dados passou a usar lista semântica de rótulos/valores com divisores discretos, substituindo cards internos repetidos. Tipografia do título e identidade foi suavizada; thumbnail mobile compactada sem truncar o nome. Navegação mobile tem texto maior; sidebar desktop respeita a altura do header fixo. Configurações usa ícones e texto lado a lado, reduzindo altura sem esconder informações. Espaçamentos do shell mobile foram compactados. Breakpoints 320/360/390/430/768/1440/2560px novamente conferidos sem overflow; seis testes focados de shell/navegação aprovados, typecheck e lint aprovados.
+
 Prévia: `npx vite --config tests/visual/vite.central-audit.config.ts --host 127.0.0.1 --port 5176 --strictPort`, URL `/tests/visual/central-audit.html`. Não integra o build/runtime público.

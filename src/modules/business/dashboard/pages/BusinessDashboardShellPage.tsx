@@ -87,7 +87,7 @@ export default function BusinessDashboardShellPage({ navigationItems }: {
   };
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-5 sm:px-6 xl:px-8">
+    <div className="mx-auto max-w-[1440px] space-y-3 px-4 py-3 sm:space-y-4 sm:px-6 sm:py-5 xl:px-8">
       {activeProfile ? <ActiveProfileIdentity profile={activeProfile} /> : null}
       <nav
         aria-label="Caminho da central"

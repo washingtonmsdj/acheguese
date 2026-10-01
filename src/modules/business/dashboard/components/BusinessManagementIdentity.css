@@ -4,9 +4,9 @@
   align-items: center;
   gap: 16px;
   min-width: 0;
-  padding: 16px;
+  padding: var(--business-panel-padding, 16px);
   border: 1px solid hsl(var(--border));
-  border-radius: 16px;
+  border-radius: var(--business-panel-radius, 16px);
   background: hsl(var(--card));
   color: hsl(var(--foreground));
 }
@@ -37,7 +37,7 @@
 .business-management-identity__copy strong {
   display: block;
   font-size: clamp(1rem, 1.5vw, 1.35rem);
-  font-weight: 750;
+  font-weight: 650;
   line-height: 1.35;
   overflow-wrap: break-word;
   letter-spacing: -0.025em;
@@ -88,21 +88,29 @@
   font-size: 12px;
   font-weight: 650;
 }
+.business-management-identity > a:hover {
+  background: hsl(var(--primary) / 0.06);
+}
+.business-management-identity > a:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
 @media (max-width: 639px) {
   .business-management-identity {
-    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-columns: 64px minmax(0, 1fr);
     gap: 12px;
     padding: 12px;
   }
   .business-management-identity__image {
-    width: 76px;
+    width: 64px;
+    aspect-ratio: 1;
     border-radius: 10px;
   }
   .business-management-identity__copy {
     min-width: 0;
   }
   .business-management-identity__copy strong {
-    font-size: 15px;
+    font-size: 16px;
   }
   .business-management-identity__copy p {
     display: none;

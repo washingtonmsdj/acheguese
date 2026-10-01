@@ -67,12 +67,14 @@ function InfoItem({
   description: string;
 }) {
   return (
-    <div className="bg-card p-5">
-      <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+    <div className="flex min-w-0 items-start gap-3 bg-card p-4 sm:p-5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className="h-4.5 w-4.5" />
       </span>
-      <h3 className="mt-3 text-sm font-semibold text-foreground">{title}</h3>
-      <p className="mt-1 text-sm leading-5 text-muted-foreground">{description}</p>
+      <div className="min-w-0">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <p className="mt-1 text-sm leading-5 text-muted-foreground">{description}</p>
+      </div>
     </div>
   );
 }
