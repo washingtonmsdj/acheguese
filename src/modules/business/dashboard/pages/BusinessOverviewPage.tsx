@@ -25,7 +25,6 @@ import { getBusinessAnalyticsSummary } from "@/core/business/services/business-a
 import { businessDirectMessagingService } from "@/core/messaging/services/BusinessDirectMessagingService";
 import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
-import { getActiveMessagingProviderIds } from "@/app/config/messagingProviderScope";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
@@ -40,13 +39,18 @@ function getStatusLabel(status: string) {
   }
 }
 
-export default function BusinessOverviewPage() {
+interface BusinessOverviewPageProps {
+  messagingAvailable: boolean;
+}
+
+export default function BusinessOverviewPage({
+  messagingAvailable,
+}: BusinessOverviewPageProps) {
   const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
   const navigate = useNavigate();
   const { activeProfile, profiles, switchProfile } = useSessionContext();
   const [switchingProfile, setSwitchingProfile] = useState(false);
   const businessDataId = business.business_data_id;
-  const messagingAvailable = getActiveMessagingProviderIds().includes("business");
   const isBusinessProfileActive = activeProfile?.id === business.profile_id;
   const canActivateBusinessProfile = profiles.some((profile) => profile.id === business.profile_id);
   const analyticsQuery = useQuery({
