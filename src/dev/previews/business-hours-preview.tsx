@@ -50,7 +50,7 @@ export function Preview() {
     );
   };
   return (
-    <div className="pt-page min-h-screen bg-background text-foreground">
+    <div className="light pt-page min-h-screen bg-background text-foreground">
       <PublicBrandHeader
         urls={{
           nearby: "/",
