@@ -2,11 +2,16 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("MVP business signup copy", () => {
-  it("keeps the public signup landing human-facing", () => {
-    const content = readFileSync(
+  it("keeps the public signup flow human-facing", () => {
+    const landing = readFileSync(
       "src/modules/business/pages/EmpresasCadastroLandingPage.tsx",
       "utf8",
     );
+    const create = readFileSync(
+      "src/modules/business/pages/CriarEmpresaPage.tsx",
+      "utf8",
+    );
+    const content = `${landing}\n${create}`;
 
     for (const internalPhrase of [
       "Entrada comercial pública",
@@ -19,8 +24,11 @@ describe("MVP business signup copy", () => {
       expect(content).not.toContain(internalPhrase);
     }
 
-    expect(content).toContain("Para quem empreende no bairro");
-    expect(content).toContain("Central da empresa");
-    expect(content).toContain("Sua página pública");
+    expect(landing).toContain("<CriarEmpresaPage");
+    expect(create).toContain('"Para quem empreende"');
+    expect(create).toContain('"Cadastrar empresa"');
+    expect(create).toContain("Divulgue seu negócio");
+    expect(create).toContain("Revisar e publicar");
+    expect(create).toContain("Central da empresa");
   });
 });
