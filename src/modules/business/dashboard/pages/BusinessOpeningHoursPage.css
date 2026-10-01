@@ -86,21 +86,8 @@
   min-height: 44px;
   flex: 0 1 auto;
   padding-inline: 20px;
-  border-radius: var(--radius-full);
   height: auto;
   white-space: normal;
-}
-.business-hours-page__actions .business-hours-page__save {
-  background: hsl(var(--brand-solar));
-  color: hsl(var(--brand-petroleum));
-  border-radius: var(--radius-full);
-  font-weight: 700;
-}
-.business-hours-page__actions .business-hours-page__save:hover {
-  background: hsl(var(--brand-solar) / 0.85);
-}
-.business-hours-page__actions .business-hours-page__save:disabled {
-  opacity: 0.55;
 }
 .business-hours-page__preview-heading {
   display: flex;
