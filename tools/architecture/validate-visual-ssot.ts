@@ -116,6 +116,24 @@ const MIGRATED_RUNTIME_FILES = [
   'src/styles/theme.ts',
 ] as const;
 
+const BUSINESS_SEMANTIC_TOKEN_FILES = [
+  'src/core/business/constants/serviceModes.ts',
+  'src/core/business/constants/paymentMethods.ts',
+  'src/core/business/constants/facilities.ts',
+  'src/core/business/components/settings/SocialMediaEditor.tsx',
+  'src/core/business/components/settings/AddressEditor.tsx',
+  'src/core/business/components/settings/FacilitiesSelector.tsx',
+  'src/core/business/components/settings/PaymentMethodsSelector.tsx',
+  'src/core/business/components/settings/ServiceModesSelector.tsx',
+  'src/modules/business/dashboard/components/BusinessManagementIdentity.css',
+] as const;
+
+const LEGACY_BUSINESS_PALETTE_RE =
+  /\b(?:text|bg|border|ring)-(?:emerald|green|amber|sky|blue|cyan|purple|pink|indigo)-\d+(?:\/\d+)?\b/;
+const LEGACY_BUSINESS_PRIMITIVE_RE = /var\(--(?:primary|card|border)\)/;
+const LEGACY_BUSINESS_GENERIC_UTILITY_RE =
+  /\b(?:text|bg|border|ring)-(?:primary|secondary|border)(?:\/[\[\].0-9]+)?\b/;
+
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
