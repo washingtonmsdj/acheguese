@@ -67,7 +67,7 @@ function formatCategory(value: string): string {
     servicos: "Serviços",
     comercio: "Comércio",
   };
-  return labels[normalized] ?? value.replaceAll("_", " ").replace(/^./, (letter) => letter.toLocaleUpperCase("pt-BR"));
+  return labels[normalized] ?? value.replace(/_/g, " ").replace(/^./, (letter) => letter.toLocaleUpperCase("pt-BR"));
 }
 
 function NearbyBusinessCard({ business, precise }: { business: NearbyBusiness; precise: boolean }) {

@@ -97,6 +97,11 @@ const MODULE_COPY: Record<ModuleSlug, ModuleCopy> = {
     focus: 'Ranking local',
     descriptionSuffix: 'Veja os destaques, avaliações e posições da região.',
   },
+  'pontos-turisticos': {
+    label: 'Pontos turísticos',
+    focus: 'Pontos turísticos locais',
+    descriptionSuffix: 'Conheça atrações, patrimônios e pontos turísticos da região.',
+  },
   guia: {
     label: 'Guia',
     focus: 'Guia local',

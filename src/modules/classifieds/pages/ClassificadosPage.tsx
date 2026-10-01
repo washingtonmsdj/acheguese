@@ -220,7 +220,7 @@ export default function ClassificadosPage({
       )}
 
       {/* Mini Banner */}
-      <ClassificadosFooterSection
+      <ClassifiedsFooterSection
         territoryName={territoryName}
         navigate={navigate}
         onNewClassificado={handleNewClassificado}

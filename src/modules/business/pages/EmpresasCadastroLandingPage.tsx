@@ -1,12 +1,20 @@
-import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
-import { getActiveBusinessVerticalKeys } from "@/app/config/businessVerticalScope";
+import type { ReactNode } from "react";
+import type { VerticalKey } from "@/core/verticals/config";
 import CriarEmpresaPage from "./CriarEmpresaPage";
 
-export default function EmpresasCadastroLandingPage() {
+interface EmpresasCadastroLandingPageProps {
+  header?: ReactNode;
+  enabledVerticalKeys?: readonly VerticalKey[];
+}
+
+export default function EmpresasCadastroLandingPage({
+  header,
+  enabledVerticalKeys = [],
+}: EmpresasCadastroLandingPageProps) {
   return (
     <>
-      <AuthBrandHeader showBack={false} />
-      <CriarEmpresaPage enabledVerticalKeys={getActiveBusinessVerticalKeys()} />
+      {header}
+      <CriarEmpresaPage enabledVerticalKeys={enabledVerticalKeys} />
     </>
   );
 }
