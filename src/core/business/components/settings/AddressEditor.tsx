@@ -5,7 +5,14 @@
  * CEP e GPS passam pelos owners canônicos de localização.
  */
 import { useState } from "react";
-import { MapPin, Search, Loader2, Check, X, Map as MapIcon } from "lucide-react";
+import {
+  MapPin,
+  Search,
+  Loader2,
+  Check,
+  X,
+  Map as MapIcon,
+} from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
@@ -59,7 +66,10 @@ export function AddressEditor({
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
 
-  const handleChange = (field: keyof Address, value: string | number | undefined) => {
+  const handleChange = (
+    field: keyof Address,
+    value: string | number | undefined,
+  ) => {
     onChange({
       ...address,
       [field]: value,
@@ -92,7 +102,9 @@ export function AddressEditor({
     setCepError(null);
 
     try {
-      const data = await locationGeocodingService.lookupPostalCode({ postalCode: cep });
+      const data = await locationGeocodingService.lookupPostalCode({
+        postalCode: cep,
+      });
 
       if (!data) {
         setCepError("CEP não encontrado");
@@ -150,7 +162,10 @@ export function AddressEditor({
     }
   };
 
-  const handleCoordinateChange = (field: "latitude" | "longitude", value: string) => {
+  const handleCoordinateChange = (
+    field: "latitude" | "longitude",
+    value: string,
+  ) => {
     if (value.trim() === "") {
       handleChange(field, undefined);
       return;
@@ -168,23 +183,25 @@ export function AddressEditor({
     address.number &&
     address.neighborhood &&
     address.city &&
-    address.state
+    address.state,
   );
 
   return (
     <div className={cn("space-y-4", className)}>
-      {showHeading && <div>
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <MapPin className="h-4 w-4 text-primary" />
-          Endereço
-        </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Preencha o endereço completo da empresa
-        </p>
-      </div>}
+      {showHeading && (
+        <div>
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-primary" />
+            Endereço
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Preencha o endereço completo da empresa
+          </p>
+        </div>
+      )}
 
       {features.cepLookup && (
-        <div className="space-y-2">
+        <div className="business-address-editor__postal-code space-y-2">
           <Label htmlFor="postal_code" className="text-sm font-medium">
             CEP
           </Label>
@@ -197,12 +214,15 @@ export function AddressEditor({
                 placeholder="00000-000"
                 maxLength={9}
                 className={cn(
-                  cepError && "border-destructive focus-visible:ring-destructive"
+                  cepError &&
+                    "border-destructive focus-visible:ring-destructive",
                 )}
               />
-              {address.postal_code && address.postal_code.replace(/\D/g, "").length === 8 && !cepError && (
-                <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
-              )}
+              {address.postal_code &&
+                address.postal_code.replace(/\D/g, "").length === 8 &&
+                !cepError && (
+                  <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                )}
             </div>
             <Button
               type="button"
@@ -210,7 +230,10 @@ export function AddressEditor({
               disabled={loading || !address.postal_code}
               aria-label="Buscar CEP"
               variant={compactCepButton ? "outline" : undefined}
-              className={cn("gap-2", compactCepButton && "business-address-editor__cep-button")}
+              className={cn(
+                "gap-2",
+                compactCepButton && "business-address-editor__cep-button",
+              )}
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -229,7 +252,7 @@ export function AddressEditor({
         </div>
       )}
 
-      <div className="space-y-2">
+      <div className="business-address-editor__street space-y-2">
         <Label htmlFor="street" className="text-sm font-medium">
           Rua/Avenida
         </Label>
@@ -241,7 +264,7 @@ export function AddressEditor({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="business-address-editor__number-complement grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="number" className="text-sm font-medium">
             Número
@@ -266,7 +289,7 @@ export function AddressEditor({
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="business-address-editor__neighborhood space-y-2">
         <Label htmlFor="neighborhood" className="text-sm font-medium">
           Bairro
         </Label>
@@ -278,7 +301,7 @@ export function AddressEditor({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="business-address-editor__city-state grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="city" className="text-sm font-medium">
             Cidade
@@ -292,12 +315,15 @@ export function AddressEditor({
         </div>
         <div className="space-y-2">
           <Label htmlFor="state" className="text-sm font-medium">
-            Estado (UF)
+            UF
           </Label>
           <Input
             id="state"
+            aria-label="Estado (UF)"
             value={address.state || ""}
-            onChange={(e) => handleChange("state", e.target.value.toUpperCase())}
+            onChange={(e) =>
+              handleChange("state", e.target.value.toUpperCase())
+            }
             placeholder="BA"
             maxLength={2}
           />
@@ -343,7 +369,9 @@ export function AddressEditor({
                 type="number"
                 step="any"
                 value={address.latitude ?? ""}
-                onChange={(e) => handleCoordinateChange("latitude", e.target.value)}
+                onChange={(e) =>
+                  handleCoordinateChange("latitude", e.target.value)
+                }
                 placeholder="-12.975"
               />
             </div>
@@ -356,7 +384,9 @@ export function AddressEditor({
                 type="number"
                 step="any"
                 value={address.longitude ?? ""}
-                onChange={(e) => handleCoordinateChange("longitude", e.target.value)}
+                onChange={(e) =>
+                  handleCoordinateChange("longitude", e.target.value)
+                }
                 placeholder="-38.476"
               />
             </div>
@@ -364,19 +394,20 @@ export function AddressEditor({
         </div>
       )}
 
-      {showCompleteness && (isAddressComplete ? (
-        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-xs text-emerald-600 flex items-center gap-2">
-          <Check className="h-4 w-4" />
-          <span className="font-medium">Endereço completo</span>
-        </div>
-      ) : (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600">
-          <p className="font-medium">Preencha todos os campos obrigatórios</p>
-          <p className="mt-1 text-amber-600/80">
-            CEP, Rua, Número, Bairro, Cidade e Estado são obrigatórios
-          </p>
-        </div>
-      ))}
+      {showCompleteness &&
+        (isAddressComplete ? (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-xs text-emerald-600 flex items-center gap-2">
+            <Check className="h-4 w-4" />
+            <span className="font-medium">Endereço completo</span>
+          </div>
+        ) : (
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600">
+            <p className="font-medium">Preencha todos os campos obrigatórios</p>
+            <p className="mt-1 text-amber-600/80">
+              CEP, Rua, Número, Bairro, Cidade e Estado são obrigatórios
+            </p>
+          </div>
+        ))}
     </div>
   );
 }

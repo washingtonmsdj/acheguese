@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ComponentType, type CSSProperties } from "react";
+import { useEffect, useMemo, type ComponentType } from "react";
 import {
   NavLink,
   Outlet,
@@ -6,7 +6,16 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import { ArrowLeft, BarChart3, Clock, Images, MapPin, Pencil, Settings, Store } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  Clock,
+  Images,
+  MapPin,
+  Pencil,
+  Settings,
+  Store,
+} from "lucide-react";
 
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
@@ -17,7 +26,7 @@ import {
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import type { ActiveBusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import "./BusinessDashboardNav.css";
+import { BusinessDashboardNavigation } from "../components/BusinessDashboardNavigation";
 
 interface NavItem {
   label: string;
@@ -40,7 +49,8 @@ export default function BusinessDashboardShellPage() {
   const { business, isLoading } = useBusiness(businessId || "");
 
   const publicUrlContext = useMemo(() => {
-    if (!business?.id || !business.slug || !business.geographic_path) return null;
+    if (!business?.id || !business.slug || !business.geographic_path)
+      return null;
     return {
       id: business.id,
       slug: business.slug,
@@ -87,8 +97,18 @@ export default function BusinessDashboardShellPage() {
       to: businessManagementRoutes.photos(businessId),
       icon: Images,
     },
-    { label: "Horário de funcionamento", mobileLabel: "Horário", to: businessManagementRoutes.hours(businessId), icon: Clock },
-    { label: "Localização", mobileLabel: "Local", to: businessManagementRoutes.location(businessId), icon: MapPin },
+    {
+      label: "Horário de funcionamento",
+      mobileLabel: "Horário",
+      to: businessManagementRoutes.hours(businessId),
+      icon: Clock,
+    },
+    {
+      label: "Localização",
+      mobileLabel: "Local",
+      to: businessManagementRoutes.location(businessId),
+      icon: MapPin,
+    },
     {
       label: "Desempenho",
       mobileLabel: "Métricas",
@@ -113,7 +133,10 @@ export default function BusinessDashboardShellPage() {
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-5 sm:px-6 xl:px-8">
-      <nav aria-label="Caminho da central" className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-muted-foreground sm:text-sm">
+      <nav
+        aria-label="Caminho da central"
+        className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-muted-foreground sm:text-sm"
+      >
         <button
           type="button"
           aria-label="Voltar para minhas empresas"
@@ -122,7 +145,11 @@ export default function BusinessDashboardShellPage() {
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </button>
-        <button type="button" className="hidden shrink-0 hover:text-foreground sm:inline" onClick={() => navigate("/conta")}>
+        <button
+          type="button"
+          className="hidden shrink-0 hover:text-foreground sm:inline"
+          onClick={() => navigate("/conta")}
+        >
           Conta
         </button>
         <span className="hidden sm:inline">/</span>
@@ -134,40 +161,39 @@ export default function BusinessDashboardShellPage() {
           Empresas
         </button>
         <span className="hidden sm:inline">/</span>
-        <span className="truncate font-medium text-foreground">{business.name}</span>
+        <span className="truncate font-medium text-foreground">
+          {business.name}
+        </span>
         <span className="hidden sm:inline">/</span>
         <span className="hidden shrink-0 sm:inline">{sectionLabel}</span>
       </nav>
 
       <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
-        <aside aria-label="Navegação da empresa" className="min-w-0 self-start rounded-2xl border border-border bg-card p-1.5 shadow-sm sm:p-2 lg:sticky lg:top-4 lg:shadow-none">
-          <div className="hidden px-3 pb-3 pt-2 lg:block">
-            <p className="text-sm font-bold text-foreground">Central da empresa</p>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">Gerencie sua presença no território.</p>
-          </div>
-          <nav aria-label="Seções da empresa" className="business-dashboard-nav" style={{ "--business-nav-count": navItems.length } as CSSProperties}>
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                aria-label={item.label}
-                end={item.to === basePath}
-                className={({ isActive }) =>
-                  [
-                    "business-dashboard-nav__item",
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/20 lg:bg-primary/10 lg:text-primary lg:shadow-none"
-                      : "text-foreground hover:bg-muted active:bg-muted",
-                  ].join(" ")
-                }
-              >
-                <item.icon className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4" aria-hidden="true" />
-                <span className="lg:hidden">{item.mobileLabel}</span>
-                <span className="hidden lg:inline">{item.label}</span>
-              </NavLink>
-            ))}
-          </nav>
-        </aside>
+        <BusinessDashboardNavigation count={navItems.length}>
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              aria-label={item.label}
+              end={item.to === basePath}
+              className={({ isActive }) =>
+                [
+                  "business-dashboard-nav__item",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/20 lg:bg-primary/10 lg:text-primary lg:shadow-none"
+                    : "text-foreground hover:bg-muted active:bg-muted",
+                ].join(" ")
+              }
+            >
+              <item.icon
+                className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4"
+                aria-hidden="true"
+              />
+              <span className="lg:hidden">{item.mobileLabel}</span>
+              <span className="hidden lg:inline">{item.label}</span>
+            </NavLink>
+          ))}
+        </BusinessDashboardNavigation>
 
         <div className="min-w-0">
           <Outlet context={outletContext} />

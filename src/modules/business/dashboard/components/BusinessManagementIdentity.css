@@ -103,6 +103,9 @@
   .business-management-identity__copy strong {
     font-size: 15px;
   }
+  .business-management-identity__copy p {
+    display: none;
+  }
   .business-management-identity > a {
     width: 100%;
     justify-content: center;
