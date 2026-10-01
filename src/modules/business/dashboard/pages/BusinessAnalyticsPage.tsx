@@ -111,7 +111,7 @@ function MetricCard({ label, value, previous, icon: Icon }: { label: string; val
     <article className="min-w-0 rounded-2xl border border-border bg-card p-3.5 sm:p-5">
       <div className="flex items-start justify-between gap-2">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-4 w-4" aria-hidden="true" /></span>
-        <span className={`inline-flex items-center gap-1 text-xs font-semibold ${change < 0 ? "text-rose-600" : change > 0 ? "text-emerald-700" : "text-muted-foreground"}`}>
+        <span className={`inline-flex items-center gap-1 text-xs font-semibold ${change < 0 ? "text-destructive" : change > 0 ? "text-success" : "text-muted-foreground"}`}>
           <TrendIcon className="h-3.5 w-3.5" aria-hidden="true" />
           {change > 0 ? "+" : ""}{change.toLocaleString("pt-BR")}%
         </span>
