@@ -182,11 +182,15 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.business-catalog__copy > strong {
+.business-catalog__item-meta > strong {
   display: block;
   margin-top: 5px;
   font-size: 12px;
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.business-catalog .business-catalog__quick-edit {
+  display: none;
 }
 .business-catalog__actions {
   display: grid;
@@ -247,11 +251,10 @@
 .business-catalog__preview .business-catalog__heading h2 {
   font-size: 16px;
 }
-.business-catalog__business-name {
-  display: block;
+.business-catalog__preview .business-management-identity {
   margin-bottom: 12px;
-  font-size: 15px;
-  overflow-wrap: anywhere;
+  padding: 12px;
+  box-shadow: none;
 }
 .business-catalog__preview ul {
   list-style: none;
@@ -396,6 +399,24 @@
     margin-top: 0;
     font-size: 13px;
     line-height: 1.45;
+  }
+  .business-catalog__item-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    min-width: 0;
+  }
+  .business-catalog__item-meta > strong {
+    margin-top: 0;
+    font-size: 11px;
+  }
+  .business-catalog .business-catalog__quick-edit {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    color: hsl(var(--primary));
   }
   .business-catalog__list > li {
     grid-template-columns: 56px minmax(0, 1fr) 44px;

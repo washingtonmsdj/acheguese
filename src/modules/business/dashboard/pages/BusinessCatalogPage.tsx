@@ -298,7 +298,19 @@ export function BusinessCatalogView({
                       <h2>{item.name}</h2>
                     </div>
                     {item.description && <p>{item.description}</p>}
-                    <strong>{catalogPrice(item.price)}</strong>
+                    <div className="business-catalog__item-meta">
+                      <strong>{catalogPrice(item.price)}</strong>
+                      <Button
+                        className="business-catalog__quick-edit"
+                        size="icon"
+                        variant="ghost"
+                        aria-label={`Editar item: ${item.name}`}
+                        disabled={pending}
+                        onClick={() => startEditing(item)}
+                      >
+                        <Pencil size={17} aria-hidden="true" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="business-catalog__actions">
                     <span
@@ -401,9 +413,7 @@ export function BusinessCatalogView({
               <p>Apenas itens ativos são mostrados nesta prévia.</p>
             </div>
           </header>
-          <strong className="business-catalog__business-name">
-            {business.name}
-          </strong>
+          <BusinessManagementIdentity business={business} />
           <ul>
             {items
               .filter((item) => item.active)
