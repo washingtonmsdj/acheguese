@@ -496,7 +496,7 @@ describe("MVP core module boundary", () => {
     expect(heavyPrWorkflow).toContain("github.sha");
 
     const heavyConcurrencyBlock =
-      heavyPrWorkflow.match(/concurrency:\\n[\\s\\S]*?(?=\\n\\njobs:)/)?.[0] ?? "";
+      heavyPrWorkflow.match(/concurrency:\n[\s\S]*?(?=\n\njobs:)/)?.[0] ?? "";
     expect(heavyConcurrencyBlock).toContain(
       "github.event.pull_request.number || github.ref",
     );
