@@ -7,6 +7,7 @@ import {
   ArrowUpRight,
   BarChart3,
   Building2,
+  CircleAlert,
   Clock3,
   ImageIcon,
   MapPin,
