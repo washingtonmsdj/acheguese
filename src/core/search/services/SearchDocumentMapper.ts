@@ -82,7 +82,9 @@ export function communityToSearchDocument(
     title: community.name,
     subtitle: "Comunidade",
     description: community.headline ?? community.description,
-    // Community is paused and no alias URL may leak into Search.\n    // Its provider must supply a resolved territory path before reactivation.\n    url: null,
+    // Community is paused and no alias URL may leak into Search.
+    // Its provider must supply a resolved territory path before reactivation.
+    url: null,
     metadata: {
       status: community.status,
       territory_type: community.territory_type,
