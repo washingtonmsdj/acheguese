@@ -271,6 +271,23 @@ function main(): void {
     violations,
   );
 
+  for (const relative of BUSINESS_SEMANTIC_TOKEN_FILES) {
+    const content = readRequired(relative, violations);
+    if (LEGACY_BUSINESS_PALETTE_RE.test(content)) {
+      violations.push(
+        `${relative}: raw Tailwind palette color found in active Business management; use territory/business semantic tokens.`,
+      );
+    }
+    if (
+      relative.endsWith('BusinessManagementIdentity.css') &&
+      LEGACY_BUSINESS_PRIMITIVE_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: generic primary/card/border primitive found; consume the business visual projection instead.`,
+      );
+    }
+  }
+
   for (const relative of MIGRATED_RUNTIME_FILES) {
     const content = readRequired(relative, violations);
     if (RAW_RUNTIME_COLOR_RE.test(content)) {
