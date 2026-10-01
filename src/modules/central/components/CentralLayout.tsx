@@ -34,7 +34,7 @@ export function CentralLayout({
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+      <div className={`min-h-screen flex w-full ${businessWorkspace ? "bg-territory-canvas" : "bg-background"}`}>
         {!businessWorkspace ? <CentralNavigation businessEnabled={businessEnabled} /> : null}
         <div className="flex-1 flex flex-col min-w-0 w-full">
           <CentralHeader billingEnabled={billingEnabled} brand={brand} showNavigation={!businessWorkspace} />
