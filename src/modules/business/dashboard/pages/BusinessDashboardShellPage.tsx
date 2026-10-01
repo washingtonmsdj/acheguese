@@ -18,8 +18,6 @@ import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-r
 import type { ActiveBusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { BusinessDashboardNavigation } from "../components/BusinessDashboardNavigation";
-import { ActiveProfileIdentity } from "@/shared/components/ActiveProfileIdentity";
-import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import type { BusinessManagementNavigationItem } from "../businessManagementNavigation";
 import { BusinessManagementIdentity } from "../components/BusinessManagementIdentity";
 
@@ -30,7 +28,6 @@ export default function BusinessDashboardShellPage({ navigationItems }: {
   const navigate = useNavigate();
   const location = useLocation();
   const { setModuleContext } = useMultiProfileContext();
-  const { activeProfile } = useSessionContext();
 
   useEffect(() => {
     setModuleContext("business");
@@ -88,7 +85,6 @@ export default function BusinessDashboardShellPage({ navigationItems }: {
 
   return (
     <div className="mx-auto max-w-[1440px] space-y-3 px-4 py-3 sm:space-y-4 sm:px-6 sm:py-5 xl:px-8">
-      {activeProfile ? <ActiveProfileIdentity profile={activeProfile} /> : null}
       <nav
         aria-label="Caminho da central"
         className="flex min-w-0 items-center gap-2 overflow-hidden text-xs text-muted-foreground sm:text-sm"
