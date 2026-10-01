@@ -365,8 +365,8 @@ export function BusinessCatalogView({
           if (!pending) setOpen(value);
         }}
       >
-        <DialogContent className="business-catalog__dialog">
-          <DialogHeader>
+        <DialogContent className="business-catalog__dialog w-[calc(100%-24px)] max-w-[520px] bg-card">
+          <DialogHeader className="pr-8 text-left">
             <DialogTitle>
               {editing ? "Editar item" : "Adicionar produto ou serviço"}
             </DialogTitle>

@@ -248,6 +248,7 @@
 .business-catalog__dialog form {
   display: grid;
   gap: 12px;
+  min-width: 0;
 }
 .business-catalog__dialog label {
   display: grid;
@@ -274,10 +275,14 @@
   min-height: 44px;
 }
 .business-catalog__dialog footer {
+  position: sticky;
+  bottom: 0;
+  background: hsl(var(--card));
   display: flex;
   justify-content: space-between;
   gap: 12px;
   padding-top: 12px;
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
   border-top: 1px solid hsl(var(--border));
 }
 .business-catalog__dialog footer button {
@@ -302,6 +307,11 @@
   }
 }
 @media (max-width: 767px) {
+  .business-catalog__dialog input,
+  .business-catalog__dialog textarea,
+  .business-catalog__dialog select {
+    font-size: 16px;
+  }
   .business-catalog__panel {
     padding: 16px;
   }
