@@ -300,6 +300,12 @@
   .business-location__fields button {
     min-height: 44px;
   }
+  .business-location__fields input,
+  .business-location__fields select,
+  .business-location__fields textarea {
+    font-size: 16px;
+    max-width: 100%;
+  }
   .business-location__fields .business-address-editor__cep-button {
     width: 44px;
     padding: 0;
@@ -347,6 +353,9 @@
     visibility: visible;
   }
   .business-location footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 8px;
     position: sticky;
     bottom: 0;
     background: hsl(var(--card));
@@ -354,6 +363,8 @@
     z-index: 1;
   }
   .business-location footer button {
+    min-width: 0;
+    width: 100%;
     padding-inline: 14px;
     font-size: 12px;
   }

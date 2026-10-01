@@ -369,6 +369,9 @@
   }
 }
 @media (max-width: 767px) {
+  .business-catalog__search input {
+    font-size: 16px;
+  }
   .business-catalog__dialog input,
   .business-catalog__dialog textarea,
   .business-catalog__dialog select {
