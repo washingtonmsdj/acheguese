@@ -113,8 +113,8 @@
   line-height: 1.5;
 }
 .business-catalog__status--active {
-  color: hsl(var(--primary));
-  background: hsl(var(--primary) / 0.1);
+  color: hsl(var(--success));
+  background: hsl(var(--success) / 0.12);
 }
 .business-catalog .business-catalog__item-menu,
 .business-catalog__actions > .business-catalog__status {
