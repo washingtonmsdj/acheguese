@@ -494,9 +494,15 @@ describe("MVP core module boundary", () => {
     expect(heavyPrWorkflow).toContain('- "**/*.md"');
     expect(heavyPrWorkflow).toContain("github.event_name == 'push'");
     expect(heavyPrWorkflow).toContain("github.sha");
-    expect(heavyPrWorkflow).toContain(
-      "github.event.pull_request.number || github.sha",
+
+    const heavyConcurrencyBlock =
+      heavyPrWorkflow.match(/concurrency:\\n[\\s\\S]*?(?=\\n\\njobs:)/)?.[0] ?? "";
+    expect(heavyConcurrencyBlock).toContain(
+      "github.event.pull_request.number || github.ref",
     );
+    expect(heavyConcurrencyBlock).toContain("cancel-in-progress: true");
+    expect(heavyConcurrencyBlock).not.toContain("github.sha");
+
     expect(heavyPrWorkflow).not.toContain(
       ".\\scripts\\ci\\run-preview-e2e.ps1",
     );
