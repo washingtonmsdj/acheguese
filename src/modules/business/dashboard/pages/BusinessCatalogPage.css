@@ -51,10 +51,7 @@
   margin-top: 5px;
 }
 .business-catalog__heading > button {
-  background: hsl(var(--brand-solar));
-  color: hsl(var(--brand-petroleum));
   min-height: 44px;
-  border-radius: 999px;
   align-self: center;
   flex-shrink: 0;
 }
