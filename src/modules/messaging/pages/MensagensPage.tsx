@@ -58,12 +58,25 @@ export interface MensagensPageProps {
 }
 
 export default function MensagensPage({ providerIds }: MensagensPageProps) {
+  const { activeProfile, isLoading } = useSessionContext();
+  const providers = useMemo(
+    () => providerIds.map(getMessagingProvider).filter((provider): provider is MessagingInboxProvider => provider !== null),
+    [providerIds],
+  );
+  return <MessagingInboxScreen providers={providers} activeProfile={activeProfile} sessionLoading={isLoading} />;
+}
+
+/** Shared screen; real and isolated preview adapters supply the same contract. */
+export function MessagingInboxScreen({ providers, activeProfile, sessionLoading = false }: {
+  providers: readonly MessagingInboxProvider[];
+  activeProfile: { id: string; displayName: string } | null;
+  sessionLoading?: boolean;
+}) {
   const navigate = useNavigate();
   const { providerId, threadId } = useParams<{
     providerId?: string;
     threadId?: string;
   }>();
-  const { activeProfile, isLoading: sessionLoading } = useSessionContext();
 
   const [threads, setThreads] = useState<MessagingInboxThread[]>([]);
   const [messages, setMessages] = useState<MessagingInboxMessage[]>([]);
@@ -74,20 +87,10 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const providers = useMemo(
-    () =>
-      providerIds
-        .map((id) => getMessagingProvider(id))
-        .filter(
-          (provider): provider is MessagingInboxProvider => provider !== null,
-        ),
-    [providerIds],
-  );
   const activeProvider = useMemo<MessagingInboxProvider | null>(() => {
     if (!isMessagingProviderId(providerId)) return null;
-    if (!providerIds.includes(providerId)) return null;
-    return getMessagingProvider(providerId);
-  }, [providerId, providerIds]);
+    return providers.find((provider) => provider.id === providerId) ?? null;
+  }, [providerId, providers]);
 
   const selectedThread = useMemo(
     () =>
