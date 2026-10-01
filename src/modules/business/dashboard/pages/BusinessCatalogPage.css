@@ -38,7 +38,7 @@
 .business-catalog__heading h1,
 .business-catalog__heading h2 {
   font-size: var(--business-heading-size, 1.25rem);
-  font-weight: var(--business-heading-weight, 650);
+  font-weight: var(--business-heading-weight, 600);
   line-height: var(--business-heading-line-height, 1.3);
   letter-spacing: -0.025em;
 }
