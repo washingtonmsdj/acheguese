@@ -30,6 +30,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import { logger } from "@/shared/utils/logger";
+import "./MensagensPage.css";
 
 function formatTimestamp(value: string): string {
   const date = new Date(value);
@@ -303,7 +304,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
     <main
       id="main-content"
       data-page="messaging-inbox"
-      className="h-[100dvh] min-h-0 bg-background text-foreground"
+      className="messaging-inbox min-h-0 bg-background text-foreground"
     >
       <div className="mx-auto grid h-full w-full max-w-7xl md:grid-cols-[22rem_minmax(0,1fr)]">
         <aside
@@ -349,6 +350,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
                   <button
                     key={`${thread.providerId}:${thread.threadId}`}
                     type="button"
+                    aria-pressed={selectedThread?.threadId === thread.threadId && selectedThread.providerId === thread.providerId}
                     onClick={() => navigate(messagingRoutes.thread(thread.providerId, thread.threadId))}
                     className={cn(
                       "flex w-full gap-3 p-4 text-left transition hover:bg-accent/60",

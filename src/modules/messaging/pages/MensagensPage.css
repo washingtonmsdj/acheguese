@@ -1,0 +1,65 @@
+.messaging-inbox {
+  height: 100dvh;
+  min-width: 0;
+  color: hsl(var(--foreground));
+}
+
+.messaging-inbox > div,
+.messaging-inbox aside,
+.messaging-inbox section {
+  min-width: 0;
+}
+
+.messaging-inbox aside {
+  background: hsl(var(--card));
+}
+
+.messaging-inbox aside button {
+  min-height: 76px;
+}
+
+.messaging-inbox button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: -2px;
+}
+
+.messaging-inbox section > header,
+.messaging-inbox section > form {
+  flex-shrink: 0;
+  background: hsl(var(--card));
+}
+
+.messaging-inbox section > header button,
+.messaging-inbox form button {
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+
+.messaging-inbox form input {
+  min-width: 0;
+  height: 44px;
+  font-size: 16px;
+}
+
+.messaging-inbox section p {
+  overflow-wrap: anywhere;
+}
+
+.messaging-inbox section > form {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .messaging-inbox {
+    padding: 20px;
+  }
+
+  .messaging-inbox > div {
+    overflow: hidden;
+    border: 1px solid hsl(var(--border));
+    border-radius: 16px;
+    background: hsl(var(--card));
+    grid-template-columns: minmax(260px, 30%) minmax(0, 1fr);
+  }
+}
