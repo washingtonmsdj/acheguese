@@ -57,6 +57,10 @@ export interface MensagensPageProps {
   providerIds: readonly MessagingProviderId[];
 }
 
+export type MessagingScreenProvider = Omit<MessagingInboxProvider, "subscribeToThread"> & {
+  subscribeToThread(threadId: string, callback: (message: MessagingInboxMessage) => void): { unsubscribe(): void };
+};
+
 export default function MensagensPage({ providerIds }: MensagensPageProps) {
   const { activeProfile, isLoading } = useSessionContext();
   const providers = useMemo(
@@ -68,7 +72,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
 
 /** Shared screen; real and isolated preview adapters supply the same contract. */
 export function MessagingInboxScreen({ providers, activeProfile, sessionLoading = false }: {
-  providers: readonly MessagingInboxProvider[];
+  providers: readonly MessagingScreenProvider[];
   activeProfile: { id: string; displayName: string } | null;
   sessionLoading?: boolean;
 }) {
@@ -87,7 +91,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const activeProvider = useMemo<MessagingInboxProvider | null>(() => {
+  const activeProvider = useMemo<MessagingScreenProvider | null>(() => {
     if (!isMessagingProviderId(providerId)) return null;
     return providers.find((provider) => provider.id === providerId) ?? null;
   }, [providerId, providers]);

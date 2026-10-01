@@ -1,8 +1,8 @@
 import { createRoot } from "react-dom/client";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
-import { MessagingInboxScreen } from "@/modules/messaging/pages/MensagensPage";
-import type { MessagingInboxProvider, MessagingInboxThread, MessagingInboxMessage } from "@/core/messaging/inboxTypes";
+import { MessagingInboxScreen, type MessagingScreenProvider } from "@/modules/messaging/pages/MensagensPage";
+import type { MessagingInboxThread, MessagingInboxMessage } from "@/core/messaging/inboxTypes";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import "@/index.css";
 
@@ -20,7 +20,7 @@ const messages: MessagingInboxMessage[] = threads.flatMap((thread, index) => [
   { providerId: "business" as const, id: `${thread.threadId}-1`, threadId: thread.threadId, senderProfileId: `person-${index}`, body: questions[index], isRemoved: false, createdAt: thread.lastMessageAt },
   { providerId: "business" as const, id: `${thread.threadId}-2`, threadId: thread.threadId, senderProfileId: profile.id, body: "Olá! Podemos ajudar. Qual informação você precisa?", isRemoved: false, createdAt: thread.lastMessageAt },
 ]);
-const provider: MessagingInboxProvider = {
+const provider: MessagingScreenProvider = {
   id: "business", label: "Empresas",
   async listThreads(query) {
     return { items: threads.filter((thread) => `${thread.title} ${thread.lastMessageText}`.toLocaleLowerCase("pt-BR").includes((query.search ?? "").toLocaleLowerCase("pt-BR"))).map((thread) => ({ ...thread })), nextCursor: null };
