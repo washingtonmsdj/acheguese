@@ -129,6 +129,7 @@ const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:emerald|green|lime|rose|red|amber|yellow)-\d{2,3}(?:\/\d+)?\b/;
 const BUSINESS_DIRECT_BRAND_PRIMITIVE_RE = /var\(--brand-[a-z0-9-]+\)/;
+const BUSINESS_EXTRABOLD_RE = /(?:font-weight\s*:\s*800\b|\bfont-extrabold\b|\bfont-\[800\]\b)/;
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
 const APPROVED_FONT_WEIGHTS = new Set(['400', '500', '600', '700', '800']);
@@ -315,6 +316,14 @@ function main(): void {
     ) {
       violations.push(
         `${relative}: direct brand primitive found in Business management; consume semantic tokens or shared design-system components instead.`,
+      );
+    }
+    if (
+      isBusinessManagementSurface &&
+      BUSINESS_EXTRABOLD_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: 800/extrabold typography found in Business management; reserve 800 for approved display/wordmark usage and use 600/700 for UI hierarchy.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);
