@@ -3,6 +3,8 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
+  ORDAX_AUDIENCE,
+  ORDAX_CLIENT_ID,
   ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
   ORDAX_READ_SCOPES,
   ORDAX_WRITE_SCOPES,
@@ -57,6 +59,8 @@ describe("OrdaX first-party integration boundary", () => {
     const link = validateOrdaxSpaceLink({
       schema: ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
       provider: "ordax",
+      clientId: ORDAX_CLIENT_ID,
+      audience: ORDAX_AUDIENCE,
       connectionId: "connection_school_001",
       achegueseOwnerUserId: "acheguese_user_001",
       achegueseEntityKind: "education-institution",
@@ -74,6 +78,37 @@ describe("OrdaX first-party integration boundary", () => {
     expect(link.spaceId).toBe("ordax_space_school_001");
   });
 
+  it("binds every OrdaX link to the Achegue-se client audience", () => {
+    expect(ORDAX_CLIENT_ID).toBe("acheguese");
+    expect(ORDAX_AUDIENCE).toBe("ordax:first-party:acheguese");
+    expect(contract.identity.client_id).toBe(ORDAX_CLIENT_ID);
+    expect(contract.identity.audience).toBe(ORDAX_AUDIENCE);
+    expect(contract.identity.cross_audience_token_reuse).toBe(false);
+
+    const base = {
+      schema: ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
+      provider: "ordax",
+      clientId: ORDAX_CLIENT_ID,
+      audience: ORDAX_AUDIENCE,
+      connectionId: "connection_school_001",
+      achegueseOwnerUserId: "acheguese_user_001",
+      achegueseEntityKind: "education-institution",
+      achegueseEntityId: "education_school_001",
+      issuer: "https://identity.ordax.example",
+      subjectId: "ordax_subject_001",
+      spaceId: "ordax_space_school_001",
+      scopes: ["network.space.read"],
+      state: "active",
+      linkedAt: "2026-10-01T04:30:00.000Z",
+      revokedAt: null,
+    };
+
+    expect(() => validateOrdaxSpaceLink({ ...base, audience: "ordax:product-mcp" }))
+      .toThrow(/audience is incompatible/);
+    expect(() => validateOrdaxSpaceLink({ ...base, clientId: "product-mcp" }))
+      .toThrow(/client is incompatible/);
+  });
+
   it("keeps read and write scopes classified explicitly", () => {
     expect(ORDAX_READ_SCOPES).toContain("network.messages.read");
     expect(ORDAX_WRITE_SCOPES).not.toContain("network.messages.read");
@@ -84,6 +119,8 @@ describe("OrdaX first-party integration boundary", () => {
     const base = {
       schema: ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
       provider: "ordax",
+      clientId: ORDAX_CLIENT_ID,
+      audience: ORDAX_AUDIENCE,
       connectionId: "connection_school_001",
       achegueseOwnerUserId: "acheguese_user_001",
       achegueseEntityKind: "education-institution",
@@ -112,6 +149,8 @@ describe("OrdaX first-party integration boundary", () => {
     const base = {
       schema: ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
       provider: "ordax",
+      clientId: ORDAX_CLIENT_ID,
+      audience: ORDAX_AUDIENCE,
       connectionId: "connection_school_001",
       achegueseOwnerUserId: "acheguese_user_001",
       achegueseEntityKind: "education-institution",
