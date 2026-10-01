@@ -7,7 +7,7 @@ import { LAUNCH_URLS } from "@/core/routing/config/territory";
 import "@/index.css";
 
 // Local-only data adapter. Never registered in the production provider registry.
-const profile = { id: "preview-business", displayName: "Empresa de demonstração" };
+const profile = { id: "preview-business", displayName: "Escola Municipal Artur de Sales (demonstração)" };
 const names = ["Ana Silva", "Carlos Mendes", "Mariana Costa", "José Almeida", "Fernanda Santos"];
 const questions = ["Olá! Gostaria de saber se ainda há vagas.", "Quais são os horários de atendimento?", "Vocês oferecem atividades extras?", "Como faço para chegar?", "Preciso de informações sobre os serviços."];
 const threads: MessagingInboxThread[] = names.map((name, index) => ({
