@@ -76,7 +76,7 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260514094500_create_territory_communities.sql",
     );
     const aliasRetirement = readProjectFile(
-      "supabase/migrations/20260927183000_retire_community_public_aliases.sql",
+      "supabase/migrations/20261001111930_retire_community_public_aliases_reconcile.sql",
     );
 
     expect(foundation).toContain(
