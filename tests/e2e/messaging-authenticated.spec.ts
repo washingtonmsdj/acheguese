@@ -6,6 +6,7 @@ import {
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "./helpers/auth";
+import { logRuntimeBootstrapDiagnostics } from "./helpers/bootstrapDiagnostics";
 import {
   installPrivacyRpcPreviewBridge,
   installSessionProfilePreviewBridges,
@@ -32,9 +33,14 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
-    await expect(page).toHaveURL(/\/login\?redirect=%2Fmensagens$/, {
-      timeout: 30_000,
-    });
+    try {
+      await expect(page).toHaveURL(/\/login\?redirect=%2Fmensagens$/, {
+        timeout: 30_000,
+      });
+    } catch (error) {
+      await logRuntimeBootstrapDiagnostics(page, "messaging");
+      throw error;
+    }
 
     await Promise.all([
       installPrivacyRpcPreviewBridge(page),

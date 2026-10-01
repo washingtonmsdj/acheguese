@@ -6,6 +6,7 @@ import {
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "./helpers/auth";
+import { logRuntimeBootstrapDiagnostics } from "./helpers/bootstrapDiagnostics";
 
 const VIEWPORTS = [
   { name: "mobile", width: 390, height: 844, navigation: "mobile" },
@@ -110,9 +111,18 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       await page.context().clearCookies();
       await bootstrapProtectedPreviewAccess(page);
       await page.goto("/conta", { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/, {
-        timeout: 30_000,
-      });
+      try {
+        await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/, {
+          timeout: 30_000,
+        });
+      } catch (error) {
+        await logRuntimeBootstrapDiagnostics(page, `account-${viewport.name}`, {
+          consoleErrors,
+          pageErrors,
+          networkErrors,
+        });
+        throw error;
+      }
       await expect(page.locator("#login-identifier")).toBeVisible({
         timeout: 30_000,
       });
