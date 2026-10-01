@@ -57,10 +57,6 @@
   background: hsl(var(--primary) / 0.07);
   color: hsl(var(--primary));
 }
-.business-management-identity__badges [data-status="active"] {
-  background: hsl(var(--success) / 0.12);
-  color: hsl(var(--success));
-}
 .business-management-identity__copy p {
   display: flex;
   align-items: flex-start;
