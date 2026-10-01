@@ -114,6 +114,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/business/dashboard/pages/BusinessSettingsPage.tsx',
   'src/modules/business/dashboard/pages/BusinessAnalyticsPage.tsx',
   'src/modules/business/dashboard/pages/BusinessPlansPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessPremiumSitePage.tsx',
   'src/modules/business/dashboard/pages/BusinessAdsPage.tsx',
   'src/modules/business/dashboard/components/BusinessSettingsRiskAction.tsx',
   'src/styles/theme.ts',
