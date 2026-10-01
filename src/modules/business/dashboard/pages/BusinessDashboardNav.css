@@ -2,14 +2,20 @@
   min-width: 0;
   align-self: start;
   padding: 8px;
-  border: 1px solid hsl(var(--border));
-  border-radius: 14px;
-  background: hsl(var(--card));
+  border: 1px solid hsl(var(--business-border, var(--territory-border)));
+  border-radius: var(--business-panel-radius, var(--radius-xl));
+  background: hsl(var(--business-surface, var(--territory-surface)));
 }
 .business-management-workspace {
-  --business-panel-radius: 16px;
-  --business-panel-padding: 16px;
-  --business-section-gap: 16px;
+  --business-surface: var(--territory-surface);
+  --business-raised: var(--territory-raised);
+  --business-border: var(--territory-border);
+  --business-brand: var(--territory-brand);
+  --business-success: var(--territory-success);
+  --business-highlight: var(--territory-sun);
+  --business-panel-radius: var(--radius-xl);
+  --business-panel-padding: var(--space-md);
+  --business-section-gap: var(--space-md);
   --business-heading-size: clamp(1.125rem, 1rem + 0.5vw, 1.5rem);
   --business-heading-weight: 600;
   --business-heading-line-height: 1.3;
@@ -31,7 +37,7 @@
 }
 @media (min-width: 1024px) {
   .business-management-workspace {
-    --business-panel-padding: 20px;
+      --business-panel-padding: var(--space-lg);
     grid-template-columns: 240px minmax(0, 1fr);
     grid-template-areas: "navigation identity" "navigation content";
     align-items: start;
@@ -40,9 +46,9 @@
 .business-management-panel {
   min-width: 0;
   padding: var(--business-panel-padding, 16px);
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--business-panel-radius, 16px);
-  background: hsl(var(--card));
+  border: 1px solid hsl(var(--business-border, var(--territory-border)));
+  border-radius: var(--business-panel-radius, var(--radius-xl));
+  background: hsl(var(--business-surface, var(--territory-surface)));
 }
 .business-management-title {
   font-size: var(--business-heading-size, 1.25rem);
@@ -59,7 +65,7 @@
   gap: 4px;
   min-width: 0;
   padding: 10px 0;
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--business-border, var(--territory-border)));
 }
 .business-management-field:last-child {
   border-bottom: 0;
@@ -100,7 +106,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px;
-  color: hsl(var(--primary));
+  color: hsl(var(--business-brand, var(--territory-brand)));
   font-size: 12px;
   font-weight: 600;
 }
@@ -168,10 +174,22 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.3;
+  color: hsl(var(--foreground));
   text-decoration: none;
   transition:
     background-color 150ms ease,
     color 150ms ease;
+}
+
+.business-dashboard-nav__item:hover {
+  background: hsl(var(--business-raised, var(--territory-raised)));
+  color: hsl(var(--business-brand, var(--territory-brand)));
+}
+
+.business-dashboard-nav__item[aria-current="page"] {
+  background: hsl(var(--business-brand, var(--territory-brand)) / 0.1);
+  color: hsl(var(--business-brand, var(--territory-brand)));
+  box-shadow: inset 3px 0 0 hsl(var(--business-brand, var(--territory-brand)));
 }
 
 .business-dashboard-nav__item:focus-visible {
