@@ -278,6 +278,11 @@ function main(): void {
         `${relative}: raw Tailwind palette color found in active Business management; use territory/business semantic tokens.`,
       );
     }
+    if (LEGACY_BUSINESS_GENERIC_UTILITY_RE.test(content)) {
+      violations.push(
+        `${relative}: generic primary/secondary/border utility found in active Business management; consume territory/business tokens.`,
+      );
+    }
     if (
       relative.endsWith('BusinessManagementIdentity.css') &&
       LEGACY_BUSINESS_PRIMITIVE_RE.test(content)
