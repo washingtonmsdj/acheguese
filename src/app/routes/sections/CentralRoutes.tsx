@@ -1,7 +1,9 @@
 import { Route, Routes } from "react-router-dom";
 
+import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { getActiveBusinessVerticalKeys } from "@/app/config/businessVerticalScope";
 import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
+import { getActiveMessagingProviderIds } from "@/app/config/messagingProviderScope";
 
 import * as P from "../activeCentralLazyImports";
 
@@ -16,6 +18,8 @@ export function CentralRoutes() {
   const businessEnabled = isProductModuleEnabled("business");
   const billingEnabled = isProductModuleEnabled("billing");
   const activeBusinessVerticalKeys = getActiveBusinessVerticalKeys();
+  const businessMessagingAvailable =
+    getActiveMessagingProviderIds().includes("business");
 
   return (
     <Routes>
@@ -24,6 +28,7 @@ export function CentralRoutes() {
           <P.CentralLayout
             businessEnabled={businessEnabled}
             billingEnabled={billingEnabled}
+            createBusinessHeader={<AuthBrandHeader showBack={false} />}
           />
         }
       >
@@ -47,7 +52,14 @@ export function CentralRoutes() {
                 element={<P.BusinessAdminGuard />}
               >
                 <Route element={<P.BusinessDashboardShellPage />}>
-                  <Route index element={<P.BusinessOverviewPage />} />
+                  <Route
+                    index
+                    element={
+                      <P.BusinessOverviewPage
+                        messagingAvailable={businessMessagingAvailable}
+                      />
+                    }
+                  />
                   <Route path="editar" element={<P.EditarEmpresaPage />} />
                   <Route path="fotos" element={<P.BusinessPhotosPage />} />
                   <Route path="horarios" element={<P.BusinessOpeningHoursPage />} />
