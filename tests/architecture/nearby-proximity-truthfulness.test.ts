@@ -26,18 +26,19 @@ describe("nearby MVP boundary", () => {
   const territorialLayout = read("src/core/routing/components/TerritorialLayout.tsx");
 
   it("uses location quality rather than fallback coordinates as personal proximity truth", () => {
-    expect(page).toContain("const hasPreciseProximity = isGoodForProximity");
     expect(page).toContain("useTerritorialContextOptional");
     expect(page).toContain("territoryLocation: routeFallbackLocation");
+    expect(page).toContain('type: "address"');
+    expect(page).toContain('type: "gps"');
+    expect(page).toContain("setSavedReference(reference)");
+    expect(page).toContain("const isGoodForProximity = Boolean(savedReference)");
     expect(page).toContain("const spatialLocationId = territorialContext");
-    expect(page).toContain("const routeCenterUnavailable =");
     expect(page).toContain("center: spatialCenter");
     expect(page).toContain("locationIds: spatialLocationIds");
-    expect(page).toContain("showProximity={hasPreciseProximity}");
     expect(page).toContain(
-      "Ative sua localização para saber o que está realmente perto de você.",
+      'enabled: providerIds.includes("business") && isGoodForProximity',
     );
-    expect(page).toContain("Não foi possível determinar o centro deste território; ative o GPS.");
+    expect(page).toContain("Informe um endereço ou ative o GPS para calcular distâncias reais.");
   });
 
   it("keeps Nearby horizontal and gates the current Business provider separately", () => {
@@ -114,8 +115,9 @@ describe("nearby MVP boundary", () => {
     expect(section).toContain('emptyMessage = "Nenhum resultado encontrado neste recorte."');
     expect(section).toContain("{emptyMessage}");
     expect(section).not.toContain("if (isEmpty && !isLoading) return null");
-    expect(page).toContain("Nenhuma empresa encontrada em até ${radiusKm}km.");
-    expect(page).toContain("Nenhuma empresa encontrada ${territoryLabels.inTerritory}.");
+    expect(page).toContain("Nenhum resultado neste recorte");
+    expect(page).toContain("Amplie o raio ou remova os filtros para ver mais opções.");
+    expect(page).toContain('className="nb-no-results"');
   });
 
   it("does not retain fake cross-module category filters", () => {
