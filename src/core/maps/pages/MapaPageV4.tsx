@@ -51,12 +51,12 @@ import { boundaryService } from '@/core/geospatial';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import { EntityStatus } from '@/shared/types/enums';
 import { LocationStatus, type Location } from '@/core/location/types';
-import { getBusinessCategoryLabel } from '@/shared/taxonomy/businessCategories';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type {
   MapLayerProviderRuntime,
   MapProviderBrowseLink,
 } from '../providers/types';
+import { getMapMarkerCategoryLabel } from '../utils/mapMarkerPresentation';
 
 export interface MapaPageV4Props {
   resolved?: ResolvedTerritory | null;
@@ -163,18 +163,6 @@ function hasMeaningfulViewportChange(
     || Math.abs(current.zoom - reference.zoom) >= 0.35;
 }
 
-function getMarkerCategory(marker: MapMarker): string | null {
-  const category = marker.metadata?.category;
-  return typeof category === 'string' && category.trim() ? category.trim() : null;
-}
-
-function getMarkerCategoryLabel(marker: MapMarker): string {
-  const category = getMarkerCategory(marker);
-  if (marker.type === 'business' && category) return getBusinessCategoryLabel(category);
-  const label = category ?? marker.type.replace(/_/g, ' ');
-  return label.charAt(0).toLocaleUpperCase('pt-BR') + label.slice(1);
-}
-
 function MapResultItem({
   marker,
   selected,
@@ -205,7 +193,7 @@ function MapResultItem({
           {marker.type === 'business' ? <Store /> : <MapPin />}
         </span>
         <span className="map-result-copy">
-          <span className="map-result-category">{getMarkerCategoryLabel(marker)}</span>
+          <span className="map-result-category">{getMapMarkerCategoryLabel(marker)}</span>
           <strong>{marker.title}</strong>
           <span className="map-result-meta">
             {isVerified ? (
