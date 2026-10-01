@@ -44,6 +44,7 @@ export default function BusinessLocationPage() {
   return (
     <BusinessLocationView
       showIdentity={false}
+      showSteps={false}
       business={business}
       publicUrl={publicUrl}
       address={address}
