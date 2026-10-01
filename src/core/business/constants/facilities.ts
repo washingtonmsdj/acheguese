@@ -26,56 +26,56 @@ export const FACILITIES: readonly Facility[] = [
     id: "wifi", 
     label: "Wi-Fi Grátis", 
     icon: Wifi, 
-    color: "text-sky-600",
+    color: "text-territory-brand",
     description: "Internet sem fio gratuita para clientes"
   },
   { 
     id: "estacionamento", 
     label: "Estacionamento", 
     icon: ParkingSquare, 
-    color: "text-blue-600",
+    color: "text-territory-brand",
     description: "Vagas de estacionamento disponíveis"
   },
   { 
     id: "acessibilidade", 
     label: "Acessibilidade", 
     icon: Accessibility, 
-    color: "text-purple-600",
+    color: "text-territory-brand",
     description: "Acessível para pessoas com deficiência"
   },
   { 
     id: "kids", 
     label: "Espaço Kids", 
     icon: Baby, 
-    color: "text-pink-600",
+    color: "text-territory-brand",
     description: "Área dedicada para crianças"
   },
   { 
     id: "pet_friendly", 
     label: "Pet Friendly", 
     icon: Dog, 
-    color: "text-amber-600",
+    color: "text-territory-brand",
     description: "Aceita animais de estimação"
   },
   { 
     id: "ar_condicionado", 
     label: "Ar Condicionado", 
     icon: AirVent, 
-    color: "text-cyan-600",
+    color: "text-territory-brand",
     description: "Ambiente climatizado"
   },
   { 
     id: "area_externa", 
     label: "Área Externa", 
     icon: Utensils, 
-    color: "text-emerald-600",
+    color: "text-territory-brand",
     description: "Espaço ao ar livre"
   },
   { 
     id: "musica_ao_vivo", 
     label: "Música ao Vivo", 
     icon: Music, 
-    color: "text-indigo-600",
+    color: "text-territory-brand",
     description: "Apresentações musicais"
   },
 ] as const;
