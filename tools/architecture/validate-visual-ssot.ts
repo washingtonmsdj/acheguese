@@ -93,6 +93,9 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/admin/pages/AdminServicos.tsx',
   'src/modules/central/components/CentralLayout.tsx',
   'src/modules/central/components/CentralHeader.tsx',
+  'src/modules/central/pages/CentralEmpresasPage.tsx',
+  'src/modules/central/pages/CentralEmpresasPage.css',
+  'src/core/profiles/components/hub/BusinessModulesSection.tsx',
   'src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx',
   'src/modules/business/dashboard/pages/BusinessDashboardNav.css',
   'src/modules/business/dashboard/components/BusinessDashboardNavigation.tsx',
@@ -279,6 +282,11 @@ function main(): void {
 
   for (const relative of MIGRATED_RUNTIME_FILES) {
     const content = readRequired(relative, violations);
+    const isBusinessManagementSurface =
+      relative.startsWith('src/modules/business/dashboard/') ||
+      relative === 'src/modules/central/pages/CentralEmpresasPage.tsx' ||
+      relative === 'src/modules/central/pages/CentralEmpresasPage.css' ||
+      relative === 'src/core/profiles/components/hub/BusinessModulesSection.tsx';
     if (RAW_RUNTIME_COLOR_RE.test(content)) {
       violations.push(
         `${relative}: raw runtime color found after SSOT migration; use semantic CSS/Tailwind tokens.`,
@@ -288,19 +296,19 @@ function main(): void {
       violations.push(`${relative}: legacy font found after Plus Jakarta Sans migration.`);
     }
     if (
-      relative.startsWith('src/modules/business/dashboard/') &&
+      isBusinessManagementSurface &&
       NON_SEMANTIC_STATUS_COLOR_RE.test(content)
     ) {
       violations.push(
-        `${relative}: non-semantic status color found in Business dashboard; use success, warning or destructive tokens.`,
+        `${relative}: non-semantic status color found in Business management; use success, warning or destructive tokens.`,
       );
     }
     if (
-      relative.startsWith('src/modules/business/dashboard/') &&
+      isBusinessManagementSurface &&
       BUSINESS_DIRECT_BRAND_PRIMITIVE_RE.test(content)
     ) {
       violations.push(
-        `${relative}: direct brand primitive found in Business dashboard; consume semantic tokens or shared design-system components instead.`,
+        `${relative}: direct brand primitive found in Business management; consume semantic tokens or shared design-system components instead.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);
