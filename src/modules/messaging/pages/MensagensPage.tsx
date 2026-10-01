@@ -85,6 +85,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
   const [threads, setThreads] = useState<MessagingInboxThread[]>([]);
   const [messages, setMessages] = useState<MessagingInboxMessage[]>([]);
   const [search, setSearch] = useState("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const draftKey = `${activeProfile?.id ?? ""}:${providerId ?? ""}:${threadId ?? ""}`;
   const draft = drafts[draftKey] ?? "";
@@ -93,6 +94,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const visibleThreads = unreadOnly ? threads.filter((thread) => thread.unreadCount > 0) : threads;
 
   const activeProvider = useMemo<MessagingScreenProvider | null>(() => {
     if (!isMessagingProviderId(providerId)) return null;
@@ -353,6 +355,10 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                 aria-label="Buscar conversas"
               />
             </div>
+            <label className="mt-3 flex min-h-11 items-center gap-2 text-sm text-foreground">
+              <input type="checkbox" checked={unreadOnly} onChange={(event) => setUnreadOnly(event.target.checked)} className="h-4 w-4 accent-primary" />
+              Somente não lidas
+            </label>
             {error && !threadId ? (
               <p className="mt-3 text-sm text-destructive" role="alert">{error}</p>
             ) : null}
@@ -363,13 +369,13 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
               <div className="flex justify-center p-8">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
-            ) : threads.length === 0 ? (
+            ) : visibleThreads.length === 0 ? (
               <div className="p-6 text-center text-sm text-muted-foreground">
-                {error ? "Suas conversas não puderam ser carregadas." : search.trim() ? "Nenhuma conversa corresponde à sua busca." : "Nenhuma conversa ainda."}
+                {error ? "Suas conversas não puderam ser carregadas." : unreadOnly ? "Nenhuma conversa não lida nesta busca." : search.trim() ? "Nenhuma conversa corresponde à sua busca." : "Nenhuma conversa ainda."}
               </div>
             ) : (
               <div className="divide-y">
-                {threads.map((thread) => (
+                {visibleThreads.map((thread) => (
                   <button
                     key={`${thread.providerId}:${thread.threadId}`}
                     type="button"
@@ -531,6 +537,11 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                     {error}
                   </p>
                 ) : null}
+                {selectedThread?.closedAt || selectedThread?.blockedByMe || selectedThread?.blockedByOther ? (
+                  <p role="status" className="mb-2 text-sm text-muted-foreground">
+                    {selectedThread.closedAt ? "Esta conversa está encerrada." : "O envio está indisponível nesta conversa por bloqueio."}
+                  </p>
+                ) : null}
                 <div className="mx-auto flex max-w-3xl items-end gap-2">
                   <textarea
                     value={draft}
@@ -566,6 +577,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                     )}
                   </Button>
                 </div>
+                <p className="mx-auto mt-2 max-w-3xl text-xs text-muted-foreground">Mensagens de texto · anexos ainda não disponíveis.</p>
               </form>
             </>
           )}
