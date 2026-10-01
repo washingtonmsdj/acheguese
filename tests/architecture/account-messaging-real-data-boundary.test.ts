@@ -71,7 +71,9 @@ describe("account and horizontal messaging real-data boundary", () => {
 
   it("keeps the global Inbox provider-based instead of Community-owned", () => {
     expect(inbox).toContain("providerIds");
-    expect(inbox).toContain("getMessagingProvider(providerId)");
+    expect(inbox).toContain("providerIds.map");
+    expect(inbox).toContain("getMessagingProvider");
+    expect(inbox).toContain("MessagingInboxProvider");
     expect(inbox).toContain("useSessionContext()");
     expect(inbox).not.toContain("useCommunityDirectMessages");
     expect(inbox).not.toContain("concept-mock");
