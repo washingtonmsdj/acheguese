@@ -9,6 +9,7 @@ import {
   Eye,
   Wrench,
   Info,
+  SlidersHorizontal,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveBusinessDashboardContext } from "../businessDashboardContext";
@@ -140,6 +141,7 @@ export function BusinessCatalogView({
   const [search, setSearch] = useState("");
   const [kind, setKind] = useState("all");
   const [sort, setSort] = useState("recent");
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [editing, setEditing] = useState<BusinessCatalogItem | null>(null);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<CatalogInput>(EMPTY_ITEM);
@@ -206,7 +208,9 @@ export function BusinessCatalogView({
               Adicionar item
             </Button>
           </header>
-          <div className="business-catalog__filters">
+          <div
+            className={`business-catalog__filters${filtersOpen ? " business-catalog__filters--open" : ""}`}
+          >
             <label className="business-catalog__search">
               <Search size={16} aria-hidden="true" />
               <Input
@@ -216,23 +220,39 @@ export function BusinessCatalogView({
                 onChange={(e) => setSearch(e.target.value)}
               />
             </label>
-            <select
-              aria-label="Filtrar por tipo"
-              value={kind}
-              onChange={(e) => setKind(e.target.value)}
+            <Button
+              className="business-catalog__filter-toggle"
+              variant="outline"
+              size="icon"
+              aria-label="Filtros do catálogo"
+              aria-expanded={filtersOpen}
+              aria-controls="business-catalog-filter-options"
+              onClick={() => setFiltersOpen((value) => !value)}
             >
-              <option value="all">Todos os tipos</option>
-              <option value="product">Produtos</option>
-              <option value="service">Serviços</option>
-            </select>
-            <select
-              aria-label="Ordenar catálogo"
-              value={sort}
-              onChange={(e) => setSort(e.target.value)}
+              <SlidersHorizontal size={18} aria-hidden="true" />
+            </Button>
+            <div
+              id="business-catalog-filter-options"
+              className="business-catalog__filter-options"
             >
-              <option value="recent">Mais recentes</option>
-              <option value="name">Nome A–Z</option>
-            </select>
+              <select
+                aria-label="Filtrar por tipo"
+                value={kind}
+                onChange={(e) => setKind(e.target.value)}
+              >
+                <option value="all">Todos os tipos</option>
+                <option value="product">Produtos</option>
+                <option value="service">Serviços</option>
+              </select>
+              <select
+                aria-label="Ordenar catálogo"
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+              >
+                <option value="recent">Mais recentes</option>
+                <option value="name">Nome A–Z</option>
+              </select>
+            </div>
           </div>
           <p className="business-catalog__count" aria-live="polite">
             {filtered.length} {filtered.length === 1 ? "item" : "itens"}
@@ -270,7 +290,14 @@ export function BusinessCatalogView({
                       {item.kind === "product" ? "Produto" : "Serviço"}
                       {item.category ? ` · ${item.category}` : ""}
                     </span>
-                    <h2>{item.name}</h2>
+                    <div className="business-catalog__item-heading">
+                      <h2>{item.name}</h2>
+                      <span
+                        className={`business-catalog__status${item.active ? " business-catalog__status--active" : ""}`}
+                      >
+                        {item.active ? "Ativo" : "Inativo"}
+                      </span>
+                    </div>
                     {item.description && <p>{item.description}</p>}
                     <strong>{catalogPrice(item.price)}</strong>
                   </div>
