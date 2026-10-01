@@ -20,6 +20,7 @@ import { Building2, Briefcase, Car, User, ChevronDown, Zap } from 'lucide-react'
 import { useMultiProfileContext } from '../contexts/multi-profile-runtime-context';
 import { toast } from 'sonner';
 import type { ProfileType } from '../services/multi-profile/types';
+import { Link } from 'react-router-dom';
 
 function typeIcon(t: ProfileType) {
   switch (t) {
@@ -56,7 +57,7 @@ function getInitials(name?: string | null): string {
   return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 }
 
-export function MultiProfileSwitcher() {
+export function MultiProfileSwitcher({ compact = false }: { compact?: boolean }) {
   const {
     activeProfile,
     contextualProfile,
@@ -76,12 +77,12 @@ export function MultiProfileSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-border hover:bg-muted/50 transition-colors max-w-[180px]">
+        <button aria-label={`Trocar perfil: ${effectiveProfile.display_name}`} className="flex min-h-10 items-center gap-2 px-2.5 py-1.5 rounded-xl border border-border hover:bg-muted/50 transition-colors max-w-[180px]">
           <Avatar className="h-6 w-6 flex-shrink-0">
             <AvatarImage src={effectiveProfile.avatar_url || undefined} />
             <AvatarFallback className="text-[10px]">{getInitials(effectiveProfile.display_name)}</AvatarFallback>
           </Avatar>
-          <div className="flex items-center gap-1 min-w-0">
+          <div className={compact ? "hidden sm:flex items-center gap-1 min-w-0" : "flex items-center gap-1 min-w-0"}>
             <Icon className={`h-3 w-3 flex-shrink-0 ${color}`} />
             <span className="text-xs font-medium truncate">{effectiveProfile.display_name}</span>
             {/* Indicador de contexto automático */}
@@ -94,6 +95,12 @@ export function MultiProfileSwitcher() {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-56">
+        {compact && (
+          <>
+            <DropdownMenuItem asChild><Link to="/conta">Minha conta</Link></DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         {isContextual && (
           <>
             <DropdownMenuLabel className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 font-normal">
@@ -144,4 +151,3 @@ export function MultiProfileSwitcher() {
     </DropdownMenu>
   );
 }
-

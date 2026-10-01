@@ -73,6 +73,7 @@ export default function BusinessOpeningHoursPage() {
   };
   return (
     <BusinessOpeningHoursView
+      showIdentity={false}
       businessName={business.name}
       businessIdentity={business}
       publicUrl={publicUrl}
@@ -87,6 +88,7 @@ export default function BusinessOpeningHoursPage() {
 }
 
 interface BusinessOpeningHoursViewProps {
+  showIdentity?: boolean;
   businessName: string;
   businessIdentity?: BusinessManagementIdentityData;
   publicUrl: string | null;
@@ -100,6 +102,7 @@ interface BusinessOpeningHoursViewProps {
 
 /** Shared presentation used by the authenticated page and the isolated dev preview. */
 export function BusinessOpeningHoursView({
+  showIdentity = true,
   businessName,
   businessIdentity,
   publicUrl,
@@ -116,10 +119,10 @@ export function BusinessOpeningHoursView({
   const valid = invalidDays.length === 0;
   return (
     <div className="business-hours-page">
-      <BusinessManagementIdentity
+      {showIdentity ? <BusinessManagementIdentity
         business={businessIdentity ?? { name: businessName }}
         publicUrl={publicUrl}
-      />
+      /> : null}
       <header className="business-hours-page__heading">
         <Clock aria-hidden="true" />
         <div>

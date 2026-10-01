@@ -6,28 +6,14 @@ import { businessManagementRoutes } from "@/core/business/utils/businessManageme
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { Button } from "@/shared/components/ui/button";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
-
-function getStatusLabel(status: string) {
-  switch (status) {
-    case "active":
-      return "Ativa";
-    case "pending":
-      return "Em análise";
-    case "suspended":
-      return "Suspensa";
-    case "inactive":
-      return "Inativa";
-    default:
-      return status;
-  }
-}
+import { getBusinessStatusPresentation } from "../presentation/businessStatusPresentation";
 
 export default function BusinessDetailsPage() {
-  const { businessId, business } = useActiveBusinessDashboardContext();
+  const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
 
   return (
     <div className="space-y-5">
-      <section className="rounded-[26px] border border-border bg-card p-5 sm:p-6">
+      <section className="business-management-panel">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
@@ -42,12 +28,12 @@ export default function BusinessDetailsPage() {
             </p>
           </div>
 
-          <Link to={businessManagementRoutes.edit(businessId)}>
-            <Button className="w-full gap-2 sm:w-auto">
+          <Button asChild className="w-full gap-2 sm:w-auto">
+            <Link to={businessManagementRoutes.edit(businessId)}>
               <Pencil className="h-4 w-4" />
               Editar dados
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </section>
 
@@ -59,11 +45,13 @@ export default function BusinessDetailsPage() {
         >
           <Field label="Nome" value={business.name} />
           <Field label="Categoria" value={getBusinessCategoryLabel(business.category)} />
-          <Field label="Situação" value={getStatusLabel(business.status)} />
+          <Field label="Situação" value={getBusinessStatusPresentation(business.status).label} />
+          <Field label="Identificador" value={businessId} />
           <Field
             label="Endereço da página"
             value={business.slug ? `@${business.slug}` : "Ainda não configurado"}
           />
+          <Field label="Página pública" value={publicUrl || "Ainda não disponível"} />
         </SectionCard>
 
         <SectionCard
@@ -107,7 +95,7 @@ function SectionCard({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-[24px] border border-border bg-card p-5 sm:p-6">
+    <section className="business-management-panel">
       <div className="mb-5 flex items-start gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
           <Icon className="h-5 w-5" />
@@ -138,7 +126,7 @@ function Field({
       </p>
       <div className="mt-1.5 flex min-w-0 items-center gap-2">
         {Icon ? <Icon className="h-4 w-4 shrink-0 text-muted-foreground" /> : null}
-        <p className="min-w-0 break-words text-sm font-medium text-foreground">
+        <p className="min-w-0 break-words [overflow-wrap:anywhere] text-sm font-medium text-foreground">
           {value}
         </p>
       </div>

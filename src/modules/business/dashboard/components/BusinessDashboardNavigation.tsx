@@ -6,9 +6,11 @@ import "../pages/BusinessDashboardNav.css";
 export function BusinessDashboardNavigation({
   children,
   count,
+  sectionLabel,
 }: {
   children: ReactNode;
   count: number;
+  sectionLabel?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const navigationId = useId();
@@ -30,13 +32,19 @@ export function BusinessDashboardNavigation({
         onClick={() => setExpanded(!expanded)}
       >
         <Menu size={18} aria-hidden="true" />
-        Gerenciar empresa
+        {sectionLabel ?? "Gerenciar empresa"}
         <ChevronDown size={16} aria-hidden="true" />
       </button>
       <nav
         id={navigationId}
         aria-label="Seções da empresa"
         className="business-dashboard-nav"
+        onClick={(event) => {
+          if (event.target instanceof Element && event.target.closest("a")) setExpanded(false);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setExpanded(false);
+        }}
         style={{ "--business-nav-count": count } as CSSProperties}
       >
         {children}

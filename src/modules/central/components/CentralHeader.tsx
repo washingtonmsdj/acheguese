@@ -1,11 +1,11 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
 import { Bell, Home, LogOut } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
-import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import type { ReactNode } from "react";
+import { MultiProfileSwitcher } from "@/core/profiles/components/MultiProfileSwitcher";
 
 /**
  * CentralHeader
@@ -14,10 +14,11 @@ import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
  */
 interface CentralHeaderProps {
   readonly billingEnabled: boolean;
+  readonly brand?: ReactNode;
+  readonly showNavigation?: boolean;
 }
 
-export function CentralHeader({ billingEnabled }: CentralHeaderProps) {
-  const { activeProfile, user } = useSessionContext();
+export function CentralHeader({ billingEnabled, brand, showNavigation = true }: CentralHeaderProps) {
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
 
   const handleLogout = async () => {
@@ -27,12 +28,14 @@ export function CentralHeader({ billingEnabled }: CentralHeaderProps) {
 
   return (
     <header className="sticky top-0 z-40 flex h-14 w-full items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-sm">
-      <SidebarTrigger className="text-muted-foreground hover:text-foreground md:mr-2" />
+      {showNavigation ? <SidebarTrigger className="text-muted-foreground hover:text-foreground md:mr-2" /> : null}
+      <div className="min-w-0 shrink-0">{brand}</div>
 
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-3">
+        <MultiProfileSwitcher compact />
         <a
           href={publicHomeUrl}
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
           aria-label="Voltar ao site"
         >
           <Home className="h-4 w-4" />
@@ -46,21 +49,14 @@ export function CentralHeader({ billingEnabled }: CentralHeaderProps) {
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
-        <Link to="/notificacoes" className="relative text-muted-foreground transition-colors hover:text-foreground">
+        <Link to="/notificacoes" aria-label="Notificações" className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground">
           <Bell className="h-5 w-5" />
         </Link>
-        <Link to="/conta">
-          <Avatar className="h-8 w-8 border border-primary/30">
-            <AvatarImage src={activeProfile?.avatarUrl || ""} />
-            <AvatarFallback>
-              {activeProfile?.displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
+        <Link to="/conta" className="hidden text-sm sm:inline" aria-label="Minha conta">Conta</Link>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground"
           aria-label="Sair da conta"
           onClick={handleLogout}
         >

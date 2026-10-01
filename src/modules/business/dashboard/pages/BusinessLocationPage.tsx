@@ -32,6 +32,7 @@ export default function BusinessLocationPage() {
   const changed = JSON.stringify(address) !== JSON.stringify(initial);
   return (
     <BusinessLocationView
+      showIdentity={false}
       business={business}
       publicUrl={publicUrl}
       address={address}
@@ -62,6 +63,7 @@ export default function BusinessLocationPage() {
 }
 
 interface BusinessLocationViewProps {
+  showIdentity?: boolean;
   business: BusinessManagementIdentityData;
   publicUrl?: string | null;
   address: Address;
@@ -74,6 +76,7 @@ interface BusinessLocationViewProps {
 }
 
 export function BusinessLocationView({
+  showIdentity = true,
   business,
   publicUrl,
   address,
@@ -110,7 +113,7 @@ export function BusinessLocationView({
   };
   return (
     <div className="business-location">
-      <BusinessManagementIdentity business={business} publicUrl={publicUrl} />
+      {showIdentity ? <BusinessManagementIdentity business={business} publicUrl={publicUrl} /> : null}
       <ol
         className="business-location__steps"
         aria-label="Etapas de edição da empresa"

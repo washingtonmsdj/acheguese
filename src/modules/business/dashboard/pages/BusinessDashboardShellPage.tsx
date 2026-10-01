@@ -1,4 +1,4 @@
-import { useEffect, useMemo, type ComponentType } from "react";
+import { useEffect, useMemo } from "react";
 import {
   NavLink,
   Outlet,
@@ -6,16 +6,7 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import {
-  ArrowLeft,
-  Clock,
-  Images,
-  MapPin,
-  Pencil,
-  Package,
-  Settings,
-  Store,
-} from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
@@ -29,15 +20,12 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { BusinessDashboardNavigation } from "../components/BusinessDashboardNavigation";
 import { ActiveProfileIdentity } from "@/shared/components/ActiveProfileIdentity";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
+import type { BusinessManagementNavigationItem } from "../businessManagementNavigation";
+import { BusinessManagementIdentity } from "../components/BusinessManagementIdentity";
 
-interface NavItem {
-  label: string;
-  mobileLabel: string;
-  to: string;
-  icon: ComponentType<{ className?: string }>;
-}
-
-export default function BusinessDashboardShellPage() {
+export default function BusinessDashboardShellPage({ navigationItems }: {
+  navigationItems: readonly BusinessManagementNavigationItem[];
+}) {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -71,7 +59,7 @@ export default function BusinessDashboardShellPage() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-[1440px] space-y-4 px-4 py-6 sm:px-6 xl:px-8">
-        <Skeleton className="h-8 w-80" />
+        <Skeleton className="h-8 w-full max-w-80" />
         <Skeleton className="h-28 w-full" />
         <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
           <Skeleton className="h-96 w-full" />
@@ -86,45 +74,9 @@ export default function BusinessDashboardShellPage() {
   }
 
   const basePath = businessManagementRoutes.overview(businessId);
-  const navItems: NavItem[] = [
-    { label: "Visão geral", mobileLabel: "Visão", to: basePath, icon: Store },
-    {
-      label: "Editar empresa",
-      mobileLabel: "Editar",
-      to: businessManagementRoutes.edit(businessId),
-      icon: Pencil,
-    },
-    {
-      label: "Fotos",
-      mobileLabel: "Fotos",
-      to: businessManagementRoutes.photos(businessId),
-      icon: Images,
-    },
-    {
-      label: "Horário de funcionamento",
-      mobileLabel: "Horário",
-      to: businessManagementRoutes.hours(businessId),
-      icon: Clock,
-    },
-    {
-      label: "Localização",
-      mobileLabel: "Local",
-      to: businessManagementRoutes.location(businessId),
-      icon: MapPin,
-    },
-    {
-      label: "Produtos e serviços",
-      mobileLabel: "Catálogo",
-      to: businessManagementRoutes.catalog(businessId),
-      icon: Package,
-    },
-    {
-      label: "Configurações",
-      mobileLabel: "Ajustes",
-      to: businessManagementRoutes.configuracoes(businessId),
-      icon: Settings,
-    },
-  ];
+  const navItems = navigationItems.map((item) => ({
+    ...item, to: item.buildRoute(businessId),
+  }));
 
   const sectionLabel = getBusinessManagementSectionLabel(location.pathname);
 
@@ -152,9 +104,9 @@ export default function BusinessDashboardShellPage() {
         <button
           type="button"
           className="hidden shrink-0 hover:text-foreground sm:inline"
-          onClick={() => navigate("/conta")}
+          onClick={() => navigate("/central")}
         >
-          Conta
+          Central
         </button>
         <span className="hidden sm:inline">/</span>
         <button
@@ -172,8 +124,9 @@ export default function BusinessDashboardShellPage() {
         <span className="hidden shrink-0 sm:inline">{sectionLabel}</span>
       </nav>
 
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[240px_minmax(0,1fr)]">
-        <BusinessDashboardNavigation count={navItems.length}>
+      <div className="business-management-workspace">
+        <div className="business-management-workspace__identity"><BusinessManagementIdentity business={business} publicUrl={publicUrl} /></div>
+        <BusinessDashboardNavigation count={navItems.length} sectionLabel={sectionLabel}>
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -193,13 +146,12 @@ export default function BusinessDashboardShellPage() {
                 className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4"
                 aria-hidden="true"
               />
-              <span className="lg:hidden">{item.mobileLabel}</span>
-              <span className="hidden lg:inline">{item.label}</span>
+              <span>{item.label}</span>
             </NavLink>
           ))}
         </BusinessDashboardNavigation>
 
-        <div className="min-w-0">
+        <div className="business-management-workspace__content">
           <Outlet context={outletContext} />
         </div>
       </div>

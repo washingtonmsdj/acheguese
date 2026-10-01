@@ -51,6 +51,16 @@ A Central usa uma única árvore canônica em `/central/empresas/*`:
 - configurações;
 - edição canônica pelo `businessId` autorizado.
 
+Seções certificadas da empresa: visão geral, editar, fotos, horários, localização,
+produtos e serviços, dados e configurações. Desktop e mobile consomem
+`businessManagementNavigation.ts`, autorizado no boundary da aplicação por
+`businessManagementSurfaceScope.ts`. A gestão de uma empresa usa um único
+shell e header autenticado, sem a sidebar do hub duplicada.
+
+Mensagens permanece em `/mensagens` e `/mensagens/business/:threadId`;
+Notificações permanece em `/notificacoes`, com preferências em
+`/conta/notificacoes`. Não são subseções da empresa.
+
 Criação e edição compartilham a mesma linguagem visual e os mesmos contratos de validação do domínio. Billing/premium pausado não pode introduzir CTA ou rota funcional no shell ativo.
 
 ## Módulos pós-MVP

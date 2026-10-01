@@ -7,9 +7,9 @@ import "@/app/pages/TerritoryPortalPage.css";
 export function BrandMark() {
   return (
     <span className="pt-brand-mark" aria-hidden="true">
-      <i />
-      <i />
-      <i />
+      <i style={{ background: "var(--sea, #087f83)" }} />
+      <i style={{ background: "var(--sun, hsl(var(--brand-solar)))" }} />
+      <i style={{ background: "var(--coral, #ef6748)" }} />
       <i />
     </span>
   );

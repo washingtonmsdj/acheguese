@@ -100,6 +100,7 @@ export default function BusinessCatalogPage() {
   };
   return (
     <BusinessCatalogView
+      showIdentity={false}
       business={business}
       publicUrl={publicUrl}
       items={catalog.data ?? []}
@@ -123,6 +124,7 @@ export default function BusinessCatalogPage() {
 }
 
 interface CatalogViewProps {
+  showIdentity?: boolean;
   business: BusinessManagementIdentityData;
   publicUrl?: string | null;
   items: BusinessCatalogItem[];
@@ -135,6 +137,7 @@ interface CatalogViewProps {
 }
 
 export function BusinessCatalogView({
+  showIdentity = true,
   business,
   publicUrl,
   items,
@@ -195,7 +198,7 @@ export function BusinessCatalogView({
   };
   return (
     <div className="business-catalog">
-      <BusinessManagementIdentity business={business} publicUrl={publicUrl} />
+      {showIdentity ? <BusinessManagementIdentity business={business} publicUrl={publicUrl} /> : null}
       <div className="business-catalog__grid">
         <section className="business-catalog__panel">
           <header className="business-catalog__heading">

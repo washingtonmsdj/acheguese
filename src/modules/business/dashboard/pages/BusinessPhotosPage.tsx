@@ -91,11 +91,6 @@ export default function BusinessPhotosPage() {
 
   return (
     <div className="business-photos-page">
-      <div className="business-photos-context">
-        <div className="business-photos-context__logo">{logoSource ? <img src={logoSource} alt="" /> : <Store aria-hidden="true" />}</div>
-        <div><strong>{business.name}</strong><span>{getBusinessCategoryLabel(business.category)}{locationLabel ? ` · ${locationLabel}` : ""}</span></div>
-        {publicUrl ? <Link to={publicUrl}>Ver página pública <ArrowUpRight aria-hidden="true" /></Link> : null}
-      </div>
       <header className="business-photos-heading">
         <div className="business-photos-heading__icon"><Images aria-hidden="true" /></div>
         <div className="business-photos-heading__copy">

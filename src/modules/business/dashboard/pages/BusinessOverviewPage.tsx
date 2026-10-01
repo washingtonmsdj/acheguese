@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   ArrowRight,
-  ArrowUpRight,
   Building2,
   CircleAlert,
   Clock3,
@@ -33,7 +32,7 @@ interface BusinessOverviewPageProps {
 export default function BusinessOverviewPage({
   messagingAvailable,
 }: BusinessOverviewPageProps) {
-  const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
+  const { businessId, business } = useActiveBusinessDashboardContext();
   const navigate = useNavigate();
   const { activeProfile, profiles, switchProfile } = useSessionContext();
   const [switchingProfile, setSwitchingProfile] = useState(false);
@@ -62,7 +61,6 @@ export default function BusinessOverviewPage({
         : businessThreads.length === 0
           ? "Nenhuma conversa"
           : `${businessThreads.length}${messagesQuery.data?.nextCursor ? "+" : ""} ${businessThreads.length === 1 ? "conversa" : "conversas"}`;
-  const isPublic = business.status === "active" && Boolean(publicUrl);
   const statusPresentation = getBusinessStatusPresentation(business.status);
   const StatusIcon = statusPresentation.icon;
 
@@ -88,9 +86,6 @@ export default function BusinessOverviewPage({
     return [{ day, schedule }];
   });
   const hasReviews = business.total_reviews > 0 && business.rating > 0;
-  const locationLabel = [business.location?.name, business.business_city, business.business_state]
-    .filter(Boolean)
-    .join(" · ");
   const quickActions = [
     { label: "Editar dados", detail: "Atualize as informações públicas", icon: Pencil, to: businessManagementRoutes.edit(businessId) },
     { label: "Fotos", detail: "Organize a galeria da empresa", icon: ImageIcon, to: businessManagementRoutes.photos(businessId) },
@@ -107,49 +102,7 @@ export default function BusinessOverviewPage({
 
   return (
     <div className="min-w-0 space-y-4 sm:space-y-5">
-      <section className="overflow-hidden rounded-2xl border border-border bg-card">
-        <div className="relative h-28 overflow-hidden bg-gradient-to-br from-primary/30 via-primary/15 to-accent/30 sm:h-44 xl:h-52">
-          {business.banner_url ? (
-            <img src={business.banner_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,hsl(var(--accent)/.35),transparent_35%)]" />
-          )}
-        </div>
-        <div className="flex flex-col gap-3 px-4 pb-5 sm:flex-row sm:items-end sm:justify-between sm:px-6">
-          <div className="min-w-0">
-            <div className="-mt-9 mb-3 flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl border-4 border-card bg-primary/10 text-primary shadow-sm sm:-mt-12 sm:h-24 sm:w-24">
-              {business.logo_url ? (
-                <img src={business.logo_url} alt="" className="h-full w-full object-cover" />
-              ) : (
-                <Store className="h-8 w-8" aria-hidden="true" />
-              )}
-            </div>
-            <h1 className="break-words text-xl font-bold leading-tight tracking-tight text-foreground sm:text-2xl xl:text-3xl">
-              {business.name}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs sm:text-sm">
-              <span className="rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
-                {getBusinessCategoryLabel(business.category)}
-              </span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${statusPresentation.badgeClassName}`}>
-                <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                {statusPresentation.label}
-              </span>
-            </div>
-            {locationLabel ? (
-              <p className="mt-2 flex items-start gap-1.5 text-xs leading-5 text-muted-foreground sm:text-sm">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                {locationLabel}
-              </p>
-            ) : null}
-          </div>
-          {isPublic ? (
-            <Link to={publicUrl!} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/30 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5">
-              Ver página pública <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
-          ) : <p className="max-w-52 text-xs leading-5 text-muted-foreground">{statusPresentation.unavailablePublicMessage}</p>}
-        </div>
-      </section>
+      <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Visão geral</h1>
 
       <section aria-label="Resumo da empresa" className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
         <SummaryCard icon={StatusIcon} label="Situação" value={statusPresentation.label} />

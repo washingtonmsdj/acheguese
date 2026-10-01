@@ -25,7 +25,9 @@ Superfícies ativas do MVP:
 - detalhe público canônico;
 - cadastro de empresa em três etapas;
 - edição de identidade, contato/localização e apresentação;
-- Central da empresa com visão geral, dados e configurações;
+- Central da empresa com visão geral, edição, fotos, horários, localização,
+  produtos e serviços, dados e configurações; navegação única certificada e
+  autorizada pelo lifecycle, compartilhada entre desktop e mobile;
 - CTA de Mensagens quando a capability está habilitada;
 - projeção no Mapa;
 - descoberta em Perto de mim;

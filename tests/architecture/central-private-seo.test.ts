@@ -18,6 +18,7 @@ describe("Central private SEO boundary", () => {
     expect(layout).toContain('import { Helmet } from "react-helmet-async"');
     expect(layout).toContain('<meta name="robots" content="noindex, nofollow" />');
     expect(layout).toContain("<Outlet />");
-    expect(routes).toContain("<Route element={<P.CentralLayout />}>");
+    expect(routes).toContain("<P.CentralLayout");
+    expect(routes).toContain("businessEnabled={businessEnabled}");
   });
 });

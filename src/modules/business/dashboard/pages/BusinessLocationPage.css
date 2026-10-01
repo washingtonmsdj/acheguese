@@ -58,9 +58,9 @@
 }
 .business-location__panel {
   min-width: 0;
-  padding: 16px;
+  padding: var(--business-panel-padding, 16px);
   border: 1px solid hsl(var(--border));
-  border-radius: 16px;
+  border-radius: var(--business-panel-radius, 16px);
   background: hsl(var(--card));
 }
 .business-location__panel header {

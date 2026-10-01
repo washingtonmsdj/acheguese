@@ -4,6 +4,7 @@ import type { Business } from "@/core/business/types/Business";
 import { resolveMediaAssetSource } from "@/shared/media/mediaAssetReference";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import "./BusinessManagementIdentity.css";
+import { getBusinessStatusPresentation } from "../presentation/businessStatusPresentation";
 
 export type BusinessManagementIdentityData = Pick<Business, "name"> &
   Partial<
@@ -17,12 +18,6 @@ export type BusinessManagementIdentityData = Pick<Business, "name"> &
       | "business_state"
     >
   >;
-const STATUS_LABELS = {
-  active: "Ativa",
-  pending: "Em análise",
-  inactive: "Inativa",
-  suspended: "Suspensa",
-} as const;
 
 export function BusinessManagementIdentity({
   business,
@@ -42,7 +37,7 @@ export function BusinessManagementIdentity({
   return (
     <section
       className="business-management-identity"
-      aria-label="Empresa em edição"
+      aria-label="Empresa em gestão"
     >
       <div className="business-management-identity__image">
         {image ? <img src={image} alt="" /> : <Store aria-hidden="true" />}
@@ -55,7 +50,7 @@ export function BusinessManagementIdentity({
           ) : null}
           {business.status ? (
             <span data-status={business.status}>
-              {STATUS_LABELS[business.status]}
+              {getBusinessStatusPresentation(business.status).label}
             </span>
           ) : null}
         </div>
@@ -66,7 +61,7 @@ export function BusinessManagementIdentity({
           </p>
         ) : null}
       </div>
-      {publicUrl ? (
+      {publicUrl && business.status === "active" ? (
         <Link to={publicUrl}>
           Ver página pública <ArrowUpRight size={16} aria-hidden="true" />
         </Link>

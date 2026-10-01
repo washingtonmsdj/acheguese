@@ -1,6 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 
-import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { Link } from "react-router-dom";
+import { BrandMark } from "@/app/components/navigation/PublicBrandHeader";
+import { getActiveBusinessManagementNavigation } from "@/app/config/businessManagementSurfaceScope";
 import { getActiveBusinessVerticalKeys } from "@/app/config/businessVerticalScope";
 import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 import { getActiveMessagingProviderIds } from "@/app/config/messagingProviderScope";
@@ -28,7 +30,7 @@ export function CentralRoutes() {
           <P.CentralLayout
             businessEnabled={businessEnabled}
             billingEnabled={billingEnabled}
-            createBusinessHeader={<AuthBrandHeader showBack={false} />}
+            brand={<Link to="/" className="inline-flex items-center gap-2 font-heading text-base font-bold tracking-tight text-foreground sm:text-xl" aria-label="Achegue-se, início"><BrandMark /><span>achegue-se</span></Link>}
           />
         }
       >
@@ -51,7 +53,7 @@ export function CentralRoutes() {
                 path="empresas/:businessId"
                 element={<P.BusinessAdminGuard />}
               >
-                <Route element={<P.BusinessDashboardShellPage />}>
+                <Route element={<P.BusinessDashboardShellPage navigationItems={getActiveBusinessManagementNavigation()} />}>
                   <Route
                     index
                     element={

@@ -4,18 +4,19 @@ import { Button } from "@/shared/components/ui/button";
 
 interface SettingsTabProps {
   onEditBusiness?: () => void;
+  headingLevel?: "h1" | "h2";
 }
 
-export function SettingsTab({ onEditBusiness }: SettingsTabProps) {
+export function SettingsTab({ onEditBusiness, headingLevel: Heading = "h2" }: SettingsTabProps) {
   return (
-    <section className="overflow-hidden rounded-[26px] border border-border bg-card">
+    <section className="overflow-hidden rounded-[var(--business-panel-radius,16px)] border border-border bg-card">
       <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Settings className="h-5 w-5" />
           </span>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Configurações da empresa</h2>
+            <Heading className="text-lg font-semibold text-foreground">Configurações da empresa</Heading>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
               Mantenha o perfil completo para que moradores encontrem informações corretas e atualizadas.
             </p>

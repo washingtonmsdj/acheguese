@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Building2, CheckCircle2, Clock3, ExternalLink, Eye, MapPin } from "lucide-react";
+import { Building2, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
@@ -68,29 +68,14 @@ function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
   }
 }
 
-function getBusinessPublicationStatus(status: string) {
-  switch (status) {
-    case "active":
-      return { label: "Publicada", className: "is-published", Icon: CheckCircle2 };
-    case "pending":
-      return { label: "Em análise", className: "is-pending", Icon: Clock3 };
-    case "suspended":
-      return { label: "Suspensa", className: "is-pending", Icon: Clock3 };
-    default:
-      return { label: "Inativa", className: "is-pending", Icon: Clock3 };
-  }
-}
-
 export default function EditarEmpresaPage() {
   const navigate = useNavigate();
-  const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
+  const { businessId, business } = useActiveBusinessDashboardContext();
   const { user } = useSessionContext();
   const { effectiveProfile } = useMultiProfileContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [slug, setSlug] = useState("");
   const [originalSlug, setOriginalSlug] = useState("");
-  const publicationStatus = getBusinessPublicationStatus(business.status);
-  const PublicationStatusIcon = publicationStatus.Icon;
 
   // Refs para upload de imagens
   const logoRef = useRef<HTMLInputElement>(null);
@@ -302,49 +287,7 @@ export default function EditarEmpresaPage() {
 
   return (
     <div className="business-edit-page space-y-4">
-      <header
-        className={`business-edit-heading${business.banner_url ? " has-cover" : ""}`}
-        style={
-          business.banner_url
-            ? {
-                backgroundImage: `linear-gradient(90deg, rgba(6, 43, 46, 0.9), rgba(6, 43, 46, 0.46)), url("${business.banner_url}")`,
-              }
-            : undefined
-        }
-      >
-        <div className="business-edit-heading__identity">
-          <span className="business-edit-heading__logo">
-            {business.logo_url ? (
-              <img src={business.logo_url} alt="" />
-            ) : (
-              <Building2 aria-hidden="true" />
-            )}
-          </span>
-          <div className="min-w-0">
-            <p className="business-edit-context">Editar empresa</p>
-            <h1>{business.name}</h1>
-            <div className="business-edit-heading__meta">
-              <span>{getBusinessCategoryLabel(business.category)}</span>
-              <span className={publicationStatus.className}>
-                <PublicationStatusIcon aria-hidden="true" />
-                {publicationStatus.label}
-              </span>
-            </div>
-          </div>
-        </div>
-        {publicUrl ? (
-          <Link
-            aria-label="Abrir página pública da empresa"
-            className="business-edit-public-link"
-            to={publicUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span>Ver página pública</span>
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        ) : null}
-      </header>
+      <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">Editar empresa</h1>
 
       <div className="business-edit-content space-y-4">
         <StepProgress currentStep={currentStep} totalSteps={3} />
