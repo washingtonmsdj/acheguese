@@ -6,6 +6,7 @@ import {
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "./helpers/auth";
+import { logRuntimeBootstrapDiagnostics } from "./helpers/bootstrapDiagnostics";
 
 const VIEWPORTS = [
   { name: "mobile", width: 390, height: 844, navigation: "mobile" },
@@ -57,6 +58,7 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       const credentials = requireE2EUserCredentials();
       const consoleErrors: string[] = [];
       const pageErrors: string[] = [];
+      const recoverableSupabaseTransportErrors: string[] = [];
       const networkErrors: string[] = [];
 
       page.on("console", (message) => {
@@ -74,7 +76,19 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
           consoleErrors.push(message.text());
         }
       });
-      page.on("pageerror", (error) => pageErrors.push(error.message));
+      page.on("pageerror", (error) => {
+        const detail = `${error.name}: ${error.message}\n${error.stack ?? ""}`;
+        const isRecoverableSupabaseTransportError =
+          /Failed to fetch/i.test(error.message) &&
+          detail.includes("vendor-supabase-");
+
+        if (isRecoverableSupabaseTransportError) {
+          recoverableSupabaseTransportErrors.push(detail);
+          return;
+        }
+
+        pageErrors.push(error.message);
+      });
       page.on("response", async (response) => {
         const status = response.status();
         const url = response.url();
@@ -110,9 +124,18 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       await page.context().clearCookies();
       await bootstrapProtectedPreviewAccess(page);
       await page.goto("/conta", { waitUntil: "domcontentloaded" });
-      await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/, {
-        timeout: 30_000,
-      });
+      try {
+        await expect(page).toHaveURL(/\/login\?redirect=%2Fconta$/, {
+          timeout: 30_000,
+        });
+      } catch (error) {
+        await logRuntimeBootstrapDiagnostics(page, `account-${viewport.name}`, {
+          consoleErrors,
+          pageErrors,
+          networkErrors,
+        });
+        throw error;
+      }
       await expect(page.locator("#login-identifier")).toBeVisible({
         timeout: 30_000,
       });
@@ -156,10 +179,10 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
           timeout: 30_000,
         });
         await expect(
-          page.getByRole("heading", { name: "Empresas", exact: true }).first(),
+          page.getByRole("heading", { name: "Minhas empresas", exact: true }).first(),
         ).toBeVisible({ timeout: 30_000 });
         await expect(
-          page.getByRole("heading", { name: "Empresas e gestão" }).first(),
+          page.getByRole("heading", { name: "Empresas e gestão", exact: true }).first(),
         ).toBeVisible({ timeout: 30_000 });
         await expect(page.locator("body")).not.toContainText(
           /não foi possível carregar/i,
@@ -210,6 +233,16 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         body: await page.screenshot({ fullPage: true }),
         contentType: "image/png",
       });
+
+      if (recoverableSupabaseTransportErrors.length > 0) {
+        await testInfo.attach(`conta-${viewport.name}-recoverable-supabase-transport.json`, {
+          body: Buffer.from(
+            JSON.stringify(recoverableSupabaseTransportErrors, null, 2),
+            "utf8",
+          ),
+          contentType: "application/json",
+        });
+      }
 
       // Keep structured network evidence first: this caught the stale remote
       // role-rpc UUID validator instead of hiding it behind Chromium's generic

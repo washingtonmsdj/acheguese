@@ -156,26 +156,38 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
         waitUntil: "domcontentloaded",
       });
       await expect(
-        page.getByRole("heading", { name: /^Criar empresa$/i }),
+        page.getByRole("heading", { name: /^Cadastrar empresa$/i }),
       ).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByLabel("Etapa 1 de 5")).toBeVisible();
 
       await page.locator("#name").fill(originalName);
+      await page.locator("#category").selectOption({ label: "Serviços" });
       await page
         .locator("#description")
         .fill("Fixture tecnica G6 para certificacao do lifecycle Business.");
       await page.getByRole("button", { name: "Continuar" }).click();
 
       await expect(
-        page.getByRole("heading", { name: "Território, contato e operação" }),
+        page.getByRole("heading", { name: "Localização", exact: true }),
       ).toBeVisible({ timeout: 20_000 });
-      await page.locator("#phone").fill("(71) 99999-9999");
       await fillBusinessTerritory(page);
       await page.getByRole("button", { name: "Continuar" }).click();
 
       await expect(
-        page.getByText("Mídia, canais públicos e operação complementar"),
+        page.getByRole("heading", { name: "Contato e horário", exact: true }),
       ).toBeVisible({ timeout: 20_000 });
-      await page.getByRole("button", { name: "Criar empresa" }).click();
+      await page.locator("#phone").fill("(71) 99999-9999");
+      await page.getByRole("button", { name: "Continuar" }).click();
+
+      await expect(
+        page.getByRole("heading", { name: "Fotos", exact: true }),
+      ).toBeVisible({ timeout: 20_000 });
+      await page.getByRole("button", { name: "Revisar" }).click();
+
+      await expect(
+        page.getByRole("heading", { name: "Revisar e publicar", exact: true }),
+      ).toBeVisible({ timeout: 20_000 });
+      await page.getByRole("button", { name: "Publicar empresa" }).click();
 
       await page.waitForURL(
         /\/central\/empresas\/[0-9a-f-]{36}(?:\/?|\?.*)$/i,

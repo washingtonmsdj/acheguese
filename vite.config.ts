@@ -88,22 +88,13 @@ function getVendorChunk(id: string): string | undefined {
   return undefined;
 }
 
-function getAppChunk(id: string): string | undefined {
-  if (id.includes("node_modules")) return undefined;
-
-  const normalizedId = id.replaceAll("\\", "/");
-  if (normalizedId.includes("/src/core/auth/")) {
-    return "app-auth-runtime";
-  }
-  if (normalizedId.includes("/src/core/session/")) {
-    return "app-session-runtime";
-  }
-
-  return undefined;
-}
-
 function getManualChunk(id: string): string | undefined {
-  return getAppChunk(id) ?? getVendorChunk(id);
+  // Internal application modules must stay under Rollup's graph ownership.
+  // Auth and Session have a deliberate one-way source dependency (Auth -> Session),
+  // plus shared profile/business consumers. Pinning them to separate manual chunks
+  // can manufacture cross-chunk TDZ cycles that do not exist in the source graph.
+  // Vendors remain explicitly chunked because they are external, stable boundaries.
+  return getVendorChunk(id);
 }
 
 export default defineConfig(({ command, mode }) => {

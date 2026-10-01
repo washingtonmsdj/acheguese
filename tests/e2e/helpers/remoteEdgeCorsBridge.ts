@@ -14,10 +14,23 @@ function requireRemoteSupabaseUrl(): string {
   return value.replace(/\/+$/, "");
 }
 
-function resolvePreviewOrigin(): string {
+function resolvePreviewBaseUrl(): URL {
   const baseUrl =
     process.env.PLAYWRIGHT_BASE_URL?.trim() || "http://127.0.0.1:8100";
-  return new URL(baseUrl).origin;
+  return new URL(baseUrl);
+}
+
+function resolvePreviewOrigin(): string {
+  return resolvePreviewBaseUrl().origin;
+}
+
+function needsRemoteEdgeCorsBridge(): boolean {
+  if (process.env.ACCOUNT_TARGET_IS_PREVIEW === "true") {
+    return true;
+  }
+
+  const hostname = resolvePreviewBaseUrl().hostname;
+  return hostname === "127.0.0.1" || hostname === "localhost";
 }
 
 /**
@@ -36,6 +49,10 @@ async function installExplicitEdgePreviewBridge(
   page: Page,
   functionName: string,
 ): Promise<void> {
+  if (!needsRemoteEdgeCorsBridge()) {
+    return;
+  }
+
   const endpoint =
     `${requireRemoteSupabaseUrl()}/functions/v1/${functionName}`;
   const previewOrigin = resolvePreviewOrigin();
@@ -65,9 +82,9 @@ export function installPrivacyRpcPreviewBridge(page: Page): Promise<void> {
 }
 
 /**
- * Session hydration on the local preview must still exercise the real remote
- * profile/session brokers. These are the only additional functions allowed by
- * this test bridge; production CORS policy remains unchanged.
+ * Session hydration on local/protected previews must still exercise the real
+ * remote profile/session brokers. Production uses the real browser transport
+ * directly and therefore never installs this interception layer.
  */
 export async function installSessionProfilePreviewBridges(
   page: Page,

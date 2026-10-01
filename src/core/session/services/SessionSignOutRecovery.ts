@@ -4,10 +4,11 @@ import { SessionState } from "@/core/session/state/SessionState";
 import { SessionService } from "./SessionService";
 
 /**
- * Reconciles the application session after AuthService had to force a local
- * sign-out because the Supabase signOut request failed or timed out.
+ * Reconciles the application session after AuthService finalizes a local
+ * sign-out, regardless of whether Supabase completed normally or local cleanup
+ * had to recover from an upstream failure/timeout.
  *
- * The auth cookies are cleared by AuthService. This owner clears the in-memory
+ * AuthService owns auth-cookie removal. This owner clears the in-memory
  * session/profile state that belongs to core/session, removes the persisted
  * active-profile pointer, and re-arms the canonical auth listener so a later
  * sign-in in the same SPA lifetime is observed normally.
