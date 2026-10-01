@@ -123,3 +123,7 @@
 ## D-030 — Grafo pausado não preserva placeholders app-level
 
 **Decisão:** após `AppLayoutRoutes.tsx` e `activeLazyImports.ts` se tornarem o único grafo público ativo, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx` ficaram sem caller runtime e foram aposentados junto com o antigo `lazyImports.ts`. Módulos pós-MVP permanecem preservados pelos seus owners físicos, contratos e lifecycle; não por árvores de rota, factories ou placeholders desconectados. O owner territorial ativo de Map/Business é `ActiveTerritorialModulePages.tsx`, inclusive no `runtimeConfig` de Mapas. Ratchets devem impedir a recriação desses artefatos mortos. **Referências:** D-027, D-028, D-029, `src/app/routes/README.md`, `tests/architecture/app-layout-active-route-boundary.test.ts`.
+
+## D-031 — OrdaX integra por OAuth/Space, sem banco compartilhado
+
+**Decisão:** a integração Achegue-se ↔ OrdaX preserva os produtos como bounded contexts independentes. O vínculo externo é **Achegue-se Profile → OrdaX Space** e usa boundary OAuth/capability server-side. É proibido compartilhar `service_role`, senha, tabela, foreign key ou dual-write de mensagens entre bancos. Business/Mapa/Perto de mim/Busca continuam funcionando sem OrdaX. Um provider OrdaX em Mensagens só pode ser registrado depois da certificação da API Network, scopes mínimos e isolamento cross-Profile/cross-Space. **Ref.:** `03-architecture/ORDAX_INTEGRATION_BOUNDARY.md`.
