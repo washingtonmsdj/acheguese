@@ -132,6 +132,21 @@
 }
 .business-catalog__count {
   margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.business-catalog__count > button {
+  min-height: 44px;
+  font-size: 12px;
+  color: hsl(var(--primary));
+}
+.business-catalog .business-catalog__filter-toggle[data-active="true"] {
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
 }
 .business-catalog__list {
   list-style: none;

@@ -229,6 +229,7 @@ export function BusinessCatalogView({
               variant="outline"
               size="icon"
               aria-label="Filtros do catálogo"
+              data-active={kind !== "all"}
               aria-expanded={filtersOpen}
               aria-controls="business-catalog-filter-options"
               onClick={() => setFiltersOpen((value) => !value)}
@@ -258,9 +259,24 @@ export function BusinessCatalogView({
               </select>
             </div>
           </div>
-          <p className="business-catalog__count" aria-live="polite">
-            {filtered.length} {filtered.length === 1 ? "item" : "itens"}
-          </p>
+          <div className="business-catalog__count">
+            <p aria-live="polite">
+              {filtered.length} {filtered.length === 1 ? "item" : "itens"}
+              {kind !== "all" &&
+                ` · ${kind === "product" ? "Produtos" : "Serviços"}`}
+            </p>
+            {(search.trim() || kind !== "all") && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setSearch("");
+                  setKind("all");
+                }}
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
           {isLoading ? (
             <p role="status">Carregando catálogo…</p>
           ) : error ? (
