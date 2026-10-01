@@ -46,6 +46,15 @@
   overflow-wrap: anywhere;
 }
 
+.messaging-inbox__messages {
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+}
+
+.messaging-inbox aside button[aria-pressed="true"] {
+  box-shadow: inset 3px 0 hsl(var(--primary));
+}
+
 .messaging-inbox section > form {
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
