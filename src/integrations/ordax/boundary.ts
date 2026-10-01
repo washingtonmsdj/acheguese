@@ -7,11 +7,11 @@ export const ORDAX_READ_SCOPES = Object.freeze([
   "network.space.read",
   "network.directory.read",
   "network.communities.read",
+  "network.messages.read",
 ] as const);
 
 export const ORDAX_WRITE_SCOPES = Object.freeze([
   "network.groups.join",
-  "network.messages.read",
   "network.messages.write",
   "product.acheguese.publish",
 ] as const);
@@ -65,7 +65,6 @@ export interface OrdaxPublicationEnvelope {
 }
 
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{7,159}$/;
-const ISSUER = /^https:\/\/[^\s/$.?#].[^\s]*$/i;
 
 function requireRecord(value: unknown, label: string): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -77,6 +76,28 @@ function requireRecord(value: unknown, label: string): Record<string, unknown> {
 function requireOpaqueId(value: unknown, label: string): string {
   if (typeof value !== "string" || !OPAQUE_ID.test(value)) {
     throw new TypeError(`${label} must be a bounded opaque id`);
+  }
+  return value;
+}
+
+function requireHttpsIssuer(value: unknown): string {
+  if (typeof value !== "string" || value.length > 512) {
+    throw new TypeError("OrdaX issuer must be a bounded HTTPS URL");
+  }
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    throw new TypeError("OrdaX issuer must be a valid HTTPS URL");
+  }
+  if (
+    parsed.protocol !== "https:"
+    || parsed.username !== ""
+    || parsed.password !== ""
+    || parsed.search !== ""
+    || parsed.hash !== ""
+  ) {
+    throw new TypeError("OrdaX issuer must be an HTTPS URL without credentials, query or fragment");
   }
   return value;
 }
@@ -110,9 +131,7 @@ export function validateOrdaxSpaceLink(value: unknown): OrdaxSpaceLink {
     throw new TypeError("OrdaX Space link entity kind is invalid");
   }
 
-  if (typeof input.issuer !== "string" || !ISSUER.test(input.issuer)) {
-    throw new TypeError("OrdaX issuer must be an HTTPS URL");
-  }
+  const issuer = requireHttpsIssuer(input.issuer);
 
   const states: readonly OrdaxConnectionState[] = ["active", "revoked", "error"];
   if (
@@ -165,7 +184,7 @@ export function validateOrdaxSpaceLink(value: unknown): OrdaxSpaceLink {
       input.achegueseEntityId,
       "Achegue-se entity id",
     ),
-    issuer: input.issuer,
+    issuer,
     subjectId: requireOpaqueId(input.subjectId, "OrdaX subjectId"),
     spaceId: requireOpaqueId(input.spaceId, "OrdaX spaceId"),
     scopes: Object.freeze(scopes),
