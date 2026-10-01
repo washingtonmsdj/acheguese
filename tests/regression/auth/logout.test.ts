@@ -73,14 +73,19 @@ describe("auth logout regression guard", () => {
     vi.useRealTimers();
   });
 
-  it("uses current-session scope and keeps the success path untouched", async () => {
+  it("uses current-session scope and deterministically clears local auth on success", async () => {
     mocks.signOut.mockResolvedValue({ error: null });
 
     await expect(AuthService.signOut()).resolves.toBeUndefined();
 
     expect(mocks.signOut).toHaveBeenCalledTimes(1);
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: "local" });
-    expect(mocks.storageRemoveItem).not.toHaveBeenCalled();
+    expect(mocks.storageRemoveItem).toHaveBeenNthCalledWith(1, AUTH_STORAGE_KEY);
+    expect(mocks.storageRemoveItem).toHaveBeenNthCalledWith(
+      2,
+      `${AUTH_STORAGE_KEY}-code-verifier`,
+    );
+    expect(mocks.storageGetItem).toHaveBeenCalledWith(AUTH_STORAGE_KEY);
     expect(mocks.loggerWarn).not.toHaveBeenCalled();
   });
 
