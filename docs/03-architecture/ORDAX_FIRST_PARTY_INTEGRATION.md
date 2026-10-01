@@ -73,3 +73,16 @@ Contrato de arquitetura:
 
 O runtime só pode ser ativado depois da prova multi-tenant da OrdaX Network e de
 um OAuth/API de produto real.
+
+
+## Client e audience
+
+O cliente first-party canônico é `acheguese` e a audience esperada é
+`ordax:first-party:acheguese`.
+
+Todo vínculo persistível deve carregar e validar ambos. Um token/conexão emitido
+para Product MCP, outro produto ou outra audience não pode ser reinterpretado
+como autorização do Achegue-se.
+
+Isso preserva a possibilidade de um mesmo emissor OrdaX atender produtos
+diferentes sem compartilhar autoridade entre eles.
