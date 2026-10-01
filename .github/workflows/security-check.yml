@@ -115,6 +115,31 @@ jobs:
       - name: Validate Core Platform ownership
         run: npm run validate:architecture:core-platform
 
+  release-build-preflight:
+    name: Canonical Release Build Preflight
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run canonical release build without production-only secrets
+        env:
+          VERCEL_ENV: preview
+          VERCEL_GIT_COMMIT_SHA: ${{ github.sha }}
+        run: node tools/release/run-vercel-production-build.mjs
+
   maps-architecture-enforcement:
     name: Maps Architecture Enforcement
     runs-on: ubuntu-latest
