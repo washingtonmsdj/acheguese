@@ -47,57 +47,61 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       installSessionProfilePreviewBridges(page),
     ]);
 
-    const businessPreviewStatuses: number[] = [];
-    page.on("response", (response) => {
-      if (
-        response.request().method() === "POST" &&
-        response.url().includes(
-          "/rest/v1/rpc/list_business_direct_thread_previews",
-        )
-      ) {
-        businessPreviewStatuses.push(response.status());
-      }
-    });
+    try {
+        const businessPreviewStatuses: number[] = [];
+      page.on("response", (response) => {
+        if (
+          response.request().method() === "POST" &&
+          response.url().includes(
+            "/rest/v1/rpc/list_business_direct_thread_previews",
+          )
+        ) {
+          businessPreviewStatuses.push(response.status());
+        }
+      });
 
-    const client = await bootstrapFixtureSession(
-      page,
-      credentials.email,
-      credentials.password,
-    );
-    await ensureFixtureCurrentTermsAcceptance(client);
+      const client = await bootstrapFixtureSession(
+        page,
+        credentials.email,
+        credentials.password,
+      );
+      await ensureFixtureCurrentTermsAcceptance(client);
 
-    await page.goto("/mensagens", {
-      waitUntil: "domcontentloaded",
-      timeout: 60_000,
-    });
+      await page.goto("/mensagens", {
+        waitUntil: "domcontentloaded",
+        timeout: 60_000,
+      });
 
-    await expect(page).toHaveURL(/\/mensagens(?:\?|$)/, {
-      timeout: 30_000,
-    });
-    await expect(page.locator('[data-page="messaging-inbox"]')).toBeVisible({
-      timeout: 30_000,
-    });
-    await expect(
-      page.getByRole("heading", { name: "Mensagens" }).first(),
-    ).toBeVisible();
+      await expect(page).toHaveURL(/\/mensagens(?:\?|$)/, {
+        timeout: 30_000,
+      });
+      await expect(page.locator('[data-page="messaging-inbox"]')).toBeVisible({
+        timeout: 30_000,
+      });
+      await expect(
+        page.getByRole("heading", { name: "Mensagens" }).first(),
+      ).toBeVisible();
 
-    await expect
-      .poll(() => businessPreviewStatuses.length, { timeout: 30_000 })
-      .toBeGreaterThan(0);
-    expect(businessPreviewStatuses.every((status) => status >= 200 && status < 300)).toBe(
-      true,
-    );
+      await expect
+        .poll(() => businessPreviewStatuses.length, { timeout: 30_000 })
+        .toBeGreaterThan(0);
+      expect(businessPreviewStatuses.every((status) => status >= 200 && status < 300)).toBe(
+        true,
+      );
 
-    await expect(page.locator("body")).not.toContainText(
-      /não foi possível carregar suas conversas/i,
-    );
+      await expect(page.locator("body")).not.toContainText(
+        /não foi possível carregar suas conversas/i,
+      );
 
-    const dimensions = await page.evaluate(() => ({
-      clientWidth: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-    }));
-    expect(dimensions.scrollWidth).toBeLessThanOrEqual(
-      dimensions.clientWidth + 1,
-    );
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+        expect(dimensions.scrollWidth).toBeLessThanOrEqual(
+          dimensions.clientWidth + 1,
+        );
+    } finally {
+      await page.unrouteAll({ behavior: "ignoreErrors" });
+    }
   });
 });
