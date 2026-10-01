@@ -68,7 +68,7 @@ async function fillBusinessTerritory(page: Page) {
   // visible selection changes. The summary is rendered only after that callback
   // has supplied locationData to the form owner, so it is the deterministic
   // readiness signal before submitting step 2.
-  await expect(page.getByText(/Exibição pública principal em/i)).toBeVisible({
+  await expect(page.getByText(/Página principal em/i)).toBeVisible({
     timeout: 20_000,
   });
 }
