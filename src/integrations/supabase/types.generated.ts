@@ -5471,41 +5471,6 @@ export type Database = {
           },
         ]
       }
-      community_public_aliases: {
-        Row: {
-          alias: string
-          created_at: string
-          id: string
-          status: string
-          territory_community_id: string
-          updated_at: string
-        }
-        Insert: {
-          alias: string
-          created_at?: string
-          id?: string
-          status?: string
-          territory_community_id: string
-          updated_at?: string
-        }
-        Update: {
-          alias?: string
-          created_at?: string
-          id?: string
-          status?: string
-          territory_community_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "community_public_aliases_territory_community_id_fkey"
-            columns: ["territory_community_id"]
-            isOneToOne: false
-            referencedRelation: "territory_communities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       community_questions: {
         Row: {
           answers_count: number | null
