@@ -7,13 +7,10 @@ import {
   ArrowUpRight,
   BarChart3,
   Building2,
-  CheckCircle2,
-  CircleAlert,
   Clock3,
   ImageIcon,
   MapPin,
   MessageCircle,
-  MinusCircle,
   Pencil,
   Settings,
   Star,
@@ -28,16 +25,7 @@ import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import { WEEK_DAYS, WEEK_DAY_LABELS } from "@/core/business/constants/weekDays";
-
-function getStatusLabel(status: string) {
-  switch (status) {
-    case "active": return "Ativa";
-    case "pending": return "Em análise";
-    case "suspended": return "Suspensa";
-    case "inactive": return "Inativa";
-    default: return status;
-  }
-}
+import { getBusinessStatusPresentation } from "@/modules/business/dashboard/presentation/businessStatusPresentation";
 
 interface BusinessOverviewPageProps {
   messagingAvailable: boolean;
@@ -84,7 +72,8 @@ export default function BusinessOverviewPage({
           ? "Nenhuma conversa"
           : `${businessThreads.length}${messagesQuery.data?.nextCursor ? "+" : ""} ${businessThreads.length === 1 ? "conversa" : "conversas"}`;
   const isPublic = business.status === "active" && Boolean(publicUrl);
-  const StatusIcon = business.status === "active" ? CheckCircle2 : business.status === "pending" ? Clock3 : business.status === "suspended" ? CircleAlert : MinusCircle;
+  const statusPresentation = getBusinessStatusPresentation(business.status);
+  const StatusIcon = statusPresentation.icon;
 
   const openBusinessInbox = async () => {
     if (switchingProfile) return;
@@ -151,9 +140,9 @@ export default function BusinessOverviewPage({
               <span className="rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">
                 {getBusinessCategoryLabel(business.category)}
               </span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${business.status === "active" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : business.status === "pending" ? "bg-amber-500/10 text-amber-800 dark:text-amber-300" : "bg-muted text-foreground"}`}>
+              <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${statusPresentation.badgeClassName}`}>
                 <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
-                {getStatusLabel(business.status)}
+                {statusPresentation.label}
               </span>
             </div>
             {locationLabel ? (
@@ -167,12 +156,12 @@ export default function BusinessOverviewPage({
             <Link to={publicUrl!} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-primary/30 px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/5">
               Ver página pública <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </Link>
-          ) : <p className="max-w-52 text-xs leading-5 text-muted-foreground">{business.status === "active" ? "Link público ainda não disponível." : "A página pública ficará disponível quando a empresa estiver ativa."}</p>}
+          ) : <p className="max-w-52 text-xs leading-5 text-muted-foreground">{statusPresentation.unavailablePublicMessage}</p>}
         </div>
       </section>
 
       <section aria-label="Resumo da empresa" className="grid grid-cols-2 gap-2.5 sm:gap-3 xl:grid-cols-4">
-        <SummaryCard icon={StatusIcon} label="Situação" value={getStatusLabel(business.status)} />
+        <SummaryCard icon={StatusIcon} label="Situação" value={statusPresentation.label} />
         <SummaryCard icon={Star} label="Avaliações" value={hasReviews ? `${business.rating.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} · ${business.total_reviews}` : "Sem avaliações"} />
         {messagingAvailable && canActivateBusinessProfile ? (
           <SummaryCard icon={MessageCircle} label="Mensagens" value={messageSummary} />
