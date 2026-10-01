@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -94,7 +95,21 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
   const [threadLoading, setThreadLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const messageListRef = useRef<HTMLDivElement>(null);
+  const followLatestRef = useRef(true);
+  const [awayFromLatest, setAwayFromLatest] = useState(false);
   const visibleThreads = unreadOnly ? threads.filter((thread) => thread.unreadCount > 0) : threads;
+
+  const showLatestMessages = useCallback(() => {
+    followLatestRef.current = true;
+    setAwayFromLatest(false);
+    const list = messageListRef.current;
+    if (list) list.scrollTop = list.scrollHeight;
+  }, []);
+
+  useEffect(() => {
+    if (followLatestRef.current) showLatestMessages();
+  }, [messages, threadLoading, showLatestMessages]);
 
   const activeProvider = useMemo<MessagingScreenProvider | null>(() => {
     if (!isMessagingProviderId(providerId)) return null;
@@ -166,6 +181,9 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
     }
 
     let disposed = false;
+    followLatestRef.current = true;
+    setAwayFromLatest(false);
+    setMessages([]);
     setThreadLoading(true);
     setError(null);
 
@@ -253,6 +271,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
         body: draft,
       });
       setDraft("");
+      followLatestRef.current = true;
       setMessages((current) =>
         current.some((item) => item.id === message.id)
           ? current
@@ -482,7 +501,20 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                 </div>
               </header>
 
-              <div aria-busy={threadLoading} className="messaging-inbox__messages min-h-0 flex-1 overflow-y-auto p-3 sm:p-4">
+              <div
+                ref={messageListRef}
+                role="log"
+                aria-label="Histórico da conversa"
+                aria-live="polite"
+                aria-busy={threadLoading}
+                onScroll={(event) => {
+                  const list = event.currentTarget;
+                  const away = list.scrollHeight - list.scrollTop - list.clientHeight > 80;
+                  followLatestRef.current = !away;
+                  setAwayFromLatest(away);
+                }}
+                className="messaging-inbox__messages min-h-0 flex-1 overflow-y-auto p-3 sm:p-4"
+              >
                 {threadLoading ? (
                   <div className="flex justify-center p-8">
                     <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -527,6 +559,12 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
                   </div>
                 )}
               </div>
+
+              {awayFromLatest ? (
+                <div className="flex shrink-0 justify-center border-t bg-card px-3 py-1">
+                  <Button type="button" variant="ghost" onClick={showLatestMessages}>Ir para mensagens recentes</Button>
+                </div>
+              ) : null}
 
               <form
                 onSubmit={handleSend}
