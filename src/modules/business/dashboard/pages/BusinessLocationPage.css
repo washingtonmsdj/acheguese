@@ -156,12 +156,6 @@
 }
 .business-location footer button {
   min-height: 44px;
-  border-radius: 24px;
-}
-.business-location footer button:last-child {
-  background: hsl(var(--brand-solar));
-  color: hsl(var(--brand-petroleum));
-  font-weight: 700;
 }
 .business-location__note {
   padding: 12px;
