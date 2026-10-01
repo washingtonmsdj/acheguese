@@ -133,14 +133,7 @@ export default function BusinessDashboardShellPage({ navigationItems }: {
               to={item.to}
               aria-label={item.label}
               end={item.to === basePath}
-              className={({ isActive }) =>
-                [
-                  "business-dashboard-nav__item",
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-sm ring-1 ring-primary/20 lg:bg-primary/10 lg:text-primary lg:shadow-none"
-                    : "text-foreground hover:bg-muted active:bg-muted",
-                ].join(" ")
-              }
+              className="business-dashboard-nav__item"
             >
               <item.icon
                 className="h-[18px] w-[18px] shrink-0 sm:h-4 sm:w-4"
