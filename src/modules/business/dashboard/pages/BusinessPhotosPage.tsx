@@ -22,7 +22,7 @@ import {
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { useBusinessGallery } from "@/modules/business/dashboard/hooks/useBusinessGallery";
-import type { BusinessGalleryPhoto } from "@/modules/business/dashboard/services/businessGalleryService";
+import type { BusinessGalleryPhoto } from "@/core/business/services/BusinessGalleryService";
 import { resolveMediaAssetSource } from "@/shared/media/mediaAssetReference";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/components/ui/dialog";
