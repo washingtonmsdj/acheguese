@@ -13,7 +13,10 @@
     "oauth_2_1_pkce_required": true,
     "ordax_actor": "space",
     "acheguese_actor": "user-profile-or-business-owner",
-    "tokens_server_side_only": true
+    "tokens_server_side_only": true,
+    "client_id": "acheguese",
+    "audience": "ordax:first-party:acheguese",
+    "cross_audience_token_reuse": false
   },
   "persistence": {
     "shared_database": false,
