@@ -10,6 +10,7 @@ export interface BusinessStatusPresentation {
   icon: LucideIcon;
   label: string;
   badgeClassName: string;
+  tone: "success" | "warning" | "neutral";
   unavailablePublicMessage: string;
 }
 
@@ -23,6 +24,7 @@ export function getBusinessStatusPresentation(
         label: "Ativa",
         badgeClassName:
           "bg-success/10 text-success",
+        tone: "success",
         unavailablePublicMessage: "Link público ainda não disponível.",
       };
     case "pending":
@@ -30,6 +32,7 @@ export function getBusinessStatusPresentation(
         icon: Clock3,
         label: "Em análise",
         badgeClassName: "bg-warning/10 text-warning",
+        tone: "warning",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
@@ -38,6 +41,7 @@ export function getBusinessStatusPresentation(
         icon: CircleAlert,
         label: "Suspensa",
         badgeClassName: "bg-muted text-muted-foreground",
+        tone: "neutral",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
@@ -46,6 +50,7 @@ export function getBusinessStatusPresentation(
         icon: MinusCircle,
         label: "Desativada",
         badgeClassName: "bg-muted text-muted-foreground",
+        tone: "neutral",
         unavailablePublicMessage:
           "Esta empresa foi desativada e não está disponível publicamente.",
       };
@@ -54,6 +59,7 @@ export function getBusinessStatusPresentation(
         icon: MinusCircle,
         label: "Inativa",
         badgeClassName: "bg-muted text-muted-foreground",
+        tone: "neutral",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
@@ -62,6 +68,7 @@ export function getBusinessStatusPresentation(
         icon: MinusCircle,
         label: status,
         badgeClassName: "bg-muted text-muted-foreground",
+        tone: "neutral",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
