@@ -67,6 +67,8 @@ Complemento mobile: campos de Localização e busca do Catálogo usam fonte de 1
 
 Complemento de navegação: Escape fecha o menu mobile e devolve o foco ao botão que o abriu, inclusive quando o próprio botão tem foco. Em desktop, não direciona foco ao botão mobile oculto. Três testes de regressão adicionados; nove testes de shell/navegação aprovados. Horários usa grid com o token de espaçamento de seção em vez de margens acumuladas; sete larguras conferidas sem overflow.
 
+Complemento de Fotos: confirmação nativa substituída pelo AlertDialog compartilhado, com identificação da foto, ação destrutiva explícita, cancelamento e retorno de foco ao botão de origem (ou ao título da galeria quando indisponível). Controles preservam bloqueio durante mutações. Diálogo limitado à viewport, com rolagem interna e botões de 44px. Testes de interação usam fixtures isoladas, sem exclusão de dados reais; serviço e contratos da galeria permanecem inalterados.
+
 - Tokens comuns de tamanho, peso e altura de linha dos títulos aplicados à Visão geral, Editar, Fotos, Horários, Localização e Catálogo, mantendo Dados e Configurações na mesma família.
 - Painéis, estados vazios de fotos, seção inicial de edição e ações rápidas compactados; prévias fixas de edição, fotos e horários respeitam o header. Filtros de catálogo se reorganizam nas larguras intermediárias, sem comprimir busca e selects.
 - Harness isolado ampliado para as oito seções, reutilizando o shell e componentes reais. Fotos valida o estado vazio; catálogo usa itens simulados e mutações somente em memória; Editar valida apenas a primeira seção real, não o fluxo completo de envio. Localização não recebe coordenadas fictícias. Nenhuma fixture faz parte do runtime de produção.

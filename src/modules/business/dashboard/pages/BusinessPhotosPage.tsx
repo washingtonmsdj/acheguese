@@ -27,6 +27,7 @@ import type { BusinessGalleryPhoto } from "@/core/business/services/BusinessGall
 import { resolveMediaAssetSource } from "@/shared/media/mediaAssetReference";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/shared/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/shared/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
 import "./BusinessPhotosPage.css";
 
@@ -35,7 +36,10 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 export default function BusinessPhotosPage() {
   const { businessId, business, publicUrl } = useActiveBusinessDashboardContext();
   const inputRef = useRef<HTMLInputElement>(null);
+  const removalTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
   const [viewingPhoto, setViewingPhoto] = useState<BusinessGalleryPhoto | null>(null);
+  const [removingPhoto, setRemovingPhoto] = useState<BusinessGalleryPhoto | null>(null);
   const businessDataId = business.business_data_id;
   const gallery = useBusinessGallery(businessDataId, business.profile_id);
   const photos = gallery.query.data ?? [];
@@ -94,7 +98,7 @@ export default function BusinessPhotosPage() {
       <header className="business-photos-heading">
         <div className="business-photos-heading__icon"><Images aria-hidden="true" /></div>
         <div className="business-photos-heading__copy">
-          <h1>Fotos da empresa</h1>
+          <h1 ref={headingRef} tabIndex={-1}>Fotos da empresa</h1>
           <p>Mostre ambientes, produtos e detalhes reais que ajudam as pessoas a reconhecer seu negócio.</p>
         </div>
         <div className="business-photos-heading__count" aria-label={`${photos.length} de ${gallery.maxPhotos} fotos`}>
@@ -152,8 +156,11 @@ export default function BusinessPhotosPage() {
                   onView={setViewingPhoto}
                   onMove={movePhoto}
                   onFeature={(id) => gallery.feature.mutate(id)}
-                  onRemove={(id) => {
-                    if (window.confirm("Remover esta foto da galeria?")) gallery.remove.mutate(id);
+                  onRemove={(id, trigger) => {
+                    if (!busy) {
+                      removalTriggerRef.current = trigger;
+                      setRemovingPhoto(photos.find((photo) => photo.id === id) ?? null);
+                    }
                   }}
                 />
               ))}
@@ -203,6 +210,37 @@ export default function BusinessPhotosPage() {
           {resolveMediaAssetSource(viewingPhoto?.image_url) ? <img src={resolveMediaAssetSource(viewingPhoto?.image_url)!} alt={viewingPhoto?.caption || `Foto de ${business.name}`} /> : null}
         </DialogContent>
       </Dialog>
+      <AlertDialog open={Boolean(removingPhoto)} onOpenChange={(open) => { if (!open) setRemovingPhoto(null); }}>
+        <AlertDialogContent
+          className="business-photo-removal-dialog"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            const trigger = removalTriggerRef.current;
+            if (trigger?.isConnected && !trigger.disabled) trigger.focus();
+            else headingRef.current?.focus();
+          }}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover foto da galeria?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {removingPhoto?.caption ? `Foto: ${removingPhoto.caption}. ` : ""}
+              A imagem deixará de aparecer na galeria pública. Para adicioná-la novamente, será necessário reenviar o arquivo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Manter foto</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={busy}
+              onClick={() => {
+                if (removingPhoto && !busy) gallery.remove.mutate(removingPhoto.id);
+              }}
+            >
+              Remover foto
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
@@ -214,7 +252,7 @@ function PhotoTile({ photo, index, total, busy, onMove, onFeature, onRemove, onV
   busy: boolean;
   onMove: (index: number, direction: -1 | 1) => void;
   onFeature: (id: string) => void;
-  onRemove: (id: string) => void;
+  onRemove: (id: string, trigger: HTMLButtonElement) => void;
   onView: (photo: BusinessGalleryPhoto) => void;
 }) {
   const source = resolveMediaAssetSource(photo.image_url);
@@ -236,7 +274,7 @@ function PhotoTile({ photo, index, total, busy, onMove, onFeature, onRemove, onV
             <DropdownMenuItem disabled={busy || index === total - 1} onSelect={() => onMove(index, 1)}><ArrowRight aria-hidden="true" />Mover para depois</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <button type="button" disabled={busy} onClick={() => onRemove(photo.id)} aria-label={`Remover foto ${index + 1}`} title="Remover foto"><Trash2 aria-hidden="true" /></button>
+        <button type="button" disabled={busy} onClick={(event) => onRemove(photo.id, event.currentTarget)} aria-label={`Remover foto ${index + 1}`} title="Remover foto"><Trash2 aria-hidden="true" /></button>
       </div>
     </article>
   );
