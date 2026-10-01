@@ -12,7 +12,7 @@ import {
   APP_MODULE_SLUGS,
   getAppModuleSlugFromPath,
 } from "@/shared/config/moduleSlugs";
-import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { buildModuleTerritoryUrl, type ModuleSlug } from "@/core/routing/utils/territoryUrls";
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -23,19 +23,6 @@ import { useLocations } from "@/core/location/hooks/useLocations";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useCityMetadataList } from "@/core/city/hooks/useCityMetadataList";
 import { resolveFallbackCityStatus, type CityStatus } from "@/core/city/services/CityService";
-
-function buildModulePath(module: string, state: string, city: string): string {
-  const territoryPath = `/${state}/${city}`;
-
-  if (module === "buscar") {
-    return `${territoryPath}/buscar`;
-  }
-
-  return buildModuleTerritoryUrl(
-    module as (typeof APP_MODULE_SLUGS)[keyof typeof APP_MODULE_SLUGS],
-    territoryPath,
-  );
-}
 
 type PublicCityLifecycleSurface =
   | { kind: "product"; surface: ProductModuleKey }
@@ -70,12 +57,37 @@ const PUBLIC_CITY_MODULE_SET = new Set<string>(
     .map(([module]) => module),
 );
 
+type PublicCityModuleSlug = Extract<
+  (typeof APP_MODULE_SLUGS)[keyof typeof APP_MODULE_SLUGS],
+  ModuleSlug
+>;
+
+function isPublicCityModuleSlug(
+  value: (typeof APP_MODULE_SLUGS)[keyof typeof APP_MODULE_SLUGS],
+): value is PublicCityModuleSlug {
+  return PUBLIC_CITY_MODULE_SET.has(value);
+}
+
+function buildModulePath(
+  module: PublicCityModuleSlug | "buscar",
+  state: string,
+  city: string,
+): string {
+  const territoryPath = `/${state}/${city}`;
+
+  if (module === "buscar") {
+    return `${territoryPath}/buscar`;
+  }
+
+  return buildModuleTerritoryUrl(module, territoryPath);
+}
+
 function buildPathForCurrentContext(pathname: string, state: string, city: string): string {
   const parts = pathname.split("/").filter(Boolean);
   if (parts.length === 0) return `/${state}/${city}`;
 
   const module = getAppModuleSlugFromPath(pathname);
-  if (module && PUBLIC_CITY_MODULE_SET.has(module)) {
+  if (module && isPublicCityModuleSlug(module)) {
     return buildModulePath(module, state, city);
   }
 
