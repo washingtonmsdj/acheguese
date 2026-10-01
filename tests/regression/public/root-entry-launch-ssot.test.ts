@@ -21,9 +21,10 @@ describe("public root launch territory SSOT", () => {
     expect(entry).toContain(
       'const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUpperCase();',
     );
-    expect(entry).toContain("action={LAUNCH_URLS.search}");
-    expect(entry).toContain("href={LAUNCH_URLS.business}");
-    expect(entry).toContain("href={LAUNCH_URLS.map}");
+    expect(entry).toContain("const launchBusinessUrl = LAUNCH_URLS.business");
+    expect(entry).toContain("const launchMapUrl = LAUNCH_URLS.map");
+    expect(entry).toContain("const launchNearbyUrl = LAUNCH_URLS.nearby");
+    expect(entry).toContain("const launchSearchUrl = LAUNCH_URLS.search");
     expect(entry).toContain("{LAUNCH_PLACE_LABEL}");
 
     expect(entry).not.toContain('TERRITORY_CONFIG.launch.state || "ba"');
@@ -66,7 +67,7 @@ describe("public root launch territory SSOT", () => {
     );
     expect(entry).toContain("getPublicTerritoryGroupPresentation(launchTerritory.group)");
     expect(entry).toContain("const launchCommunityGenitiveLabel =");
-    expect(entry).toContain("Encontre empresas e estabelecimentos {launchCommunityGenitiveLabel}.");
+    expect(entry).toContain("Empresas, mapa, busca e o que está perto de você {launchCommunityGenitiveLabel},");
     expect(entry).toContain("`do ${LAUNCH_COMMUNITY_NAME}`");
 
     expect(entry).not.toContain("launchCommunityDefiniteLabel");
@@ -74,14 +75,14 @@ describe("public root launch territory SSOT", () => {
     expect(entry).not.toContain("launchCommunityOriginLabel");
   });
 
-  it("uses the canonical raised surface token on active root navigation", () => {
+  it("keeps root navigation on the active launch URL owners", () => {
     const entry = read("src/app/pages/TerritoryEntryPage.tsx");
-    const tailwind = read("tailwind.config.ts");
 
-    expect(tailwind).toContain(
-      'raised: "hsl(var(--territory-surface-raised))"',
-    );
-    expect(entry.match(/hover:bg-territory-raised/g)?.length ?? 0).toBe(2);
+    expect(entry).toContain("href={launchBusinessUrl}");
+    expect(entry).toContain("href={launchMapUrl}");
+    expect(entry).toContain("href={launchNearbyUrl}");
+    expect(entry).toContain("href={module.href}");
+    expect(entry).not.toContain('href="/comunidade"');
   });
 
   it("keeps the root map fallback on canonical map defaults", () => {
