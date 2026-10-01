@@ -9,11 +9,16 @@ const authService = read("src/core/auth/services/AuthService.ts");
 const recovery = read("src/core/session/services/SessionSignOutRecovery.ts");
 
 describe("auth sign-out session recovery", () => {
-  it("reconciles the session owner when Supabase local sign-out fails or times out", () => {
+  it("always reconciles the local session boundary before sign-out can return", () => {
+    expect(authService).toContain("const completedSuccessfully =");
     expect(authService).toContain("await AuthService.clearLocalAuthStorage();");
     expect(authService).toContain("recoverForcedLocalSignOut();");
+    expect(authService).toContain("if (completedSuccessfully) return;");
     expect(authService.indexOf("await AuthService.clearLocalAuthStorage();")).toBeLessThan(
       authService.indexOf("recoverForcedLocalSignOut();"),
+    );
+    expect(authService.indexOf("recoverForcedLocalSignOut();")).toBeLessThan(
+      authService.indexOf("if (completedSuccessfully) return;"),
     );
   });
 
