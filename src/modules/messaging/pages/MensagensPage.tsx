@@ -69,7 +69,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
     () => providerIds.map(getMessagingProvider).filter((provider): provider is MessagingInboxProvider => provider !== null),
     [providerIds],
   );
-  return <MessagingInboxScreen providers={providers} activeProfile={activeProfile} sessionLoading={isLoading} />;
+  return <MessagingInboxScreen key={activeProfile?.id ?? "no-profile"} providers={providers} activeProfile={activeProfile} sessionLoading={isLoading} />;
 }
 
 /** Shared screen; real and isolated preview adapters supply the same contract. */
@@ -90,6 +90,8 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const draftKey = `${activeProfile?.id ?? ""}:${providerId ?? ""}:${threadId ?? ""}`;
+  const currentConversationRef = useRef(draftKey);
+  useEffect(() => { currentConversationRef.current = draftKey; }, [draftKey]);
   const draft = drafts[draftKey] ?? "";
   const setDraft = (value: string) => setDrafts((current) => ({ ...current, [draftKey]: value }));
   const [inboxLoading, setInboxLoading] = useState(true);
@@ -272,12 +274,14 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
         body: draft,
       });
       setDraft("");
-      followLatestRef.current = true;
-      setMessages((current) =>
-        current.some((item) => item.id === message.id)
-          ? current
-          : [...current, message],
-      );
+      if (currentConversationRef.current === draftKey) {
+        followLatestRef.current = true;
+        setMessages((current) =>
+          current.some((item) => item.id === message.id)
+            ? current
+            : [...current, message],
+        );
+      }
       setThreads((current) =>
         current
           .map((thread) =>
@@ -298,7 +302,7 @@ export function MessagingInboxScreen({ providers, activeProfile, sessionLoading 
       );
     } catch (cause) {
       logger.error("[MessagingInbox] failed to send message", cause);
-      setError("Não foi possível enviar a mensagem.");
+      if (currentConversationRef.current === draftKey) setError("Não foi possível enviar a mensagem.");
     } finally {
       setSending(false);
     }

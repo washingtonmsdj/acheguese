@@ -27,6 +27,8 @@ const provider: MessagingScreenProvider = {
   },
   async listMessagePage(query) { return { items: messages.filter((message) => message.threadId === query.threadId), nextCursor: null }; },
   async sendMessage(input) {
+    // Simulate a pending send so navigation/loading can be verified locally.
+    await new Promise<void>((resolve) => setTimeout(resolve, 400));
     const message: MessagingInboxMessage = { providerId: "business", id: crypto.randomUUID(), threadId: input.threadId, senderProfileId: input.profileId, body: input.body, isRemoved: false, createdAt: new Date().toISOString() };
     messages.push(message);
     const thread = threads.find((item) => item.threadId === input.threadId);
