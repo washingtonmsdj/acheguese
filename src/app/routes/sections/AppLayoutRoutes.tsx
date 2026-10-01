@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Route, Routes } from "react-router-dom";
 
 import { AppLayoutSidebar } from "@/app/components/AppLayoutSidebar";
+import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { getActiveBusinessVerticalKeys } from "@/app/config/businessVerticalScope";
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -42,6 +44,9 @@ const protectedElement = (element: ReactNode) => (
  */
 export function AppLayoutRoutes() {
   const businessEnabled = isProductModuleEnabled("business");
+  const activeBusinessVerticalKeys = businessEnabled
+    ? getActiveBusinessVerticalKeys()
+    : [];
 
   const profilesEnabled = isPlatformCapabilityEnabled("profiles");
   const accountEnabled = isPlatformCapabilityEnabled("account");
@@ -111,7 +116,12 @@ export function AppLayoutRoutes() {
             <Route path="/empresas" element={<P.EmpresasLandingPage />} />
             <Route
               path="/empresas/cadastrar"
-              element={protectedElement(<P.EmpresasCadastroLandingPage />)}
+              element={protectedElement(
+                <P.EmpresasCadastroLandingPage
+                  header={<AuthBrandHeader showBack={false} />}
+                  enabledVerticalKeys={activeBusinessVerticalKeys}
+                />,
+              )}
             />
           </>
         ) : null}
