@@ -22,14 +22,14 @@ export function getBusinessStatusPresentation(
         icon: CheckCircle2,
         label: "Ativa",
         badgeClassName:
-          "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+          "bg-success/10 text-success",
         unavailablePublicMessage: "Link público ainda não disponível.",
       };
     case "pending":
       return {
         icon: Clock3,
         label: "Em análise",
-        badgeClassName: "bg-amber-500/10 text-amber-800 dark:text-amber-300",
+        badgeClassName: "bg-warning/10 text-warning",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
@@ -37,7 +37,7 @@ export function getBusinessStatusPresentation(
       return {
         icon: CircleAlert,
         label: "Suspensa",
-        badgeClassName: "bg-muted text-foreground",
+        badgeClassName: "bg-muted text-muted-foreground",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
@@ -45,7 +45,7 @@ export function getBusinessStatusPresentation(
       return {
         icon: MinusCircle,
         label: "Desativada",
-        badgeClassName: "bg-muted text-foreground",
+        badgeClassName: "bg-muted text-muted-foreground",
         unavailablePublicMessage:
           "Esta empresa foi desativada e não está disponível publicamente.",
       };
@@ -53,7 +53,7 @@ export function getBusinessStatusPresentation(
       return {
         icon: MinusCircle,
         label: "Inativa",
-        badgeClassName: "bg-muted text-foreground",
+        badgeClassName: "bg-muted text-muted-foreground",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
@@ -61,7 +61,7 @@ export function getBusinessStatusPresentation(
       return {
         icon: MinusCircle,
         label: status,
-        badgeClassName: "bg-muted text-foreground",
+        badgeClassName: "bg-muted text-muted-foreground",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
       };
