@@ -56,7 +56,11 @@ import type {
   MapLayerProviderRuntime,
   MapProviderBrowseLink,
 } from '../providers/types';
-import { getMapMarkerCategoryLabel } from '../utils/mapMarkerPresentation';
+import {
+  getMapCategoryLabel,
+  getMapMarkerCategory,
+  getMapMarkerCategoryLabel,
+} from '../utils/mapMarkerPresentation';
 
 export interface MapaPageV4Props {
   resolved?: ResolvedTerritory | null;
@@ -756,7 +760,7 @@ export default function MapaPageV4({
   const categoryOptions = React.useMemo<MapCategoryOption[]>(() => {
     const counts = new Map<string, number>();
     allMarkers.forEach((marker) => {
-      const category = getMarkerCategory(marker);
+      const category = getMapMarkerCategory(marker);
       if (!category) return;
       counts.set(category, (counts.get(category) ?? 0) + 1);
     });
@@ -765,7 +769,7 @@ export default function MapaPageV4({
       .map(([key, count]) => ({
         key,
         count,
-        label: getBusinessCategoryLabel(key),
+        label: getMapCategoryLabel(key),
       }))
       .sort((left, right) => left.label.localeCompare(right.label, 'pt-BR'));
   }, [allMarkers]);
@@ -782,7 +786,7 @@ export default function MapaPageV4({
   const filteredMarkers = React.useMemo(() => {
     const normalizedQuery = mapQuery.trim().toLocaleLowerCase('pt-BR');
     const filtered = allMarkers.filter((marker) => {
-      const category = getMarkerCategory(marker);
+      const category = getMapMarkerCategory(marker);
       if (activeCategory !== 'all' && category !== activeCategory) return false;
       if (verifiedOnly && marker.metadata?.is_verified !== true) return false;
       if (ratedOnly && !(typeof marker.metadata?.rating === 'number' && marker.metadata.rating > 0)) return false;
@@ -1152,7 +1156,7 @@ export default function MapaPageV4({
                 </header>
                 <h2 aria-live="polite">{selectedMarker.title}</h2>
                 <div className="map-selection-body">
-                  <p>{getMarkerCategoryLabel(selectedMarker)}</p>
+                  <p>{getMapMarkerCategoryLabel(selectedMarker)}</p>
                   {selectedMarker.subtitle ? <p className="map-selection-address">{selectedMarker.subtitle}</p> : null}
                   <div className="map-selection-actions">
                     {selectedMarker.url ? <Link to={selectedMarker.url}>Ver detalhes <ArrowUpRight aria-hidden="true" /></Link> : null}
