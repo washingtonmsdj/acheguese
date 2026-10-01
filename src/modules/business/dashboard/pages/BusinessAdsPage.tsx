@@ -205,11 +205,11 @@ export default function BusinessAdsPage() {
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
           <div className="flex items-center gap-2 rounded-md border p-3 text-sm">
-            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <ShieldCheck className="h-4 w-4 text-success" />
             <span>Publicacao somente apos aprovacao</span>
           </div>
           <div className="flex items-center gap-2 rounded-md border p-3 text-sm">
-            <Clock className="h-4 w-4 text-amber-600" />
+            <Clock className="h-4 w-4 text-warning" />
             <span>Janela de exibicao controlada</span>
           </div>
           <div className="flex items-center gap-2 rounded-md border p-3 text-sm">
@@ -220,7 +220,7 @@ export default function BusinessAdsPage() {
       </Card>
 
       {!canRequestCampaign && (
-        <Card className="border-amber-300">
+        <Card className="border-warning/40">
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4 text-sm">
             <span>Esta empresa precisa de um territorio principal para solicitar anuncio.</span>
             <Link to={businessManagementRoutes.edit(businessId)}>

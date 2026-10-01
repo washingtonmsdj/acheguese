@@ -112,12 +112,17 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/business/dashboard/pages/BusinessCatalogPage.css',
   'src/modules/business/dashboard/pages/BusinessDetailsPage.tsx',
   'src/modules/business/dashboard/pages/BusinessSettingsPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessAnalyticsPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessPlansPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessPremiumSitePage.tsx',
+  'src/modules/business/dashboard/pages/BusinessAdsPage.tsx',
   'src/modules/business/dashboard/components/BusinessSettingsRiskAction.tsx',
   'src/styles/theme.ts',
 ] as const;
 
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
+const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:emerald|green|lime|rose|red|amber|yellow)-\d{2,3}(?:\/\d+)?\b/;
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
 const APPROVED_FONT_WEIGHTS = new Set(['400', '500', '600', '700', '800']);
@@ -280,6 +285,14 @@ function main(): void {
     }
     if (LEGACY_FONT_RE.test(content)) {
       violations.push(`${relative}: legacy font found after Plus Jakarta Sans migration.`);
+    }
+    if (
+      relative.startsWith('src/modules/business/dashboard/') &&
+      NON_SEMANTIC_STATUS_COLOR_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: non-semantic status color found in Business dashboard; use success, warning or destructive tokens.`,
+      );
     }
     validateApprovedFontWeights(relative, content, violations);
   }
