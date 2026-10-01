@@ -1,10 +1,9 @@
 import { mediaService } from "@/core/media/services/MediaService";
 import { MEDIA_PRESET_CLIENT_CONFIG } from "@/core/media/config/mediaPresets";
+import { BUSINESS_GALLERY_CONFIG } from "@/core/business/config/businessGalleryConfig";
 import { supabase, type Database } from "@/integrations/supabase";
 
 export type BusinessGalleryPhoto = Database["public"]["Tables"]["business_gallery"]["Row"];
-
-const MAX_GALLERY_PHOTOS = 20;
 
 async function list(businessDataId: string): Promise<BusinessGalleryPhoto[]> {
   const { data, error } = await supabase
@@ -23,15 +22,15 @@ async function upload(
   files: File[],
   currentCount: number,
 ): Promise<void> {
-  if (currentCount + files.length > MAX_GALLERY_PHOTOS) {
-    throw new Error(`A galeria aceita no máximo ${MAX_GALLERY_PHOTOS} fotos.`);
+  if (currentCount + files.length > BUSINESS_GALLERY_CONFIG.maxPhotos) {
+    throw new Error(`A galeria aceita no máximo ${BUSINESS_GALLERY_CONFIG.maxPhotos} fotos.`);
   }
   if (files.some((file) => file.size > MEDIA_PRESET_CLIENT_CONFIG.business_gallery.maxSourceBytes)) {
     throw new Error("Cada foto deve ter no máximo 5 MB.");
   }
   const existing = await list(businessDataId);
-  if (existing.length + files.length > MAX_GALLERY_PHOTOS) {
-    throw new Error(`A galeria aceita no máximo ${MAX_GALLERY_PHOTOS} fotos.`);
+  if (existing.length + files.length > BUSINESS_GALLERY_CONFIG.maxPhotos) {
+    throw new Error(`A galeria aceita no máximo ${BUSINESS_GALLERY_CONFIG.maxPhotos} fotos.`);
   }
   const nextOrder = existing.reduce((order, photo) => Math.max(order, photo.display_order + 1), 0);
 
@@ -110,5 +109,5 @@ export const businessGalleryService = {
   remove,
   setFeatured,
   reorder,
-  maxPhotos: MAX_GALLERY_PHOTOS,
+  maxPhotos: BUSINESS_GALLERY_CONFIG.maxPhotos,
 };
