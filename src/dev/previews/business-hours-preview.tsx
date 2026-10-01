@@ -5,9 +5,9 @@ import {
   Clock,
   Images,
   Pencil,
-  Settings,
+  MapPin,
+  Package,
   Store,
-  BarChart3,
 } from "lucide-react";
 import { BusinessOpeningHoursView } from "@/modules/business/dashboard/pages/BusinessOpeningHoursPage";
 import { WEEK_DAYS, WEEKDAYS } from "@/core/business/constants/weekDays";
@@ -27,12 +27,12 @@ const exampleHours: Hours = Object.fromEntries(
 );
 exampleHours.sabado = { open: "00:00", close: "00:00", closed: true };
 const sections = [
-  { name: "Visão", icon: Store },
-  { name: "Editar", icon: Pencil },
+  { name: "Visão", icon: Store, href: "/central-empresa-preview.html" },
+  { name: "Editar", icon: Pencil, href: "/editar-empresa-preview.html" },
   { name: "Fotos", icon: Images },
   { name: "Horário", icon: Clock },
-  { name: "Métricas", icon: BarChart3 },
-  { name: "Ajustes", icon: Settings },
+  { name: "Localização", icon: MapPin, href: "/localizacao-empresa-preview.html" },
+  { name: "Catálogo", icon: Package, href: "/produtos-servicos-empresa-preview.html" },
 ];
 
 export function Preview() {
@@ -69,7 +69,12 @@ export function Preview() {
         </p>
         <div className="grid min-w-0 gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
           <BusinessDashboardNavigation count={sections.length}>
-              {sections.map(({ name, icon: Icon }) => (
+              {sections.map(({ name, icon: Icon, href }) => href ? (
+                <a key={name} href={href} className="business-dashboard-nav__item text-foreground">
+                  <Icon size={18} aria-hidden="true" />
+                  {name}
+                </a>
+              ) : (
                 <button
                   key={name}
                   type="button"
