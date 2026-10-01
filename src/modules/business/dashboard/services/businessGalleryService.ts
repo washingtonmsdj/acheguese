@@ -1,7 +1,6 @@
 import { mediaService } from "@/core/media/services/MediaService";
 import { MEDIA_PRESET_CLIENT_CONFIG } from "@/core/media/config/mediaPresets";
-import { supabase } from "@/integrations/supabase";
-import type { Database } from "@/integrations/supabase/types.generated";
+import { supabase, type Database } from "@/integrations/supabase";
 
 export type BusinessGalleryPhoto = Database["public"]["Tables"]["business_gallery"]["Row"];
 
