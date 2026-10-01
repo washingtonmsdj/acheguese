@@ -136,8 +136,8 @@ export default function BusinessOverviewPage({
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 2xl:grid-cols-5">
           {quickActions.map((action) => (
-            <Link key={action.to} to={action.to} className="group flex min-h-24 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background p-2 text-center transition-colors hover:border-primary/30 hover:bg-primary/[0.03] sm:min-h-28 sm:items-start sm:justify-start sm:p-4 sm:text-left">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><action.icon className="h-5 w-5" aria-hidden="true" /></span>
+            <Link key={action.to} to={action.to} className="group flex min-h-24 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-territory-border bg-territory-surface p-2 text-center transition-colors hover:border-territory-brand/30 hover:bg-territory-brand/[0.03] sm:min-h-28 sm:items-start sm:justify-start sm:p-4 sm:text-left">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><action.icon className="h-5 w-5" aria-hidden="true" /></span>
               <span className="min-w-0">
                 <span className="block text-xs font-semibold leading-4 text-foreground sm:text-sm">{action.label}</span>
                 <span className="mt-0.5 hidden text-xs leading-4 text-muted-foreground sm:block">{action.detail}</span>
@@ -250,7 +250,7 @@ function SummaryCard({
         ? "bg-warning/10 text-warning"
         : tone === "neutral"
           ? "bg-muted text-muted-foreground"
-          : "bg-primary/10 text-primary";
+          : "bg-territory-brand/10 text-territory-brand";
   const borderClass =
     tone === "success"
       ? "border-success/20"
@@ -265,7 +265,7 @@ function SummaryCard({
     <p className="mt-0.5 break-words text-base font-bold leading-tight text-foreground sm:text-lg">{value}</p>
   </>;
   const classes = `min-w-0 rounded-2xl border ${borderClass} bg-card p-3 sm:p-4 ${className}`;
-  return to ? <Link to={to} className={`${classes} transition-colors hover:border-primary/30 hover:bg-primary/[0.03]`}>{content}</Link> : <div className={classes}>{content}</div>;
+  return to ? <Link to={to} className={`${classes} transition-colors hover:border-territory-brand/30 hover:bg-territory-brand/[0.03]`}>{content}</Link> : <div className={classes}>{content}</div>;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
