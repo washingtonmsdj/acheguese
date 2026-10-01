@@ -345,11 +345,6 @@
 }
 .business-catalog__dialog footer button {
   min-height: 44px;
-  border-radius: 999px;
-}
-.business-catalog__dialog footer button[type="submit"] {
-  background: hsl(var(--brand-solar));
-  color: hsl(var(--brand-petroleum));
 }
 .business-catalog__hint {
   font-size: 11px;
