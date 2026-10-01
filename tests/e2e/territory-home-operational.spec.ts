@@ -78,7 +78,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await gotoApp(page, "/");
 
     await expect(
-      page.getByRole("heading", { name: "Tudo perto de você." }),
+      page.getByRole("heading", { name: "Tudo que importa, logo ali." }),
     ).toBeVisible({ timeout: 30_000 });
 
     const main = page.locator("#main-content");
@@ -113,9 +113,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await gotoApp(page, "/ba/salvador/pituba");
 
     await expect(
-      page.getByRole("heading", {
-        name: /Encontre empresas em .+\./,
-      }),
+      page.getByRole("heading", { name: "Pituba", exact: true }),
     ).toBeVisible({ timeout: 30_000 });
 
     const main = page.locator("main");
@@ -154,7 +152,9 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await gotoApp(page, "/ba/salvador/pituba/busca");
 
     await expect(
-      page.getByRole("heading", { name: "Busca", exact: true }),
+      page
+        .getByRole("region", { name: "Busca", exact: true })
+        .getByRole("heading", { name: "Busca", exact: true }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Negócios", { exact: true })).toBeVisible();
     await expect(
@@ -189,11 +189,15 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await gotoApp(page, "/ba/salvador/pituba/empresas");
 
     await expect(
-      page.getByRole("heading", { name: "Empresas do bairro" }),
+      page
+        .getByRole("region", { name: "Empresas", exact: true })
+        .getByRole("heading", { name: "Empresas", exact: true }),
     ).toBeVisible({ timeout: 30_000 });
 
     await expect(page.getByText(HOME_BUSINESS.business_name).first()).toBeVisible();
-    await expect(page.getByText("Todas as empresas (1)")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "1 empresas encontradas", exact: true }),
+    ).toBeVisible();
 
     const mapLink = page.getByRole("link", { name: /Ver no mapa/i }).first();
     await expect(mapLink).toHaveAttribute("href", /\/mapa/);
@@ -220,7 +224,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     });
 
     const relatedModules = page.getByRole("navigation", {
-      name: "Atalhos relacionados ao mapa",
+      name: "Atalhos do território",
     });
     await expect(
       relatedModules.getByRole("link", { name: "Empresas" }),
@@ -248,23 +252,27 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
 
     await gotoApp(page, "/ba/salvador/pituba/perto-de-mim");
 
+    const gpsButton = page.getByRole("button", { name: "Usar GPS", exact: true });
+    await expect(gpsButton).toBeVisible({ timeout: 30_000 });
+    await gpsButton.click();
+
     await expect(page.getByText(HOME_BUSINESS.business_name).first()).toBeVisible({
       timeout: 30_000,
     });
-    await expect(page.getByText("430m")).toBeVisible();
+    await expect(page.getByText("430 m", { exact: true })).toBeVisible();
     await expect(
       page.getByRole("heading", {
-        name: "Empresas perto de você",
+        name: "Mais próximos de você",
         exact: true,
       }),
     ).toBeVisible();
 
     const openMapButton = page
-      .getByRole("button", { name: "Abrir mapa" })
+      .getByRole("button", { name: /Mapa completo|Expandir mapa/ })
       .first();
     await expect(openMapButton).toBeVisible();
     await expect(
-      page.getByText("Empresas próximas com localização real"),
+      page.getByText("Buscando perto de:", { exact: true }),
     ).toBeVisible();
 
     await expectNoHorizontalOverflow(page);
