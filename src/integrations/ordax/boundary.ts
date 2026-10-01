@@ -2,6 +2,8 @@ export const ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA =
   "acheguese.ordax-first-party-integration/1";
 
 export const ORDAX_PROVIDER_ID = "ordax" as const;
+export const ORDAX_CLIENT_ID = "acheguese" as const;
+export const ORDAX_AUDIENCE = "ordax:first-party:acheguese" as const;
 
 export const ORDAX_READ_SCOPES = Object.freeze([
   "network.space.read",
@@ -33,6 +35,8 @@ export type OrdaxLinkedEntityKind =
 export interface OrdaxSpaceLink {
   readonly schema: typeof ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA;
   readonly provider: typeof ORDAX_PROVIDER_ID;
+  readonly clientId: typeof ORDAX_CLIENT_ID;
+  readonly audience: typeof ORDAX_AUDIENCE;
   readonly connectionId: string;
   readonly achegueseOwnerUserId: string;
   readonly achegueseEntityKind: OrdaxLinkedEntityKind;
@@ -118,6 +122,12 @@ export function validateOrdaxSpaceLink(value: unknown): OrdaxSpaceLink {
   if (input.provider !== ORDAX_PROVIDER_ID) {
     throw new TypeError("OrdaX Space link provider is incompatible");
   }
+  if (input.clientId !== ORDAX_CLIENT_ID) {
+    throw new TypeError("OrdaX Space link client is incompatible");
+  }
+  if (input.audience !== ORDAX_AUDIENCE) {
+    throw new TypeError("OrdaX Space link audience is incompatible");
+  }
 
   const entityKinds: readonly OrdaxLinkedEntityKind[] = [
     "business",
@@ -174,6 +184,8 @@ export function validateOrdaxSpaceLink(value: unknown): OrdaxSpaceLink {
   return Object.freeze({
     schema: ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
     provider: ORDAX_PROVIDER_ID,
+    clientId: ORDAX_CLIENT_ID,
+    audience: ORDAX_AUDIENCE,
     connectionId: requireOpaqueId(input.connectionId, "OrdaX connectionId"),
     achegueseOwnerUserId: requireOpaqueId(
       input.achegueseOwnerUserId,
