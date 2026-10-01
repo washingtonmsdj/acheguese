@@ -89,7 +89,8 @@ describe("MVP Business public flow", () => {
 
   it("labels category-similar businesses as related, not geographically near", () => {
     expect(detailPage).toContain("BusinessService.getSimilarBusinesses(");
-    expect(detailPage).toContain(">Relacionadas</TabsTrigger>");
+    expect(detailPage).toContain("setNearbyBusinesses(mapped)");
+    expect(detailPage).toContain("nearbyBusinesses={displayNearbyBusinesses}");
     expect(relatedSection).toContain("Empresas relacionadas");
     expect(relatedSection).not.toContain("Empresas proximas");
   });
