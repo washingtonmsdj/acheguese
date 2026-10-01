@@ -90,14 +90,14 @@ export function PaymentMethodsSelector({
               className={cn(
                 "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
                 isSelected
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/30 hover:bg-secondary/50"
+                  ? "border-territory-brand bg-territory-brand/5"
+                  : "border-territory-border hover:border-territory-brand/30 hover:bg-territory-raised"
               )}
             >
               <div
                 className={cn(
                   "rounded-lg p-2",
-                  isSelected ? "bg-primary/10" : "bg-secondary"
+                  isSelected ? "bg-territory-brand/10" : "bg-territory-raised"
                 )}
               >
                 <Icon className={cn("h-5 w-5", isSelected ? "text-primary" : method.color)} />
@@ -128,7 +128,7 @@ export function PaymentMethodsSelector({
             {customMethods.map((method) => (
               <div
                 key={method}
-                className="inline-flex items-center gap-2 bg-secondary text-secondary-foreground px-3 py-2 rounded-lg border border-border"
+                className="inline-flex items-center gap-2 bg-territory-raised text-secondary-foreground px-3 py-2 rounded-lg border border-border"
               >
                 <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
                 <span className="text-sm font-medium">{method}</span>
