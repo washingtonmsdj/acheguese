@@ -132,7 +132,7 @@ const LEGACY_BUSINESS_PALETTE_RE =
   /\b(?:text|bg|border|ring)-(?:emerald|green|amber|sky|blue|cyan|purple|pink|indigo)-\d+(?:\/\d+)?\b/;
 const LEGACY_BUSINESS_PRIMITIVE_RE = /var\(--(?:primary|card|border)\)/;
 const LEGACY_BUSINESS_GENERIC_UTILITY_RE =
-  /\b(?:text|bg|border|ring)-(?:primary|secondary|border)(?:\/[\[\].0-9]+)?\b/;
+  /\b(?:text|bg|border|ring)-(?:primary|secondary|border)(?:\/(?:\[[^\]]+\]|\d+))?(?![-\w])/;
 
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
