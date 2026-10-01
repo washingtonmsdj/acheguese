@@ -98,7 +98,7 @@ export default function BusinessPhotosPage() {
       <header className="business-photos-heading">
         <div className="business-photos-heading__icon"><Images aria-hidden="true" /></div>
         <div className="business-photos-heading__copy">
-          <h1 ref={headingRef} tabIndex={-1}>Fotos da empresa</h1>
+          <h1 ref={headingRef} tabIndex={-1} className="business-management-title">Fotos da empresa</h1>
           <p>Mostre ambientes, produtos e detalhes reais que ajudam as pessoas a reconhecer seu negócio.</p>
         </div>
         <div className="business-photos-heading__count" aria-label={`${photos.length} de ${gallery.maxPhotos} fotos`}>
