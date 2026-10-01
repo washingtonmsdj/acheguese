@@ -103,13 +103,13 @@ export function ServiceModesSelector({
                   isSelected ? "bg-territory-brand/10" : "bg-territory-raised"
                 )}
               >
-                <Icon className={cn("h-5 w-5", isSelected ? "text-primary" : mode.color)} />
+                <Icon className={cn("h-5 w-5", isSelected ? "text-territory-brand" : mode.color)} />
               </div>
               
               <div className="flex-1 min-w-0">
                 <p className={cn(
                   "text-sm font-medium mb-0.5",
-                  isSelected ? "text-primary" : "text-foreground"
+                  isSelected ? "text-territory-brand" : "text-foreground"
                 )}>
                   {mode.label}
                 </p>
@@ -126,10 +126,10 @@ export function ServiceModesSelector({
 
       {/* Delivery areas (if delivery or domicilio is selected) */}
       {hasDeliveryMode && onDeliveryAreasChange && (
-        <div className="pt-4 border-t border-border space-y-3">
+        <div className="pt-4 border-t border-territory-border space-y-3">
           <div>
             <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
+              <MapPin className="h-4 w-4 text-territory-brand" />
               Áreas de Atendimento
             </h4>
             <p className="text-xs text-muted-foreground mt-0.5">
@@ -143,7 +143,7 @@ export function ServiceModesSelector({
               {deliveryAreas.map((area) => (
                 <div
                   key={area}
-                  className="inline-flex items-center gap-2 bg-territory-raised text-secondary-foreground px-3 py-2 rounded-lg border border-border"
+                  className="inline-flex items-center gap-2 bg-territory-raised text-secondary-foreground px-3 py-2 rounded-lg border border-territory-border"
                 >
                   <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-sm font-medium">{area}</span>
@@ -205,15 +205,15 @@ export function ServiceModesSelector({
 
       {/* Summary */}
       {selected.length > 0 && (
-        <div className="bg-primary/5 rounded-lg p-3 text-xs text-muted-foreground">
-          <span className="font-semibold text-primary">
+        <div className="bg-territory-brand/5 rounded-lg p-3 text-xs text-muted-foreground">
+          <span className="font-semibold text-territory-brand">
             {selected.length} {selected.length === 1 ? "modo" : "modos"}
           </span>{" "}
           de atendimento selecionado{selected.length !== 1 ? "s" : ""}
           {hasDeliveryMode && deliveryAreas.length > 0 && (
             <>
               {" · "}
-              <span className="font-semibold text-primary">{deliveryAreas.length}</span>{" "}
+              <span className="font-semibold text-territory-brand">{deliveryAreas.length}</span>{" "}
               {deliveryAreas.length === 1 ? "área" : "áreas"} de atendimento
             </>
           )}
