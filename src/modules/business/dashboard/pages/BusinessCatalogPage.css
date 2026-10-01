@@ -86,7 +86,7 @@
   gap: 8px;
   min-width: 0;
 }
-.business-catalog__filter-toggle {
+.business-catalog .business-catalog__filter-toggle {
   display: none;
 }
 .business-catalog__item-heading {
@@ -107,6 +107,14 @@
 .business-catalog__status--active {
   color: hsl(var(--primary));
   background: hsl(var(--primary) / 0.1);
+}
+.business-catalog .business-catalog__item-menu,
+.business-catalog__actions > .business-catalog__status {
+  display: none;
+}
+.business-catalog__menu-content [role="menuitem"] {
+  min-height: 44px;
+  gap: 8px;
 }
 .business-catalog__search {
   position: relative;
@@ -192,7 +200,8 @@
   min-height: 44px;
 }
 .business-catalog__actions > label > span {
-  display: none;
+  font-size: 10px;
+  color: hsl(var(--muted-foreground));
 }
 .business-catalog__actions > div {
   display: flex;
@@ -340,7 +349,7 @@
     font-size: 16px;
   }
   .business-catalog__panel {
-    padding: 16px;
+    padding: 12px;
   }
   .business-catalog__heading {
     flex-wrap: wrap;
@@ -348,7 +357,12 @@
     margin-bottom: 16px;
   }
   .business-catalog__heading h1 {
-    font-size: 18px;
+    font-size: 16px;
+  }
+  .business-catalog__heading > svg {
+    width: 40px;
+    height: 40px;
+    padding: 9px;
   }
   .business-catalog__heading > button {
     width: 100%;
@@ -359,7 +373,7 @@
   .business-catalog__search {
     grid-column: 1;
   }
-  .business-catalog__filter-toggle {
+  .business-catalog .business-catalog__filter-toggle {
     display: inline-flex;
     width: 44px;
     height: 44px;
@@ -375,9 +389,18 @@
   .business-catalog__copy > p {
     display: none;
   }
+  .business-catalog__copy > span {
+    display: none;
+  }
+  .business-catalog__copy h2 {
+    margin-top: 0;
+    font-size: 13px;
+    line-height: 1.45;
+  }
   .business-catalog__list > li {
-    grid-template-columns: 56px minmax(0, 1fr);
-    gap: 8px 10px;
+    grid-template-columns: 56px minmax(0, 1fr) 44px;
+    gap: 8px;
+    align-items: center;
     padding: 12px 0;
   }
   .business-catalog__image {
@@ -385,18 +408,22 @@
     height: 56px;
   }
   .business-catalog__actions {
-    grid-column: 2;
-    display: flex;
-    flex-wrap: wrap;
+    grid-column: 3;
+    display: grid;
     gap: 4px;
-    justify-content: space-between;
-    align-items: center;
+    justify-items: center;
   }
-  .business-catalog__actions > div {
-    margin-left: auto;
-    flex-shrink: 0;
-  }
+  .business-catalog__actions > div,
   .business-catalog__actions > label {
-    flex-direction: row-reverse;
+    display: none;
+  }
+  .business-catalog__actions > .business-catalog__status {
+    display: inline-block;
+    padding: 2px 5px;
+  }
+  .business-catalog .business-catalog__item-menu {
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
   }
 }

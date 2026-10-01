@@ -10,6 +10,7 @@ import {
   Wrench,
   Info,
   SlidersHorizontal,
+  MoreVertical,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useActiveBusinessDashboardContext } from "../businessDashboardContext";
@@ -27,6 +28,12 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Switch } from "@/shared/components/ui/switch";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/shared/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -195,10 +202,7 @@ export function BusinessCatalogView({
             <Package aria-hidden="true" />
             <div>
               <h1>Produtos e serviços</h1>
-              <p>
-                Mostre o que sua empresa oferece. Adicione itens e mantenha a
-                disponibilidade atualizada.
-              </p>
+              <p>Gerencie os produtos e serviços que sua empresa oferece.</p>
             </div>
             <Button
               onClick={() => startEditing(null)}
@@ -292,16 +296,56 @@ export function BusinessCatalogView({
                     </span>
                     <div className="business-catalog__item-heading">
                       <h2>{item.name}</h2>
-                      <span
-                        className={`business-catalog__status${item.active ? " business-catalog__status--active" : ""}`}
-                      >
-                        {item.active ? "Ativo" : "Inativo"}
-                      </span>
                     </div>
                     {item.description && <p>{item.description}</p>}
                     <strong>{catalogPrice(item.price)}</strong>
                   </div>
                   <div className="business-catalog__actions">
+                    <span
+                      className={`business-catalog__status${item.active ? " business-catalog__status--active" : ""}`}
+                    >
+                      {item.active ? "Ativo" : "Inativo"}
+                    </span>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          className="business-catalog__item-menu"
+                          size="icon"
+                          variant="ghost"
+                          disabled={pending}
+                          aria-label={`Opções de ${item.name}`}
+                        >
+                          <MoreVertical size={18} aria-hidden="true" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        align="end"
+                        className="business-catalog__menu-content"
+                      >
+                        <DropdownMenuItem onSelect={() => startEditing(item)}>
+                          <Pencil size={16} aria-hidden="true" /> Editar item
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() =>
+                            void run(
+                              () =>
+                                onSave(
+                                  { ...item, active: !item.active },
+                                  item.id,
+                                ),
+                              item.active
+                                ? "Item desativado."
+                                : "Item ativado.",
+                            )
+                          }
+                        >
+                          {item.active ? "Desativar item" : "Ativar item"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => setRemoving(item)}>
+                          <Trash2 size={16} aria-hidden="true" /> Remover item
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <label>
                       <span>{item.active ? "Ativo" : "Inativo"}</span>
                       <Switch
