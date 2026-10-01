@@ -8,7 +8,7 @@ const root = process.cwd();
 const migration = readFileSync(
   resolve(
     root,
-    "supabase/migrations/20261001054000_pause_paused_product_cron_workers.sql",
+    "supabase/migrations/20261001054425_pause_paused_product_cron_workers.sql",
   ),
   "utf8",
 );
