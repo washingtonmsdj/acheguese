@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
+  ORDAX_READ_SCOPES,
+  ORDAX_WRITE_SCOPES,
   validateOrdaxPublicationEnvelope,
   validateOrdaxSpaceLink,
 } from "../../src/integrations/ordax/boundary";
@@ -70,6 +72,40 @@ describe("OrdaX first-party integration boundary", () => {
 
     expect(link.achegueseEntityKind).toBe("education-institution");
     expect(link.spaceId).toBe("ordax_space_school_001");
+  });
+
+  it("keeps read and write scopes classified explicitly", () => {
+    expect(ORDAX_READ_SCOPES).toContain("network.messages.read");
+    expect(ORDAX_WRITE_SCOPES).not.toContain("network.messages.read");
+    expect(ORDAX_WRITE_SCOPES).toContain("network.messages.write");
+  });
+
+  it("rejects insecure or credential-bearing issuers", () => {
+    const base = {
+      schema: ORDAX_FIRST_PARTY_INTEGRATION_SCHEMA,
+      provider: "ordax",
+      connectionId: "connection_school_001",
+      achegueseOwnerUserId: "acheguese_user_001",
+      achegueseEntityKind: "education-institution",
+      achegueseEntityId: "education_school_001",
+      subjectId: "ordax_subject_001",
+      spaceId: "ordax_space_school_001",
+      scopes: ["network.space.read"],
+      state: "active",
+      linkedAt: "2026-10-01T04:30:00.000Z",
+      revokedAt: null,
+    };
+
+    for (const issuer of [
+      "http://identity.ordax.example",
+      "https://user:secret@identity.ordax.example",
+      "https://identity.ordax.example?tenant=other",
+      "https://identity.ordax.example#fragment",
+    ]) {
+      expect(() => validateOrdaxSpaceLink({ ...base, issuer })).toThrow(
+        /issuer must be/,
+      );
+    }
   });
 
   it("rejects unsupported scopes and inconsistent revocation state", () => {
