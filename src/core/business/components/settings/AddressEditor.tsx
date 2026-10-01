@@ -191,7 +191,7 @@ export function AddressEditor({
       {showHeading && (
         <div>
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="h-4 w-4 text-territory-brand" />
             Endereço
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -331,11 +331,11 @@ export function AddressEditor({
       </div>
 
       {features.coordinates && (
-        <div className="pt-3 border-t border-border space-y-3">
+        <div className="pt-3 border-t border-territory-border space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <MapIcon className="h-4 w-4 text-primary" />
+                <MapIcon className="h-4 w-4 text-territory-brand" />
                 Coordenadas (Opcional)
               </h4>
               <p className="text-xs text-muted-foreground mt-0.5">
