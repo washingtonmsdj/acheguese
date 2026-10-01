@@ -307,10 +307,17 @@ export class AuthService {
     const result = await Promise.race([signOutPromise, timeoutPromise]);
     if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
 
-    if (result.kind === "completed" && !result.error) return;
+    const completedSuccessfully =
+      result.kind === "completed" && !result.error;
 
+    // Supabase may report a successful local sign-out before custom browser
+    // storage has been fully reconciled. Always finalize the local boundary
+    // before allowing navigation so a reload cannot restore a stale session.
     await AuthService.clearLocalAuthStorage();
     recoverForcedLocalSignOut();
+
+    if (completedSuccessfully) return;
+
     logger.warn("AuthService.signOut recovered with local auth cleanup", {
       reason: result.kind,
     });
