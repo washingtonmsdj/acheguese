@@ -1,4 +1,5 @@
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { centralRoutes } from "@/core/routing/config/centralRoutes";
 import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
@@ -6,7 +7,7 @@ import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 const AUTH_REQUIRED_RUNTIME_PREFIXES = [
   ACCOUNT_PATHS.home,
   messagingRoutes.inbox(),
-  "/central",
+  centralRoutes.home,
 ] as const;
 
 const AUTH_REQUIRED_RUNTIME_EXACT_PATHS = new Set<string>([
