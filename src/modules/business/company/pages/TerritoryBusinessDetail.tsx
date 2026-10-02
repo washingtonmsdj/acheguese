@@ -30,6 +30,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
@@ -243,7 +244,7 @@ export function TerritoryBusinessDetail({
           </Link>
           <nav className="bd-main-nav" aria-label="Navegação principal">
             <Link to={nearbyUrl}>Por perto</Link>
-            <Link to="/como-funciona">Como funciona</Link>
+            <Link to={STATIC_ROUTE_PATHS.howItWorks}>Como funciona</Link>
             <Link to={businessDirectoryUrl}>Para negócios</Link>
           </nav>
           <Link className="bd-global-search" to={searchUrl}>
@@ -258,7 +259,7 @@ export function TerritoryBusinessDetail({
             <nav>
               <Link to={territoryUrl}>Território</Link>
               <Link to={businessDirectoryUrl}>Empresas</Link>
-              <Link to="/como-funciona">Como funciona</Link>
+              <Link to={STATIC_ROUTE_PATHS.howItWorks}>Como funciona</Link>
             </nav>
           </details>
         </div>
