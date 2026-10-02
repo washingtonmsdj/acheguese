@@ -995,8 +995,19 @@ test.describe.serial("Auth and business flow", () => {
     ).toBeVisible({ timeout: 30_000 });
 
     await page.locator("#name").fill(renamedName);
-    await page.getByRole("button", { name: "Continuar" }).click();
-    await page.getByRole("button", { name: "Continuar" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Identidade da empresa", exact: true }),
+    ).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("button", { name: "Próximo" }).click();
+
+    await expect(
+      page.getByRole("heading", { name: "Contato e localização", exact: true }),
+    ).toBeVisible({ timeout: 20_000 });
+    await page.getByRole("button", { name: "Próximo" }).click();
+
+    await expect(
+      page.getByRole("heading", { name: "Apresentação e detalhes", exact: true }),
+    ).toBeVisible({ timeout: 20_000 });
     await page.getByRole("button", { name: "Salvar alterações" }).click();
 
     await waitForBusinessRename({
