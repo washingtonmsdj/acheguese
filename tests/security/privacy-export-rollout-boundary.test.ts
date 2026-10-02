@@ -194,6 +194,12 @@ describe("privacy data export rollout boundary", () => {
     expect(privacyPage).toContain("disabled={isExporting || !exportAvailable}");
     expect(privacyPage).toContain("Exportação temporariamente indisponível");
     expect(privacyPage).toContain("Solicitar meus dados à proteção de dados");
+    expect(privacyPage).toContain("Exportação automática indisponível");
+    expect(privacyPage).toContain("A exportação automática ainda não foi certificada.");
+    expect(privacyPage).toContain('exportAvailable ? "Exportar" : "Solicitar meus dados"');
+    expect(privacyPage).toContain(
+      "exportAvailable ? ACCOUNT_PATHS.exportData : DATA_PROTECTION_CONTACT_PATH",
+    );
     expect(privacyPage).toContain("navigate(DATA_PROTECTION_CONTACT_PATH)");
   });
 });
