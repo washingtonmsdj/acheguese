@@ -25,3 +25,8 @@ export const ACCOUNT_SETTINGS_SHELL_PATHS = new Set<string>([
   ACCOUNT_PATHS.addresses,
   ACCOUNT_PATHS.profileSettings,
 ]);
+
+
+export const ACCOUNT_ROUTE_PATTERNS = {
+  editProfile: "/conta/editar/:profileId",
+} as const;
