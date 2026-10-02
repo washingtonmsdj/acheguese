@@ -121,7 +121,7 @@ export function TerritoryTopbar({
         )}
       >
         <Link
-          to="/"
+          to={APP_PATHS.home}
           className="group flex min-h-11 min-w-0 shrink-0 items-center rounded-territory pr-1 lg:order-1"
           aria-label="Achegue-se — início"
         >
