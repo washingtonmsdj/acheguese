@@ -7,6 +7,7 @@
  * Lifecycle é resolvido neste boundary de app; loaders não conhecem
  * launchScope nem decidem estado de domínio/capability por conta própria.
  */
+import { APP_PATHS } from "@/core/routing/config/appPaths";
 import {
   APP_MODULE_SLUGS,
   buildAppModulePath,
@@ -47,7 +48,7 @@ const PREFETCHERS: PrefetchEntry[] = [
     enabled: () => isPlatformCapabilityEnabled("search"),
   },
   {
-    test: (path) => path.startsWith("/notificacoes"),
+    test: (path) => path.startsWith(APP_PATHS.notifications),
     load: () => import("@/app/pages/NotificationsPage"),
     enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
@@ -77,7 +78,7 @@ const IDLE_WARMUP_ROUTES: Array<{
     enabled: () => isPlatformCapabilityEnabled("search"),
   },
   {
-    href: "/notificacoes",
+    href: APP_PATHS.notifications,
     enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
 ];
