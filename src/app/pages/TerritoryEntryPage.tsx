@@ -1,5 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
   getPublicTerritoryGroupPresentation,
@@ -18,8 +20,6 @@ const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUppe
 const LAUNCH_PLACE_LABEL = [TERRITORY_CONFIG.launch.name, LAUNCH_STATE_LABEL]
   .filter(Boolean)
   .join(" · ");
-const ACCOUNT_PATH = "/conta";
-
 const launchBusinessUrl = LAUNCH_URLS.business;
 const launchMapUrl = LAUNCH_URLS.map;
 const launchNearbyUrl = LAUNCH_URLS.nearby;
@@ -190,7 +190,7 @@ export default function TerritoryEntryPage() {
     };
   }, []);
 
-  const accountHref = isAuthenticated ? buildLoginPath(ACCOUNT_PATH) : AUTH_PATHS.login;
+  const accountHref = isAuthenticated ? buildLoginPath(ACCOUNT_PATHS.home) : AUTH_PATHS.login;
   const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
 
   return (
@@ -201,14 +201,14 @@ export default function TerritoryEntryPage() {
 
       <header className="ag-header">
         <div className="ag-container ag-header-inner">
-          <a href="/" className="ag-brand" aria-label="Achegue-se — início">
+          <a href={STATIC_ROUTE_PATHS.home} className="ag-brand" aria-label="Achegue-se — início">
             <BrandMark />
             <span>achegue-se</span>
           </a>
 
           <nav className="ag-nav" aria-label="Navegação principal">
             <a href="#descobrir">Por perto</a>
-            <a href="/como-funciona">Como funciona</a>
+            <a href={STATIC_ROUTE_PATHS.howItWorks}>Como funciona</a>
             <a href={launchBusinessUrl}>Para negócios</a>
           </nav>
 
@@ -401,17 +401,17 @@ export default function TerritoryEntryPage() {
       <footer className="ag-footer">
         <div className="ag-container ag-footer-grid">
           <div>
-            <a href="/" className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
+            <a href={STATIC_ROUTE_PATHS.home} className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
               <BrandMark />
               <span>achegue-se</span>
             </a>
             <p>A cidade acontece quando a gente se encontra.</p>
           </div>
           <nav aria-label="Links do rodapé">
-            <a href="/sobre">Sobre</a>
+            <a href={STATIC_ROUTE_PATHS.about}>Sobre</a>
             <a href="/como-funciona">Como funciona</a>
             <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
-            <a href="/conta/preferencias#acessibilidade">Acessibilidade</a>
+            <a href={ACCOUNT_PATHS.accessibility}>Acessibilidade</a>
           </nav>
           <p className="ag-footer-place">
             Disponível inicialmente no<br />
