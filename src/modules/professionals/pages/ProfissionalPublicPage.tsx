@@ -17,6 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { TerritorySurface } from "@/shared/components/territory-vivo/TerritorySurface";
+import { TERRITORY_TOPBAR_NAVIGATION } from "@/core/routing/config/territoryTopbarNavigation";
 import { TerritoryTopbar } from "@/shared/components/territory-vivo/TerritoryTopbar";
 import { MODULE_SLUGS, buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
@@ -324,7 +325,7 @@ function MobileCoverageSection({ coverage }: { coverage: string[] }) {
 function ProfileLoading({ territoryName, contextLabel, searchHref }: { territoryName: string; contextLabel: string; searchHref: string }) {
   return (
     <div className="min-h-[100dvh] bg-territory-canvas text-territory-ink">
-      <TerritoryTopbar territoryName={territoryName} contextLabel={contextLabel} isAuthenticated={false} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} />
+      <TerritoryTopbar navigation={TERRITORY_TOPBAR_NAVIGATION} territoryName={territoryName} contextLabel={contextLabel} isAuthenticated={false} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} />
       <main className="mx-auto w-full max-w-[72rem] px-4 py-6 sm:px-6 lg:px-8">
         <div className="h-5 w-48 animate-pulse rounded bg-territory-raised" />
         <div className="mt-8 flex items-center gap-4"><div className="h-24 w-24 animate-pulse rounded-full bg-territory-raised" /><div className="space-y-3"><div className="h-8 w-56 animate-pulse rounded bg-territory-raised" /><div className="h-4 w-40 animate-pulse rounded bg-territory-raised" /></div></div>
@@ -384,7 +385,7 @@ export default function ProfissionalPublicPage() {
 
   return (
     <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
-      <TerritoryTopbar territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} flushDesktop compactMobile />
+      <TerritoryTopbar navigation={TERRITORY_TOPBAR_NAVIGATION} territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} flushDesktop compactMobile />
 
       <main className="w-full max-w-[60rem] px-4 pb-8 pt-1 sm:px-6 md:pt-3 lg:px-6">
         <div className="hidden items-center gap-2 text-type-caption text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
