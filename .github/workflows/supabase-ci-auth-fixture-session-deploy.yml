@@ -164,6 +164,7 @@ jobs:
 
           $config = Get-Content "supabase/config.toml" -Raw
           $entry = Get-Content "supabase/functions/ci-auth-fixture-session/index.ts" -Raw
+          $authUpstreamFetch = Get-Content "supabase/functions/ci-auth-fixture-session/authUpstreamFetch.ts" -Raw
 
           $section = [regex]::Match(
             $config,
@@ -187,9 +188,12 @@ jobs:
             'data.user?.app_metadata?.acheguese_fixture',
             'signInWithPassword',
             'rateLimitMiddleware',
+            'createBoundedAuthFetch',
+            'authFetch.didTimeout()',
             '"fixture_credentials_rejected"',
             '"fixture_account_unavailable"',
             '"auth_rate_limited"',
+            '"auth_upstream_timeout"',
             '"auth_upstream_unavailable"',
             '"fixture_auth_failed"',
             'return fixtureAuthFailureResponse(req, failure)',
@@ -207,7 +211,19 @@ jobs:
             throw "ci-auth-fixture-session must not depend on service-role authority."
           }
 
-          Write-Host "GitHub OIDC, fixture provenance, fail-closed diagnostics and no-service-role contracts confirmed."
+          $requiredTimeoutMarkers = @(
+            'CI_AUTH_UPSTREAM_TIMEOUT_MS = 10_000',
+            'new AbortController()',
+            'AuthUpstreamTimeoutError',
+            'didTimeout: () => timedOut'
+          )
+          foreach ($marker in $requiredTimeoutMarkers) {
+            if (-not $authUpstreamFetch.Contains($marker)) {
+              throw "ci-auth-fixture-session bounded upstream fetch contract missing: $marker"
+            }
+          }
+
+          Write-Host "GitHub OIDC, fixture provenance, bounded Auth upstream timeout, fail-closed diagnostics and no-service-role contracts confirmed."
 
       - name: Record exact source bundle hashes
         shell: pwsh
@@ -216,6 +232,7 @@ jobs:
           $ErrorActionPreference = "Stop"
           $files = @(
             "supabase/functions/ci-auth-fixture-session/index.ts",
+            "supabase/functions/ci-auth-fixture-session/authUpstreamFetch.ts",
             "supabase/functions/_shared/security.ts"
           )
 
