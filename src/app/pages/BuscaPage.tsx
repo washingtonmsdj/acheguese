@@ -50,6 +50,7 @@ import { mapEntityProjection } from "@/core/maps";
 import type { MapMarker } from "@/core/maps/types/core";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
+import { TERRITORY_TOPBAR_NAVIGATION } from "@/core/routing/config/territoryTopbarNavigation";
 import {
   TERRITORY_RESOLVE_STATUS,
   useResolveTerritoryFromUrl,
@@ -528,6 +529,7 @@ export default function BuscaPage({ embedded = false }: { embedded?: boolean } =
     <div className="min-h-[100dvh] text-territory-ink">
       {!embedded ? (
         <TerritoryTopbar
+          navigation={TERRITORY_TOPBAR_NAVIGATION}
           territoryName={territoryName}
           contextLabel={contextLabel}
           isAuthenticated={Boolean(user)}
