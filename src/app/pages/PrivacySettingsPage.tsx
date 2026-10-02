@@ -165,7 +165,7 @@ function ExportItem({ icon, title, description }: { icon: ReactNode; title: stri
 
 function QueryErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+    <div className="rounded-xl border border-destructive/25 bg-destructive/10 p-4 text-sm text-destructive" role="alert">
       <div className="flex items-start gap-2">
         <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1">
@@ -205,8 +205,8 @@ function ConsentHistoryItem({ record }: { record: ConsentHistoryRecord }) {
   const statusClass = revoked
     ? "bg-territory-raised text-territory-muted"
     : record.granted
-      ? "bg-emerald-100 text-emerald-800"
-      : "bg-amber-100 text-amber-900";
+      ? "bg-success/10 text-success"
+      : "bg-warning/10 text-warning";
 
   return (
     <article className="border-b border-territory-border py-4 last:border-b-0">
@@ -404,7 +404,7 @@ export default function PrivacySettingsPage() {
               <p>A exportação respeita as permissões e o escopo dos dados disponíveis.</p>
             </div>
           ) : (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" role="status">
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-warning/25 bg-warning/10 p-4 text-sm text-warning" role="status">
               <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
               <p>A exportação automática está temporariamente indisponível enquanto concluímos a certificação de segurança e completude. Você ainda pode solicitar seus dados pelo canal de proteção de dados.</p>
             </div>
@@ -489,11 +489,11 @@ export default function PrivacySettingsPage() {
         {scheduled ? (
           <>
             <div className="mb-4 text-center lg:hidden">
-              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600"><Trash2 className="h-8 w-8" aria-hidden="true" /></span>
+              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 text-destructive"><Trash2 className="h-8 w-8" aria-hidden="true" /></span>
               <h1 className="mt-4 font-heading text-[1.35rem] font-bold leading-tight tracking-[-0.035em] text-territory-ink">Exclusão da conta solicitada</h1>
               <p className="mt-1 text-sm leading-5 text-territory-muted">Consulte o andamento e as opções disponíveis.</p>
             </div>
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800" role="status">
+            <div className="rounded-2xl border border-success/25 bg-success/10 px-4 py-3 text-success" role="status">
               <div className="flex items-center justify-center gap-2 font-semibold lg:justify-start"><CheckCircle2 className="h-5 w-5" aria-hidden="true" />Solicitação registrada</div>
             </div>
 
@@ -636,7 +636,7 @@ export default function PrivacySettingsPage() {
               if (!open) setDeleteAcknowledged(false);
             }}>
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="ghost" className="min-h-12 w-full justify-start rounded-2xl bg-red-50 px-4 text-destructive hover:bg-red-100 hover:text-destructive lg:w-auto lg:bg-transparent">
+                <Button type="button" variant="ghost" className="min-h-12 w-full justify-start rounded-2xl bg-destructive/10 px-4 text-destructive hover:bg-destructive/15 hover:text-destructive lg:w-auto lg:bg-transparent">
                   <Trash2 className="mr-2 h-5 w-5" aria-hidden="true" />
                   Solicitar exclusão da conta
                 </Button>
@@ -680,7 +680,7 @@ export default function PrivacySettingsPage() {
             ) : (
               <Surface className="p-4 sm:p-5">
                 <div className="flex items-start gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-destructive">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                     <Trash2 className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
