@@ -201,7 +201,7 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
         waitUntil: "domcontentloaded",
       });
       await expect(
-        page.getByRole("heading", { name: "Editar Empresa" }),
+        page.getByRole("heading", { name: "Editar empresa", exact: true }),
       ).toBeVisible({ timeout: 30_000 });
 
       await page.locator("#name").fill(renamedName);
