@@ -99,6 +99,19 @@ describe("active MVP route SSOT", () => {
       "src/shared/components/territory-vivo/TerritoryTopbar.tsx",
       "utf8",
     );
+    const topbarNavigationOwner = readFileSync(
+      "src/core/routing/config/territoryTopbarNavigation.ts",
+      "utf8",
+    );
+    const searchPage = readFileSync("src/app/pages/BuscaPage.tsx", "utf8");
+    const communityPage = readFileSync(
+      "src/core/community-feed/pages/ComunidadePage.tsx",
+      "utf8",
+    );
+    const professionalPage = readFileSync(
+      "src/modules/professionals/pages/ProfissionalPublicPage.tsx",
+      "utf8",
+    );
     const useAppUrls = readFileSync(
       "src/core/routing/hooks/useAppUrls.ts",
       "utf8",
@@ -144,8 +157,21 @@ describe("active MVP route SSOT", () => {
       expect(centralHeader).not.toContain(literal);
     }
 
-    for (const literal of ['"/notificacoes"', '"/login"', 'to="/conta"']) {
-      expect(territoryTopbar).not.toContain(literal);
+    expect(territoryTopbar).not.toContain("@/core/");
+    expect(territoryTopbar).toContain("navigation.home");
+    expect(territoryTopbar).toContain("navigation.notifications");
+    expect(territoryTopbar).toContain("navigation.login");
+    expect(territoryTopbar).toContain("navigation.account");
+    expect(territoryTopbar).toContain("navigation.messages");
+
+    expect(topbarNavigationOwner).toContain("STATIC_ROUTE_PATHS.notifications");
+    expect(topbarNavigationOwner).toContain("AUTH_PATHS.login");
+    expect(topbarNavigationOwner).toContain("ACCOUNT_PATHS.home");
+    expect(topbarNavigationOwner).toContain("messagingRoutes.inbox()");
+
+    for (const caller of [searchPage, communityPage, professionalPage]) {
+      expect(caller).toContain("TERRITORY_TOPBAR_NAVIGATION");
+      expect(caller).toContain("navigation={TERRITORY_TOPBAR_NAVIGATION}");
     }
 
     expect(useAppUrls).toContain(
