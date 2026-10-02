@@ -151,7 +151,7 @@ export function TerritoryTopbar({
 
         <div className="ml-auto flex items-center gap-1.5 lg:order-4 sm:gap-2">
           <Link
-            to={isAuthenticated ? "/notificacoes" : "/login"}
+            to={isAuthenticated ? STATIC_ROUTE_PATHS.notifications : AUTH_PATHS.login}
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun"
             aria-label={
               isAuthenticated && unreadCount > 0
@@ -186,7 +186,7 @@ export function TerritoryTopbar({
             </Link>
           ) : (
             <Link
-              to="/conta"
+              to={ACCOUNT_PATHS.home}
               className="flex h-10 max-w-[9rem] items-center gap-2 rounded-full bg-white/10 px-1.5 text-sm font-semibold text-white hover:bg-white/15 sm:px-2 sm:pr-3"
               aria-label="Abrir minha conta"
             >
