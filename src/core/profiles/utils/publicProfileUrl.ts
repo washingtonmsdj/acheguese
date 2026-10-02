@@ -1,5 +1,7 @@
 import type { Profile } from '@/core/profiles';
-import { ACCOUNT_PATHS } from '@/core/routing/config/account';
+import { ACCOUNT_PATHS, ACCOUNT_ROUTE_PATTERNS } from '@/core/routing/config/account';
+
+export const PUBLIC_PROFILE_ROUTE_PATTERN = "/u/:username";
 
 /**
  * Constroi URL publica para perfil pessoal.
@@ -10,7 +12,7 @@ import { ACCOUNT_PATHS } from '@/core/routing/config/account';
  * - Driver nao tem pagina publica
  */
 export function buildPublicProfileUrl(username: string): string {
-  return `/u/${username}`;
+  return PUBLIC_PROFILE_ROUTE_PATTERN.replace(":username", encodeURIComponent(username));
 }
 
 /**
@@ -39,7 +41,7 @@ export function canHavePublicUrl(profile: Profile): boolean {
 }
 
 export function buildProfileEditUrl(profileId: string): string {
-  return `/conta/editar/${profileId}`;
+  return ACCOUNT_ROUTE_PATTERNS.editProfile.replace(":profileId", encodeURIComponent(profileId));
 }
 
 export function buildProfileSettingsUrl(
