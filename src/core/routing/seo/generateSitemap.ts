@@ -140,13 +140,31 @@ function asTerritoryVisibilityMetadata(
   return value as TerritoryVisibilityMetadata;
 }
 
-function errorText(error: unknown): string {
-  if (error instanceof Error) return `${error.name}: ${error.message}`;
+function errorText(error: unknown, depth = 0): string {
+  if (depth > 3 || error == null) return '';
   if (typeof error === 'string') return error;
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String((error as { message?: unknown }).message ?? '');
+
+  if (error instanceof Error) {
+    const cause =
+      'cause' in error
+        ? errorText((error as Error & { cause?: unknown }).cause, depth + 1)
+        : '';
+    return [error.name, error.message, cause].filter(Boolean).join(': ');
   }
-  return String(error ?? '');
+
+  if (typeof error === 'object') {
+    const record = error as Record<string, unknown>;
+    return ['name', 'message', 'details', 'hint', 'code', 'cause']
+      .map((key) =>
+        key === 'cause'
+          ? errorText(record[key], depth + 1)
+          : String(record[key] ?? ''),
+      )
+      .filter(Boolean)
+      .join(' | ');
+  }
+
+  return String(error);
 }
 
 export function isTransientSitemapSourceError(error: unknown): boolean {
