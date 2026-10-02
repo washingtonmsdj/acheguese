@@ -11,6 +11,7 @@ import {
   type MapMarker,
 } from "@/core/maps";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
+import { MAP_DEFAULT_COORDINATES, MAP_DEFAULT_LOCATION } from "@/shared/config/mapDefaults";
 import { EntityStatus } from "@/shared/types/enums";
 import { normalizeTerritoryText, slugifyTerritory } from "@/shared/utils/slugify";
 
@@ -22,16 +23,6 @@ const COMPLEX_NEIGHBORHOODS = [
 ] as const;
 
 const COMPLEX_POLYGON_COLORS = ["#18B37E", "#f97316", "#0ea5e9", "#84cc16"] as const;
-const SALVADOR_CENTER = { latitude: -12.9777, longitude: -38.5016 };
-const COMPLEX_FALLBACK_CENTERS: Record<
-  (typeof COMPLEX_NEIGHBORHOODS)[number],
-  [number, number]
-> = {
-  "Nordeste de Amaralina": [-13.00850207522845, -38.473872259293444],
-  "Santa Cruz": [-13.00219789478145, -38.47471040182655],
-  "Chapada do Rio Vermelho": [-13.004056002367001, -38.4818418340164],
-  "Vale das Pedrinhas": [-13.00843350490315, -38.48009510441305],
-};
 
 type TerritoryFitPadding = {
   top: number;
@@ -278,19 +269,24 @@ export function PreLaunchTerritoryMap() {
     [cityPolygons, complexPolygons],
   );
 
+  const launchCityCenter =
+    cityPolygons[0]?.center ?? (cityLocation ? getLocationCenter(cityLocation) : null);
+  const initialViewportCenter = launchCityCenter
+    ? { latitude: launchCityCenter[0], longitude: launchCityCenter[1] }
+    : MAP_DEFAULT_COORDINATES;
+
   const markers = useMemo<MapMarker[]>(() => {
-    const salvadorCenter = cityPolygons[0]?.center;
-    const salvadorMarker = projectPreLaunchMarker({
-      id: "prelaunch-salvador",
+    const cityMarker = projectPreLaunchMarker({
+      id: "prelaunch-city",
       type: "service",
-      latitude: salvadorCenter?.[0] ?? SALVADOR_CENTER.latitude,
-      longitude: salvadorCenter?.[1] ?? SALVADOR_CENTER.longitude,
-      title: "Salvador",
+      latitude: initialViewportCenter.latitude,
+      longitude: initialViewportCenter.longitude,
+      title: cityLocation?.name ?? MAP_DEFAULT_LOCATION.city,
       subtitle: "cidade piloto",
       score: 100,
       isPremium: true,
     });
-    const output: MapMarker[] = salvadorMarker ? [salvadorMarker] : [];
+    const output: MapMarker[] = cityMarker ? [cityMarker] : [];
     const complexMarkerSourcesByName = new Map<
       string,
       { center: [number, number]; name: string }
@@ -317,15 +313,6 @@ export function PreLaunchTerritoryMap() {
       }
     });
 
-    COMPLEX_NEIGHBORHOODS.forEach((name) => {
-      const key = normalizeTerritoryText(name);
-      if (!key || complexMarkerSourcesByName.has(key)) return;
-      complexMarkerSourcesByName.set(key, {
-        center: COMPLEX_FALLBACK_CENTERS[name],
-        name,
-      });
-    });
-
     Array.from(complexMarkerSourcesByName.values())
       .slice(0, 4)
       .forEach((source, index) => {
@@ -343,7 +330,7 @@ export function PreLaunchTerritoryMap() {
       });
 
     return output;
-  }, [cityPolygons, complexLocations, complexPolygons]);
+  }, [cityLocation, complexLocations, complexPolygons, initialViewportCenter]);
 
   const complexCount = new Set(
     (complexPolygons.length > 0 ? complexPolygons : complexLocations).map((item) =>
@@ -359,7 +346,7 @@ export function PreLaunchTerritoryMap() {
       <div className="absolute inset-0 opacity-[0.62] sm:opacity-[0.78] lg:opacity-100 [&_.maplibregl-marker]:drop-shadow-[0_10px_18px_rgba(15,23,42,0.24)]">
         <MapLibreAdapter
           styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-          initialViewport={{ center: SALVADOR_CENTER, zoom: 10.2 }}
+          initialViewport={{ center: initialViewportCenter, zoom: 10.2 }}
           territoryPolygons={territoryPolygons}
           markers={markers}
           fitTerritoryBounds={territoryPolygons.length > 0}
