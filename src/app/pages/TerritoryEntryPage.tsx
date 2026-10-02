@@ -292,7 +292,7 @@ export default function TerritoryEntryPage() {
           </div>
 
           <div className="ag-container ag-neighborhood-rail">
-            <p>Agora no Complexo</p>
+            <p>Agora em {LAUNCH_COMMUNITY_DISCOVERY_LABEL}</p>
             <div>
               {launchCommunityMembers.map((member, index) => (
                 <a href={launchMapUrl} key={member.id}>
@@ -386,7 +386,7 @@ export default function TerritoryEntryPage() {
             </h2>
             <div className="ag-manifesto-footer">
               <p>
-                O Achegue-se nasce no Complexo do Nordeste de Amaralina para tornar visível a
+                O Achegue-se começa em {LAUNCH_COMMUNITY_NAME} para tornar visível a
                 potência que já existe em cada rua.
               </p>
               <a href={LAUNCH_URLS.portal}>
