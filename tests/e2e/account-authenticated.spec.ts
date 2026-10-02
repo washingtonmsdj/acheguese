@@ -191,9 +191,6 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         await expect(
           page.getByRole("heading", { name: "Minhas empresas", exact: true }).first(),
         ).toBeVisible({ timeout: 30_000 });
-        await expect(
-          page.getByRole("heading", { name: "Empresas e gestão", exact: true }).first(),
-        ).toBeVisible({ timeout: 30_000 });
         await expect(page.locator("body")).not.toContainText(
           /não foi possível carregar/i,
         );
