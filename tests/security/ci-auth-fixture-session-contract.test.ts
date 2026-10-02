@@ -64,14 +64,20 @@ describe("CI Auth fixture session boundary", () => {
     expect(edgeFunction).toContain('"fixture_credentials_rejected"');
     expect(edgeFunction).toContain('"fixture_account_unavailable"');
     expect(edgeFunction).toContain('"auth_rate_limited"');
+    expect(edgeFunction).toContain('"auth_upstream_timeout"');
     expect(edgeFunction).toContain('"auth_upstream_unavailable"');
     expect(edgeFunction).toContain('"fixture_auth_failed"');
+    expect(edgeFunction).toContain("createBoundedAuthFetch");
+    expect(edgeFunction).toContain("authFetch.didTimeout()");
     expect(edgeFunction).toContain("sanitizedUpstreamAuthCode");
     expect(edgeFunction).toContain("upstreamStatus:");
     expect(edgeFunction).toContain("upstreamCode: sanitizedUpstreamAuthCode(error)");
     expect(edgeFunction).toContain("authLatencyMs");
     expect(edgeFunction).not.toContain("upstreamMessage");
     expect(edgeFunction).toContain("return fixtureAuthFailureResponse(req, failure)");
+    expect(edgeFunction).toContain(
+      'return { code: "auth_upstream_timeout", status: 503 }',
+    );
     expect(edgeFunction).toContain(
       'return { code: "auth_upstream_unavailable", status: 503 }',
     );
