@@ -56,6 +56,7 @@ import {
 } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import {
   buildModuleTerritoryUrl,
+  buildPublicTerritoryBaseUrlFromInput,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 import type {
@@ -261,7 +262,11 @@ export default function BuscaPage({ embedded = false }: { embedded?: boolean } =
 
   const stateSlug = state ?? active.state;
   const citySlug = city ?? active.city;
-  const territoryBase = `/${stateSlug}/${citySlug}${territorySlug ? `/${territorySlug}` : ""}`;
+  const territoryBase = buildPublicTerritoryBaseUrlFromInput(
+    stateSlug,
+    citySlug,
+    territorySlug,
+  );
   const territoryName = territorySlug
     ? moduleTerritory.displayLabel || titleCase(territorySlug)
     : moduleTerritory.displayLabel || titleCase(citySlug);
