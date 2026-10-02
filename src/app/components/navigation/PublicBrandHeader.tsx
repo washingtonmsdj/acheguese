@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronDown, MapPin, Menu, Search } from "lucide-react";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
 import "@/app/pages/TerritoryPortalPage.css";
 
 export function BrandMark() {
@@ -38,7 +39,7 @@ export function PublicBrandHeader({
         </Link>
         <nav aria-label="Navegação principal">
           <Link to={urls.nearby}>Por perto</Link>
-          <Link to="/como-funciona">Como funciona</Link>
+          <Link to={APP_GLOBAL_PATHS.howItWorks}>Como funciona</Link>
           <Link to={urls.business}>Para negócios</Link>
         </nav>
         <form
@@ -70,7 +71,7 @@ export function PublicBrandHeader({
           </summary>
           <nav aria-label="Menu principal">
             <Link to={urls.nearby}>Por perto</Link>
-            <Link to="/como-funciona">Como funciona</Link>
+            <Link to={APP_GLOBAL_PATHS.howItWorks}>Como funciona</Link>
             <Link to={urls.business}>Empresas</Link>
             <Link to={urls.map}>Mapa do território</Link>
             <Link to={urls.search}>Busca</Link>
