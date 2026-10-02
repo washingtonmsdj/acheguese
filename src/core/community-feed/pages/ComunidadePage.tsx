@@ -1,5 +1,5 @@
 import { GLOBAL_NAV_PATHS } from "@/core/routing/config/globalNavigationPaths";
-﻿/**
+/**
  * ComunidadePage - PÃ¡gina principal da comunidade
  *
  * SSOT - Usa Services via hooks
