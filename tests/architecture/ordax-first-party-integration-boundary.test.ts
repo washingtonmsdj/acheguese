@@ -205,11 +205,24 @@ describe("OrdaX first-party integration boundary", () => {
     ).toThrow(/positive integer/);
   });
 
-  it("keeps runtime activation fail-closed until real OrdaX proof exists", () => {
-    expect(contract.status).toBe("boundary-defined-runtime-disabled");
+  it("records the completed Network proof while keeping Product OAuth activation fail-closed", () => {
+    expect(contract.status).toBe("network-proof-complete-oauth-runtime-disabled");
     expect(contract.runtime_gate.enabled).toBe(false);
     expect(contract.runtime_gate.requires_ordax_network_multitenant_proof).toBe(true);
+    expect(contract.runtime_gate.ordax_network_multitenant_proof_satisfied).toBe(true);
     expect(contract.runtime_gate.requires_ordax_product_oauth_api).toBe(true);
+    expect(contract.runtime_gate.ordax_product_oauth_source_available).toBe(true);
+    expect(contract.runtime_gate.ordax_product_oauth_public_runtime_enabled).toBe(false);
+    expect(contract.runtime_gate.ordax_product_oauth_registration_client_id).toBe(
+      "acheguese-web-01",
+    );
+    expect(contract.runtime_gate.ordax_product_oauth_redirect_registered).toBe(false);
+    expect(contract.runtime_gate.ordax_product_oauth_listener_deployed).toBe(false);
+    expect(contract.runtime_gate.initial_oauth_scopes).toEqual([
+      "network.space.read",
+      "network.directory.read",
+      "network.communities.read",
+    ]);
     expect(contract.publications.mirror_every_ordax_post).toBe(false);
   });
 });
