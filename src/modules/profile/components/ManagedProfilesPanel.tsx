@@ -177,7 +177,7 @@ function ManagedProfileCard({
               </span>
             ) : null}
             {profile.is_public === true ? (
-              <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-800">
+              <span className="rounded-full bg-success/10 px-2 py-1 font-semibold text-success">
                 Público
               </span>
             ) : profile.is_public === false ? (
@@ -346,7 +346,7 @@ export function ManagedProfilesPanel() {
                 className={cn(
                   "min-h-10 shrink-0 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
                   selected
-                    ? "bg-territory-brand text-white"
+                    ? "bg-territory-brand text-primary-foreground"
                     : "bg-territory-raised text-territory-ink hover:bg-territory-border",
                 )}
               >
