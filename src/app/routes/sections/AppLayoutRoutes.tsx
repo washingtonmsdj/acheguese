@@ -75,7 +75,7 @@ export function AppLayoutRoutes() {
               element={protectedElement(<P.NotificationsPage />)}
             />
             <Route
-              path="/settings/email-logs"
+              path={STATIC_ROUTE_PATHS.emailLogs}
               element={protectedElement(<P.EmailLogsPage />)}
             />
           </>
@@ -176,7 +176,7 @@ export function AppLayoutRoutes() {
 
         <Route path={TERMS_OF_SERVICE_PATH} element={<P.TermosPage />} />
         <Route path={PRIVACY_POLICY_PATH} element={<P.PrivacidadePage />} />
-        <Route path="/offline-settings" element={<P.OfflineSettingsPage />} />
+        <Route path={STATIC_ROUTE_PATHS.offlineSettings} element={<P.OfflineSettingsPage />} />
         <Route path={DATA_PROTECTION_CONTACT_PATH} element={<P.DPOContactPage />} />
 
         {renderAppLayoutRouteDescriptors(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES)}
