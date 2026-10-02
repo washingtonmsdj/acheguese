@@ -108,4 +108,24 @@ describe("Business Central navigation certification", () => {
       /path="(mensagens|avaliacoes|estatisticas|analytics|planos)"/,
     );
   });
+  it("excludes deleted companies from the active owner workspace", () => {
+    const queries = readFileSync(
+      "src/core/profiles/services/profile.external-data.queries.ts",
+      "utf8",
+    );
+    const start = queries.indexOf(
+      "export async function getUserBusinessesByProfilesQuery",
+    );
+    const end = queries.indexOf(
+      "export async function getUserBusinessesQuery",
+      start,
+    );
+
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(end).toBeGreaterThan(start);
+    const ownerWorkspaceQuery = queries.slice(start, end);
+    expect(ownerWorkspaceQuery).toContain('.neq("status", "deleted")');
+    expect(ownerWorkspaceQuery).not.toContain('.eq("status", "active")');
+  });
+
 });
