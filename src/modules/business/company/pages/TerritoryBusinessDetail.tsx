@@ -371,8 +371,8 @@ export function TerritoryBusinessDetail({
               {reviewCount > 0 ? (
                 <div className="bd-review-summary">
                   <div><strong>{rating.toFixed(1)}</strong><span>{Array.from({ length: 5 }).map((_, index) => <Star key={index} className={index < Math.round(rating) ? "is-filled" : ""} />)}</span><small>{reviewCount} avaliações</small></div>
-                  <div className="flex flex-col gap-1 text-xs text-[#587276]">
-                    <strong className="text-sm text-[#173f43]">Nota média da comunidade</strong>
+                  <div className="flex flex-col gap-1 text-xs text-territory-muted">
+                    <strong className="text-sm text-territory-ink">Nota média da comunidade</strong>
                     <span>Calculada a partir de {reviewCount} {reviewCount === 1 ? "avaliação publicada" : "avaliações publicadas"}.</span>
                   </div>
                   <p>As avaliações ajudam moradores e visitantes a descobrirem os melhores negócios do território.</p>
@@ -397,10 +397,10 @@ export function TerritoryBusinessDetail({
                       zoom={physicalCoordinates ? 16 : 14}
                       height="100%"
                       className="h-full w-full"
-                      markerColor={physicalCoordinates ? "#ef4640" : "#078b8f"}
+                      markerColor={physicalCoordinates ? "hsl(var(--territory-error))" : "hsl(var(--territory-brand))"}
                       showControls={false}
                       interactive={false}
-                      fallbackClassName="bg-[#edf3f2]"
+                      fallbackClassName="bg-territory-raised"
                     />
                     <span className={`bd-map-context ${isTerritoryReference ? "is-territory" : ""}`}>
                       {isTerritoryReference ? "Referência do território" : "Localização da empresa"}
