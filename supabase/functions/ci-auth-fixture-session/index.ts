@@ -77,6 +77,19 @@ interface FixtureAuthFailure {
   status: 401 | 429 | 503;
 }
 
+function sanitizedUpstreamAuthCode(error: FixtureAuthErrorShape | null): string | null {
+  const code = error?.code;
+  if (
+    typeof code !== "string" ||
+    code.length < 1 ||
+    code.length > 64 ||
+    !/^[a-z0-9_]+$/.test(code)
+  ) {
+    return null;
+  }
+  return code;
+}
+
 function classifyFixtureAuthFailure(
   error: FixtureAuthErrorShape | null,
 ): FixtureAuthFailure {
@@ -241,10 +254,12 @@ Deno.serve(async (req: Request) => {
       },
     });
 
+    const authStartedAt = Date.now();
     const { data, error } = await authClient.auth.signInWithPassword({
       email: validated.data.email,
       password: validated.data.password,
     });
+    const authLatencyMs = Math.max(0, Date.now() - authStartedAt);
 
     const marker = data.user?.app_metadata?.acheguese_fixture;
     const fixtureVersion = data.user?.app_metadata?.fixture_version;
@@ -257,6 +272,15 @@ Deno.serve(async (req: Request) => {
         status: "failure",
         details: {
           reason: failure.code,
+          upstreamStatus:
+            typeof error?.status === "number" &&
+            Number.isInteger(error.status) &&
+            error.status >= 100 &&
+            error.status <= 599
+              ? error.status
+              : null,
+          upstreamCode: sanitizedUpstreamAuthCode(error),
+          authLatencyMs,
           githubRunId: oidcClaims.run_id ?? null,
           githubSha: oidcClaims.sha ?? null,
         },
@@ -288,6 +312,7 @@ Deno.serve(async (req: Request) => {
       resource: "ci-auth-fixture-session",
       status: "success",
       details: {
+        authLatencyMs,
         githubRunId: oidcClaims.run_id ?? null,
         githubSha: oidcClaims.sha ?? null,
       },
