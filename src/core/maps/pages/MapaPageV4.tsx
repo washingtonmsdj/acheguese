@@ -43,8 +43,8 @@ import { createLocationRepository } from '@/core/location/repositories/createLoc
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 import {
   MODULE_SLUGS,
-  buildGroupBaseUrl,
   buildModuleTerritoryUrl,
+  buildPublicTerritoryBaseUrlFromInput,
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
 import { boundaryService } from '@/core/geospatial';
@@ -473,14 +473,16 @@ function resolveNearbyUrl(resolved: ResolvedTerritory | null): string {
   const firstMember = resolved.group.members.at(0);
   if (!firstMember?.geographic_path) return NEARBY_URL;
 
-  const [country, state, city] = firstMember.geographic_path
-    .split("/")
-    .filter(Boolean);
-  if (!country || !state || !city) return NEARBY_URL;
+  const parsed = parseLocationGeoPath(firstMember.geographic_path);
+  if (!parsed) return NEARBY_URL;
 
   return buildModuleTerritoryUrl(
     MODULE_SLUGS.nearby,
-    buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`),
+    buildPublicTerritoryBaseUrlFromInput(
+      parsed.state,
+      parsed.city,
+      resolved.group.slug,
+    ),
   );
 }
 
