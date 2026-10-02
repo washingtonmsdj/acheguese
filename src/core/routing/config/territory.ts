@@ -1,32 +1,30 @@
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import {
+  resolveLaunchTerritoryEnvironment,
+  type LaunchEnvironment,
+} from "@/core/routing/config/territoryEnvironment";
 
-type PublicEnv = Partial<Record<string, string>>;
+const publicEnv = (
+  (import.meta as ImportMeta & { env?: LaunchEnvironment }).env ?? {}
+) as LaunchEnvironment;
 
-const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) as PublicEnv;
+const launchEnvironment = resolveLaunchTerritoryEnvironment(publicEnv);
 
-const launchCountry = publicEnv.VITE_LAUNCH_COUNTRY?.trim().toLowerCase() || "br";
-const launchState = publicEnv.VITE_LAUNCH_STATE?.trim().toLowerCase() || "";
-const launchCity = publicEnv.VITE_LAUNCH_CITY?.trim().toLowerCase() || "";
-const launchName = publicEnv.VITE_LAUNCH_CITY_NAME?.trim() || "Território inicial";
-const launchCommunitySlug = publicEnv.VITE_LAUNCH_COMMUNITY_SLUG?.trim() || "";
-const launchCommunityName =
-  publicEnv.VITE_LAUNCH_COMMUNITY_NAME?.trim() || launchName;
+export const LAUNCH_CITY_PATH = launchEnvironment.cityPath;
+export const LAUNCH_COMMUNITY_TERRITORY_PATH =
+  launchEnvironment.communityPath;
 
-export const LAUNCH_CITY_PATH = launchState && launchCity ? `/${launchState}/${launchCity}` : "/brasil";
-export const LAUNCH_COMMUNITY_TERRITORY_PATH = launchCommunitySlug
-  ? `${LAUNCH_CITY_PATH}/${launchCommunitySlug}`
-  : LAUNCH_CITY_PATH;
 export const TERRITORY_CONFIG = {
   launch: {
-    country: launchCountry,
-    state: launchState,
-    city: launchCity,
-    name: launchName,
+    country: launchEnvironment.country,
+    state: launchEnvironment.state,
+    city: launchEnvironment.city,
+    name: launchEnvironment.cityName,
     community: {
-      scope: launchCommunitySlug ? "territory" : "city",
-      slug: launchCommunitySlug || null,
-      name: launchCommunityName,
+      scope: launchEnvironment.communitySlug ? "territory" : "city",
+      slug: launchEnvironment.communitySlug || null,
+      name: launchEnvironment.communityName,
       path: LAUNCH_COMMUNITY_TERRITORY_PATH,
     },
   },

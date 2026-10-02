@@ -14,9 +14,11 @@
  * redirects de compatibilidade para a arquitetura anterior.
  */
 
+import { getStateByNameOrCode } from '@/core/location/data/brazilianStates';
 import type { Location } from '@/core/location/types';
 import type { TerritorialGroup } from '@/core/territorial/contracts';
 import { ROUTING_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
+import { slugifyTerritory } from '@/shared/utils/slugify';
 
 export const MODULE_SLUGS = ROUTING_MODULE_SLUGS;
 export type ModuleSlug = typeof MODULE_SLUGS[keyof typeof MODULE_SLUGS];
@@ -85,6 +87,25 @@ export function normalizePublicTerritoryPath(path: string): string {
   return '/' + normalizedParts.join('/');
 }
 
+export function buildPublicTerritoryBaseUrlFromInput(
+  state: string,
+  city: string,
+  territory?: string,
+): string {
+  const stateEntry = getStateByNameOrCode(state);
+  if (!stateEntry) {
+    throw new Error('buildPublicTerritoryBaseUrlFromInput exige estado brasileiro valido.');
+  }
+
+  const citySlug = slugifyTerritory(city);
+  if (!citySlug) {
+    throw new Error('buildPublicTerritoryBaseUrlFromInput exige cidade valida.');
+  }
+
+  const territorySlug = territory ? slugifyTerritory(territory) : '';
+  return `/${[stateEntry.code, citySlug, territorySlug].filter(Boolean).join('/')}`;
+}
+
 export function buildCityTerritoryBaseUrl(territoryBaseUrl: string): string {
   const parts = normalizePublicTerritoryPath(territoryBaseUrl)
     .split('/')
@@ -120,7 +141,7 @@ export function buildLocationBaseUrl(location: Location): string {
 }
 
 export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): string {
-  const publicCity = geoPathToPublicUrl(cityPath);
+  const publicCity = buildCityTerritoryBaseUrl(cityPath);
   return `${publicCity}/${group.slug}`;
 }
 

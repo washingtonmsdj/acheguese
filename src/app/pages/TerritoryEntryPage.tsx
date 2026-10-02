@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { getStateByCode } from "@/core/location/data/brazilianStates";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
@@ -15,7 +16,8 @@ const LAUNCH_CITY = TERRITORY_CONFIG.launch.city;
 const LAUNCH_COMMUNITY_SLUG = TERRITORY_CONFIG.launch.community.slug;
 const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
 const LAUNCH_COMMUNITY_DISCOVERY_LABEL = LAUNCH_COMMUNITY_NAME.replace(/^Complexo do /, "");
-const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUpperCase();
+const LAUNCH_STATE_LABEL =
+  getStateByCode(LAUNCH_STATE)?.name ?? LAUNCH_STATE.toLocaleUpperCase("pt-BR");
 const LAUNCH_PLACE_LABEL = [TERRITORY_CONFIG.launch.name, LAUNCH_STATE_LABEL]
   .filter(Boolean)
   .join(" · ");
@@ -292,7 +294,7 @@ export default function TerritoryEntryPage() {
           </div>
 
           <div className="ag-container ag-neighborhood-rail">
-            <p>Agora no Complexo</p>
+            <p>Agora em {LAUNCH_COMMUNITY_DISCOVERY_LABEL}</p>
             <div>
               {launchCommunityMembers.map((member, index) => (
                 <a href={launchMapUrl} key={member.id}>
@@ -386,7 +388,7 @@ export default function TerritoryEntryPage() {
             </h2>
             <div className="ag-manifesto-footer">
               <p>
-                O Achegue-se nasce no Complexo do Nordeste de Amaralina para tornar visível a
+                O Achegue-se começa em {LAUNCH_COMMUNITY_NAME} para tornar visível a
                 potência que já existe em cada rua.
               </p>
               <a href={LAUNCH_URLS.portal}>

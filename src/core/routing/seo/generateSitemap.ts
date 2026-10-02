@@ -63,6 +63,7 @@ export interface GenerateAndSaveSitemapOptions {
    * Core routing must not import app/config or own product activation state.
    */
   isSurfaceEnabled: SitemapSurfacePredicate;
+  launchCityPath: string;
   /**
    * Release-only resilience. A transient upstream/network failure may publish
    * the deterministic static sitemap instead of blocking the frontend build.
@@ -247,6 +248,7 @@ function collectSitemapUrls(
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
   isSurfaceEnabled: SitemapSurfacePredicate,
+  launchCityPath: string,
 ): SitemapUrl[] {
   const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
   const urls: SitemapUrl[] = [
@@ -258,7 +260,7 @@ function collectSitemapUrls(
   ];
 
   const staticPages = [
-    { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
+    { path: launchCityPath, priority: 0.95, changefreq: 'daily' as const },
     ...(isSurfaceEnabled('nearby')
       ? [
           {
@@ -302,8 +304,10 @@ function collectSitemapUrls(
     .forEach((group) => {
       const firstMember = group.members?.[0];
       if (firstMember?.geographic_path) {
-        const parts = firstMember.geographic_path.split('/').filter(Boolean);
-        const groupPath = buildGroupBaseUrl(group, `/${parts[0]}/${parts[1]}/${parts[2]}`);
+        const groupPath = buildGroupBaseUrl(
+          group,
+          firstMember.geographic_path,
+        );
         urls.push(
           ...generateTerritoryUrls(
             normalizedBaseUrl,
@@ -358,9 +362,16 @@ export function generateSitemap(
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
   isSurfaceEnabled: SitemapSurfacePredicate,
+  launchCityPath: string,
 ): string {
   return renderSitemapUrlset(
-    collectSitemapUrls(locations, groups, baseUrl, isSurfaceEnabled),
+    collectSitemapUrls(
+      locations,
+      groups,
+      baseUrl,
+      isSurfaceEnabled,
+      launchCityPath,
+    ),
   );
 }
 
@@ -369,6 +380,7 @@ export function generateSitemapArtifacts(
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
   isSurfaceEnabled: SitemapSurfacePredicate,
+  launchCityPath: string,
   maxUrlsPerFile = SITEMAP_URL_CHUNK_SIZE,
 ): SitemapArtifact[] {
   if (
@@ -387,6 +399,7 @@ export function generateSitemapArtifacts(
     groups,
     normalizedBaseUrl,
     isSurfaceEnabled,
+    launchCityPath,
   );
 
   if (urls.length <= maxUrlsPerFile) {
@@ -442,6 +455,7 @@ export async function generateAndSaveSitemap(
     inventory.groups,
     resolveSitemapBaseUrl(),
     options.isSurfaceEnabled,
+    options.launchCityPath,
   );
 
   await removeStaleSitemapChunks(outputDirectory);
