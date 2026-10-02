@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { buildLoginPath } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import {
