@@ -33,6 +33,12 @@ import type { BoundingBox, MapViewport, MapMarker } from '../../types/core';
 import type { TerritoryPolygon } from '../../hooks/useTerritoryPolygon';
 import type { MapControlsConfig, UserLocationMarkerConfig } from './controls/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+
+function resolveCssHslToken(variable: string, fallback: string): string {
+  if (typeof document === 'undefined') return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+  return value ? `hsl(${value})` : fallback;
+}
 import {
   createClusterRenderMarker,
   createUserLocationMarker,
@@ -701,12 +707,17 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
         });
         coords.push(coords[0]);
 
+        const brandColor = resolveCssHslToken(
+          '--territory-brand',
+          getMarkerConfig('business').color,
+        );
+
         map.addSource(CIRCLE_SOURCE, {
           type: 'geojson',
           data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] }, properties: {} },
         });
-        map.addLayer({ id: CIRCLE_FILL, type: 'fill', source: CIRCLE_SOURCE, paint: { 'fill-color': '#3b82f6', 'fill-opacity': 0.1 } });
-        map.addLayer({ id: CIRCLE_LINE, type: 'line', source: CIRCLE_SOURCE, paint: { 'line-color': '#3b82f6', 'line-width': 2 } });
+        map.addLayer({ id: CIRCLE_FILL, type: 'fill', source: CIRCLE_SOURCE, paint: { 'fill-color': brandColor, 'fill-opacity': 0.1 } });
+        map.addLayer({ id: CIRCLE_LINE, type: 'line', source: CIRCLE_SOURCE, paint: { 'line-color': brandColor, 'line-width': 2 } });
         map.flyTo({ center: [lng, lat], zoom: 14 });
       };
 
@@ -929,20 +940,22 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
           if (isTerritoryReference) {
             el.style.cssText = 'position:relative;display:block;width:22px;height:22px;pointer-events:none;';
             const point = document.createElement('span');
-            point.style.cssText = 'position:absolute;inset:0;display:block;box-sizing:border-box;width:22px;height:22px;border:5px solid white;border-radius:50%;background:#087f83;box-shadow:0 2px 8px rgba(0,0,0,.3);';
+            point.style.cssText = 'position:absolute;inset:0;display:block;box-sizing:border-box;width:22px;height:22px;border:5px solid hsl(var(--territory-on-image));border-radius:50%;background:hsl(var(--territory-brand));box-shadow:0 2px 8px hsl(var(--territory-image-overlay)/.3);';
             const label = document.createElement('span');
-            label.style.cssText = 'position:absolute;left:50%;bottom:calc(100% + 8px);display:flex;width:max-content;max-width:min(185px,calc(100vw - 2rem));transform:translateX(-50%);flex-direction:column;gap:1px;border:1px solid rgba(13,54,57,.12);border-radius:8px;background:rgba(255,255,255,.96);padding:5px 8px;box-shadow:0 2px 8px rgba(0,0,0,.16);font:600 11px/1.2 Arial,sans-serif;color:#0d3639;white-space:normal;';
+            label.style.cssText = 'position:absolute;left:50%;bottom:calc(100% + 8px);display:flex;width:max-content;max-width:min(185px,calc(100vw - 2rem));transform:translateX(-50%);flex-direction:column;gap:1px;border:1px solid hsl(var(--territory-border)/.75);border-radius:8px;background:hsl(var(--territory-surface)/.96);padding:5px 8px;box-shadow:0 2px 8px hsl(var(--territory-image-overlay)/.16);font:600 11px/1.2 var(--font-sans);color:hsl(var(--territory-ink));white-space:normal;';
             const title = document.createElement('span');
             title.textContent = marker.title;
             const subtitle = document.createElement('small');
             subtitle.textContent = markerSubtitle ?? 'Referência territorial';
-            subtitle.style.cssText = 'font:500 9px/1.2 Arial,sans-serif;color:#587276;';
+            subtitle.style.cssText = 'font:500 9px/1.2 var(--font-sans);color:hsl(var(--territory-muted-strong));';
             label.append(title, subtitle);
             el.append(point, label);
           } else if (isUserLocation) {
             el.style.cssText = 'width:60px;height:60px;display:flex;align-items:center;justify-content:center;position:relative;pointer-events:auto;';
             // ✅ SEGURO - Usa DOM API ao invés de innerHTML
-            const svg = createUserLocationSvg('#2563eb');
+            const svg = createUserLocationSvg(
+              resolveCssHslToken('--territory-brand', getMarkerConfig('user_location').color),
+            );
             el.appendChild(svg);
           } else if (isCluster) {
             // Renderizar cluster
@@ -955,12 +968,12 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
               `width:${size}px`, `height:${size}px`,
               'display:flex', 'align-items:center', 'justify-content:center',
               'border-radius:50%',
-              'background:#3b82f6',
-              `border:${markerSizing.clusterBorder}px solid white`,
-              'box-shadow:0 2px 12px rgba(0,0,0,0.4)',
+              'background:hsl(var(--territory-brand))',
+              `border:${markerSizing.clusterBorder}px solid hsl(var(--territory-on-image))`,
+              'box-shadow:0 2px 12px hsl(var(--territory-image-overlay)/.4)',
               'cursor:pointer',
               'font-weight:bold',
-              'color:white',
+              'color:hsl(var(--territory-on-image))',
               `font-size:${markerSizing.clusterFont}px`,
             ].join(';');
             el.textContent = String(pointCount);
@@ -988,25 +1001,24 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
               'display:flex', 'align-items:center', 'justify-content:center',
               'border-radius:50% 50% 50% 0', 'transform:rotate(-45deg)',
               `background:${cfg.color}`,
-              `border:${markerSizing.markerBorder}px solid white`,
-              'box-shadow:0 2px 8px rgba(0,0,0,0.35)',
+              `border:${markerSizing.markerBorder}px solid hsl(var(--territory-on-image))`,
+              'box-shadow:0 2px 8px hsl(var(--territory-image-overlay)/.35)',
               'cursor:pointer',
             ].join(';');
             const inner = document.createElement('span');
-            inner.style.cssText = `transform:rotate(45deg);font-size:${markerSizing.markerFont}px;line-height:1;font-weight:800;color:white;font-family:Arial,sans-serif;`;
+            inner.style.cssText = `transform:rotate(45deg);font-size:${markerSizing.markerFont}px;line-height:1;font-weight:800;color:hsl(var(--territory-on-image));font-family:var(--font-sans);`;
             inner.textContent = cfg.abbr;
             const category = typeof metadata.category === 'string'
               ? Object.values(CATEGORY_CONFIGS).find((config) => config.slug === metadata.category)
               : undefined;
             if (category) {
-              el.className = category.color;
-              el.style.background = 'currentColor';
+              el.style.background = 'hsl(var(--territory-brand))';
               inner.style.transform = 'none';
               inner.textContent = '';
-              const svg = new DOMParser().parseFromString(renderToStaticMarkup(React.createElement(category.icon, { size: 18, color: 'white', 'aria-hidden': true })), 'image/svg+xml').documentElement;
+              const svg = new DOMParser().parseFromString(renderToStaticMarkup(React.createElement(category.icon, { size: 18, color: 'currentColor', 'aria-hidden': true })), 'image/svg+xml').documentElement;
               inner.appendChild(document.importNode(svg, true));
             }
-            if (metadata.selected === true) el.style.boxShadow = '0 0 0 4px #ffca38,0 3px 12px rgba(0,0,0,.4)';
+            if (metadata.selected === true) el.style.boxShadow = '0 0 0 4px hsl(var(--territory-sun)),0 3px 12px hsl(var(--territory-image-overlay)/.4)';
             el.appendChild(inner);
           }
 

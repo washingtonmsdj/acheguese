@@ -39,9 +39,6 @@ export interface CategoryConfig {
   labelPlural: string;
   description: string;
   icon: LucideIcon;
-  color: string;         // Tailwind text class token
-  bg: string;            // Tailwind bg class token
-  accentGradient: string; // gradient for hero
   filters: FilterOption[];
   sortOptions: SortOption[];
   /** Show "open now" / "closed" status prominently */
@@ -73,9 +70,6 @@ const RESTAURANTE_CONFIG: CategoryConfig = {
   labelPlural: "Restaurantes",
   description: "Descubra os melhores restaurantes da sua região. Comida de verdade, recomendada por vizinhos.",
   icon: Utensils,
-  color: "text-orange-400",
-  bg: "bg-orange-400/10",
-  accentGradient: "from-orange-500/20 via-card to-amber-500/10",
   showOpenStatus: true,
   showDeliveryBadge: true,
   filters: [
@@ -97,9 +91,6 @@ const MERCADO_CONFIG: CategoryConfig = {
   labelPlural: "Mercados",
   description: "Mercados, mercearias e minimercados da sua região. Produtos frescos do dia a dia.",
   icon: ShoppingBag,
-  color: "text-emerald-400",
-  bg: "bg-emerald-400/10",
-  accentGradient: "from-emerald-500/20 via-card to-green-500/10",
   showOpenStatus: true,
   showDeliveryBadge: true,
   filters: [
@@ -116,9 +107,6 @@ const FARMACIA_CONFIG: CategoryConfig = {
   labelPlural: "Farmácias",
   description: "Farmácias e drogarias da sua região. Medicamentos, cosméticos e atendimento especializado.",
   icon: Heart,
-  color: "text-rose-400",
-  bg: "bg-rose-400/10",
-  accentGradient: "from-rose-500/20 via-card to-pink-500/10",
   showOpenStatus: true,
   showDeliveryBadge: true,
   filters: [
@@ -135,9 +123,6 @@ const SAUDE_CONFIG: CategoryConfig = {
   labelPlural: "Saúde",
   description: "Clínicas, consultórios e profissionais de saúde. Cuide-se com quem está perto.",
   icon: Stethoscope,
-  color: "text-sky-400",
-  bg: "bg-sky-400/10",
-  accentGradient: "from-sky-500/20 via-card to-cyan-500/10",
   showOpenStatus: true,
   showDeliveryBadge: false,
   filters: [
@@ -157,9 +142,6 @@ const EDUCACAO_CONFIG: CategoryConfig = {
   labelPlural: "Educação",
   description: "Escolas, cursos, reforço escolar e centros de ensino da sua região.",
   icon: GraduationCap,
-  color: "text-violet-400",
-  bg: "bg-violet-400/10",
-  accentGradient: "from-violet-500/20 via-card to-purple-500/10",
   showOpenStatus: false,
   showDeliveryBadge: false,
   filters: [
@@ -176,9 +158,6 @@ const SERVICOS_CONFIG: CategoryConfig = {
   labelPlural: "Serviços",
   description: "Oficinas, assistências técnicas, encanadores, eletricistas e muito mais.",
   icon: Wrench,
-  color: "text-amber-400",
-  bg: "bg-amber-400/10",
-  accentGradient: "from-amber-500/20 via-card to-yellow-500/10",
   showOpenStatus: true,
   showDeliveryBadge: false,
   filters: [
@@ -195,9 +174,6 @@ const LAZER_CONFIG: CategoryConfig = {
   labelPlural: "Lazer",
   description: "Academias, parques, esportes e entretenimento. Divirta-se perto de casa.",
   icon: Dumbbell,
-  color: "text-teal-400",
-  bg: "bg-teal-400/10",
-  accentGradient: "from-teal-500/20 via-card to-emerald-500/10",
   showOpenStatus: true,
   showDeliveryBadge: false,
   filters: [
@@ -214,9 +190,6 @@ const OUTROS_CONFIG: CategoryConfig = {
   labelPlural: "Outros",
   description: "Outros estabelecimentos e negócios da sua região.",
   icon: Store,
-  color: "text-muted-foreground",
-  bg: "bg-muted/50",
-  accentGradient: "from-secondary via-card to-muted",
   showOpenStatus: true,
   showDeliveryBadge: false,
   filters: COMMON_FILTERS,

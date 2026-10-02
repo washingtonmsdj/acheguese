@@ -274,7 +274,7 @@ export default function CategoryBusinessPage({
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       {/* ── HERO HEADER ──────────────────────────────────────────── */}
-      <section className={`relative bg-gradient-to-br ${config.accentGradient} border-b border-border`}>
+      <section className="relative border-b border-territory-border bg-gradient-to-br from-territory-brand/10 via-territory-surface to-territory-sun/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
           {/* Back button */}
           <button
@@ -285,8 +285,8 @@ export default function CategoryBusinessPage({
           </button>
 
           <div className="flex items-center gap-4">
-            <div className={`${config.bg} p-3 md:p-4 rounded-2xl border border-border`}>
-              <Icon className={`h-7 w-7 md:h-9 md:w-9 ${config.color}`} />
+            <div className="rounded-2xl border border-territory-border bg-territory-brand/10 p-3 md:p-4">
+              <Icon className="h-7 w-7 text-territory-brand md:h-9 md:w-9" />
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground font-heading">
@@ -485,7 +485,7 @@ export default function CategoryBusinessPage({
         {/* Empty */}
         {!isLoading && !isError && filteredBusinesses.length === 0 && (
           <div className="text-center py-16">
-            <Icon className={cn("h-12 w-12 mx-auto mb-4", config.color)} />
+            <Icon className="mx-auto mb-4 h-12 w-12 text-territory-brand" />
             <h3 className="text-lg font-bold text-foreground mb-2">Nenhum resultado</h3>
             <p className="text-sm text-muted-foreground mb-4">
               {hasActiveFilters
@@ -535,12 +535,12 @@ export default function CategoryBusinessPage({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <div className={`w-14 h-14 rounded-full ${config.bg} flex items-center justify-center`}>
-                          <Icon className={`h-7 w-7 ${config.color}`} />
+                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-territory-brand/10">
+                          <Icon className="h-7 w-7 text-territory-brand" />
                         </div>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-territory-image-overlay/50 via-transparent to-transparent" />
 
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex items-center gap-1.5">
