@@ -146,6 +146,18 @@ describe("generateSitemap", () => {
     expect(isTransientSitemapSourceError({ message: "HTTP 503 upstream" })).toBe(true);
     expect(
       isTransientSitemapSourceError({
+        message: "TypeError: terminated",
+        details: "Caused by: Error: read ECONNRESET (ECONNRESET)",
+      }),
+    ).toBe(true);
+    expect(
+      isTransientSitemapSourceError({
+        message: "request failed",
+        cause: { code: "ETIMEDOUT", message: "socket timeout" },
+      }),
+    ).toBe(true);
+    expect(
+      isTransientSitemapSourceError({
         code: "57014",
         message: "canceling statement due to statement timeout",
       }),
