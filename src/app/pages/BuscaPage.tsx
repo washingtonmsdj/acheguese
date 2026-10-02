@@ -67,6 +67,7 @@ import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { useSessionContext } from "@/core/session";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
 import { BusinessLogo } from "@/shared/components/ui/business-logo";
+import { EntityStatus } from "@/shared/types/enums";
 import { cn } from "@/shared/utils/cn";
 
 const TerritoryMapPreview = lazy(
@@ -361,7 +362,7 @@ export default function BuscaPage({ embedded = false }: { embedded?: boolean } =
           name: business.name,
           latitude: business.latitude,
           longitude: business.longitude,
-          status: "active",
+          status: EntityStatus.ACTIVE,
           category: business.category,
           description: business.description,
         },
@@ -387,7 +388,7 @@ export default function BuscaPage({ embedded = false }: { embedded?: boolean } =
             name: professional.name,
             latitude: professional.latitude,
             longitude: professional.longitude,
-            status: "active",
+            status: EntityStatus.ACTIVE,
             category: professional.category,
             description: professional.description,
             url: professional.target_url ?? undefined,
