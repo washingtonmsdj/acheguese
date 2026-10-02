@@ -122,7 +122,7 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute -bottom-1 -right-1 hidden h-8 w-8 items-center justify-center rounded-full border-2 border-territory-surface bg-territory-brand text-white transition-colors hover:bg-territory-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:flex"
+            className="absolute -bottom-1 -right-1 hidden h-8 w-8 items-center justify-center rounded-full border-2 border-territory-surface bg-territory-brand text-primary-foreground transition-colors hover:bg-territory-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:flex"
             aria-label="Alterar foto de perfil"
           >
             <Camera className="h-3.5 w-3.5" aria-hidden="true" />
