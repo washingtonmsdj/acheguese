@@ -5,6 +5,7 @@ import {
   ACCOUNT_PATHS,
   ACCOUNT_ROUTE_PATTERNS,
 } from "@/core/routing/config/account";
+import { PUBLIC_PROFILE_ROUTE_PATTERN } from "@/core/profiles/utils/publicProfileUrl";
 import { centralRoutes } from "@/core/routing/config/centralRoutes";
 import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import {
@@ -31,6 +32,9 @@ describe("active MVP route SSOT", () => {
     expect(STATIC_ROUTE_PATHS.notifications).toBe("/notificacoes");
     expect(STATIC_ROUTE_PATHS.howItWorks).toBe("/como-funciona");
     expect(STATIC_ROUTE_PATHS.about).toBe("/sobre");
+    expect(STATIC_ROUTE_PATHS.brazilShowcase).toBe("/brasil");
+    expect(STATIC_ROUTE_PATHS.countryLanding).toBe("/br");
+    expect(PUBLIC_PROFILE_ROUTE_PATTERN).toBe("/u/:username");
     expect(centralRoutes.home).toBe("/central");
     expect(centralRoutes.admin.home).toBe("/admin");
 
@@ -67,6 +71,9 @@ describe("active MVP route SSOT", () => {
     expect(appLayout).toContain("TERMS_OF_SERVICE_PATH");
     expect(appLayout).toContain("PRIVACY_POLICY_PATH");
     expect(appLayout).toContain("DATA_PROTECTION_CONTACT_PATH");
+    expect(appLayout).toContain("PUBLIC_PROFILE_ROUTE_PATTERN");
+    expect(appLayout).toContain("STATIC_ROUTE_PATHS.brazilShowcase");
+    expect(appLayout).toContain("STATIC_ROUTE_PATHS.countryLanding");
 
     for (const literal of [
       'path="/empresas"',
