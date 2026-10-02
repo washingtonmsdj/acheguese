@@ -107,7 +107,6 @@ const MIGRATED_RUNTIME_FILES = [
   'src/app/pages/NotificationsPage.tsx',
   'src/app/components/notifications/NotificationItem.tsx',
   'src/app/components/notifications/PushNotificationSettings.tsx',
-  'src/modules/profile/pages/ContaHubLayout.tsx',
   'src/modules/profile/components/ManagedProfilesPanel.tsx',
   'src/modules/profile/components/hub/ProfileHeaderCompact.tsx',
   'src/modules/profile/components/ProfileCompletenessWidget.tsx',
@@ -117,11 +116,6 @@ const MIGRATED_RUNTIME_FILES = [
   'src/app/pages/OfflineSettingsPage.tsx',
   'src/app/pages/TermosPage.tsx',
   'src/app/pages/DPOContactPage.tsx',
-  'src/app/components/notifications/NotificationItem.tsx',
-  'src/app/components/notifications/PushNotificationSettings.tsx',
-  'src/modules/profile/pages/ContaHubLayout.tsx',
-  'src/modules/profile/components/ManagedProfilesPanel.tsx',
-  'src/modules/profile/components/ProfileCompletenessWidget.tsx',
   'src/app/pages/EmpresasLandingPage.tsx',
   'src/app/pages/TerritoryEntryPage.tsx',
   'src/app/pages/TerritoryEntryPage.css',
@@ -191,6 +185,11 @@ const SEMANTIC_STATUS_RUNTIME_FILES = new Set([
   'src/app/pages/OfflineSettingsPage.tsx',
   'src/app/pages/TermosPage.tsx',
   'src/app/pages/DPOContactPage.tsx',
+  'src/app/components/notifications/NotificationItem.tsx',
+  'src/app/components/notifications/PushNotificationSettings.tsx',
+  'src/modules/profile/pages/ContaHubLayout.tsx',
+  'src/modules/profile/components/ManagedProfilesPanel.tsx',
+  'src/modules/profile/components/ProfileCompletenessWidget.tsx',
 ]);
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
