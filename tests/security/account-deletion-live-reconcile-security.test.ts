@@ -161,8 +161,11 @@ describe('live account deletion authority reconciliation', () => {
       expect(privacyRpc).toContain(`${action}: true`);
     }
 
-    expect(privacyRpc).toContain('supabaseAdmin.auth.getUser(token)');
-    expect(privacyRpc).toContain('return { userId: data.user.id }');
+    expect(privacyRpc).toContain(
+      'verifyAuthenticatedSubject(supabaseAdmin, token)',
+    );
+    expect(privacyRpc).toContain('return { userId: verified.userId }');
+    expect(privacyRpc).not.toContain('supabaseAdmin.auth.getUser(token)');
     expect(privacyRpc).toContain('"get_account_deletion_status_for_user"');
     expect(privacyRpc).toContain('"request_account_deletion_for_user"');
     expect(privacyRpc).toContain('"cancel_account_deletion_for_user"');
