@@ -188,7 +188,9 @@ describe("MVP core module boundary", () => {
     expect(entry).not.toContain("LAUNCH_URLS.community");
     expect(entry).not.toContain("/indicar-comunidade");
     expect(entry).not.toContain("serviços e histórias");
-    expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
+    expect(entry).toContain("? ACCOUNT_PATHS.home");
+    expect(entry).toContain(": buildLoginPath(ACCOUNT_PATHS.home)");
+    expect(entry).not.toContain('const ACCOUNT_PATH = "/conta"');
   });
 
   it("keeps institutional product copy aligned with Business plus active platform capabilities", () => {
