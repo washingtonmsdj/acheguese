@@ -12,6 +12,7 @@ import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { messagingRoutes } from "@/core/messaging";
 import { ACCOUNT_PATHS, ACCOUNT_ROUTE_PATTERNS } from "@/core/routing/config/account";
 import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
+import { PUBLIC_PROFILE_ROUTE_PATTERN } from "@/core/profiles/utils/publicProfileUrl";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import {
   TERRITORIAL_ROUTE_PARAMS,
@@ -81,7 +82,7 @@ export function AppLayoutRoutes() {
         ) : null}
 
         {profilesEnabled ? (
-          <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
+          <Route path={PUBLIC_PROFILE_ROUTE_PATTERN} element={<P.ProfilePublicRoute />} />
         ) : null}
 
         {accountEnabled ? (
@@ -201,8 +202,8 @@ export function AppLayoutRoutes() {
               />
             </Route>
             <Route path="/:state" element={<P.StateLandingPage />} />
-            <Route path="/brasil" element={<P.BrasilShowcasePage />} />
-            <Route path="/br" element={<P.CountryLandingPage />} />
+            <Route path={STATIC_ROUTE_PATHS.brazilShowcase} element={<P.BrasilShowcasePage />} />
+            <Route path={STATIC_ROUTE_PATHS.countryLanding} element={<P.CountryLandingPage />} />
           </>
         ) : null}
       </Route>
