@@ -216,6 +216,41 @@ describe("GitHub OIDC fixture auth broker", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it("rejects invalid per-request timeout bounds", async () => {
+    await expect(
+      signInFixtureViaGithubOidcBroker({
+        ...base,
+        requestTimeoutMs: 999,
+        fetchImpl: vi.fn<typeof fetch>(),
+      }),
+    ).rejects.toThrow(
+      "request timeout must be between 1000ms and 30000ms",
+    );
+  });
+
+  it("fails fast when the GitHub OIDC request hangs", async () => {
+    const fetchImpl = vi.fn<typeof fetch>((_input, init) =>
+      new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener(
+          "abort",
+          () => reject(new DOMException("aborted", "AbortError")),
+          { once: true },
+        );
+      }),
+    );
+
+    await expect(
+      signInFixtureViaGithubOidcBroker({
+        ...base,
+        fetchImpl,
+        requestTimeoutMs: 1_000,
+      }),
+    ).rejects.toThrow(
+      "GitHub OIDC token request timed out after 1000ms",
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
   it("treats bounded upstream Auth unavailability as transient", async () => {
     let brokerCalls = 0;
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {

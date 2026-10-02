@@ -4,6 +4,7 @@ export const GITHUB_OIDC_AUDIENCE = "acheguese-supabase-ci-auth";
 export const CI_AUTH_FUNCTION_REGION = "us-west-2";
 const CI_AUTH_FUNCTION = "ci-auth-fixture-session";
 const MAX_ATTEMPTS = 3;
+const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 
 interface GithubOidcEnvironment {
   requestUrl: string;
@@ -23,6 +24,7 @@ interface BrokerOptions extends GithubOidcEnvironment {
   password: string;
   fetchImpl?: typeof fetch;
   retryDelayMs?: number;
+  requestTimeoutMs?: number;
 }
 
 function transientStatus(status: number): boolean {
@@ -88,16 +90,48 @@ function assertExpectedOidcClaims(
   }
 }
 
+async function fetchWithTimeout(
+  fetchImpl: typeof fetch,
+  input: string,
+  init: RequestInit,
+  timeoutMs: number,
+  stage: string,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetchImpl(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (controller.signal.aborted) {
+      throw new Error(`${stage} timed out after ${timeoutMs}ms.`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function requestGithubOidcToken(
   env: GithubOidcEnvironment,
   fetchImpl: typeof fetch,
+  requestTimeoutMs: number,
 ): Promise<string> {
-  const response = await fetchImpl(appendAudience(env.requestUrl), {
-    headers: {
-      Authorization: `bearer ${env.requestToken}`,
-      Accept: "application/json",
+  const response = await fetchWithTimeout(
+    fetchImpl,
+    appendAudience(env.requestUrl),
+    {
+      headers: {
+        Authorization: `bearer ${env.requestToken}`,
+        Accept: "application/json",
+      },
     },
-  });
+    requestTimeoutMs,
+    "GitHub OIDC token request",
+  );
   const raw = await response.text();
   const body = readJsonObject(raw);
   const value = typeof body.value === "string" ? body.value.trim() : "";
@@ -172,27 +206,41 @@ export async function signInFixtureViaGithubOidcBroker({
   password,
   fetchImpl = fetch,
   retryDelayMs = 750,
+  requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   ...oidcEnv
 }: BrokerOptions): Promise<FixtureAuthPasswordGrantSession> {
+  if (!Number.isFinite(requestTimeoutMs) || requestTimeoutMs < 1_000 || requestTimeoutMs > 30_000) {
+    throw new Error("CI Auth fixture broker request timeout must be between 1000ms and 30000ms.");
+  }
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
-      const oidcToken = await requestGithubOidcToken(oidcEnv, fetchImpl);
-      const response = await fetchImpl(brokerUrl(supabaseUrl), {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${oidcToken}`,
-          "Content-Type": "application/json",
-          "x-region": CI_AUTH_FUNCTION_REGION,
+      const oidcToken = await requestGithubOidcToken(
+        oidcEnv,
+        fetchImpl,
+        requestTimeoutMs,
+      );
+      const response = await fetchWithTimeout(
+        fetchImpl,
+        brokerUrl(supabaseUrl),
+        {
+          method: "POST",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${oidcToken}`,
+            "Content-Type": "application/json",
+            "x-region": CI_AUTH_FUNCTION_REGION,
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            expectedSha: oidcEnv.expectedSha,
+          }),
         },
-        body: JSON.stringify({
-          email,
-          password,
-          expectedSha: oidcEnv.expectedSha,
-        }),
-      });
+        requestTimeoutMs,
+        "CI Auth fixture broker request",
+      );
       const raw = await response.text();
       const body = readJsonObject(raw);
       const session =
