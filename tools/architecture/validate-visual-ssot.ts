@@ -102,6 +102,8 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/profile/pages/ContaHubLayout.tsx',
   'src/modules/profile/pages/ContaEditarPerfilPage.tsx',
   'src/modules/profile/components/AccountSettingsShell.tsx',
+  'src/modules/profile/pages/ContaPreferenciasPage.tsx',
+  'src/app/pages/NotificationPreferencesPage.tsx',
   'src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx',
   'src/modules/business/dashboard/pages/BusinessDashboardNav.css',
   'src/modules/business/dashboard/components/BusinessDashboardNavigation.tsx',
