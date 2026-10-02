@@ -56,12 +56,26 @@ function base64Url(bytes: Uint8Array): string {
     .replace(/=+$/g, "");
 }
 
+function containsUnsafeOpaqueCharacter(value: string): boolean {
+  for (const character of value) {
+    const code = character.codePointAt(0) ?? 0;
+    if (
+      code <= 0x20 ||
+      code === 0x7f ||
+      character === "\u00a0"
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function requireBoundedOpaqueValue(value: unknown, label: string): string {
   if (
     typeof value !== "string" ||
     value.length < 8 ||
     value.length > MAX_OAUTH_VALUE_LENGTH ||
-    /[\u0000-\u001f\u007f\s]/.test(value)
+    containsUnsafeOpaqueCharacter(value)
   ) {
     throw new TypeError(`${label} must be a bounded opaque value`);
   }
@@ -233,7 +247,7 @@ export function validateOrdaxOAuthTokenResponse(
     typeof input.access_token !== "string" ||
     input.access_token.length < 16 ||
     input.access_token.length > MAX_OAUTH_VALUE_LENGTH ||
-    /[\u0000-\u001f\u007f\s]/.test(input.access_token)
+    containsUnsafeOpaqueCharacter(input.access_token)
   ) {
     throw new TypeError("OrdaX OAuth access token is invalid");
   }
