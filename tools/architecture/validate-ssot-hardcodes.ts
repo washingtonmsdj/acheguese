@@ -92,12 +92,13 @@ const COMMON_PATTERNS = [
 
 const HARDCODED_LIMIT_PATTERN = /\b((?:MAX|MIN|LIMIT)_[A-Z_]+)\s*=\s*(\d+)\b/g;
 
-const SCAN_DIRS = [
+export const HARDCODE_SCAN_DIRS = [
+  "src/app",
   "src/modules",
   "src/core",
   "src/pages",
   "src/shared/components",
-];
+] as const;
 
 const IGNORE_DIRS = [
   "node_modules",
@@ -294,7 +295,7 @@ function printViolation(violation: Violation): void {
 export function main(): void {
   violations.length = 0;
   console.log("Iniciando validacao de hardcodes...\n");
-  SCAN_DIRS.forEach((directory) => {
+  HARDCODE_SCAN_DIRS.forEach((directory) => {
     console.log(`Escaneando ${directory}...`);
     scanDirectory(directory);
   });
