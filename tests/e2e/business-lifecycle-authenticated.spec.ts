@@ -103,11 +103,13 @@ async function cleanupBusinessFixtures(
       throw new Error("Cleanup recusado para empresa fora do prefixo tecnico G6.");
     }
 
-    const { error: businessError } = await client
-      .from("business_data")
-      .update({ status: "deleted" })
-      .eq("profile_id", business.profile_id);
-    if (businessError) throw businessError;
+    if (business.status !== "deleted") {
+      const { error: businessError } = await client
+        .from("business_data")
+        .update({ status: "deleted" })
+        .eq("profile_id", business.profile_id);
+      if (businessError) throw businessError;
+    }
 
     const { error: profileError } = await client
       .from("profiles")
