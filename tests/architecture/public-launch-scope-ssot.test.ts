@@ -59,6 +59,14 @@ describe("public launch scope SSOT", () => {
     });
   });
 
+  it("keeps sitemap launch city on canonical territory config", () => {
+    const sitemap = read("src/core/routing/seo/generateSitemap.ts");
+
+    expect(sitemap).toContain("LAUNCH_CITY_PATH");
+    expect(sitemap).toContain("path: LAUNCH_CITY_PATH");
+    expect(sitemap).not.toContain("path: '/ba/salvador'");
+  });
+
   it("keeps consent auth-surface detection on AUTH_PATHS", () => {
     const banner = read("src/app/components/privacy/ConsentBannerContent.tsx");
 
