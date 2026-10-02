@@ -107,7 +107,7 @@ export function AppLayoutRoutes() {
               element={protectedElement(<P.ContaEnderecosPage />)}
             />
             <Route
-              path="/conta/editar/:profileId"
+              path={ACCOUNT_PATHS.profileEditPattern}
               element={protectedElement(<P.ContaEditarPerfilPage />)}
             />
             <Route path={ACCOUNT_PATHS.home} element={protectedElement(<P.ContaPage />)} />
