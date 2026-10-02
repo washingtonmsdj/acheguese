@@ -408,11 +408,11 @@ describe("MVP core module boundary", () => {
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("search")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("messaging")');
 
-    expect(appRoutes).toContain('path="/empresas"');
-    expect(appRoutes).toContain('path="/empresas/cadastrar"');
-    expect(appRoutes).toContain('path="/mapa"');
-    expect(appRoutes).toContain('path="/perto-de-mim"');
-    expect(appRoutes).toContain('path="/busca"');
+    expect(appRoutes).toContain("path={APP_GLOBAL_PATHS.businessDirectory}");
+    expect(appRoutes).toContain("path={APP_GLOBAL_PATHS.businessRegistration}");
+    expect(appRoutes).toContain("path={APP_GLOBAL_PATHS.map}");
+    expect(appRoutes).toContain("path={APP_GLOBAL_PATHS.nearby}");
+    expect(appRoutes).toContain("path={APP_GLOBAL_PATHS.search}");
     expect(appRoutes).toContain("messagingRoutes.inbox()");
     expect(appRoutes).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
