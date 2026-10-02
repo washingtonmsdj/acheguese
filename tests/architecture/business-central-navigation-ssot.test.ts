@@ -60,6 +60,36 @@ describe("Business Central navigation certification", () => {
     expect(getActiveBusinessManagementNavigation()).toEqual([]);
   });
 
+  it("keeps all active Business management pages on the canonical title token", () => {
+    const activePageFiles = [
+      "src/modules/business/dashboard/pages/BusinessOverviewPage.tsx",
+      "src/modules/business/pages/EditarEmpresaPage.tsx",
+      "src/modules/business/dashboard/pages/BusinessPhotosPage.tsx",
+      "src/modules/business/dashboard/pages/BusinessOpeningHoursPage.tsx",
+      "src/modules/business/dashboard/pages/BusinessLocationPage.tsx",
+      "src/modules/business/dashboard/pages/BusinessCatalogPage.tsx",
+      "src/modules/business/dashboard/pages/BusinessDetailsPage.tsx",
+      "src/modules/business/dashboard/pages/BusinessSettingsPage.tsx",
+    ];
+
+    for (const file of activePageFiles) {
+      expect(readFileSync(file, "utf8")).toContain("business-management-title");
+    }
+  });
+
+  it("keeps the management shell as the sole runtime navigation owner", () => {
+    const locationPage = readFileSync(
+      "src/modules/business/dashboard/pages/BusinessLocationPage.tsx",
+      "utf8",
+    );
+
+    expect(locationPage).toContain("showIdentity={false}");
+    expect(locationPage).toContain("showSteps={false}");
+    expect(locationPage).toContain("showSteps = showIdentity");
+    expect(locationPage).not.toContain("<h1>4. Localização</h1>");
+    expect(locationPage).not.toContain("window.confirm");
+  });
+
   it("uses one registry for the desktop/mobile shell and no nested domain inbox", () => {
     const routes = readFileSync(
       "src/app/routes/sections/CentralRoutes.tsx",
