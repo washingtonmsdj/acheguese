@@ -11,6 +11,7 @@ import {
   type MapMarker,
 } from "@/core/maps";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
+import { EntityStatus } from "@/shared/types/enums";
 import { normalizeTerritoryText, slugifyTerritory } from "@/shared/utils/slugify";
 
 const COMPLEX_NEIGHBORHOODS = [
@@ -58,7 +59,7 @@ function projectPreLaunchMarker(input: PreLaunchMarkerInput): MapMarker | null {
       latitude: input.latitude,
       longitude: input.longitude,
       subtitle: input.subtitle,
-      status: "active",
+      status: EntityStatus.ACTIVE,
       isPremium: input.isPremium,
     },
     input.type,
