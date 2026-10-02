@@ -18,6 +18,11 @@ import { useCanonicalBusinessFavorite } from "@/modules/business/hooks/useCanoni
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
 import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
+import {
+  buildModuleTerritoryUrl,
+  buildPublicTerritoryBaseUrlFromInput,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
 import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { TerritoryBusinessDetail } from "@/modules/business/company/pages/TerritoryBusinessDetail";
@@ -393,8 +398,14 @@ export default function EmpresaDetailLandingPage(
         )
         .join(" ")
     : business.location?.name || institutional.locationText || "Território";
-  const territoryUrl = `/${state || "ba"}/${city || "salvador"}/${territorySlug || "complexo-do-nordeste-de-amaralina"}`;
-  const businessDirectoryUrl = `${territoryUrl}/empresas`;
+  const territoryUrl =
+    state && city
+      ? buildPublicTerritoryBaseUrlFromInput(state, city, territorySlug)
+      : LAUNCH_URLS.portal;
+  const businessDirectoryUrl = buildModuleTerritoryUrl(
+    MODULE_SLUGS.business,
+    territoryUrl,
+  );
 
   return (
     <>

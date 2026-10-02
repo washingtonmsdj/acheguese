@@ -5,7 +5,13 @@ import {
   registerCommunityInterest,
   type CommunityInterestRole,
 } from "@/core/routing/services";
-import { LAUNCH_URLS } from "@/core/routing/config/territory";
+import {
+  BRAZILIAN_STATES,
+  getStateByCode,
+} from "@/core/location/data/brazilianStates";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { addCountryPrefix } from "@/core/routing/utils/pathNormalization";
+import { buildPublicTerritoryBaseUrlFromInput } from "@/core/routing/utils/territoryUrls";
 import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/shared/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { slugifyTerritory } from "@/shared/utils/slugify";
@@ -13,6 +19,10 @@ import { slugifyTerritory } from "@/shared/utils/slugify";
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
 const TURNSTILE_REQUIRED =
   COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction && import.meta.env.PROD;
+const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
+const LAUNCH_CITY_NAME = TERRITORY_CONFIG.launch.name;
+const LAUNCH_STATE_NAME =
+  getStateByCode(TERRITORY_CONFIG.launch.state)?.name ?? "";
 
 const RELATIONSHIP_OPTIONS: { value: CommunityInterestRole; label: string }[] = [
   { value: "morador", label: "Moro aqui" },
@@ -30,7 +40,7 @@ type SubmitState =
 export default function CommunityIndicationPage() {
   const navigate = useNavigate();
   const mountedAtRef = useRef(Date.now());
-  const [state, setState] = useState("Bahia");
+  const [state, setState] = useState(LAUNCH_STATE_NAME);
   const [city, setCity] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [relationship, setRelationship] = useState<CommunityInterestRole>("morador");
@@ -47,6 +57,7 @@ export default function CommunityIndicationPage() {
   const phoneDigits = contact.replace(/\D/g, "");
   const validContact = isEmail || (phoneDigits.length >= 10 && phoneDigits.length <= 15);
   const canSubmit =
+    state.trim().length > 0 &&
     name.trim().length >= 2 &&
     city.trim().length >= 2 &&
     neighborhood.trim().length >= 2 &&
@@ -77,15 +88,16 @@ export default function CommunityIndicationPage() {
 
     setSubmitState({ status: "submitting" });
     try {
-      const normalizedCity = slugifyTerritory(city.trim());
       const normalizedNeighborhood = slugifyTerritory(neighborhood.trim());
       const phone = isEmail ? null : contact.trim();
       const email = isEmail ? contact.trim().toLowerCase() : null;
 
       const result = await registerCommunityInterest({
         communityId: null,
-        communitySlug: normalizedCity,
-        territoryPath: `/ba/${normalizedCity}/${normalizedNeighborhood}`,
+        communitySlug: normalizedNeighborhood,
+        territoryPath: addCountryPrefix(
+          buildPublicTerritoryBaseUrlFromInput(state, city, neighborhood),
+        ),
         fullName: name.trim(),
         email,
         phone,
@@ -140,13 +152,13 @@ export default function CommunityIndicationPage() {
               <span>{city} · {state}</span>
             </div>
             <p className="community-indication-copy">
-              Estamos começando pelo Complexo do Nordeste de Amaralina.
+              Estamos começando por {LAUNCH_COMMUNITY_NAME}.
               <br />
               A expansão será por etapas, sem prazo artificial.
             </p>
             <div className="community-indication-actions">
-              <Link className="community-indication-primary" to={LAUNCH_URLS.community}>
-                <span>Explorar o Complexo</span>
+              <Link className="community-indication-primary" to={LAUNCH_URLS.portal}>
+                <span>Explorar {LAUNCH_COMMUNITY_NAME}</span>
                 <ArrowRight aria-hidden="true" />
               </Link>
               <Link className="community-indication-secondary" to="/cadastro">
@@ -194,7 +206,20 @@ export default function CommunityIndicationPage() {
 
             <label className="community-indication-field">
               <span>Estado</span>
-              <input value={state} onChange={(event) => setState(event.target.value)} required />
+              <select
+                value={state}
+                onChange={(event) => setState(event.target.value)}
+                required
+              >
+                <option value="" disabled>
+                  Selecione um estado
+                </option>
+                {BRAZILIAN_STATES.map((option) => (
+                  <option key={option.code} value={option.name}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="community-indication-field">
               <span>Cidade</span>
@@ -214,8 +239,8 @@ export default function CommunityIndicationPage() {
             <div className="community-indication-note is-starting">
               <Megaphone aria-hidden="true" />
               <span>
-                Hoje, começamos pelo Complexo
-                <strong>do Nordeste de Amaralina, em Salvador.</strong>
+                Hoje, começamos por
+                <strong>{LAUNCH_COMMUNITY_NAME}, em {LAUNCH_CITY_NAME}.</strong>
               </span>
             </div>
 

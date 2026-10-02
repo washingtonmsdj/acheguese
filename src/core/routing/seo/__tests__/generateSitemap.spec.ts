@@ -10,6 +10,7 @@ import {
 
 const mvpSurfaceEnabled = (surface: string): boolean =>
   ["business", "map", "nearby"].includes(surface);
+const launchCityPath = "/ba/salvador";
 
 describe("generateSitemap", () => {
   it("gera URLs publicas canonicas sem portal comunitario nem legado /area/", () => {
@@ -34,6 +35,7 @@ describe("generateSitemap", () => {
       ] as never,
       "https://acheguese.com.br",
       mvpSurfaceEnabled,
+      launchCityPath,
     );
 
     expect(sitemap).not.toContain("/area/");
@@ -73,6 +75,7 @@ describe("generateSitemap", () => {
       [],
       "https://acheguese.com.br",
       mvpSurfaceEnabled,
+      launchCityPath,
     );
 
     const salvadorLocations =
@@ -98,6 +101,7 @@ describe("generateSitemap", () => {
       [],
       "https://acheguese.com.br",
       mvpSurfaceEnabled,
+      launchCityPath,
       5,
     );
 
@@ -173,6 +177,10 @@ describe("generateSitemap", () => {
     expect(generator).toContain("static-fallback");
     expect(releaseScript).toContain('process.env.VERCEL === "1"');
     expect(releaseScript).toContain("SITEMAP_ALLOW_TRANSIENT_SOURCE_FALLBACK");
+    expect(releaseScript).toContain("resolveLaunchTerritoryEnvironment");
+    expect(releaseScript).toContain("launchCityPath: launchEnvironment.cityPath");
+    expect(generator).toContain("launchCityPath: string");
+    expect(generator).not.toContain("path: '/ba/salvador'");
     expect(locationReader).toContain(
       '"id,type,status,geographic_path,metadata"',
     );
