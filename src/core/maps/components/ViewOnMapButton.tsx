@@ -28,7 +28,7 @@ export function ViewOnMapButton({
 }: ViewOnMapButtonProps) {
   if (!latitude || !longitude) return null;
 
-  const mapUrl = `/mapa?lat=${latitude}&lng=${longitude}&zoom=16${itemName ? `&highlight=${encodeURIComponent(itemName)}` : ''}`;
+  const mapUrl = `${buildAppModulePath(APP_MODULE_SLUGS.map)}?lat=${latitude}&lng=${longitude}&zoom=16${itemName ? `&highlight=${encodeURIComponent(itemName)}` : ''}`;
 
   return (
     <Button
