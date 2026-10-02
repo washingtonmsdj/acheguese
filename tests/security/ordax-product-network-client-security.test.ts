@@ -119,6 +119,15 @@ describe("OrdaX Product Network read-only server primitives", () => {
     expect(() =>
       buildOrdaxProductNetworkSpaceRequest(config, "short"),
     ).toThrow(/access token/);
+    expect(() =>
+      buildOrdaxProductNetworkSpaceRequest(
+        config,
+        "opaque_product_access token_1234567890",
+      ),
+    ).toThrow(/access token/);
+    expect(() =>
+      buildOrdaxProductNetworkSpaceRequest(config, "a".repeat(513)),
+    ).toThrow(/access token/);
 
     expect(() =>
       buildOrdaxProductNetworkDirectoryRequest(config, token, {
