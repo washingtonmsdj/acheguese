@@ -22,6 +22,7 @@ import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
 import { getBusinessUrl, normalizeRealBusinessEntry } from "@/app/features/business-landing/utils";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
 import type { MapMarker } from "@/core/maps/types/core";
+import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
 
 import "./TerritoryPortalPage.css";
 
@@ -425,8 +426,8 @@ export default function TerritoryPortalPage({
             Informação local para quem vive, trabalha e circula pelo território.
           </p>
           <nav aria-label="Links institucionais">
-            <Link to="/como-funciona">Como funciona</Link>
-            <Link to="/sobre">Sobre</Link>
+            <Link to={APP_GLOBAL_PATHS.howItWorks}>Como funciona</Link>
+            <Link to={APP_GLOBAL_PATHS.about}>Sobre</Link>
           </nav>
         </div>
       </footer>
