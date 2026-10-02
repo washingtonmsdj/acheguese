@@ -104,12 +104,24 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/profile/components/AccountSettingsShell.tsx',
   'src/modules/profile/pages/ContaPreferenciasPage.tsx',
   'src/app/pages/NotificationPreferencesPage.tsx',
+  'src/app/pages/NotificationsPage.tsx',
+  'src/app/components/notifications/NotificationItem.tsx',
+  'src/app/components/notifications/PushNotificationSettings.tsx',
+  'src/modules/profile/pages/ContaHubLayout.tsx',
+  'src/modules/profile/components/ManagedProfilesPanel.tsx',
+  'src/modules/profile/components/hub/ProfileHeaderCompact.tsx',
+  'src/modules/profile/components/ProfileCompletenessWidget.tsx',
   'src/modules/profile/pages/ContaSegurancaPage.tsx',
   'src/app/pages/PrivacySettingsPage.tsx',
   'src/app/pages/EmailLogsPage.tsx',
   'src/app/pages/OfflineSettingsPage.tsx',
   'src/app/pages/TermosPage.tsx',
   'src/app/pages/DPOContactPage.tsx',
+  'src/app/components/notifications/NotificationItem.tsx',
+  'src/app/components/notifications/PushNotificationSettings.tsx',
+  'src/modules/profile/pages/ContaHubLayout.tsx',
+  'src/modules/profile/components/ManagedProfilesPanel.tsx',
+  'src/modules/profile/components/ProfileCompletenessWidget.tsx',
   'src/app/pages/EmpresasLandingPage.tsx',
   'src/app/pages/TerritoryEntryPage.tsx',
   'src/app/pages/TerritoryEntryPage.css',
@@ -164,6 +176,14 @@ const MIGRATED_RUNTIME_FILES = [
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:blue|cyan|teal|emerald|green|lime|rose|red|amber|yellow|slate|gray)-\d{2,3}(?:\/\d+)?\b/;
+const NON_SEMANTIC_NEUTRAL_COLOR_RE = /\b(?:text|bg|border)-white(?:\/\d+)?\b/;
+const TOKEN_ONLY_RUNTIME_FILES = new Set([
+  'src/modules/profile/components/AccountSettingsShell.tsx',
+  'src/modules/profile/components/ManagedProfilesPanel.tsx',
+  'src/modules/profile/components/hub/ProfileHeaderCompact.tsx',
+  'src/app/components/notifications/PushNotificationSettings.tsx',
+]);
+
 const SEMANTIC_STATUS_RUNTIME_FILES = new Set([
   'src/modules/profile/pages/ContaSegurancaPage.tsx',
   'src/app/pages/PrivacySettingsPage.tsx',
@@ -342,6 +362,14 @@ function main(): void {
     ) {
       violations.push(
         `${relative}: non-semantic status color found; use success, warning, destructive, info or muted tokens.`,
+      );
+    }
+    if (
+      TOKEN_ONLY_RUNTIME_FILES.has(relative) &&
+      NON_SEMANTIC_NEUTRAL_COLOR_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: non-semantic neutral color found; use canonical semantic or territory tokens.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);
