@@ -26,6 +26,7 @@ import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { AUTH_PATHS } from '@/core/auth/constants/authFlow';
 import { ACCOUNT_PATHS } from '@/core/routing/config/account';
+import { centralRoutes } from '@/core/routing/config/centralRoutes';
 import { STATIC_ROUTE_PATHS } from '@/core/routing/config/staticRoutePaths';
 import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
@@ -214,7 +215,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
       password: ACCOUNT_PATHS.password,
       mfa: ACCOUNT_PATHS.mfa,
       mobilidade: {
-        home: '/central',
+        home: centralRoutes.home,
         motorista: mobility.motorista,
         motoboy: mobility.motoboy,
       },
