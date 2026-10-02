@@ -25,6 +25,7 @@ import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCi
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { ACCOUNT_PATHS } from '@/core/routing/config/account';
+import { APP_PATHS } from '@/core/routing/config/appPaths';
 import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { messagingRoutes } from '@/core/messaging';
@@ -238,7 +239,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     ranking: '/ranking',
     gamification: '/gamificacao',
     search: buildModuleTerritoryUrl(MODULE_SLUGS.search, cityBase),
-    notifications: '/notificacoes',
+    notifications: APP_PATHS.notifications,
     jobs: jobPublicRoutes.list({ state: active.state, city: active.city }),
     family: {
       home: ACCOUNT_PATHS.home,
