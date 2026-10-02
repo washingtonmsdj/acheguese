@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import {
   getPublicTerritoryGroupPresentation,
   getPublicTerritoryLocationLabel,
@@ -18,8 +19,6 @@ const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUppe
 const LAUNCH_PLACE_LABEL = [TERRITORY_CONFIG.launch.name, LAUNCH_STATE_LABEL]
   .filter(Boolean)
   .join(" · ");
-const ACCOUNT_PATH = "/conta";
-
 const launchBusinessUrl = LAUNCH_URLS.business;
 const launchMapUrl = LAUNCH_URLS.map;
 const launchNearbyUrl = LAUNCH_URLS.nearby;
@@ -190,7 +189,9 @@ export default function TerritoryEntryPage() {
     };
   }, []);
 
-  const accountHref = isAuthenticated ? buildLoginPath(ACCOUNT_PATH) : AUTH_PATHS.login;
+  const accountHref = isAuthenticated
+    ? ACCOUNT_PATHS.home
+    : buildLoginPath(ACCOUNT_PATHS.home);
   const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
 
   return (
@@ -411,7 +412,7 @@ export default function TerritoryEntryPage() {
             <a href="/sobre">Sobre</a>
             <a href="/como-funciona">Como funciona</a>
             <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
-            <a href="/conta/preferencias#acessibilidade">Acessibilidade</a>
+            <a href={ACCOUNT_PATHS.accessibility}>Acessibilidade</a>
           </nav>
           <p className="ag-footer-place">
             Disponível inicialmente no<br />
