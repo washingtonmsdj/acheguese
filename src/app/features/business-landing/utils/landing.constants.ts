@@ -13,8 +13,8 @@ import type { Category, QuickFilter } from "../sections/types";
 export const CATEGORIES: readonly Category[] = getAllCategories().map((category) => ({
     icon: category.icon,
     label: category.labelPlural,
-    iconColor: category.color,
-    bg: `${category.bg} border-border`,
+    iconColor: "text-territory-brand",
+    bg: "border-territory-border bg-territory-brand/10",
     slug: category.slug,
   }));
 
