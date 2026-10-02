@@ -1,3 +1,4 @@
+import { EntityStatus } from "@/shared/types/enums";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LocationType, type Location } from "@/core/location/types";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
@@ -137,7 +138,7 @@ export default function TerritoryEntryMapRuntime({
         coordinates: territoryReference,
         title: territoryLabel,
         subtitle: "Referência territorial",
-        status: "active" as const,
+        status: EntityStatus.ACTIVE,
         metadata: { isTerritoryReference: true },
       },
     ];
