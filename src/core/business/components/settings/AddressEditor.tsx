@@ -191,7 +191,7 @@ export function AddressEditor({
       {showHeading && (
         <div>
           <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="h-4 w-4 text-territory-brand" />
             Endereço
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -221,7 +221,7 @@ export function AddressEditor({
               {address.postal_code &&
                 address.postal_code.replace(/\D/g, "").length === 8 &&
                 !cepError && (
-                  <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                  <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-territory-success" />
                 )}
             </div>
             <Button
@@ -331,11 +331,11 @@ export function AddressEditor({
       </div>
 
       {features.coordinates && (
-        <div className="pt-3 border-t border-border space-y-3">
+        <div className="pt-3 border-t border-territory-border space-y-3">
           <div className="flex items-center justify-between">
             <div>
               <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <MapIcon className="h-4 w-4 text-primary" />
+                <MapIcon className="h-4 w-4 text-territory-brand" />
                 Coordenadas (Opcional)
               </h4>
               <p className="text-xs text-muted-foreground mt-0.5">
@@ -396,14 +396,14 @@ export function AddressEditor({
 
       {showCompleteness &&
         (isAddressComplete ? (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-xs text-emerald-600 flex items-center gap-2">
+          <div className="bg-territory-success/10 border border-territory-success/20 rounded-lg p-3 text-xs text-territory-success flex items-center gap-2">
             <Check className="h-4 w-4" />
             <span className="font-medium">Endereço completo</span>
           </div>
         ) : (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600">
+          <div className="bg-territory-warning/10 border border-territory-warning/20 rounded-lg p-3 text-xs text-territory-warning">
             <p className="font-medium">Preencha todos os campos obrigatórios</p>
-            <p className="mt-1 text-amber-600/80">
+            <p className="mt-1 text-territory-warning/80">
               CEP, Rua, Número, Bairro, Cidade e Estado são obrigatórios
             </p>
           </div>

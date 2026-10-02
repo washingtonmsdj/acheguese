@@ -51,23 +51,23 @@ export function FacilitiesSelector({
               className={cn(
                 "flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
                 isSelected
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/30 hover:bg-secondary/50"
+                  ? "border-territory-brand bg-territory-brand/5"
+                  : "border-territory-border hover:border-territory-brand/30 hover:bg-territory-raised"
               )}
             >
               <div
                 className={cn(
                   "rounded-lg p-2",
-                  isSelected ? "bg-primary/10" : "bg-secondary"
+                  isSelected ? "bg-territory-brand/10" : "bg-territory-raised"
                 )}
               >
-                <Icon className={cn("h-5 w-5", isSelected ? "text-primary" : facility.color)} />
+                <Icon className={cn("h-5 w-5", isSelected ? "text-territory-brand" : facility.color)} />
               </div>
               
               <div className="flex-1">
                 <p className={cn(
                   "text-sm font-medium",
-                  isSelected ? "text-primary" : "text-foreground"
+                  isSelected ? "text-territory-brand" : "text-foreground"
                 )}>
                   {facility.label}
                 </p>
@@ -81,8 +81,8 @@ export function FacilitiesSelector({
 
       {/* Summary */}
       {selected.length > 0 && (
-        <div className="bg-primary/5 rounded-lg p-3 text-xs text-muted-foreground">
-          <span className="font-semibold text-primary">
+        <div className="bg-territory-brand/5 rounded-lg p-3 text-xs text-muted-foreground">
+          <span className="font-semibold text-territory-brand">
             {selected.length} {selected.length === 1 ? "facilidade" : "facilidades"}
           </span>{" "}
           selecionada{selected.length !== 1 ? "s" : ""}

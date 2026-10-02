@@ -84,3 +84,13 @@ Complemento de Fotos: confirmação nativa substituída pelo AlertDialog compart
 - Harness isolado ampliado para as oito seções, reutilizando o shell e componentes reais. Fotos valida o estado vazio; catálogo usa itens simulados e mutações somente em memória; Editar valida apenas a primeira seção real, não o fluxo completo de envio. Localização não recebe coordenadas fictícias. Nenhuma fixture faz parte do runtime de produção.
 - 56 verificações de layout: oito superfícies em 320/360/390/430/768/1440/2560px, sem overflow horizontal e com exatamente um H1. Catálogo conferido visualmente em mobile e desktop; filtros e diálogo de criação conferidos em 320px. Horários inclui estados definido, fechado e não informado na fixture.
 - Typecheck da aplicação aprovado; ESLint dos componentes de produção alterados sem erros; oito arquivos de testes focados, 25 testes aprovados. Os arquivos do harness são excluídos pelo lint padrão. Persistência/backend real continuam fora da certificação visual.
+
+
+### Fechamento do SSOT visual da gestão Business
+
+- O shell da Central projeta a linguagem visual de Business a partir dos tokens canônicos `territory-*`; componentes da gestão não definem paletas locais.
+- Seleções e atributos decorativos (modos de atendimento, formas de pagamento e facilidades) usam a cor de marca, preservando significado visual consistente.
+- Verde de sucesso fica reservado a estados e feedbacks positivos, como empresa ativa, endereço completo e validação correta. Avisos usam o token semântico de warning.
+- Identidade, seletores, endereço e redes sociais da empresa consomem tokens semânticos em vez de `emerald-*`, `amber-*` ou primitives genéricas `primary/secondary/card/border`.
+- O validador visual possui ratchet explícito para esses consumidores ativos, impedindo reintrodução de paletas Tailwind locais ou primitives concorrentes ao SSOT.
+- Nenhuma rota, permissão, persistência ou contrato de domínio foi alterado por este fechamento visual.

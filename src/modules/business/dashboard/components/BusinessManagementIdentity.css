@@ -5,9 +5,9 @@
   gap: 16px;
   min-width: 0;
   padding: var(--business-panel-padding, 16px);
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--business-border, var(--territory-border)));
   border-radius: var(--business-panel-radius, 16px);
-  background: hsl(var(--card));
+  background: hsl(var(--business-surface, var(--territory-surface)));
   color: hsl(var(--foreground));
 }
 .business-management-identity__image {
@@ -18,8 +18,8 @@
   place-items: center;
   overflow: hidden;
   border-radius: 12px;
-  background: hsl(var(--primary) / 0.08);
-  color: hsl(var(--primary));
+  background: hsl(var(--business-brand, var(--territory-brand)) / 0.08);
+  color: hsl(var(--business-brand, var(--territory-brand)));
 }
 .business-management-identity__image img {
   width: 100%;
@@ -80,17 +80,17 @@
   gap: 6px;
   min-height: 44px;
   padding: 8px 12px;
-  border: 1px solid hsl(var(--primary) / 0.3);
+  border: 1px solid hsl(var(--business-brand, var(--territory-brand)) / 0.3);
   border-radius: 10px;
-  color: hsl(var(--primary));
+  color: hsl(var(--business-brand, var(--territory-brand)));
   font-size: 12px;
   font-weight: 600;
 }
 .business-management-identity > a:hover {
-  background: hsl(var(--primary) / 0.06);
+  background: hsl(var(--business-brand, var(--territory-brand)) / 0.06);
 }
 .business-management-identity > a:focus-visible {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid hsl(var(--business-brand, var(--territory-brand)));
   outline-offset: 3px;
 }
 @media (max-width: 639px) {

@@ -136,8 +136,8 @@ export default function BusinessOverviewPage({
         </div>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 2xl:grid-cols-5">
           {quickActions.map((action) => (
-            <Link key={action.to} to={action.to} className="group flex min-h-24 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-background p-2 text-center transition-colors hover:border-primary/30 hover:bg-primary/[0.03] sm:min-h-28 sm:items-start sm:justify-start sm:p-4 sm:text-left">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><action.icon className="h-5 w-5" aria-hidden="true" /></span>
+            <Link key={action.to} to={action.to} className="group flex min-h-24 min-w-0 flex-col items-center justify-center gap-2 rounded-xl border border-territory-border bg-territory-surface p-2 text-center transition-colors hover:border-territory-brand/30 hover:bg-territory-brand/[0.03] sm:min-h-28 sm:items-start sm:justify-start sm:p-4 sm:text-left">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><action.icon className="h-5 w-5" aria-hidden="true" /></span>
               <span className="min-w-0">
                 <span className="block text-xs font-semibold leading-4 text-foreground sm:text-sm">{action.label}</span>
                 <span className="mt-0.5 hidden text-xs leading-4 text-muted-foreground sm:block">{action.detail}</span>
@@ -148,32 +148,32 @@ export default function BusinessOverviewPage({
       </section>
 
       <div className={`grid gap-4 ${profileSuggestions.length ? "xl:grid-cols-2" : ""}`}>
-        <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-          <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><Building2 className="h-5 w-5 text-primary" aria-hidden="true" /> Informações principais</h2>
+        <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+          <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><Building2 className="h-5 w-5 text-territory-brand" aria-hidden="true" /> Informações principais</h2>
           <dl className="mt-4 space-y-3 text-sm">
             <InfoRow label="Categoria" value={getBusinessCategoryLabel(business.category)} />
             <InfoRow label="Endereço" value={business.business_address || "Não informado"} />
             <InfoRow label="Telefone" value={business.phone || "Não informado"} />
           </dl>
-          <Link to={businessManagementRoutes.dados(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-primary">Ver dados <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          <Link to={businessManagementRoutes.dados(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-territory-brand">Ver dados <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
         </section>
         {profileSuggestions.length ? (
-          <section className="rounded-2xl border border-border bg-card p-4 sm:p-5">
-            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><CircleAlert className="h-5 w-5 text-primary" aria-hidden="true" /> Complete seu perfil</h2>
+          <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><CircleAlert className="h-5 w-5 text-territory-brand" aria-hidden="true" /> Complete seu perfil</h2>
             <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-              {profileSuggestions.slice(0, 3).map((suggestion) => <li key={suggestion} className="flex items-start gap-2"><span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />{suggestion}</li>)}
+              {profileSuggestions.slice(0, 3).map((suggestion) => <li key={suggestion} className="flex items-start gap-2"><span aria-hidden="true" className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-territory-brand" />{suggestion}</li>)}
             </ul>
-            <Link to={businessManagementRoutes.edit(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-primary">Completar dados <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+            <Link to={businessManagementRoutes.edit(businessId)} className="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-semibold text-territory-brand">Completar dados <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
           </section>
         ) : null}
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
         {messagingAvailable && canActivateBusinessProfile ? (
-          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
+          <section className="min-w-0 rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><MessageCircle className="h-5 w-5 text-primary" aria-hidden="true" /> Mensagens recentes</h2>
-              <button type="button" onClick={() => void openBusinessInbox()} disabled={switchingProfile} className="min-h-10 shrink-0 text-xs font-semibold text-primary disabled:opacity-50 sm:text-sm">{isBusinessProfileActive ? "Ver todas" : "Ativar perfil"} <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></button>
+              <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><MessageCircle className="h-5 w-5 text-territory-brand" aria-hidden="true" /> Mensagens recentes</h2>
+              <button type="button" onClick={() => void openBusinessInbox()} disabled={switchingProfile} className="min-h-10 shrink-0 text-xs font-semibold text-territory-brand disabled:opacity-50 sm:text-sm">{isBusinessProfileActive ? "Ver todas" : "Ativar perfil"} <ArrowRight className="inline h-4 w-4" aria-hidden="true" /></button>
             </div>
             {!isBusinessProfileActive ? (
               <p className="mt-3 text-sm leading-5 text-muted-foreground">Ative o perfil da empresa para ver e responder às conversas.</p>
@@ -184,22 +184,22 @@ export default function BusinessOverviewPage({
             ) : recentMessages.length === 0 ? (
               <p className="mt-3 text-sm text-muted-foreground">Nenhuma conversa recebida ainda.</p>
             ) : (
-              <div className="mt-2 divide-y divide-border">
+              <div className="mt-2 divide-y divide-territory-border">
                 {recentMessages.map((thread) => (
-                  <Link key={thread.id} to={messagingRoutes.thread("business", thread.id)} className="flex min-w-0 items-center gap-3 py-3 hover:text-primary">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">{thread.counterparty_name.charAt(0).toLocaleUpperCase("pt-BR")}</span>
+                  <Link key={thread.id} to={messagingRoutes.thread("business", thread.id)} className="flex min-w-0 items-center gap-3 py-3 hover:text-territory-brand">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-territory-brand/10 text-sm font-bold text-territory-brand">{thread.counterparty_name.charAt(0).toLocaleUpperCase("pt-BR")}</span>
                     <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold text-foreground">{thread.counterparty_name}</span><span className="block truncate text-xs text-muted-foreground">{thread.last_message_text}</span></span>
-                    {thread.unread_count > 0 ? <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-primary-foreground">{thread.unread_count}</span> : null}
+                    {thread.unread_count > 0 ? <span className="rounded-full bg-territory-brand px-2 py-0.5 text-xs font-bold text-primary-foreground">{thread.unread_count}</span> : null}
                   </Link>
                 ))}
               </div>
             )}
           </section>
         ) : null}
-        <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
+        <section className="min-w-0 rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><ImageIcon className="h-5 w-5 text-primary" aria-hidden="true" /> Capa e logo</h2>
-            <Link to={businessManagementRoutes.edit(businessId)} className="inline-flex min-h-10 shrink-0 items-center gap-1 text-xs font-semibold text-primary sm:text-sm">Editar <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><ImageIcon className="h-5 w-5 text-territory-brand" aria-hidden="true" /> Capa e logo</h2>
+            <Link to={businessManagementRoutes.edit(businessId)} className="inline-flex min-h-10 shrink-0 items-center gap-1 text-xs font-semibold text-territory-brand sm:text-sm">Editar <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
           </div>
           {media.length ? (
             <div className="mt-2 grid min-h-28 grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2">
@@ -211,11 +211,11 @@ export default function BusinessOverviewPage({
           )}
         </section>
         {businessHours.length > 0 ? (
-          <section className="min-w-0 rounded-2xl border border-border bg-card p-4 sm:p-5">
-            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><Clock3 className="h-5 w-5 text-primary" aria-hidden="true" /> Horário de funcionamento</h2>
+          <section className="min-w-0 rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+            <h2 className="flex items-center gap-2 text-base font-bold text-foreground"><Clock3 className="h-5 w-5 text-territory-brand" aria-hidden="true" /> Horário de funcionamento</h2>
             <dl className="mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[minmax(0,1fr)_auto]">
               {businessHours.map(({ day, schedule }) => (
-                <div key={day} className="flex min-w-0 items-center justify-between gap-3 border-b border-border/60 py-1 last:border-0 sm:col-span-2">
+                <div key={day} className="flex min-w-0 items-center justify-between gap-3 border-b border-territory-border/60 py-1 last:border-0 sm:col-span-2">
                   <dt className="text-muted-foreground">{WEEK_DAY_LABELS[day]}</dt>
                   <dd className="shrink-0 font-medium text-foreground">{schedule.closed ? "Fechado" : schedule.open && schedule.close ? `${schedule.open}–${schedule.close}` : "Não informado"}</dd>
                 </div>
@@ -245,18 +245,18 @@ function SummaryCard({
 }) {
   const toneClass =
     tone === "success"
-      ? "bg-success/10 text-success"
+      ? "bg-territory-success/10 text-territory-success"
       : tone === "warning"
-        ? "bg-warning/10 text-warning"
+        ? "bg-territory-warning/10 text-territory-warning"
         : tone === "neutral"
           ? "bg-muted text-muted-foreground"
-          : "bg-primary/10 text-primary";
+          : "bg-territory-brand/10 text-territory-brand";
   const borderClass =
     tone === "success"
-      ? "border-success/20"
+      ? "border-territory-success/20"
       : tone === "warning"
-        ? "border-warning/20"
-        : "border-border";
+        ? "border-territory-warning/20"
+        : "border-territory-border";
   const content = <>
     <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${toneClass}`}>
       <Icon className="h-5 w-5" aria-hidden="true" />
@@ -264,10 +264,10 @@ function SummaryCard({
     <p className="mt-2 text-xs text-muted-foreground">{label}</p>
     <p className="mt-0.5 break-words text-base font-bold leading-tight text-foreground sm:text-lg">{value}</p>
   </>;
-  const classes = `min-w-0 rounded-2xl border ${borderClass} bg-card p-3 sm:p-4 ${className}`;
-  return to ? <Link to={to} className={`${classes} transition-colors hover:border-primary/30 hover:bg-primary/[0.03]`}>{content}</Link> : <div className={classes}>{content}</div>;
+  const classes = `min-w-0 rounded-2xl border ${borderClass} bg-territory-surface p-3 sm:p-4 ${className}`;
+  return to ? <Link to={to} className={`${classes} transition-colors hover:border-territory-brand/30 hover:bg-territory-brand/[0.03]`}>{content}</Link> : <div className={classes}>{content}</div>;
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
-  return <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-2 border-b border-border/60 pb-2 last:border-0 last:pb-0"><dt className="text-muted-foreground">{label}</dt><dd className="min-w-0 break-words font-medium text-foreground">{value}</dd></div>;
+  return <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-2 border-b border-territory-border/60 pb-2 last:border-0 last:pb-0"><dt className="text-muted-foreground">{label}</dt><dd className="min-w-0 break-words font-medium text-foreground">{value}</dd></div>;
 }

@@ -23,7 +23,7 @@ export function getBusinessStatusPresentation(
         icon: CheckCircle2,
         label: "Ativa",
         badgeClassName:
-          "bg-success/10 text-success",
+          "bg-territory-success/10 text-territory-success",
         tone: "success",
         unavailablePublicMessage: "Link público ainda não disponível.",
       };
@@ -31,7 +31,7 @@ export function getBusinessStatusPresentation(
       return {
         icon: Clock3,
         label: "Em análise",
-        badgeClassName: "bg-warning/10 text-warning",
+        badgeClassName: "bg-territory-warning/10 text-territory-warning",
         tone: "warning",
         unavailablePublicMessage:
           "A página pública ficará disponível quando a empresa estiver ativa.",
