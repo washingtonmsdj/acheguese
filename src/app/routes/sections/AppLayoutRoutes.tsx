@@ -11,6 +11,7 @@ import {
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { messagingRoutes } from "@/core/messaging";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
+import { APP_PATHS } from "@/core/routing/config/appPaths";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
@@ -63,11 +64,11 @@ export function AppLayoutRoutes() {
         {notificationsEnabled ? (
           <>
             <Route
-              path="/notificacoes"
+              path={APP_PATHS.notifications}
               element={protectedElement(<P.NotificationsPage />)}
             />
             <Route
-              path="/settings/email-logs"
+              path={APP_PATHS.emailLogs}
               element={protectedElement(<P.EmailLogsPage />)}
             />
           </>
@@ -147,8 +148,8 @@ export function AppLayoutRoutes() {
 
         {searchEnabled ? (
           <>
-            <Route path="/busca" element={<P.BuscaPage />} />
-            <Route path="/buscar" element={<P.BuscarPage />} />
+            <Route path={APP_PATHS.search} element={<P.BuscaPage />} />
+            <Route path={APP_PATHS.aiSearch} element={<P.BuscarPage />} />
             <Route
               path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
               element={<P.ActiveTerritorialLayout />}
