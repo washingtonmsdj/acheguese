@@ -7,7 +7,7 @@ import {
 } from "@/core/routing/config/account";
 import { PUBLIC_PROFILE_ROUTE_PATTERN } from "@/core/profiles/utils/publicProfileUrl";
 import { centralRoutes } from "@/core/routing/config/centralRoutes";
-import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
+import { STATIC_ROUTE_PATHS, STATIC_ROUTE_PATTERNS } from "@/core/routing/config/staticRoutePaths";
 import {
   DATA_PROTECTION_CONTACT_PATH,
   PRIVACY_POLICY_PATH,
@@ -32,6 +32,10 @@ describe("active MVP route SSOT", () => {
     expect(STATIC_ROUTE_PATHS.notifications).toBe("/notificacoes");
     expect(STATIC_ROUTE_PATHS.howItWorks).toBe("/como-funciona");
     expect(STATIC_ROUTE_PATHS.about).toBe("/sobre");
+    expect(STATIC_ROUTE_PATHS.status).toBe("/status");
+    expect(STATIC_ROUTE_PATHS.emailLogs).toBe("/settings/email-logs");
+    expect(STATIC_ROUTE_PATHS.offlineSettings).toBe("/offline-settings");
+    expect(STATIC_ROUTE_PATTERNS.qrResolver).toBe("/q/:token");
     expect(STATIC_ROUTE_PATHS.brazilShowcase).toBe("/brasil");
     expect(STATIC_ROUTE_PATHS.countryLanding).toBe("/br");
     expect(PUBLIC_PROFILE_ROUTE_PATTERN).toBe("/u/:username");
@@ -54,6 +58,8 @@ describe("active MVP route SSOT", () => {
 
     expect(appRoutes).toContain("STATIC_ROUTE_PATHS.howItWorks");
     expect(appRoutes).toContain("STATIC_ROUTE_PATHS.about");
+    expect(appRoutes).toContain("STATIC_ROUTE_PATHS.status");
+    expect(appRoutes).toContain("STATIC_ROUTE_PATTERNS.qrResolver");
     expect(appRoutes).toContain("SUPPORT_PATH");
     expect(appRoutes).toContain("centralRoutes.home");
     expect(appRoutes).toContain("centralRoutes.admin.home");
@@ -71,6 +77,8 @@ describe("active MVP route SSOT", () => {
     expect(appLayout).toContain("TERMS_OF_SERVICE_PATH");
     expect(appLayout).toContain("PRIVACY_POLICY_PATH");
     expect(appLayout).toContain("DATA_PROTECTION_CONTACT_PATH");
+    expect(appLayout).toContain("STATIC_ROUTE_PATHS.emailLogs");
+    expect(appLayout).toContain("STATIC_ROUTE_PATHS.offlineSettings");
     expect(appLayout).toContain("PUBLIC_PROFILE_ROUTE_PATTERN");
     expect(appLayout).toContain("STATIC_ROUTE_PATHS.brazilShowcase");
     expect(appLayout).toContain("STATIC_ROUTE_PATHS.countryLanding");
