@@ -131,6 +131,15 @@ describe("active MVP route SSOT", () => {
       expect(territoryEntry).not.toContain(literal);
     }
 
+    expect(territoryEntry).toContain("getStateByCode(LAUNCH_STATE)");
+    expect(territoryEntry).toContain("launchCommunityPresentation.label");
+    expect(territoryEntry).not.toContain('LAUNCH_STATE === "ba"');
+    expect(territoryEntry).not.toContain("Agora no Complexo");
+    expect(territoryEntry).not.toContain("Comece pelo Complexo");
+    expect(territoryEntry).not.toContain(
+      "nasce no Complexo do Nordeste de Amaralina",
+    );
+
     for (const literal of [
       'to="/buscar"',
       'to="/notificacoes"',
