@@ -95,7 +95,7 @@ export function SocialMediaEditor({
             <div key={platform.id} className="space-y-2">
               {/* Platform label */}
               <div className="flex items-center gap-2">
-                <div className={cn("rounded-lg p-1.5 bg-secondary")}>
+                <div className={cn("rounded-lg p-1.5 bg-territory-raised")}>
                   <Icon className={cn("h-4 w-4", platform.color)} />
                 </div>
                 <label className="text-sm font-medium text-foreground">
@@ -119,14 +119,14 @@ export function SocialMediaEditor({
                       className={cn(
                         platform.prefix && "pl-8",
                         hasError && "border-destructive focus-visible:ring-destructive",
-                        validationStatus === true && "border-emerald-500 focus-visible:ring-emerald-500"
+                        validationStatus === true && "border-territory-success focus-visible:ring-territory-success"
                       )}
                     />
                     {/* Validation indicator */}
                     {value && (
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
                         {validationStatus === true ? (
-                          <Check className="h-4 w-4 text-emerald-600" />
+                          <Check className="h-4 w-4 text-territory-success" />
                         ) : validationStatus === false ? (
                           <X className="h-4 w-4 text-destructive" />
                         ) : null}
@@ -175,7 +175,7 @@ export function SocialMediaEditor({
       </div>
 
       {/* Help text */}
-      <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground">
+      <div className="bg-territory-raised/50 rounded-lg p-3 text-xs text-muted-foreground">
         <p className="mb-1 flex items-center gap-1.5 font-medium">
           <Lightbulb className="h-3.5 w-3.5" />
           Dicas:
@@ -189,8 +189,8 @@ export function SocialMediaEditor({
 
       {/* Summary */}
       {Object.values(social).filter(Boolean).length > 0 && (
-        <div className="bg-primary/5 rounded-lg p-3 text-xs text-muted-foreground">
-          <span className="font-semibold text-primary">
+        <div className="bg-territory-brand/5 rounded-lg p-3 text-xs text-muted-foreground">
+          <span className="font-semibold text-territory-brand">
             {Object.values(social).filter(Boolean).length} {Object.values(social).filter(Boolean).length === 1 ? "rede social" : "redes sociais"}
           </span>{" "}
           configurada{Object.values(social).filter(Boolean).length !== 1 ? "s" : ""}

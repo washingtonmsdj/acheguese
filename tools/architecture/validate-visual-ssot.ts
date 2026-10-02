@@ -165,6 +165,29 @@ const MIGRATED_RUNTIME_FILES = [
   'src/styles/theme.ts',
 ] as const;
 
+const BUSINESS_SEMANTIC_TOKEN_FILES = [
+  'src/core/business/constants/serviceModes.ts',
+  'src/core/business/constants/paymentMethods.ts',
+  'src/core/business/constants/facilities.ts',
+  'src/core/business/components/settings/SocialMediaEditor.tsx',
+  'src/core/business/components/settings/AddressEditor.tsx',
+  'src/core/business/components/settings/FacilitiesSelector.tsx',
+  'src/core/business/components/settings/PaymentMethodsSelector.tsx',
+  'src/core/business/components/settings/ServiceModesSelector.tsx',
+  'src/modules/business/dashboard/components/BusinessManagementIdentity.css',
+  'src/modules/business/dashboard/presentation/businessStatusPresentation.ts',
+  'src/modules/business/dashboard/pages/BusinessOverviewPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessCatalogPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessDetailsPage.tsx',
+  'src/modules/business/dashboard/pages/BusinessSettingsPage.tsx',
+] as const;
+
+const LEGACY_BUSINESS_PALETTE_RE =
+  /\b(?:text|bg|border|ring)-(?:emerald|green|amber|sky|blue|cyan|purple|pink|indigo)-\d+(?:\/\d+)?\b/;
+const LEGACY_BUSINESS_PRIMITIVE_RE = /var\(--(?:primary|card|border)\)/;
+const LEGACY_BUSINESS_GENERIC_UTILITY_RE =
+  /\b(?:text|bg|border|ring)-(?:primary|secondary|border)(?:\/(?:\[[^\]]+\]|\d+))?(?![-\w])/;
+
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:blue|cyan|teal|emerald|green|lime|rose|red|amber|yellow|slate|gray)-\d{2,3}(?:\/\d+)?\b/;
@@ -330,6 +353,28 @@ function main(): void {
     ],
     violations,
   );
+
+  for (const relative of BUSINESS_SEMANTIC_TOKEN_FILES) {
+    const content = readRequired(relative, violations);
+    if (LEGACY_BUSINESS_PALETTE_RE.test(content)) {
+      violations.push(
+        `${relative}: raw Tailwind palette color found in active Business management; use territory/business semantic tokens.`,
+      );
+    }
+    if (LEGACY_BUSINESS_GENERIC_UTILITY_RE.test(content)) {
+      violations.push(
+        `${relative}: generic primary/secondary/border utility found in active Business management; consume territory/business tokens.`,
+      );
+    }
+    if (
+      relative.endsWith('BusinessManagementIdentity.css') &&
+      LEGACY_BUSINESS_PRIMITIVE_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: generic primary/card/border primitive found; consume the business visual projection instead.`,
+      );
+    }
+  }
 
   for (const relative of MIGRATED_RUNTIME_FILES) {
     const content = readRequired(relative, violations);

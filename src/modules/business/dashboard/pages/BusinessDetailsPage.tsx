@@ -89,7 +89,7 @@ function SectionCard({
   return (
     <section className="business-management-panel">
       <div className="mb-3 flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-territory-brand/10 text-territory-brand">
           <Icon className="h-5 w-5" />
         </span>
         <div>
