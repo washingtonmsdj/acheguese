@@ -3,8 +3,6 @@ const ACCESS_TOKEN_RE = /^[A-Za-z0-9._~-]{32,512}$/;
 const SPACE_SCHEMA = "prototype-ordax.product-network-space/1";
 const DIRECTORY_SCHEMA = "prototype-ordax.product-network-directory/1";
 const COMMUNITIES_SCHEMA = "prototype-ordax.product-network-communities/1";
-const CATEGORY_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-
 function isAsciiHex(character: string): boolean {
   const code = character.toLowerCase().charCodeAt(0);
   return (
@@ -37,6 +35,23 @@ function isLowerAsciiAlphanumeric(character: string): boolean {
     (code >= 48 && code <= 57) ||
     (code >= 97 && code <= 122)
   );
+}
+
+function isProviderCategory(value: string): boolean {
+  if (value.length < 1 || value.length > 60) return false;
+  let previousWasSeparator = true;
+
+  for (const character of value) {
+    if (character === "-") {
+      if (previousWasSeparator) return false;
+      previousWasSeparator = true;
+      continue;
+    }
+    if (!isLowerAsciiAlphanumeric(character)) return false;
+    previousWasSeparator = false;
+  }
+
+  return !previousWasSeparator;
 }
 
 function isProviderCommunityId(value: string): boolean {
@@ -220,7 +235,7 @@ export function buildOrdaxProductNetworkDirectoryRequest(
     60,
     "OrdaX directory category",
   );
-  if (category && !CATEGORY_RE.test(category)) {
+  if (category && !isProviderCategory(category)) {
     throw new TypeError("OrdaX directory category is invalid");
   }
 
