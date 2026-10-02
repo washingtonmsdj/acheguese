@@ -171,10 +171,10 @@ export function AccountSettingsShell({
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1536px] bg-territory-surface lg:border-x lg:border-territory-border">
-        <aside className="hidden w-[220px] shrink-0 bg-[hsl(var(--territory-brand))] px-3 py-5 text-white lg:sticky lg:top-0 lg:block lg:h-[100dvh] lg:overflow-y-auto xl:w-[224px]">
+        <aside className="hidden w-[220px] shrink-0 bg-[hsl(var(--territory-brand))] px-3 py-5 text-territory-on-image lg:sticky lg:top-0 lg:block lg:h-[100dvh] lg:overflow-y-auto xl:w-[224px]">
           <Link
             to="/"
-            className="mb-8 inline-flex px-3 font-heading text-[1.55rem] font-bold tracking-[-0.06em] text-white"
+            className="mb-8 inline-flex px-3 font-heading text-[1.55rem] font-bold tracking-[-0.06em] text-territory-on-image"
             aria-label="Achegue-se — início"
           >
             achegue-se<span className="text-territory-sun">.</span>
@@ -194,13 +194,13 @@ export function AccountSettingsShell({
                 extraPaths,
               );
               return (
-                <div key={label} className={dividerBefore ? "mt-3 border-t border-white/15 pt-3" : undefined}>
+                <div key={label} className={dividerBefore ? "mt-3 border-t border-territory-on-image/15 pt-3" : undefined}>
                   <Link
                     to={href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[0.82rem] font-medium text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
-                      active && "bg-white/15 font-semibold text-white",
+                      "relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[0.82rem] font-medium text-territory-on-image/90 transition-colors hover:bg-territory-on-image/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+                      active && "bg-territory-on-image/15 font-semibold text-territory-on-image",
                     )}
                   >
                     {active ? (
