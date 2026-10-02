@@ -1,3 +1,5 @@
+import { APP_PATHS } from "@/core/routing/config/appPaths";
+
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -10,7 +12,7 @@ import {
   type AppModuleSlug,
 } from "@/shared/config/moduleSlugs";
 
-export const NOTIFICATION_INBOX_PATH = "/notificacoes";
+export const NOTIFICATION_INBOX_PATH = APP_PATHS.notifications;
 export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
 
 type NotificationLifecycleSurfaceKey =
