@@ -201,5 +201,19 @@ describe("privacy data export rollout boundary", () => {
       "exportAvailable ? ACCOUNT_PATHS.exportData : DATA_PROTECTION_CONTACT_PATH",
     );
     expect(privacyPage).toContain("navigate(DATA_PROTECTION_CONTACT_PATH)");
+    expect(privacyPage).toContain(
+      'exportAvailable ? "Exportar meus dados" : "Solicitar meus dados"',
+    );
+    expect(privacyPage).toContain(
+      '? "Exportar meus dados antes"',
+    );
+    expect(privacyPage).toContain(
+      ': "Solicitar meus dados antes"',
+    );
+    expect(
+      privacyPage.match(
+        /exportAvailable\s*\?\s*ACCOUNT_PATHS\.exportData\s*:\s*DATA_PROTECTION_CONTACT_PATH/g,
+      ) ?? [],
+    ).toHaveLength(3);
   });
 });
