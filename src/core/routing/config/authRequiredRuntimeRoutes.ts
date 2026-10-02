@@ -1,3 +1,4 @@
+import { APP_PATHS } from "@/core/routing/config/appPaths";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 
@@ -8,8 +9,8 @@ const AUTH_REQUIRED_RUNTIME_PREFIXES = [
 ] as const;
 
 const AUTH_REQUIRED_RUNTIME_EXACT_PATHS = new Set<string>([
-  "/notificacoes",
-  "/settings/email-logs",
+  APP_PATHS.notifications,
+  APP_PATHS.emailLogs,
   "/empresas/cadastrar",
 ]);
 
