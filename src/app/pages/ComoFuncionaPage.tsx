@@ -104,21 +104,21 @@ const possibilities = [
     title: "Mapa",
     copy: "Veja onde ficam empresas e pontos úteis dentro do território.",
     href: LAUNCH_URLS.map,
-    className: "ag-guide-card-community",
+    className: "ag-guide-card-map",
   },
   {
     eyebrow: "Mais perto agora",
     title: "Perto de mim",
     copy: "Use sua localização para descobrir empresas próximas.",
     href: LAUNCH_URLS.nearby,
-    className: "ag-guide-card-services",
+    className: "ag-guide-card-nearby",
   },
   {
     eyebrow: "Busca territorial",
     title: "Busca",
     copy: "Procure empresas e resultados sem perder o contexto do território.",
     href: LAUNCH_URLS.search,
-    className: "ag-guide-card-community",
+    className: "ag-guide-card-search",
   },
 ] as const;
 
