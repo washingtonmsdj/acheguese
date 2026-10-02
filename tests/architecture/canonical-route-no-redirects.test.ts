@@ -56,7 +56,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
       "src/app/config/notificationActionScope.ts",
     );
 
-    expect(routes).toContain('path="/notificacoes"');
+    expect(routes).toContain("path={APP_GLOBAL_PATHS.notifications}");
     expect(routes).not.toContain('path="/notifications"');
     expect(routes).not.toContain('path="/settings/notifications"');
 
@@ -64,7 +64,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(notifications).not.toContain("/settings/notifications");
     expect(preferences).not.toContain("/settings/notifications");
 
-    expect(prefetch).toContain('path.startsWith("/notificacoes")');
+    expect(prefetch).toContain("path.startsWith(APP_GLOBAL_PATHS.notifications)");
     expect(prefetch).not.toContain('path.startsWith("/notifications")');
     expect(serviceWorker).toContain("fallback = '/notificacoes'");
     expect(serviceWorker).not.toContain("return '/notifications'");
