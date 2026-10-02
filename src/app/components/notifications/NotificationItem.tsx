@@ -47,13 +47,13 @@ export function NotificationItem({
   const getIcon = () => {
     switch (notification.type) {
       case "success":
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-success" />;
       case "warning":
-        return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+        return <AlertTriangle className="h-5 w-5 text-warning" />;
       case "error":
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-destructive" />;
       default:
-        return <Info className="h-5 w-5 text-blue-600" />;
+        return <Info className="h-5 w-5 text-info" />;
     }
   };
 
@@ -62,13 +62,13 @@ export function NotificationItem({
 
     switch (notification.type) {
       case "success":
-        return "bg-green-50 border-green-200";
+        return "bg-success/10 border-success/25";
       case "warning":
-        return "bg-yellow-50 border-yellow-200";
+        return "bg-warning/10 border-warning/25";
       case "error":
-        return "bg-red-50 border-red-200";
+        return "bg-destructive/10 border-destructive/25";
       default:
-        return "bg-blue-50 border-blue-200";
+        return "bg-info/10 border-info/25";
     }
   };
 
