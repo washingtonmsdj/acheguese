@@ -137,6 +137,12 @@ const SERVICE_ROLE_BOUNDARY_POLICY_PATH = join(
 const SERVICE_ROLE_BOUNDARY_POLICY = loadServiceRoleBoundaryPolicy(SERVICE_ROLE_BOUNDARY_POLICY_PATH);
 const SUPABASE_CONFIG_PATH = join(ROOT_DIR, 'supabase/config.toml');
 const EDGE_FUNCTIONS_DIR = join(ROOT_DIR, 'supabase/functions');
+const VERIFIED_JWT_HELPER_RELATIVE_PATH =
+  'supabase/functions/_shared/verifiedJwt.ts';
+const VERIFIED_JWT_HELPER_PATH = join(
+  ROOT_DIR,
+  VERIFIED_JWT_HELPER_RELATIVE_PATH,
+);
 const EDGE_FUNCTION_SERVICE_ROLE_PATTERN =
   /SUPABASE_SERVICE_ROLE_KEY|SERVICE_ROLE|getSupabaseAdminClient/g;
 const EDGE_FUNCTION_NO_JWT_ALLOWLIST = new Set(Object.keys(EDGE_FUNCTION_AUTH_POLICY.noJwtAllowlist));
@@ -321,6 +327,73 @@ function listEdgeFunctionNames() {
   return readdirSync(EDGE_FUNCTIONS_DIR, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !entry.name.startsWith('_'))
     .map((entry) => entry.name);
+}
+
+function validateVerifiedJwtHelper() {
+  const issues = [];
+  const helperRequired = Object.values(
+    EDGE_FUNCTION_AUTH_POLICY.serviceRoleAllowlist,
+  ).some((classification) =>
+    classification.requiredPatterns.some((pattern) =>
+      pattern.includes('verifyAuthenticatedSubject'),
+    ),
+  );
+
+  if (!helperRequired) return issues;
+
+  if (!existsSync(VERIFIED_JWT_HELPER_PATH)) {
+    return [
+      {
+        severity: 'CRITICO',
+        check: 'Helper JWT verificado ausente',
+        file: VERIFIED_JWT_HELPER_RELATIVE_PATH,
+        message:
+          'A politica Edge exige verifyAuthenticatedSubject, mas o helper canonico nao existe',
+      },
+    ];
+  }
+
+  const content = readFileSync(VERIFIED_JWT_HELPER_PATH, 'utf-8');
+  const requiredControls = [
+    {
+      pattern: /auth\.getClaims\s*\(\s*token\s*\)/,
+      message: 'helper JWT deve verificar assinatura/expiracao via auth.getClaims(token)',
+    },
+    {
+      pattern: /data\.claims\.role\s*!==\s*["']authenticated["']/,
+      message: 'helper JWT deve restringir role a authenticated',
+    },
+    {
+      pattern: /hasAuthenticatedAudience\s*\(\s*data\.claims\.aud\s*\)/,
+      message: 'helper JWT deve validar audience authenticated',
+    },
+    {
+      pattern: /UUID_PATTERN\.test\s*\(\s*subject\s*\)/,
+      message: 'helper JWT deve validar o formato do subject',
+    },
+  ];
+
+  for (const control of requiredControls) {
+    if (control.pattern.test(content)) continue;
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Helper JWT verificado incompleto',
+      file: VERIFIED_JWT_HELPER_RELATIVE_PATH,
+      message: control.message,
+    });
+  }
+
+  if (/auth\.getSession\s*\(/.test(content)) {
+    issues.push({
+      severity: 'CRITICO',
+      check: 'Helper JWT usa sessao local como autoridade',
+      file: VERIFIED_JWT_HELPER_RELATIVE_PATH,
+      message:
+        'verifyAuthenticatedSubject nao pode usar auth.getSession() para autorizacao',
+    });
+  }
+
+  return issues;
 }
 
 function validateEdgeFunctionServiceRoleGuards() {
@@ -634,7 +707,10 @@ function main() {
   console.log(scanIssues.length === 0 ? '   Nenhum problema\n' : `   ${scanIssues.length} problema(s)\n`);
 
   console.log('3) Validando service_role em Edge Functions...');
-  const edgeFunctionIssues = validateEdgeFunctionServiceRoleGuards();
+  const edgeFunctionIssues = [
+    ...validateVerifiedJwtHelper(),
+    ...validateEdgeFunctionServiceRoleGuards(),
+  ];
   allIssues.push(...edgeFunctionIssues);
   console.log(edgeFunctionIssues.length === 0 ? '   OK\n' : `   ${edgeFunctionIssues.length} problema(s)\n`);
 
