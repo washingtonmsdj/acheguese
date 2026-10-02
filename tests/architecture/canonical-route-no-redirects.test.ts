@@ -11,9 +11,9 @@ describe("MVP canonical routing without compatibility redirects", () => {
     const registry = read("tools/architecture/architecture-registry.ts");
     const audit = read("tools/architecture/generate-architecture-audit.ts");
 
-    expect(routes).toContain('path="/conta"');
-    expect(routes).toContain('path="/conta/editar/:profileId"');
-    expect(routes).toContain('path="/conta/notificacoes"');
+    expect(routes).toContain("path={ACCOUNT_PATHS.home}");
+    expect(routes).toContain("path={ACCOUNT_PATHS.profileEditPattern}");
+    expect(routes).toContain("path={ACCOUNT_PATHS.notifications}");
 
     expect(routes).not.toContain('path="/perfil"');
     expect(routes).not.toContain('path="/perfil/');
@@ -34,7 +34,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
     const profileBarrel = read("src/modules/profile/index.ts");
 
-    expect(routes).toContain('path="/conta/editar/:profileId"');
+    expect(routes).toContain("path={ACCOUNT_PATHS.profileEditPattern}");
     expect(routes).not.toContain('path="/conta/editar"');
     expect(activeLazyImports).not.toContain("ContaEditarPage");
     expect(profileBarrel).not.toContain("ContaEditarPage");
