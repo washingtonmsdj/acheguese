@@ -87,6 +87,27 @@ describe("active MVP route SSOT", () => {
       "src/modules/business/company/pages/EmpresaDetailLayout.tsx",
       "utf8",
     );
+    const businessDetail = readFileSync(
+      "src/modules/business/company/pages/TerritoryBusinessDetail.tsx",
+      "utf8",
+    );
+    const centralHeader = readFileSync(
+      "src/modules/central/components/CentralHeader.tsx",
+      "utf8",
+    );
+    const territoryTopbar = readFileSync(
+      "src/shared/components/territory-vivo/TerritoryTopbar.tsx",
+      "utf8",
+    );
+    const useAppUrls = readFileSync(
+      "src/core/routing/hooks/useAppUrls.ts",
+      "utf8",
+    );
+    const prefetch = readFileSync("src/app/routes/prefetch.ts", "utf8");
+    const notificationScope = readFileSync(
+      "src/app/config/notificationActionScope.ts",
+      "utf8",
+    );
 
     for (const literal of [
       'href="/"',
@@ -106,5 +127,38 @@ describe("active MVP route SSOT", () => {
     ]) {
       expect(businessShell).not.toContain(literal);
     }
+
+    for (const literal of [
+      'to="/perto-de-mim"',
+      'to="/busca"',
+      'to="/mapa"',
+      'to="/como-funciona"',
+      '${territoryUrl}/perto-de-mim',
+      '${territoryUrl}/busca',
+      '${territoryUrl}/mapa',
+    ]) {
+      expect(businessDetail).not.toContain(literal);
+    }
+
+    for (const literal of ['to="/sobre"', 'to="/notificacoes"', 'to="/conta"']) {
+      expect(centralHeader).not.toContain(literal);
+    }
+
+    for (const literal of ['"/notificacoes"', '"/login"', 'to="/conta"']) {
+      expect(territoryTopbar).not.toContain(literal);
+    }
+
+    expect(useAppUrls).toContain(
+      "buildModuleTerritoryUrl(MODULE_SLUGS.map, cityBase)",
+    );
+    expect(useAppUrls).not.toContain("`/mapa${cityBase}`");
+    expect(useAppUrls).not.toContain("notifications: '/notificacoes'");
+    expect(prefetch).not.toContain('href: "/notificacoes"');
+    expect(notificationScope).toContain(
+      "NOTIFICATION_INBOX_PATH = STATIC_ROUTE_PATHS.notifications",
+    );
+    expect(notificationScope).not.toContain(
+      'NOTIFICATION_INBOX_PATH = "/notificacoes"',
+    );
   });
 });
