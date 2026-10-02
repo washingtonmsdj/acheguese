@@ -125,7 +125,9 @@ describe("public territorial surface audit", () => {
     expect(mapSource).toContain("activeMemberIds");
     expect(mapSource).toContain("const isFocusOnlyMode = Boolean(focusTarget) && !effectiveResolved");
     expect(mapSource).toContain("const runtimeTerritoryFilter = isFocusOnlyMode ? undefined : territoryFilter");
+    expect(mapSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
     expect(mapSource).not.toContain("useTerritoryFilter(effectiveResolved, activeMemberIds)");
+    expect(mapSource).not.toContain("buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`)");
   });
 
   it("keeps gastronomy and classifieds group routes scoped to active module members", () => {
