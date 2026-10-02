@@ -45,7 +45,7 @@ export function CentralHeader({ billingEnabled, brand, showNavigation = true }: 
           <span className="hidden sm:inline">Ver site</span>
         </a>
         {billingEnabled ? (
-          <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+          <Link to={STATIC_ROUTE_PATHS.pricing} className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
             Planos
           </Link>
         ) : null}
