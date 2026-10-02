@@ -65,7 +65,7 @@ export function AppLayoutSidebar() {
   const isPublicBusinessLandingRoute =
     pathSegments[0] === MODULE_SLUGS.business &&
     pathSegments[1] !== "cadastrar";
-  const isBusinessRegistrationRoute = pathname === "/empresas/cadastrar";
+  const isBusinessRegistrationRoute = pathname === buildAppModulePath(APP_MODULE_SLUGS.business, "cadastrar");
   const isAccountRoute = pathSegments[0] === "conta";
   const isAccountOverview = pathname === ACCOUNT_PATHS.home;
   const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
