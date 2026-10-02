@@ -30,6 +30,8 @@ import {
   Utensils,
 } from "lucide-react";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
 import { LazyMiniMap } from "@/core/maps/components/LazyMiniMap";
 import type { PublicSnapshotInstitutional } from "@/core/business/types/publicSnapshots";
@@ -205,6 +207,9 @@ export function TerritoryBusinessDetail({
     setActiveSection(sectionId);
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  const nearbyUrl = buildModuleTerritoryUrl(APP_MODULE_SLUGS.nearby, territoryUrl);
+  const searchUrl = buildModuleTerritoryUrl(APP_MODULE_SLUGS.search, territoryUrl);
+  const mapUrl = buildModuleTerritoryUrl(APP_MODULE_SLUGS.map, territoryUrl);
   const isSecondarySection = activeSection === "fotos"
     || activeSection === "localizacao"
     || activeSection === "informacoes";
@@ -237,11 +242,11 @@ export function TerritoryBusinessDetail({
             <BrandMark /><strong>achegue-se</strong>
           </Link>
           <nav className="bd-main-nav" aria-label="Navegação principal">
-            <Link to={`${territoryUrl}/perto-de-mim`}>Por perto</Link>
+            <Link to={nearbyUrl}>Por perto</Link>
             <Link to="/como-funciona">Como funciona</Link>
             <Link to={businessDirectoryUrl}>Para negócios</Link>
           </nav>
-          <Link className="bd-global-search" to={`${territoryUrl}/busca`}>
+          <Link className="bd-global-search" to={searchUrl}>
             <Search /><span>Buscar empresas, serviços, lugares...</span>
           </Link>
           <Link className="bd-location" to={territoryUrl}>
@@ -385,8 +390,8 @@ export function TerritoryBusinessDetail({
 
           <aside className="bd-side-column">
             <section className="bd-card bd-location-card" id="localizacao">
-              <SectionTitle icon={MapPin} action={<Link to={`${territoryUrl}/mapa`}>Ver no mapa <ExternalLink /></Link>}>Localização</SectionTitle>
-              <Link className="bd-map-preview" to={`${territoryUrl}/mapa`} aria-label="Abrir mapa do território">
+              <SectionTitle icon={MapPin} action={<Link to={mapUrl}>Ver no mapa <ExternalLink /></Link>}>Localização</SectionTitle>
+              <Link className="bd-map-preview" to={mapUrl} aria-label="Abrir mapa do território">
                 {mapCoordinates ? (
                   <>
                     <LazyMiniMap
