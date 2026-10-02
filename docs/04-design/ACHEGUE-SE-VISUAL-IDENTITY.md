@@ -61,7 +61,7 @@ Ainda é necessário verificar com leitor de tela, zoom real a 200%, teclado vir
 
 Já consomem o contrato consolidado: shell de autenticação, login, cadastro, confirmação de cadastro, primeiro acesso, aceite de termos, recuperação de senha, confirmação de troca de e-mail, página pública de pré-lançamento e e-mails transacionais. A página de pré-lançamento preserva diferenças editoriais usando tokens de categoria, sem reintroduzir Manrope/Bricolage.
 
-A página operacional de cidade/comunidade ainda possui uma paleta escura funcional própria. Sua tipografia e papéis de marca devem migrar sem destruir a semântica de mapa, métricas, alertas, categorias e estados. Esse domínio não deve ser marcado como totalmente migrado enquanto os valores funcionais não estiverem classificados em tokens explícitos.
+A entrada territorial pública (`TerritoryEntryPage`) já consome os tokens canônicos de marca e não mantém mais paleta ou fonte locais. Superfícies públicas territoriais mais amplas ainda devem preservar a semântica funcional de mapa, métricas, alertas, categorias e estados durante sua migração; nenhuma delas deve ser marcada como totalmente migrada enquanto valores funcionais não estiverem classificados em tokens explícitos.
 
 ## Regra para novas alterações
 

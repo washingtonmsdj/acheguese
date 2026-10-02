@@ -126,7 +126,7 @@ const modules = [
     number: "01",
   },
   {
-    className: "ag-module-community",
+    className: "ag-module-map",
     eyebrow: "Território no mapa",
     title: "Veja o que existe em cada rua.",
     copy: "Explore empresas e pontos úteis dentro do território pelo mapa.",
@@ -136,7 +136,7 @@ const modules = [
     number: "02",
   },
   {
-    className: "ag-module-work",
+    className: "ag-module-nearby",
     eyebrow: "Mais perto de você",
     title: "Encontre o que está próximo agora.",
     copy: "Use sua localização para descobrir empresas disponíveis ao seu redor.",
@@ -146,7 +146,7 @@ const modules = [
     number: "03",
   },
   {
-    className: "ag-module-mobility",
+    className: "ag-module-search",
     eyebrow: "Busca territorial",
     title: "Procure sem sair do contexto local.",
     copy: "Busque empresas e lugares dentro do território atual.",

@@ -105,6 +105,8 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/profile/pages/ContaPreferenciasPage.tsx',
   'src/app/pages/NotificationPreferencesPage.tsx',
   'src/app/pages/EmpresasLandingPage.tsx',
+  'src/app/pages/TerritoryEntryPage.tsx',
+  'src/app/pages/TerritoryEntryPage.css',
   'src/modules/business/pages/CriarEmpresaPage.tsx',
   'src/modules/business/pages/CriarEmpresaPage.css',
   'src/modules/business/company/pages/EmpresaDetailLayout.tsx',
