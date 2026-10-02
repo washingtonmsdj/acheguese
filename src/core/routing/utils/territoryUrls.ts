@@ -141,7 +141,7 @@ export function buildLocationBaseUrl(location: Location): string {
 }
 
 export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): string {
-  const publicCity = geoPathToPublicUrl(cityPath);
+  const publicCity = buildCityTerritoryBaseUrl(cityPath);
   return `${publicCity}/${group.slug}`;
 }
 
