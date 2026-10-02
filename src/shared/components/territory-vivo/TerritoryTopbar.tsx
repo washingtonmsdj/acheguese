@@ -10,6 +10,10 @@ import {
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/shared/utils/cn";
+import { APP_PATHS } from "@/core/routing/config/appPaths";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { messagingRoutes } from "@/core/messaging";
 
 interface TerritoryTopbarProps {
   territoryName: string;
@@ -40,7 +44,7 @@ export function TerritoryTopbar({
   showMobileSearch = true,
   flushDesktop = false,
   compactMobile = false,
-  messagesHref = "/mensagens",
+  messagesHref = messagingRoutes.inbox(),
   profileLabel,
   profileAvatarUrl,
 }: TerritoryTopbarProps) {
@@ -151,7 +155,7 @@ export function TerritoryTopbar({
 
         <div className="ml-auto flex items-center gap-1.5 lg:order-4 sm:gap-2">
           <Link
-            to={isAuthenticated ? "/notificacoes" : "/login"}
+            to={isAuthenticated ? APP_PATHS.notifications : AUTH_PATHS.login}
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun"
             aria-label={
               isAuthenticated && unreadCount > 0
@@ -167,7 +171,7 @@ export function TerritoryTopbar({
             ) : null}
           </Link>
           <Link
-            to={isAuthenticated ? messagesHref : "/login"}
+            to={isAuthenticated ? messagesHref : AUTH_PATHS.login}
             className="relative hidden h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:flex"
             aria-label="Conversas"
           >
@@ -175,7 +179,7 @@ export function TerritoryTopbar({
           </Link>
           {!isAuthenticated ? (
             <Link
-              to="/login"
+              to={AUTH_PATHS.login}
               className="group inline-flex min-h-10 items-center gap-2 rounded-full px-1.5 text-sm font-semibold text-white hover:bg-white/10 sm:px-2"
               aria-label="Entrar"
             >
@@ -186,7 +190,7 @@ export function TerritoryTopbar({
             </Link>
           ) : (
             <Link
-              to="/conta"
+              to={ACCOUNT_PATHS.home}
               className="flex h-10 max-w-[9rem] items-center gap-2 rounded-full bg-white/10 px-1.5 text-sm font-semibold text-white hover:bg-white/15 sm:px-2 sm:pr-3"
               aria-label="Abrir minha conta"
             >
