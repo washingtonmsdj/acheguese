@@ -9,6 +9,9 @@ import type { ReactNode } from 'react';
 import { ArrowLeft, Bell, Building2, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
+import { APP_PATHS } from '@/core/routing/config/appPaths';
+import { ACCOUNT_PATHS } from '@/core/routing/config/account';
+import { PRIVACY_POLICY_PATH, TERMS_OF_SERVICE_PATH } from '@/shared/constants/legal';
 
 interface EmpresaDetailLayoutProps {
   readonly children: ReactNode;
@@ -53,7 +56,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
               Empresas do bairro
             </Link>
             <Link
-              to="/buscar"
+              to={APP_PATHS.aiSearch}
               className="inline-flex min-h-11 min-w-0 max-w-[34rem] flex-1 items-center gap-3 rounded-[18px] border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm text-territory-on-image/48 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05] hover:text-territory-on-image/72"
             >
               <Search className="h-4 w-4 shrink-0 text-territory-on-image/46" />
@@ -71,7 +74,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
 
           <div className="hidden items-center gap-2.5 lg:flex">
             <Link
-              to="/notificacoes"
+              to={APP_PATHS.notifications}
               className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/70 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05] hover:text-territory-on-image"
               aria-label="Notificações"
             >
@@ -79,7 +82,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
             </Link>
             <button
               type="button"
-              onClick={() => navigate('/conta')}
+              onClick={() => navigate(ACCOUNT_PATHS.home)}
               className="inline-flex h-11 items-center gap-2 rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-3 text-territory-on-image/80 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
               aria-label="Perfil"
             >
@@ -116,13 +119,13 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
                 Todas as empresas
               </button>
               <button
-                onClick={() => navigate('/termos')}
+                onClick={() => navigate(TERMS_OF_SERVICE_PATH)}
                 className="transition-colors hover:text-primary"
               >
                 Termos
               </button>
               <button
-                onClick={() => navigate('/privacidade')}
+                onClick={() => navigate(PRIVACY_POLICY_PATH)}
                 className="transition-colors hover:text-primary"
               >
                 Privacidade
