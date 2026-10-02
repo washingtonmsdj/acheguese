@@ -13,6 +13,7 @@ import {
   getAppModuleSlugFromPath,
 } from "@/shared/config/moduleSlugs";
 import { buildModuleTerritoryUrl, type ModuleSlug } from "@/core/routing/utils/territoryUrls";
+import { TERRITORIAL_ROUTE_STATIC_SEGMENTS } from "@/core/routing/config/territorialRoutePatterns";
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -36,7 +37,7 @@ const PUBLIC_CITY_MODULE_SURFACES = {
   [APP_MODULE_SLUGS.classifieds]: { kind: "product", surface: "classifieds" },
   [APP_MODULE_SLUGS.jobs]: { kind: "product", surface: "jobs" },
   [APP_MODULE_SLUGS.search]: { kind: "capability", surface: "search" },
-  buscar: { kind: "capability", surface: "search" },
+  [TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias]: { kind: "capability", surface: "search" },
   [APP_MODULE_SLUGS.map]: { kind: "capability", surface: "map" },
   [APP_MODULE_SLUGS.education]: { kind: "product", surface: "education" },
   [APP_MODULE_SLUGS.touristPoints]: { kind: "product", surface: "touristPoints" },
@@ -69,14 +70,14 @@ function isPublicCityModuleSlug(
 }
 
 function buildModulePath(
-  module: PublicCityModuleSlug | "buscar",
+  module: PublicCityModuleSlug | typeof TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias,
   state: string,
   city: string,
 ): string {
   const territoryPath = `/${state}/${city}`;
 
-  if (module === "buscar") {
-    return `${territoryPath}/buscar`;
+  if (module === TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias) {
+    return `${territoryPath}/${TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias}`;
   }
 
   return buildModuleTerritoryUrl(module, territoryPath);
@@ -91,14 +92,14 @@ function buildPathForCurrentContext(pathname: string, state: string, city: strin
     return buildModulePath(module, state, city);
   }
 
-  const searchAliasIndex = parts.findIndex((segment) => segment === "buscar");
+  const searchAliasIndex = parts.findIndex((segment) => segment === TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias);
   if (
     searchAliasIndex >= 2 &&
     /^[a-z]{2}$/i.test(parts[0] ?? "") &&
     parts[1] &&
-    PUBLIC_CITY_MODULE_SET.has("buscar")
+    PUBLIC_CITY_MODULE_SET.has(TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias)
   ) {
-    return buildModulePath("buscar", state, city);
+    return buildModulePath(TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias, state, city);
   }
 
   return `/${state}/${city}`;
