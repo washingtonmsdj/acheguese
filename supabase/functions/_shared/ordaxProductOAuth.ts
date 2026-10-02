@@ -62,7 +62,7 @@ function containsUnsafeOpaqueCharacter(value: string): boolean {
     if (
       code <= 0x20 ||
       code === 0x7f ||
-      character === "\u00a0"
+      character.trim() === ""
     ) {
       return true;
     }
