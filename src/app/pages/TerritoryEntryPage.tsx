@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { APP_PATHS } from "@/core/routing/config/appPaths";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
@@ -190,7 +190,7 @@ export default function TerritoryEntryPage() {
     };
   }, []);
 
-  const accountHref = isAuthenticated ? ACCOUNT_PATHS.home : AUTH_PATHS.login;
+  const accountHref = isAuthenticated ? buildLoginPath(ACCOUNT_PATHS.home) : AUTH_PATHS.login;
   const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
 
   return (
