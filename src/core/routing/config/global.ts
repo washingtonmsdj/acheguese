@@ -15,4 +15,6 @@ export const APP_GLOBAL_PATHS = {
   search: "/busca",
   aiSearch: "/buscar",
   offlineSettings: "/offline-settings",
+  about: "/sobre",
+  howItWorks: "/como-funciona",
 } as const;
