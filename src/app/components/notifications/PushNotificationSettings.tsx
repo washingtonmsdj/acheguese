@@ -88,7 +88,7 @@ export function PushNotificationSettings() {
     <div className="space-y-3">
       <div className="rounded-xl bg-territory-raised px-3 py-3">
         <div className="flex items-center gap-3">
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-surface ${deliveryReady ? "text-emerald-700" : "text-territory-muted"}`}>
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-surface ${deliveryReady ? "text-success" : "text-territory-muted"}`}>
             {deliveryReady ? (
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             ) : (
@@ -100,7 +100,7 @@ export function PushNotificationSettings() {
             <p className="mt-0.5 text-xs leading-4 text-territory-muted">{currentDeviceDescription}</p>
           </div>
           {deliveryReady ? (
-            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[0.6875rem] font-semibold text-emerald-800">
+            <span className="shrink-0 rounded-full bg-success/15 px-2 py-1 text-[0.6875rem] font-semibold text-success">
               Ativado
             </span>
           ) : !permissionBlocked ? (
@@ -109,7 +109,7 @@ export function PushNotificationSettings() {
               size="sm"
               onClick={subscribe}
               disabled={isSubscribing}
-              className="min-h-9 shrink-0 bg-territory-brand text-white hover:bg-territory-brand-strong"
+              className="min-h-9 shrink-0 bg-territory-brand text-primary-foreground hover:bg-territory-brand-strong"
             >
               {isSubscribing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {isSubscribing ? "Ativando..." : "Ativar"}
@@ -131,7 +131,7 @@ export function PushNotificationSettings() {
       </div>
 
       {subscriptionsError ? (
-        <Alert className="border-red-200 bg-red-50 text-red-900">
+        <Alert className="border-destructive/25 bg-destructive/10 text-destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-xs leading-5">
             Não foi possível carregar os dispositivos registrados.
