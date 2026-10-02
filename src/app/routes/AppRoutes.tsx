@@ -103,7 +103,7 @@ export function AppRoutes() {
       <Route path={APP_GLOBAL_PATHS.howItWorks} element={<ComoFuncionaPage />} />
       <Route path={APP_GLOBAL_PATHS.about} element={<AboutPage />} />
       <Route path="/contato" element={<ContactPage />} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route path={AUTH_PATHS.onboarding} element={<OnboardingPage />} />
       <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
 
       <Route path="/central/*" element={<CentralRoutes />} />
