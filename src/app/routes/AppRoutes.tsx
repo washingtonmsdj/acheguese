@@ -10,7 +10,7 @@ import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import { AuthEntrySessionGate } from "@/app/routes/AuthEntrySessionGate";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { centralRoutes } from "@/core/routing/config/centralRoutes";
-import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
+import { STATIC_ROUTE_PATHS, STATIC_ROUTE_PATTERNS } from "@/core/routing/config/staticRoutePaths";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 
 const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
@@ -87,8 +87,8 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path={STATIC_ROUTE_PATHS.home} element={<RootRouteEntry />} />
-      <Route path="/q/:token" element={<QrResolverPage />} />
-      <Route path="/status" element={<StatusPage />} />
+      <Route path={STATIC_ROUTE_PATTERNS.qrResolver} element={<QrResolverPage />} />
+      <Route path={STATIC_ROUTE_PATHS.status} element={<StatusPage />} />
 
       <Route path={AUTH_PATHS.login} element={<LoginRoute />} />
       <Route
