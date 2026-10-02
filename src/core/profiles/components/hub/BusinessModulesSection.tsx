@@ -153,13 +153,13 @@ function BusinessModuleCard({
             {business.verified ? (
               <Badge
                 variant="outline"
-                className="h-5 border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-700"
+                className="h-5 border-success/25 bg-success/10 text-[10px] text-success"
               >
                 Verificada
               </Badge>
             ) : null}
             {business.isPremium ? (
-              <Badge className="h-5 bg-amber-500 px-2 text-[10px] text-white">
+              <Badge className="h-5 bg-warning px-2 text-[10px] text-warning-foreground">
                 Premium
               </Badge>
             ) : null}
