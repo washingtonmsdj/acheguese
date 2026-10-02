@@ -125,7 +125,9 @@ describe("public territorial surface audit", () => {
     expect(mapSource).toContain("activeMemberIds");
     expect(mapSource).toContain("const isFocusOnlyMode = Boolean(focusTarget) && !effectiveResolved");
     expect(mapSource).toContain("const runtimeTerritoryFilter = isFocusOnlyMode ? undefined : territoryFilter");
+    expect(mapSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
     expect(mapSource).not.toContain("useTerritoryFilter(effectiveResolved, activeMemberIds)");
+    expect(mapSource).not.toContain("buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`)");
   });
 
   it("keeps gastronomy and classifieds group routes scoped to active module members", () => {
@@ -175,5 +177,43 @@ describe("public territorial surface audit", () => {
     expect(businessDetailShell).not.toContain("navigate('/termos')");
     expect(businessDetailShell).not.toContain("navigate('/privacidade')");
   });
+
+  it("keeps launch territory copy and indication paths projected from canonical SSOT", () => {
+    const entrySource = readProjectFile("src/app/pages/TerritoryEntryPage.tsx");
+    const guideSource = readProjectFile("src/app/pages/ComoFuncionaPage.tsx");
+    const indicationSource = readProjectFile("src/app/pages/CommunityIndicationPage.tsx");
+    const searchSource = readProjectFile("src/app/pages/BuscaPage.tsx");
+    const businessDetailSource = readProjectFile("src/app/pages/EmpresaDetailLandingPage.tsx");
+
+    expect(entrySource).toContain("TERRITORY_CONFIG");
+    expect(entrySource).toContain("LAUNCH_COMMUNITY_NAME");
+    expect(entrySource).not.toContain("Complexo do Nordeste de Amaralina");
+
+    expect(guideSource).toContain("TERRITORY_CONFIG.launch.community.name");
+    expect(guideSource).toContain("getStateByCode(TERRITORY_CONFIG.launch.state)");
+    expect(guideSource).not.toContain('|| "Salvador"');
+    expect(guideSource).not.toContain('|| "Complexo do Nordeste de Amaralina"');
+
+    expect(indicationSource).toContain("BRAZILIAN_STATES.map");
+    expect(indicationSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
+    expect(indicationSource).toContain("addCountryPrefix(");
+    expect(indicationSource).toContain("communitySlug: normalizedNeighborhood");
+    expect(indicationSource).toContain("to={LAUNCH_URLS.portal}");
+    expect(indicationSource).not.toContain("to={LAUNCH_URLS.community}");
+    expect(indicationSource).not.toContain("territoryPath: `/ba/");
+    expect(indicationSource).not.toContain("Complexo do Nordeste de Amaralina");
+
+    expect(searchSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
+    expect(searchSource).not.toContain("const territoryBase = `/${stateSlug}");
+
+    expect(businessDetailSource).toContain("LAUNCH_URLS.portal");
+    expect(businessDetailSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
+    expect(businessDetailSource).toContain("buildModuleTerritoryUrl(");
+    expect(businessDetailSource).not.toContain('state || "ba"');
+    expect(businessDetailSource).not.toContain('city || "salvador"');
+    expect(businessDetailSource).not.toContain("complexo-do-nordeste-de-amaralina");
+    expect(businessDetailSource).not.toContain("${territoryUrl}/empresas");
+  });
+
 
 });
