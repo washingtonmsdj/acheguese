@@ -1,6 +1,7 @@
 export const AUTH_PATHS = {
   login: "/login",
   signup: "/cadastro",
+  onboarding: "/onboarding",
   signupConfirmation: "/cadastro/confirmacao",
   firstAccess: "/cadastro/primeiro-acesso",
   termsAcceptance: "/aceitar-termos",
