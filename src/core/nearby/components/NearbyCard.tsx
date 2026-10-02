@@ -2,6 +2,8 @@ import { MapPin, Navigation, Store } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
 import type { NearbyBusiness } from "../domain/types";
+import { isPreciseNearbyDistance } from "../config/nearbyConfig";
+import { formatNearbyDistance } from "../utils/nearbyDistance";
 
 interface NearbyCardProps {
   business: NearbyBusiness;
@@ -9,20 +11,13 @@ interface NearbyCardProps {
   showProximity: boolean;
 }
 
-function formatDistance(meters: number): string {
-  if (meters < 1000) return `${Math.round(meters)}m`;
-  return `${(meters / 1000).toFixed(1)}km`;
-}
 
 export function NearbyCard({
   business,
   onNavigate,
   showProximity,
 }: NearbyCardProps) {
-  const hasRealDistance =
-    showProximity &&
-    business.distanceMeters > 0 &&
-    business.distanceMeters < 100000;
+  const hasRealDistance = isPreciseNearbyDistance(business.distanceMeters, showProximity);
   const territoryName = business.neighborhood || business.city || "na região";
 
   return (
@@ -50,7 +45,7 @@ export function NearbyCard({
                 <>
                   <div className="flex items-center gap-1.5 font-semibold text-primary">
                     <Navigation className="h-4 w-4" />
-                    <span>{formatDistance(business.distanceMeters)} em linha reta</span>
+                    <span>{formatNearbyDistance(business.distanceMeters)} em linha reta</span>
                   </div>
                 </>
               ) : (
