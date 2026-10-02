@@ -1,3 +1,4 @@
+import { GLOBAL_NAV_PATHS } from "@/core/routing/config/globalNavigationPaths";
 import {
   lazy,
   Suspense,
@@ -528,6 +529,7 @@ export default function BuscaPage({ embedded = false }: { embedded?: boolean } =
     <div className="min-h-[100dvh] text-territory-ink">
       {!embedded ? (
         <TerritoryTopbar
+      navigation={GLOBAL_NAV_PATHS}
           territoryName={territoryName}
           contextLabel={contextLabel}
           isAuthenticated={Boolean(user)}
