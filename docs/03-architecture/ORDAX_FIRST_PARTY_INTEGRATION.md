@@ -106,3 +106,24 @@ atual do OrdaX permite inicialmente somente:
 O client server-side não solicita `network.messages.read`, escrita ou publicação
 enquanto o provider não registrar e provar esses escopos para o cliente do
 Achegue-se. Não existe promoção automática de escopo.
+
+## Resource server read-only
+
+O provider OrdaX já possui uma boundary read-only provada para os três scopes
+iniciais. O Achegue-se mantém primitivas server-side correspondentes em
+`supabase/functions/_shared/ordaxProductNetwork.ts`, ainda sem runtime público.
+
+As únicas rotas conhecidas por esse client são:
+
+- `GET /product/network/v1/space`;
+- `GET /product/network/v1/directory`;
+- `GET /product/network/v1/communities`.
+
+O resource origin é configuração server-side própria e não é inferido do issuer
+OAuth. O bearer token fica somente no header `Authorization`; não entra em URL,
+query, storage do browser ou payload de banco. Respostas são validadas contra os
+schemas provider-owned antes de serem aceitas.
+
+A presença desse source não ativa conexão. O runtime continua fechado até o
+OrdaX registrar o redirect HTTPS real, habilitar o client `acheguese-web-01` e
+provar o linking real previsto em #917.
