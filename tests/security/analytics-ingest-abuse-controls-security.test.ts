@@ -91,6 +91,32 @@ describe("analytics public-ingest abuse controls", () => {
     expect(sql).toContain("'47 * * * *'");
   });
 
+  it("keeps track_analytics_event ready for an empty search_path hardening", () => {
+    const functionStart = sql.toLowerCase().indexOf(
+      "create or replace function public.track_analytics_event(",
+    );
+    expect(functionStart).toBeGreaterThanOrEqual(0);
+
+    const tail = sql.slice(functionStart);
+    const functionEnd = tail.indexOf("$function$;", tail.indexOf("AS $function$") + 1);
+    expect(functionEnd).toBeGreaterThanOrEqual(0);
+    const trackDefinition = tail.slice(0, functionEnd);
+
+    expect(trackDefinition).toContain("public.analytics_event_type");
+    expect(trackDefinition).toContain("public.analytics_event_source");
+    expect(trackDefinition).toContain("private.enforce_analytics_ingest_rate_limits");
+    expect(trackDefinition).toContain("INSERT INTO public.analytics_events");
+    expect(trackDefinition).toContain("FROM public.analytics_sessions");
+    expect(trackDefinition).toContain("INSERT INTO public.analytics_sessions");
+    expect(trackDefinition).toContain("public.analytics_sessions.user_id");
+    expect(trackDefinition).toContain("auth.uid()");
+    expect(trackDefinition).toContain("auth.role()");
+
+    expect(trackDefinition).not.toMatch(
+      /\b(?:from|join|insert\s+into|update|delete\s+from)\s+(?!public\.|private\.|auth\.|pg_catalog\.)[a-z_][a-z0-9_]*\b/i,
+    );
+  });
+
   it("preserves explicit least-privilege execution grants", () => {
     expect(sql).toMatch(
       /revoke\s+all\s+on\s+function\s+public\.track_analytics_event[\s\S]*?from\s+public/i,
