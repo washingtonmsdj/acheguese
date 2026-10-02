@@ -41,17 +41,17 @@ function StatusTile({
   const palette =
     tone === "danger"
       ? {
-          active: "border-amber-500/30 bg-amber-500/10 text-amber-200",
-          inactive: "border-red-500/30 bg-red-500/10 text-red-200",
+          active: "border-warning/30 bg-warning/10 text-warning",
+          inactive: "border-destructive/30 bg-destructive/10 text-destructive",
         }
       : tone === "neutral"
         ? {
-            active: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
-            inactive: "border-slate-500/30 bg-slate-500/10 text-slate-200",
+            active: "border-success/30 bg-success/10 text-success",
+            inactive: "border-muted-foreground/30 bg-muted/30 text-muted-foreground",
           }
         : {
-            active: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
-            inactive: "border-slate-500/30 bg-slate-500/10 text-slate-200",
+            active: "border-success/30 bg-success/10 text-success",
+            inactive: "border-muted-foreground/30 bg-muted/30 text-muted-foreground",
           };
 
   const Icon = active ? CheckCircle : XCircle;
