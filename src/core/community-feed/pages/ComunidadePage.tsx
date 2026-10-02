@@ -1,3 +1,4 @@
+import { GLOBAL_NAV_PATHS } from "@/core/routing/config/globalNavigationPaths";
 ﻿/**
  * ComunidadePage - PÃ¡gina principal da comunidade
  *
@@ -467,6 +468,7 @@ export default function ComunidadePage({
 
   const communityTopbar = (
     <TerritoryTopbar
+      navigation={GLOBAL_NAV_PATHS}
       territoryName={territoryName}
       contextLabel={territoryContextLabel}
       isAuthenticated={communityAccess.isAuthenticated}
