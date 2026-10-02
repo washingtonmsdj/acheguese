@@ -9,6 +9,8 @@ import { Route, Routes } from "react-router-dom";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import { AuthEntrySessionGate } from "@/app/routes/AuthEntrySessionGate";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
+import { SUPPORT_PATH } from "@/shared/constants/legal";
 
 const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
 const AppLayoutRoutes = lazy(() =>
@@ -67,7 +69,7 @@ export function AppRoutes() {
   if (PRELAUNCH_LOCKDOWN_ENABLED) {
     return (
       <Routes>
-        <Route path="/" element={<RootRouteEntry />} />
+        <Route path={STATIC_ROUTE_PATHS.home} element={<RootRouteEntry />} />
         <Route path={AUTH_PATHS.login} element={<LoginRoute />} />
         <Route
           path={AUTH_PATHS.emailChangeConfirmation}
@@ -83,7 +85,7 @@ export function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<RootRouteEntry />} />
+      <Route path={STATIC_ROUTE_PATHS.home} element={<RootRouteEntry />} />
       <Route path="/q/:token" element={<QrResolverPage />} />
       <Route path="/status" element={<StatusPage />} />
 
@@ -99,9 +101,9 @@ export function AppRoutes() {
         element={<CadastroConfirmacaoPage />}
       />
       <Route path={AUTH_PATHS.termsAcceptance} element={<AceiteTermosPage />} />
-      <Route path="/como-funciona" element={<ComoFuncionaPage />} />
-      <Route path="/sobre" element={<AboutPage />} />
-      <Route path="/contato" element={<ContactPage />} />
+      <Route path={STATIC_ROUTE_PATHS.howItWorks} element={<ComoFuncionaPage />} />
+      <Route path={STATIC_ROUTE_PATHS.about} element={<AboutPage />} />
+      <Route path={SUPPORT_PATH} element={<ContactPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
 
