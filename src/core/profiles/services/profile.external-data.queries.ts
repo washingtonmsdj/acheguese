@@ -19,6 +19,7 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
     options?: { count?: "exact"; head?: boolean },
   ) => QueryBuilder<TRow>;
   eq: (column: string, value: unknown) => QueryBuilder<TRow>;
+  neq: (column: string, value: unknown) => QueryBuilder<TRow>;
   in: (column: string, values: unknown[]) => QueryBuilder<TRow>;
   order: (column: string, options?: { ascending?: boolean }) => QueryBuilder<TRow>;
 }
@@ -72,6 +73,7 @@ export async function getUserBusinessesByProfilesQuery(
     `,
     )
     .in("profile_id", profileIds)
+    .neq("status", "deleted")
     .order("created_at", { ascending: false });
 
   if (error) {
