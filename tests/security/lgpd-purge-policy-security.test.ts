@@ -69,11 +69,11 @@ describe("LGPD irreversible purge policy", () => {
 
   it("locks the profile purge fanout and the classified report schema drift", () => {
     expect(policy.profileDeletionFanout.snapshot).toEqual({
-      totalForeignKeys: 157,
-      cascade: 106,
+      totalForeignKeys: 172,
+      cascade: 114,
       noAction: 5,
       restrict: 3,
-      setNull: 43,
+      setNull: 50,
       setNullOnNotNullColumn: 1,
     });
     expect(policy.profileDeletionFanout.hardBlockers).toContainEqual(
@@ -82,6 +82,13 @@ describe("LGPD irreversible purge policy", () => {
         onDelete: "SET NULL",
         nullable: false,
         constraint: "classified_reports_reporter_id_fkey",
+      }),
+    );
+    expect(policy.profileDeletionFanout.hardBlockers).toContainEqual(
+      expect.objectContaining({
+        column: "public.vagas.owner_profile_id",
+        onDelete: "NO ACTION",
+        nullable: false,
       }),
     );
   });
@@ -99,8 +106,8 @@ describe("LGPD irreversible purge policy", () => {
 
   it("records current remote foundation without pretending unapplied migrations exist", () => {
     expect(policy.remoteFoundation).toEqual({
-      accountDeletionRequestsExists: false,
-      requestRpcExists: false,
+      accountDeletionRequestsExists: true,
+      requestRpcExists: true,
       cancelRpcExists: true,
       pgCronInstalled: true,
       pgNetInstalled: true,
