@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { APP_PATHS } from "../appPaths";
+import { GLOBAL_NAV_PATHS } from "../globalNavigationPaths";
 
 const currentDir = resolve(fileURLToPath(import.meta.url), "..");
 const repoRoot = resolve(currentDir, "../../../../..");
@@ -20,6 +21,17 @@ describe("APP_PATHS", () => {
       aiSearch: "/buscar",
       notifications: "/notificacoes",
       emailLogs: "/settings/email-logs",
+    });
+  });
+
+  it("projects canonical global navigation without duplicating literals", () => {
+    expect(GLOBAL_NAV_PATHS).toEqual({
+      home: APP_PATHS.home,
+      territorySwitch: "/?trocar=territorio",
+      notifications: APP_PATHS.notifications,
+      login: "/login",
+      account: "/conta",
+      messages: "/mensagens",
     });
   });
 
@@ -50,5 +62,14 @@ describe("APP_PATHS", () => {
       "src/modules/business/company/pages/EmpresaDetailLayout.tsx",
     );
     expect(businessDetail).not.toContain('to="/buscar"');
+
+    const territoryTopbar = readProjectFile(
+      "src/shared/components/territory-vivo/TerritoryTopbar.tsx",
+    );
+    expect(territoryTopbar).not.toContain('from "@/core/');
+    expect(territoryTopbar).not.toContain('"/notificacoes"');
+    expect(territoryTopbar).not.toContain('"/login"');
+    expect(territoryTopbar).not.toContain('"/conta"');
+    expect(territoryTopbar).not.toContain('"/mensagens"');
   });
 });
