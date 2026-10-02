@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { APP_PATHS } from "@/core/routing/config/appPaths";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
   getPublicTerritoryGroupPresentation,
@@ -189,7 +190,7 @@ export default function TerritoryEntryPage() {
     };
   }, []);
 
-  const accountHref = isAuthenticated ? buildLoginPath(ACCOUNT_PATHS.home) : AUTH_PATHS.login;
+  const accountHref = isAuthenticated ? ACCOUNT_PATHS.home : AUTH_PATHS.login;
   const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
 
   return (
@@ -200,7 +201,7 @@ export default function TerritoryEntryPage() {
 
       <header className="ag-header">
         <div className="ag-container ag-header-inner">
-          <a href="/" className="ag-brand" aria-label="Achegue-se — início">
+          <a href={APP_PATHS.home} className="ag-brand" aria-label="Achegue-se — início">
             <BrandMark />
             <span>achegue-se</span>
           </a>
@@ -400,7 +401,7 @@ export default function TerritoryEntryPage() {
       <footer className="ag-footer">
         <div className="ag-container ag-footer-grid">
           <div>
-            <a href="/" className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
+            <a href={APP_PATHS.home} className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
               <BrandMark />
               <span>achegue-se</span>
             </a>
