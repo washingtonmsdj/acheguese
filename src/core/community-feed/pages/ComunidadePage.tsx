@@ -54,6 +54,7 @@ import { usePersistedCommunityProfile } from "@/core/community-experience/hooks/
 import { isPersistedCommunityId } from "@/core/community-experience/types";
 import { resolveCommunitySurfaceState } from "@/core/community-experience/policies/CommunitySurfacePolicy";
 import { CommunityAvailabilityState } from "@/core/community-feed/components/page/CommunityAvailabilityState";
+import { TERRITORY_TOPBAR_NAVIGATION } from "@/core/routing/config/territoryTopbarNavigation";
 import { TerritoryTopbar } from "@/shared/components/territory-vivo/TerritoryTopbar";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
@@ -467,6 +468,7 @@ export default function ComunidadePage({
 
   const communityTopbar = (
     <TerritoryTopbar
+      navigation={TERRITORY_TOPBAR_NAVIGATION}
       territoryName={territoryName}
       contextLabel={territoryContextLabel}
       isAuthenticated={communityAccess.isAuthenticated}
