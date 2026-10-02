@@ -445,7 +445,8 @@ describe("MVP core module boundary", () => {
     expect(prefetch).toContain('import("@/app/pages/NearbyPage")');
     expect(prefetch).toContain("if (!candidate || !candidate.enabled()) return;");
     expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter((entry) => entry.enabled())");
-    expect(prefetch).toContain('href: "/notificacoes"');
+    expect(prefetch).toContain('import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";');
+    expect(prefetch).toContain("href: APP_GLOBAL_PATHS.notifications");
   });
 
   it("keeps primary territorial navigation on the MVP core", () => {
