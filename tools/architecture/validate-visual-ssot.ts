@@ -124,7 +124,6 @@ const MIGRATED_RUNTIME_FILES = [
   'src/core/nearby/components/NearbySection.tsx',
   'src/core/nearby/components/NearbyBusinessCta.tsx',
   'src/core/nearby/components/NearbyQuickRoutes.tsx',
-  'src/core/nearby/components/NearbyCard.tsx',
   'src/modules/business/pages/CriarEmpresaPage.tsx',
   'src/modules/business/pages/CriarEmpresaPage.css',
   'src/modules/business/company/pages/EmpresaDetailLayout.tsx',
