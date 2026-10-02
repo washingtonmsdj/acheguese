@@ -3,14 +3,17 @@ import { Link } from "react-router-dom";
 import type { ReactNode } from "react";
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { getStateByCode } from "@/core/location/data/brazilianStates";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 import "./ComoFuncionaPage.css";
 
-const COMMUNITY_NAME =
-  TERRITORY_CONFIG.launch.community.name || "Complexo do Nordeste de Amaralina";
+const COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
 const COMMUNITY_SHORT_NAME = COMMUNITY_NAME.replace(/^Complexo do /, "");
-const CITY_NAME = TERRITORY_CONFIG.launch.name || "Salvador";
+const CITY_NAME = TERRITORY_CONFIG.launch.name;
+const STATE_NAME =
+  getStateByCode(TERRITORY_CONFIG.launch.state)?.name ||
+  TERRITORY_CONFIG.launch.state.toLocaleUpperCase("pt-BR");
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -173,7 +176,7 @@ export default function ComoFuncionaPage() {
                 <figcaption>
                   <span>Nosso ponto de partida</span>
                   <strong>{COMMUNITY_SHORT_NAME}</strong>
-                  <small>{CITY_NAME} · Bahia</small>
+                  <small>{CITY_NAME} · {STATE_NAME}</small>
                 </figcaption>
               </figure>
 
