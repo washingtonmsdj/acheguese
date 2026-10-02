@@ -1,5 +1,6 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { Bell, Home, LogOut } from "lucide-react";
@@ -21,11 +22,11 @@ interface CentralHeaderProps {
 }
 
 export function CentralHeader({ billingEnabled, brand, showNavigation = true }: CentralHeaderProps) {
-  const publicHomeUrl = buildPublicAbsoluteUrl("/");
+  const publicHomeUrl = buildPublicAbsoluteUrl(STATIC_ROUTE_PATHS.home);
 
   const handleLogout = async () => {
     await AuthService.signOut();
-    window.location.replace("/login");
+    window.location.replace(AUTH_PATHS.login);
   };
 
   return (
