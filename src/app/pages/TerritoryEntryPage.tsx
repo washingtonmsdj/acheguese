@@ -204,7 +204,7 @@ export default function TerritoryEntryPage() {
 
       <header className="ag-header">
         <div className="ag-container ag-header-inner">
-          <a href="/" className="ag-brand" aria-label="Achegue-se — início">
+          <a href={APP_GLOBAL_PATHS.home} className="ag-brand" aria-label="Achegue-se — início">
             <BrandMark />
             <span>achegue-se</span>
           </a>
@@ -404,7 +404,7 @@ export default function TerritoryEntryPage() {
       <footer className="ag-footer">
         <div className="ag-container ag-footer-grid">
           <div>
-            <a href="/" className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
+            <a href={APP_GLOBAL_PATHS.home} className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
               <BrandMark />
               <span>achegue-se</span>
             </a>
