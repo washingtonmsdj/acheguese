@@ -35,7 +35,6 @@ interface TerritoryTopbarProps {
   flushDesktop?: boolean;
   /** Match compact mobile concepts that place the territory row directly below the brand row. */
   compactMobile?: boolean;
-  messagesHref?: string;
   profileLabel?: string | null;
   profileAvatarUrl?: string | null;
 }
