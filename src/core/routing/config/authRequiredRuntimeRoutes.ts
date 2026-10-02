@@ -1,5 +1,6 @@
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
+import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
 
 const AUTH_REQUIRED_RUNTIME_PREFIXES = [
   ACCOUNT_PATHS.home,
@@ -8,9 +9,9 @@ const AUTH_REQUIRED_RUNTIME_PREFIXES = [
 ] as const;
 
 const AUTH_REQUIRED_RUNTIME_EXACT_PATHS = new Set<string>([
-  "/notificacoes",
-  "/settings/email-logs",
-  "/empresas/cadastrar",
+  APP_GLOBAL_PATHS.notifications,
+  APP_GLOBAL_PATHS.emailLogs,
+  APP_GLOBAL_PATHS.businessRegistration,
 ]);
 
 function normalizePathname(pathname: string): string {
