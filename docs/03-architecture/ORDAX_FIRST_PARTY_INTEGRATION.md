@@ -1,6 +1,6 @@
 # OrdaX × Achegue-se — First-party product boundary
 
-Status: **arquitetura adotada; runtime ainda desativado**
+Status: **Network multi-tenant provada; Product OAuth público ainda desativado**
 
 Achegue-se é tratado como um produto vertical first-party do ecossistema OrdaX.
 Isso não transforma Achegue-se em módulo do sistema operacional nem compartilha
@@ -71,13 +71,20 @@ Contrato executável:
 Contrato de arquitetura:
 `docs/contracts/ordax-first-party-integration.json`.
 
-O runtime só pode ser ativado depois da prova multi-tenant da OrdaX Network e de
-um OAuth/API de produto real.
+A prova multi-tenant da OrdaX Network já foi concluída no OrdaX. O gate restante é
+o Product OAuth público: o provider possui autoridade persistente e boundary HTTP
+em source, mas o cliente `acheguese-web-01` continua desativado, sem redirect HTTPS
+registrado e sem listener público habilitado.
+
+O Achegue-se já possui primitivas server-side fail-closed em
+`supabase/functions/_shared/ordaxProductOAuth.ts`: state aleatório, PKCE S256,
+validação estrita de issuer/redirect, exchange e revogação. Elas não habilitam o
+runtime por presença de source e não expõem tokens ao browser.
 
 
 ## Client e audience
 
-O cliente first-party canônico é `acheguese` e a audience esperada é
+O identificador lógico first-party no Achegue-se é `acheguese`; o registro OAuth real no OrdaX é `acheguese-web-01`. A audience esperada continua sendo
 `ordax:first-party:acheguese`.
 
 Todo vínculo persistível deve carregar e validar ambos. Um token/conexão emitido
@@ -86,3 +93,16 @@ como autorização do Achegue-se.
 
 Isso preserva a possibilidade de um mesmo emissor OrdaX atender produtos
 diferentes sem compartilhar autoridade entre eles.
+
+## Escopos do primeiro rollout OAuth
+
+Embora o boundary de produto conheça escopos futuros adicionais, o registro OAuth
+atual do OrdaX permite inicialmente somente:
+
+- `network.space.read`;
+- `network.directory.read`;
+- `network.communities.read`.
+
+O client server-side não solicita `network.messages.read`, escrita ou publicação
+enquanto o provider não registrar e provar esses escopos para o cliente do
+Achegue-se. Não existe promoção automática de escopo.

@@ -1,6 +1,6 @@
 {
   "$schema": "acheguese.ordax-first-party-integration/1",
-  "status": "boundary-defined-runtime-disabled",
+  "status": "network-proof-complete-oauth-runtime-disabled",
   "positioning": {
     "ordax": "platform",
     "acheguese": "first-party-vertical-product",
@@ -16,7 +16,8 @@
     "tokens_server_side_only": true,
     "client_id": "acheguese",
     "audience": "ordax:first-party:acheguese",
-    "cross_audience_token_reuse": false
+    "cross_audience_token_reuse": false,
+    "oauth_registration_client_id": "acheguese-web-01"
   },
   "persistence": {
     "shared_database": false,
@@ -69,7 +70,18 @@
   "runtime_gate": {
     "enabled": false,
     "requires_ordax_network_multitenant_proof": true,
+    "ordax_network_multitenant_proof_satisfied": true,
     "requires_ordax_product_oauth_api": true,
+    "ordax_product_oauth_source_available": true,
+    "ordax_product_oauth_public_runtime_enabled": false,
+    "ordax_product_oauth_registration_client_id": "acheguese-web-01",
+    "ordax_product_oauth_redirect_registered": false,
+    "ordax_product_oauth_listener_deployed": false,
+    "initial_oauth_scopes": [
+      "network.space.read",
+      "network.directory.read",
+      "network.communities.read"
+    ],
     "requires_two_account_e2e": true,
     "fake_adapter_forbidden": true
   }
