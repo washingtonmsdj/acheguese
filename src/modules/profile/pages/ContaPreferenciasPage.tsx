@@ -211,12 +211,12 @@ export default function ContaPreferenciasPage() {
                       className={cn(
                         "min-h-14 rounded-xl border px-2 py-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
                         selected
-                          ? "border-territory-brand bg-territory-brand text-white"
+                          ? "border-territory-brand bg-territory-brand text-primary-foreground"
                           : "border-territory-border bg-territory-raised text-territory-ink hover:border-territory-brand/50",
                       )}
                     >
                       <span className="block text-sm font-semibold">{option.label}</span>
-                      <span className={cn("mt-0.5 block text-xs", selected ? "text-white/80" : "text-territory-muted")}>
+                      <span className={cn("mt-0.5 block text-xs", selected ? "text-primary-foreground/80" : "text-territory-muted")}>
                         {option.description}
                       </span>
                     </button>
