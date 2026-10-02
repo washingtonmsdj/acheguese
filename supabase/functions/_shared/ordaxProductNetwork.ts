@@ -4,9 +4,58 @@ const SPACE_SCHEMA = "prototype-ordax.product-network-space/1";
 const DIRECTORY_SCHEMA = "prototype-ordax.product-network-directory/1";
 const COMMUNITIES_SCHEMA = "prototype-ordax.product-network-communities/1";
 const CATEGORY_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const COMMUNITY_ID_RE = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
+
+function isAsciiHex(character: string): boolean {
+  const code = character.toLowerCase().charCodeAt(0);
+  return (
+    (code >= 48 && code <= 57) ||
+    (code >= 97 && code <= 102)
+  );
+}
+
+function isProviderUuid(value: string): boolean {
+  if (value.length !== 36) return false;
+  const dashIndexes = new Set([8, 13, 18, 23]);
+
+  for (let index = 0; index < value.length; index += 1) {
+    const character = value[index] ?? "";
+    if (dashIndexes.has(index)) {
+      if (character !== "-") return false;
+      continue;
+    }
+    if (!isAsciiHex(character)) return false;
+  }
+
+  const version = value[14]?.toLowerCase() ?? "";
+  const variant = value[19]?.toLowerCase() ?? "";
+  return "12345678".includes(version) && "89ab".includes(variant);
+}
+
+function isLowerAsciiAlphanumeric(character: string): boolean {
+  const code = character.charCodeAt(0);
+  return (
+    (code >= 48 && code <= 57) ||
+    (code >= 97 && code <= 122)
+  );
+}
+
+function isProviderCommunityId(value: string): boolean {
+  if (value.length < 1 || value.length > 120) return false;
+  let previousWasSeparator = true;
+
+  for (const character of value) {
+    const separator = character === "." || character === "-";
+    if (separator) {
+      if (previousWasSeparator) return false;
+      previousWasSeparator = true;
+      continue;
+    }
+    if (!isLowerAsciiAlphanumeric(character)) return false;
+    previousWasSeparator = false;
+  }
+
+  return !previousWasSeparator;
+}
 
 export interface OrdaxProductNetworkServerConfig {
   readonly origin: string;
@@ -188,7 +237,7 @@ export function buildOrdaxProductNetworkDirectoryRequest(
   if ((afterName === undefined) !== (afterSpaceId === undefined)) {
     throw new TypeError("OrdaX directory cursor must include name and Space id");
   }
-  if (afterSpaceId && !UUID_RE.test(afterSpaceId)) {
+  if (afterSpaceId && !isProviderUuid(afterSpaceId)) {
     throw new TypeError("OrdaX directory cursor Space is invalid");
   }
 
@@ -292,7 +341,7 @@ function validateSpace(
     throw new TypeError("OrdaX Space fields are invalid");
   }
 
-  if (typeof input.space_id !== "string" || !UUID_RE.test(input.space_id)) {
+  if (typeof input.space_id !== "string" || !isProviderUuid(input.space_id)) {
     throw new TypeError("OrdaX Space id is invalid");
   }
 
@@ -382,7 +431,7 @@ export function validateOrdaxProductNetworkCommunitiesResponse(
       keys.some((key) => !(key in item)) ||
       typeof item.community_id !== "string" ||
       item.community_id.length > 120 ||
-      !COMMUNITY_ID_RE.test(item.community_id) ||
+      !isProviderCommunityId(item.community_id) ||
       typeof item.title !== "string" ||
       item.title.length < 1 ||
       item.title.length > 120 ||
