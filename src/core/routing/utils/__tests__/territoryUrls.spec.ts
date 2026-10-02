@@ -9,6 +9,7 @@ import {
   buildLocationModuleUrl,
   buildModuleTerritoryEntityUrl,
   buildModuleTerritoryUrl,
+  buildPublicTerritoryBaseUrlFromInput,
   buildModuleTerritoryUrlFromSegments,
   buildTerritoryModuleUrl,
   extractCommunityTerritoryBaseUrl,
@@ -32,6 +33,32 @@ describe("normalizePublicTerritoryPath", () => {
     expect(normalizePublicTerritoryPath("ba/salvador/pituba")).toBe(
       "/ba/salvador/pituba",
     );
+  });
+});
+
+describe("buildPublicTerritoryBaseUrlFromInput", () => {
+  it("resolve nome ou sigla de estado pelo SSOT e normaliza cidade/territorio", () => {
+    expect(
+      buildPublicTerritoryBaseUrlFromInput(
+        "Bahia",
+        "Salvador",
+        "Nordeste de Amaralina",
+      ),
+    ).toBe("/ba/salvador/nordeste-de-amaralina");
+
+    expect(
+      buildPublicTerritoryBaseUrlFromInput("SP", "São Paulo"),
+    ).toBe("/sp/sao-paulo");
+  });
+
+  it("rejeita estado ou cidade invalidos em vez de produzir rota incorreta", () => {
+    expect(() =>
+      buildPublicTerritoryBaseUrlFromInput("Estado inexistente", "Cidade"),
+    ).toThrow("estado brasileiro valido");
+
+    expect(() =>
+      buildPublicTerritoryBaseUrlFromInput("BA", "   "),
+    ).toThrow("cidade valida");
   });
 });
 
