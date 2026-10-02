@@ -48,7 +48,7 @@ export function CentralHeader({ billingEnabled, brand, showNavigation = true }: 
             Planos
           </Link>
         ) : null}
-        <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+        <Link to={STATIC_ROUTE_PATHS.about} className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
         <Link to={STATIC_ROUTE_PATHS.notifications} aria-label="Notificações" className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground">
