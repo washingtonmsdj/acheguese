@@ -1,5 +1,6 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
+import { APP_PATHS } from "@/core/routing/config/appPaths";
 import { Bell, Home, LogOut } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { AuthService } from "@/core/auth/services/AuthService";
@@ -49,7 +50,7 @@ export function CentralHeader({ billingEnabled, brand, showNavigation = true }: 
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
-        <Link to="/notificacoes" aria-label="Notificações" className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground">
+        <Link to={APP_PATHS.notifications} aria-label="Notificações" className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground">
           <Bell className="h-5 w-5" />
         </Link>
         <Link to="/conta" className="hidden text-sm sm:inline" aria-label="Minha conta">Conta</Link>
