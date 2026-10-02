@@ -226,7 +226,7 @@ export function ContaHubLayout({
             <button
               type="button"
               onClick={() => void handleSignOut()}
-              className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-xl border border-red-300 bg-territory-surface px-4 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 sm:rounded-2xl"
+              className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-xl border border-destructive/30 bg-territory-surface px-4 text-left text-sm font-semibold text-destructive hover:bg-destructive/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-destructive sm:rounded-2xl"
             >
               <LogOut className="h-5 w-5" aria-hidden="true" />
               Sair da conta
