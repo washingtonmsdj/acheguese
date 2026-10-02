@@ -28,8 +28,9 @@ describe("professional trust reputation SECURITY DEFINER hardening", () => {
     expect(functionStart).toBeGreaterThanOrEqual(0);
 
     const tail = sql.slice(functionStart);
-    const functionEnd = tail.indexOf("$func$;");
-    const body = functionEnd >= 0 ? tail.slice(0, functionEnd) : tail;
+    const functionEnd = tail.indexOf("$$;");
+    expect(functionEnd).toBeGreaterThanOrEqual(0);
+    const body = tail.slice(0, functionEnd);
 
     expect(body).toContain("FROM public.professional_data");
     expect(body).toContain("FROM public.work_opportunities");
