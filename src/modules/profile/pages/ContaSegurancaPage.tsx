@@ -526,7 +526,7 @@ export default function ContaSegurancaPage() {
             </div>
 
             {emailRequestSent ? (
-              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800" role="status">
+              <div className="mt-4 rounded-xl border border-success/25 bg-success/10 p-4 text-sm text-emerald-800" role="status">
                 <div className="flex items-center gap-2 font-semibold">
                   <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                   Solicitação enviada
@@ -748,7 +748,7 @@ export default function ContaSegurancaPage() {
           ) : isMFAEnabled ? (
             <Surface className="p-4 sm:p-5">
               <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
                   <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
                 </span>
                 <div>
@@ -798,7 +798,7 @@ export default function ContaSegurancaPage() {
     const googleStatusClass = providersUnknown
       ? "bg-territory-raised text-territory-muted"
       : googleLinked
-        ? "bg-emerald-100 text-emerald-800"
+        ? "bg-success/15 text-success"
         : googleAuthAvailable
           ? "bg-territory-brand/10 text-territory-brand"
           : "bg-territory-raised text-territory-muted";
@@ -926,7 +926,7 @@ export default function ContaSegurancaPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-heading text-base font-bold text-territory-ink">Autenticação em duas etapas</h2>
                   {!mfaLoading && isMFAStatusResolved ? (
-                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-100 text-emerald-800" : "bg-red-50 text-red-700"}`}>
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-success/15 text-success" : "bg-destructive/10 text-destructive"}`}>
                       {isMFAEnabled ? "Ativada" : "Não ativada"}
                     </span>
                   ) : !mfaLoading && mfaError ? (
@@ -951,7 +951,7 @@ export default function ContaSegurancaPage() {
               </Button>
             ) : isMFAStatusResolved && isMFAEnabled ? (
               <>
-                <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800"><CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />Autenticação em duas etapas ativa nesta conta.</div>
+                <div className="mt-5 flex items-center gap-2 rounded-xl border border-success/25 bg-success/10 px-3 py-3 text-sm text-emerald-800"><CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />Autenticação em duas etapas ativa nesta conta.</div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button type="button" variant="ghost" className="mt-2 min-h-10 w-full text-destructive hover:bg-destructive/5 hover:text-destructive" disabled={disablingMfa || mfaLoading}>
