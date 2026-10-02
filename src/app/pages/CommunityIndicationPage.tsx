@@ -157,7 +157,7 @@ export default function CommunityIndicationPage() {
               A expansão será por etapas, sem prazo artificial.
             </p>
             <div className="community-indication-actions">
-              <Link className="community-indication-primary" to={LAUNCH_URLS.community}>
+              <Link className="community-indication-primary" to={LAUNCH_URLS.portal}>
                 <span>Explorar {LAUNCH_COMMUNITY_NAME}</span>
                 <ArrowRight aria-hidden="true" />
               </Link>
