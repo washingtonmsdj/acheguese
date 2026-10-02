@@ -104,6 +104,12 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/profile/components/AccountSettingsShell.tsx',
   'src/modules/profile/pages/ContaPreferenciasPage.tsx',
   'src/app/pages/NotificationPreferencesPage.tsx',
+  'src/modules/profile/pages/ContaSegurancaPage.tsx',
+  'src/app/pages/PrivacySettingsPage.tsx',
+  'src/app/pages/EmailLogsPage.tsx',
+  'src/app/pages/OfflineSettingsPage.tsx',
+  'src/app/pages/TermosPage.tsx',
+  'src/app/pages/DPOContactPage.tsx',
   'src/app/pages/EmpresasLandingPage.tsx',
   'src/app/pages/TerritoryEntryPage.tsx',
   'src/app/pages/TerritoryEntryPage.css',
@@ -157,7 +163,15 @@ const MIGRATED_RUNTIME_FILES = [
 
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
-const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:emerald|green|lime|rose|red|amber|yellow)-\d{2,3}(?:\/\d+)?\b/;
+const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:blue|cyan|teal|emerald|green|lime|rose|red|amber|yellow|slate|gray)-\d{2,3}(?:\/\d+)?\b/;
+const SEMANTIC_STATUS_RUNTIME_FILES = new Set([
+  'src/modules/profile/pages/ContaSegurancaPage.tsx',
+  'src/app/pages/PrivacySettingsPage.tsx',
+  'src/app/pages/EmailLogsPage.tsx',
+  'src/app/pages/OfflineSettingsPage.tsx',
+  'src/app/pages/TermosPage.tsx',
+  'src/app/pages/DPOContactPage.tsx',
+]);
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
 const APPROVED_FONT_WEIGHTS = new Set(['400', '500', '600', '700', '800']);
@@ -322,11 +336,12 @@ function main(): void {
       violations.push(`${relative}: legacy font found after Plus Jakarta Sans migration.`);
     }
     if (
-      relative.startsWith('src/modules/business/dashboard/') &&
+      (relative.startsWith('src/modules/business/dashboard/') ||
+        SEMANTIC_STATUS_RUNTIME_FILES.has(relative)) &&
       NON_SEMANTIC_STATUS_COLOR_RE.test(content)
     ) {
       violations.push(
-        `${relative}: non-semantic status color found in Business dashboard; use success, warning or destructive tokens.`,
+        `${relative}: non-semantic status color found; use success, warning, destructive, info or muted tokens.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);
