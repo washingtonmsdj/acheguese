@@ -1,5 +1,5 @@
 import type { Profile } from '@/core/profiles';
-import { ACCOUNT_PATHS } from '@/core/routing/config/account';
+import { ACCOUNT_PATHS, buildAccountProfileEditPath } from '@/core/routing/config/account';
 
 /**
  * Constroi URL publica para perfil pessoal.
@@ -39,7 +39,7 @@ export function canHavePublicUrl(profile: Profile): boolean {
 }
 
 export function buildProfileEditUrl(profileId: string): string {
-  return `/conta/editar/${profileId}`;
+  return buildAccountProfileEditPath(profileId);
 }
 
 export function buildProfileSettingsUrl(
