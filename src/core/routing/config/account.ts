@@ -14,7 +14,12 @@ export const ACCOUNT_PATHS = {
   accessibility: "/conta/preferencias#acessibilidade",
   addresses: "/conta/enderecos",
   profileSettings: "/conta/perfil/configuracoes",
+  profileEditPattern: "/conta/editar/:profileId",
 } as const;
+
+export function buildAccountProfileEditPath(profileId: string): string {
+  return ACCOUNT_PATHS.profileEditPattern.replace(":profileId", encodeURIComponent(profileId));
+}
 
 export const ACCOUNT_SETTINGS_SHELL_PATHS = new Set<string>([
   ACCOUNT_PATHS.home,
