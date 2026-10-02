@@ -131,6 +131,8 @@ const MIGRATED_RUNTIME_FILES = [
   'src/core/nearby/components/NearbyBusinessCta.tsx',
   'src/core/nearby/components/NearbyQuickRoutes.tsx',
   'src/core/business/pages/CategoryBusinessPage.tsx',
+  'src/app/features/business-landing/utils/landing.constants.ts',
+  'src/core/maps/components/v3/MapLibreAdapterRuntime.tsx',
   'src/core/business/config/categoryFilters.ts',
   'src/modules/business/pages/CriarEmpresaPage.tsx',
   'src/modules/business/pages/CriarEmpresaPage.css',
@@ -167,6 +169,7 @@ const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:blue|cyan|teal|emerald|green|lime|rose|red|amber|yellow|slate|gray)-\d{2,3}(?:\/\d+)?\b/;
 const NON_SEMANTIC_PALETTE_COLOR_RE = /\b(?:text|bg|border|from|via|to)-(?:orange|emerald|green|lime|rose|red|pink|sky|cyan|violet|purple|amber|yellow|teal|blue)-\d{2,3}(?:\/\d+)?\b/;
+const DIRECT_RUNTIME_FONT_RE = /\b(?:Arial|Helvetica),?\s*(?:sans-serif)?\b/;
 const SEMANTIC_STATUS_RUNTIME_FILES = new Set([
   'src/modules/profile/pages/ContaSegurancaPage.tsx',
   'src/app/pages/PrivacySettingsPage.tsx',
@@ -350,12 +353,21 @@ function main(): void {
     if (
       (
         relative === 'src/core/business/pages/CategoryBusinessPage.tsx' ||
-        relative === 'src/core/business/config/categoryFilters.ts'
+        relative === 'src/core/business/config/categoryFilters.ts' ||
+        relative === 'src/app/features/business-landing/utils/landing.constants.ts'
       ) &&
       NON_SEMANTIC_PALETTE_COLOR_RE.test(content)
     ) {
       violations.push(
         `${relative}: direct Tailwind palette color found in Business category surface; use canonical semantic/territory tokens.`,
+      );
+    }
+    if (
+      relative === 'src/core/maps/components/v3/MapLibreAdapterRuntime.tsx' &&
+      DIRECT_RUNTIME_FONT_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: direct font stack found in MapLibre runtime; use the canonical --font-sans token.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);
