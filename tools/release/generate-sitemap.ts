@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 
 import type { SitemapSurfaceKey } from "@/core/routing/seo/generateSitemap";
+import { resolveLaunchTerritoryEnvironment } from "@/core/routing/config/territoryEnvironment";
 
 dotenv.config({ path: ".env.local", override: true });
 dotenv.config({ path: ".env", override: false });
@@ -66,8 +67,13 @@ async function main() {
     }
   };
 
+  const launchEnvironment = resolveLaunchTerritoryEnvironment(
+    process.env,
+  );
+
   await generateAndSaveSitemap({
     isSurfaceEnabled,
+    launchCityPath: launchEnvironment.cityPath,
     allowTransientSourceFallback: allowTransientSourceFallback(),
   });
 
