@@ -64,6 +64,7 @@ describe("OrdaX Product Network read-only server primitives", () => {
     if (!config) return;
 
     const space = buildOrdaxProductNetworkSpaceRequest(config, token);
+    expect(space.method).toBe("GET");
     expect(space.url).toBe(
       "https://network.ordax.example/product/network/v1/space",
     );
@@ -84,6 +85,7 @@ describe("OrdaX Product Network read-only server primitives", () => {
         limit: 20,
       },
     );
+    expect(directory.method).toBe("GET");
     const directoryUrl = new URL(directory.url);
     expect(directoryUrl.pathname).toBe("/product/network/v1/directory");
     expect(directoryUrl.searchParams.get("search")).toBe("escola");
@@ -98,6 +100,7 @@ describe("OrdaX Product Network read-only server primitives", () => {
       token,
       { limit: 50 },
     );
+    expect(communities.method).toBe("GET");
     expect(new URL(communities.url).pathname).toBe(
       "/product/network/v1/communities",
     );
