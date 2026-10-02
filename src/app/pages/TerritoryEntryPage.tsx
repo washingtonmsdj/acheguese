@@ -16,7 +16,6 @@ const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
 const LAUNCH_CITY = TERRITORY_CONFIG.launch.city;
 const LAUNCH_COMMUNITY_SLUG = TERRITORY_CONFIG.launch.community.slug;
 const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
-const LAUNCH_COMMUNITY_DISCOVERY_LABEL = LAUNCH_COMMUNITY_NAME.replace(/^Complexo do /, "");
 const LAUNCH_STATE_LABEL = getStateByCode(LAUNCH_STATE)?.name ?? LAUNCH_STATE.toUpperCase();
 const LAUNCH_PLACE_LABEL = [TERRITORY_CONFIG.launch.name, LAUNCH_STATE_LABEL]
   .filter(Boolean)
@@ -43,6 +42,12 @@ const launchCommunityGenitiveLabel =
     : launchCommunityPresentation.article === "a"
       ? `da ${LAUNCH_COMMUNITY_NAME}`
       : `de ${LAUNCH_COMMUNITY_NAME}`;
+const launchCommunityLocativeLabel =
+  launchCommunityPresentation.article === "o"
+    ? `no ${launchCommunityPresentation.label}`
+    : launchCommunityPresentation.article === "a"
+      ? `na ${launchCommunityPresentation.label}`
+      : `em ${launchCommunityPresentation.label}`;
 
 function Icon({ children }: { children: ReactNode }) {
   return (
@@ -251,7 +256,7 @@ export default function TerritoryEntryPage() {
 
               <div className="ag-discovery-action">
                 <a className="ag-explore-cta" href={LAUNCH_URLS.portal}>
-                  Explorar o {LAUNCH_COMMUNITY_DISCOVERY_LABEL}
+                  Explorar {launchCommunityPresentation.label}
                   <ArrowIcon />
                 </a>
                 <p>Conheça primeiro. Nenhum cadastro é necessário para explorar.</p>
@@ -295,7 +300,7 @@ export default function TerritoryEntryPage() {
           </div>
 
           <div className="ag-container ag-neighborhood-rail">
-            <p>Agora no Complexo</p>
+            <p>Agora {launchCommunityLocativeLabel}</p>
             <div>
               {launchCommunityMembers.map((member, index) => (
                 <a href={launchMapUrl} key={member.id}>
@@ -360,7 +365,7 @@ export default function TerritoryEntryPage() {
                 <span>1</span>
                 <div>
                   <h3>Entre pelo seu território</h3>
-                  <p>Comece pelo Complexo ou use o mapa para navegar pela região.</p>
+                  <p>Comece {launchCommunityLocativeLabel} ou use o mapa para navegar pela região.</p>
                 </div>
               </li>
               <li>
@@ -389,7 +394,7 @@ export default function TerritoryEntryPage() {
             </h2>
             <div className="ag-manifesto-footer">
               <p>
-                O Achegue-se nasce no Complexo do Nordeste de Amaralina para tornar visível a
+                O Achegue-se nasce {launchCommunityLocativeLabel} para tornar visível a
                 potência que já existe em cada rua.
               </p>
               <a href={LAUNCH_URLS.portal}>
