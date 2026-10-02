@@ -4,6 +4,7 @@
  * Mantem apenas rotas sem layout e delega subarvores grandes por dominio.
  */
 
+import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
 import { lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
@@ -99,8 +100,8 @@ export function AppRoutes() {
         element={<CadastroConfirmacaoPage />}
       />
       <Route path={AUTH_PATHS.termsAcceptance} element={<AceiteTermosPage />} />
-      <Route path="/como-funciona" element={<ComoFuncionaPage />} />
-      <Route path="/sobre" element={<AboutPage />} />
+      <Route path={APP_GLOBAL_PATHS.howItWorks} element={<ComoFuncionaPage />} />
+      <Route path={APP_GLOBAL_PATHS.about} element={<AboutPage />} />
       <Route path="/contato" element={<ContactPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
