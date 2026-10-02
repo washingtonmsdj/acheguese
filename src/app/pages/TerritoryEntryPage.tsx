@@ -38,10 +38,10 @@ const launchCommunityPresentation =
     : { label: LAUNCH_COMMUNITY_NAME, article: null };
 const launchCommunityGenitiveLabel =
   launchCommunityPresentation.article === "o"
-    ? `do ${LAUNCH_COMMUNITY_NAME}`
+    ? `do ${launchCommunityPresentation.label}`
     : launchCommunityPresentation.article === "a"
-      ? `da ${LAUNCH_COMMUNITY_NAME}`
-      : `de ${LAUNCH_COMMUNITY_NAME}`;
+      ? `da ${launchCommunityPresentation.label}`
+      : `de ${launchCommunityPresentation.label}`;
 const launchCommunityLocativeLabel =
   launchCommunityPresentation.article === "o"
     ? `no ${launchCommunityPresentation.label}`
