@@ -20,34 +20,34 @@ export default function EmailLogsPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-success" />;
       case 'failed':
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-destructive" />;
       case 'bounced':
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+        return <AlertCircle className="h-4 w-4 text-warning" />;
       default:
-        return <Mail className="h-4 w-4 text-gray-500" />;
+        return <Mail className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'sent':
-        return <Badge variant="default" className="bg-green-500">Enviado</Badge>;
+        return <Badge variant="default" className="bg-success text-success-foreground">Enviado</Badge>;
       case 'failed':
         return <Badge variant="destructive">Falhou</Badge>;
       case 'bounced':
-        return <Badge variant="secondary" className="bg-yellow-500">Devolvido</Badge>;
+        return <Badge variant="secondary" className="bg-warning text-warning-foreground">Devolvido</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   const getCategoryBadge = (category: string) => {
-    let colorClass = 'bg-gray-500';
+    let colorClass = 'bg-muted-foreground';
     switch (category) {
       case 'transactional':
-        colorClass = 'bg-blue-500';
+        colorClass = 'bg-info';
         break;
       case 'social':
         colorClass = 'bg-purple-500';
@@ -113,7 +113,7 @@ export default function EmailLogsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-500">
+              <div className="text-2xl font-bold text-success">
                 {emailLogs.filter((log) => log.status === 'sent').length}
               </div>
             </CardContent>
@@ -126,7 +126,7 @@ export default function EmailLogsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-500">
+              <div className="text-2xl font-bold text-destructive">
                 {emailLogs.filter((log) => log.status === 'failed').length}
               </div>
             </CardContent>
@@ -139,7 +139,7 @@ export default function EmailLogsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-500">
+              <div className="text-2xl font-bold text-warning">
                 {emailLogs.filter((log) => log.status === 'bounced').length}
               </div>
             </CardContent>
@@ -185,8 +185,8 @@ export default function EmailLogsPage() {
                       </p>
 
                       {log.error_message && (
-                        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded p-2 mb-2">
-                          <p className="text-sm text-red-600 dark:text-red-400">
+                        <div className="bg-destructive/10 border border-destructive/25 rounded p-2 mb-2">
+                          <p className="text-sm text-destructive">
                             <strong>Erro:</strong> {log.error_message}
                           </p>
                         </div>
