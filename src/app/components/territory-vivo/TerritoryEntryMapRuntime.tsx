@@ -1,4 +1,3 @@
-import { EntityStatus } from "@/shared/types/enums";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LocationType, type Location } from "@/core/location/types";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
@@ -128,20 +127,18 @@ export default function TerritoryEntryMapRuntime({
       longitude: centers.reduce((sum, center) => sum + center.longitude, 0) / centers.length,
     };
   }, [resolved]);
-  const renderedMarkers = useMemo(() => {
+  const renderedMarkers = useMemo<MapMarker[]>(() => {
     if (!showTerritoryReference || !territoryReference) return markers;
-    return [
-      ...markers,
-      {
-        id: "territory-reference",
-        type: "user_location" as const,
-        coordinates: territoryReference,
-        title: territoryLabel,
-        subtitle: "Referência territorial",
-        status: EntityStatus.ACTIVE,
-        metadata: { isTerritoryReference: true },
-      },
-    ];
+    const territoryReferenceMarker: MapMarker = {
+      id: "territory-reference",
+      type: "user_location",
+      coordinates: territoryReference,
+      title: territoryLabel,
+      subtitle: "Referência territorial",
+      status: "active",
+      metadata: { isTerritoryReference: true },
+    };
+    return [...markers, territoryReferenceMarker];
   }, [markers, showTerritoryReference, territoryLabel, territoryReference]);
   const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved, {
     enabled: boundaryStarted,
