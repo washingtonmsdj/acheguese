@@ -26,17 +26,17 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
 
   const scoreColor =
     score >= 80
-      ? "text-green-600 dark:text-green-400"
+      ? "text-success"
       : score >= 50
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-red-500 dark:text-red-400";
+        ? "text-warning"
+        : "text-destructive";
 
   const barColor =
     score >= 80
-      ? "[&>div]:bg-green-500"
+      ? "[&>div]:bg-success"
       : score >= 50
-        ? "[&>div]:bg-amber-500"
-        : "[&>div]:bg-red-500";
+        ? "[&>div]:bg-warning"
+        : "[&>div]:bg-destructive";
 
   return (
     <motion.div
@@ -103,7 +103,7 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
                 >
                   <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                     {item.done ? (
-                      <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500 sm:h-3.5 sm:w-3.5" />
+                      <CheckCircle2 className="h-3 w-3 shrink-0 text-success sm:h-3.5 sm:w-3.5" />
                     ) : (
                       <Circle className="h-3 w-3 shrink-0 text-muted-foreground sm:h-3.5 sm:w-3.5" />
                     )}
