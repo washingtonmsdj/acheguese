@@ -10,6 +10,8 @@ describe("active global route SSOT", () => {
       nearby: "/perto-de-mim",
       search: "/busca",
       aiSearch: "/buscar",
+      about: "/sobre",
+      howItWorks: "/como-funciona",
     });
   });
 });
