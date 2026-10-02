@@ -32,7 +32,7 @@ export function NearbyCard({
     >
       <div className="p-4">
         <div className="flex items-start gap-4">
-          <div className="shrink-0 rounded-xl bg-blue-500 p-3 text-white shadow-sm">
+          <div className="shrink-0 rounded-xl bg-primary p-3 text-primary-foreground shadow-sm">
             <Store className="h-6 w-6" />
           </div>
           <div className="min-w-0 flex-1">
