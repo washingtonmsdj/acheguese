@@ -8,6 +8,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyAuthenticatedSubject } from "../_shared/verifiedJwt.ts";
 import { requireOperationalAccount } from "../_shared/accountOperational.ts";
 import { evaluateUserMfaPolicy } from "../_shared/mfaPolicy.ts";
 import {
@@ -84,8 +85,8 @@ async function requireUser(
     );
   }
 
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) {
+  const verified = await verifyAuthenticatedSubject(supabaseAdmin, token);
+  if (!verified) {
     return jsonResponse(
       { error: "Invalid or expired token" },
       401,
@@ -94,7 +95,7 @@ async function requireUser(
     );
   }
 
-  return { userId: data.user.id, token };
+  return { userId: verified.userId, token };
 }
 
 async function handleGetActiveProfile(
