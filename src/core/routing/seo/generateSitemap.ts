@@ -12,6 +12,7 @@ import {
   TERMS_OF_SERVICE_PATH,
 } from '@/shared/constants/legal';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
+import { LAUNCH_CITY_PATH } from '@/core/routing/config/territory';
 import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
   MODULE_SLUGS,
@@ -258,7 +259,7 @@ function collectSitemapUrls(
   ];
 
   const staticPages = [
-    { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
+    { path: LAUNCH_CITY_PATH, priority: 0.95, changefreq: 'daily' as const },
     ...(isSurfaceEnabled('nearby')
       ? [
           {
