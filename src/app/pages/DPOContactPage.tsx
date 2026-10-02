@@ -497,7 +497,7 @@ export default function DPOContactPage() {
                 <CardContent className="space-y-3">
                   {RIGHTS.map((right) => (
                     <div key={right} className="flex items-start gap-3">
-                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                       <p className="text-sm text-foreground">{right}</p>
                     </div>
                   ))}
@@ -522,10 +522,10 @@ export default function DPOContactPage() {
                 </CardContent>
               </Card>
 
-              <Card className="rounded-3xl border-amber-500/20 bg-amber-500/5 shadow-sm">
+              <Card className="rounded-3xl border-warning/25 bg-warning/10 shadow-sm">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <AlertTriangle className="h-4 w-4 text-warning" />
                     Base legal
                   </CardTitle>
                 </CardHeader>
