@@ -22,6 +22,7 @@ import {
 } from "@/core/routing/config/territorialRoutePatterns";
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { PRIVACY_POLICY_PATH, TERMS_OF_SERVICE_PATH, DATA_PROTECTION_CONTACT_PATH } from "@/shared/constants/legal";
 
 import * as P from "../activeLazyImports";
@@ -82,34 +83,34 @@ export function AppLayoutRoutes() {
         {accountEnabled ? (
           <>
             <Route
-              path="/conta/preferencias"
+              path={ACCOUNT_PATHS.preferences}
               element={protectedElement(<P.ContaPreferenciasPage />)}
             />
             <Route
-              path="/conta/notificacoes"
+              path={ACCOUNT_PATHS.notifications}
               element={protectedElement(<P.NotificationPreferencesPage />)}
             />
             <Route
-              path="/conta/privacidade"
+              path={ACCOUNT_PATHS.privacy}
               element={protectedElement(<P.PrivacySettingsPage />)}
             />
             <Route
-              path="/conta/perfil/configuracoes"
+              path={ACCOUNT_PATHS.profileSettings}
               element={protectedElement(<P.ProfileSettingsPage />)}
             />
             <Route
-              path="/conta/seguranca"
+              path={ACCOUNT_PATHS.security}
               element={protectedElement(<P.ContaSegurancaPage />)}
             />
             <Route
-              path="/conta/enderecos"
+              path={ACCOUNT_PATHS.addresses}
               element={protectedElement(<P.ContaEnderecosPage />)}
             />
             <Route
               path="/conta/editar/:profileId"
               element={protectedElement(<P.ContaEditarPerfilPage />)}
             />
-            <Route path="/conta" element={protectedElement(<P.ContaPage />)} />
+            <Route path={ACCOUNT_PATHS.home} element={protectedElement(<P.ContaPage />)} />
           </>
         ) : null}
 
