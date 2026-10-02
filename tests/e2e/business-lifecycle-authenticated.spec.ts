@@ -227,11 +227,17 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
       );
 
       await page.goto("/central/empresas", { waitUntil: "domcontentloaded" });
-      await expect(page.getByText(renamedName, { exact: true }).first()).toBeVisible({
-        timeout: 30_000,
-      });
+      const renamedBusinessCard = page
+        .locator(".business-management-card")
+        .filter({ hasText: renamedName });
+      await expect(renamedBusinessCard).toHaveCount(1);
+      await expect(
+        renamedBusinessCard.getByText(renamedName, { exact: true }),
+      ).toBeVisible({ timeout: 30_000 });
 
-      await page.getByRole("button", { name: "Gerenciar empresa" }).click();
+      await renamedBusinessCard
+        .getByRole("button", { name: "Gerenciar empresa" })
+        .click();
       await expect(page).toHaveURL(
         new RegExp(`/central/empresas/${profileId}(?:/|\\?|$)`),
         { timeout: 30_000 },
@@ -241,7 +247,10 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
       });
 
       await page.goto("/central/empresas", { waitUntil: "domcontentloaded" });
-      await page.getByRole("button", { name: "Ver página pública" }).click();
+      await expect(renamedBusinessCard).toHaveCount(1);
+      await renamedBusinessCard
+        .getByRole("button", { name: "Ver página pública" })
+        .click();
       await expect(page).toHaveURL(/\/empresas\//, { timeout: 30_000 });
       await expect(
         page.getByRole("heading", { name: renamedName }).first(),
@@ -251,8 +260,8 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
     }
 
     await page.goto("/central/empresas", { waitUntil: "domcontentloaded" });
-    await expect(page.getByText("Nenhuma empresa ativa")).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(
+      page.getByRole("heading", { name: "Seu negócio começa aqui", exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
   });
 });
