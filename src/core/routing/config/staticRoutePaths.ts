@@ -3,6 +3,8 @@ import { TERRITORIAL_ROUTE_STATIC_SEGMENTS } from "@/core/routing/config/territo
 export const STATIC_ROUTE_PATHS = {
   home: "/",
   about: "/sobre",
+  brazilShowcase: "/brasil",
+  countryLanding: "/br",
   howItWorks: "/como-funciona",
   notifications: "/notificacoes",
   onboarding: "/onboarding",
