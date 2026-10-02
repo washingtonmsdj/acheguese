@@ -30,6 +30,7 @@ import {
   Utensils,
 } from "lucide-react";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
 import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
 import { LazyMiniMap } from "@/core/maps/components/LazyMiniMap";
 import type { PublicSnapshotInstitutional } from "@/core/business/types/publicSnapshots";
@@ -238,7 +239,7 @@ export function TerritoryBusinessDetail({
           </Link>
           <nav className="bd-main-nav" aria-label="Navegação principal">
             <Link to={`${territoryUrl}/perto-de-mim`}>Por perto</Link>
-            <Link to="/como-funciona">Como funciona</Link>
+            <Link to={APP_GLOBAL_PATHS.howItWorks}>Como funciona</Link>
             <Link to={businessDirectoryUrl}>Para negócios</Link>
           </nav>
           <Link className="bd-global-search" to={`${territoryUrl}/busca`}>
@@ -253,7 +254,7 @@ export function TerritoryBusinessDetail({
             <nav>
               <Link to={territoryUrl}>Território</Link>
               <Link to={businessDirectoryUrl}>Empresas</Link>
-              <Link to="/como-funciona">Como funciona</Link>
+              <Link to={APP_GLOBAL_PATHS.howItWorks}>Como funciona</Link>
             </nav>
           </details>
         </div>
