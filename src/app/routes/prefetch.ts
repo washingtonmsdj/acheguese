@@ -1,3 +1,4 @@
+import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
 /**
  * Route prefetch helper
  *
@@ -47,7 +48,7 @@ const PREFETCHERS: PrefetchEntry[] = [
     enabled: () => isPlatformCapabilityEnabled("search"),
   },
   {
-    test: (path) => path.startsWith("/notificacoes"),
+    test: (path) => path.startsWith(APP_GLOBAL_PATHS.notifications),
     load: () => import("@/app/pages/NotificationsPage"),
     enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
@@ -77,7 +78,7 @@ const IDLE_WARMUP_ROUTES: Array<{
     enabled: () => isPlatformCapabilityEnabled("search"),
   },
   {
-    href: "/notificacoes",
+    href: APP_GLOBAL_PATHS.notifications,
     enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
 ];
