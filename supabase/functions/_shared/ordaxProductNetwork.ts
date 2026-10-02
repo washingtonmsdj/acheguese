@@ -1,5 +1,5 @@
-const MAX_OPAQUE_TOKEN_LENGTH = 4_096;
 const MAX_ORIGIN_LENGTH = 512;
+const ACCESS_TOKEN_RE = /^[A-Za-z0-9._~-]{32,512}$/;
 const SPACE_SCHEMA = "prototype-ordax.product-network-space/1";
 const DIRECTORY_SCHEMA = "prototype-ordax.product-network-directory/1";
 const COMMUNITIES_SCHEMA = "prototype-ordax.product-network-communities/1";
@@ -83,14 +83,10 @@ function requireHttpsOrigin(value: unknown): string {
 }
 
 function requireAccessToken(value: unknown): string {
-  if (
-    typeof value !== "string" ||
-    value.length < 16 ||
-    value.length > MAX_OPAQUE_TOKEN_LENGTH ||
-    containsControlCharacter(value) ||
-    value.trim() !== value
-  ) {
-    throw new TypeError("OrdaX Network access token must be a bounded opaque value");
+  if (typeof value !== "string" || !ACCESS_TOKEN_RE.test(value)) {
+    throw new TypeError(
+      "OrdaX Network access token must match the provider opaque-token contract",
+    );
   }
   return value;
 }
