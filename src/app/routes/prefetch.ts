@@ -12,6 +12,7 @@ import {
   buildAppModulePath,
   isAppModulePath,
 } from "@/shared/config/moduleSlugs";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -47,7 +48,7 @@ const PREFETCHERS: PrefetchEntry[] = [
     enabled: () => isPlatformCapabilityEnabled("search"),
   },
   {
-    test: (path) => path.startsWith("/notificacoes"),
+    test: (path) => path.startsWith(STATIC_ROUTE_PATHS.notifications),
     load: () => import("@/app/pages/NotificationsPage"),
     enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
@@ -77,7 +78,7 @@ const IDLE_WARMUP_ROUTES: Array<{
     enabled: () => isPlatformCapabilityEnabled("search"),
   },
   {
-    href: "/notificacoes",
+    href: STATIC_ROUTE_PATHS.notifications,
     enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
 ];
