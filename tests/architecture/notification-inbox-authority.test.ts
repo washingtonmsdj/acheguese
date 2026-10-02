@@ -78,7 +78,7 @@ describe("Notification inbox authority", () => {
     expect(notificationActionScope).toContain('surface: "gastronomy"');
     expect(notificationActionScope).toContain('surface: "mobility"');
     expect(notificationActionScope).toContain(
-      'NOTIFICATION_INBOX_PATH = "/notificacoes"',
+      "NOTIFICATION_INBOX_PATH = APP_PATHS.notifications",
     );
     expect(notificationActionScope).toContain(
       "RETIRED_NOTIFICATION_ROUTE_PATTERNS",
