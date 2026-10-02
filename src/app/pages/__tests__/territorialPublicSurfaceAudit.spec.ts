@@ -158,6 +158,8 @@ describe("public territorial surface audit", () => {
     const entrySource = readProjectFile("src/app/pages/TerritoryEntryPage.tsx");
     const guideSource = readProjectFile("src/app/pages/ComoFuncionaPage.tsx");
     const indicationSource = readProjectFile("src/app/pages/CommunityIndicationPage.tsx");
+    const searchSource = readProjectFile("src/app/pages/BuscaPage.tsx");
+    const businessDetailSource = readProjectFile("src/app/pages/EmpresaDetailLandingPage.tsx");
 
     expect(entrySource).toContain("TERRITORY_CONFIG");
     expect(entrySource).toContain("LAUNCH_COMMUNITY_NAME");
@@ -174,6 +176,17 @@ describe("public territorial surface audit", () => {
     expect(indicationSource).toContain("communitySlug: normalizedNeighborhood");
     expect(indicationSource).not.toContain("territoryPath: `/ba/");
     expect(indicationSource).not.toContain("Complexo do Nordeste de Amaralina");
+
+    expect(searchSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
+    expect(searchSource).not.toContain("const territoryBase = `/${stateSlug}");
+
+    expect(businessDetailSource).toContain("LAUNCH_URLS.portal");
+    expect(businessDetailSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
+    expect(businessDetailSource).toContain("buildModuleTerritoryUrl(");
+    expect(businessDetailSource).not.toContain('state || "ba"');
+    expect(businessDetailSource).not.toContain('city || "salvador"');
+    expect(businessDetailSource).not.toContain("complexo-do-nordeste-de-amaralina");
+    expect(businessDetailSource).not.toContain("${territoryUrl}/empresas");
   });
 
 });
