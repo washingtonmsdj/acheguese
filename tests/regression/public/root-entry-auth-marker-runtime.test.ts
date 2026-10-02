@@ -43,8 +43,9 @@ describe("public root auth-return runtime boundary", () => {
 
     expect(entry).toContain("AUTH_PATHS");
     expect(entry).toContain("buildLoginPath");
-    expect(entry).toContain('const ACCOUNT_PATH = "/conta";');
-    expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
+    expect(entry).toContain("ACCOUNT_PATHS");
+    expect(entry).toContain("buildLoginPath(ACCOUNT_PATHS.home)");
+    expect(entry).not.toContain('const ACCOUNT_PATH = "/conta";');
     expect(entry).not.toContain('<a href="/login">');
     expect(entry).not.toContain('href="/cadastro"');
   });
