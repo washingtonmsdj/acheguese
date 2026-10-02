@@ -141,6 +141,13 @@ describe("territory-first module urls", () => {
       ),
     ).toBe("/ba/salvador/complexo-nordeste/classificados");
     expect(
+      buildGroupModuleUrl(
+        group,
+        "/br/ba/salvador/nordeste-de-amaralina",
+        MODULE_SLUGS.business,
+      ),
+    ).toBe("/ba/salvador/complexo-nordeste/empresas");
+    expect(
       buildTerritoryModuleUrl(
         { kind: "location", location },
         MODULE_SLUGS.gastronomy,
