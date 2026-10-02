@@ -188,7 +188,8 @@ describe("MVP core module boundary", () => {
     expect(entry).not.toContain("LAUNCH_URLS.community");
     expect(entry).not.toContain("/indicar-comunidade");
     expect(entry).not.toContain("serviços e histórias");
-    expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
+    expect(entry).toContain("ACCOUNT_PATHS.home");
+    expect(entry).not.toContain("buildLoginPath(ACCOUNT_PATH)");
   });
 
   it("keeps institutional product copy aligned with Business plus active platform capabilities", () => {
@@ -412,7 +413,7 @@ describe("MVP core module boundary", () => {
     expect(appRoutes).toContain('path="/empresas/cadastrar"');
     expect(appRoutes).toContain('path="/mapa"');
     expect(appRoutes).toContain('path="/perto-de-mim"');
-    expect(appRoutes).toContain('path="/busca"');
+    expect(appRoutes).toContain("path={APP_PATHS.search}");
     expect(appRoutes).toContain("messagingRoutes.inbox()");
     expect(appRoutes).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
@@ -445,7 +446,7 @@ describe("MVP core module boundary", () => {
     expect(prefetch).toContain('import("@/app/pages/NearbyPage")');
     expect(prefetch).toContain("if (!candidate || !candidate.enabled()) return;");
     expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter((entry) => entry.enabled())");
-    expect(prefetch).toContain('href: "/notificacoes"');
+    expect(prefetch).toContain("href: APP_PATHS.notifications");
   });
 
   it("keeps primary territorial navigation on the MVP core", () => {
