@@ -177,7 +177,7 @@ function ManagedProfileCard({
               </span>
             ) : null}
             {profile.is_public === true ? (
-              <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-800">
+              <span className="rounded-full bg-success/10 px-2 py-1 font-semibold text-success">
                 Público
               </span>
             ) : profile.is_public === false ? (
