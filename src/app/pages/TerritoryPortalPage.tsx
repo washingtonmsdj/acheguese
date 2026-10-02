@@ -1,3 +1,4 @@
+import { EntityStatus } from "@/shared/types/enums";
 import { lazy, Suspense, useMemo, type ComponentType, type FormEvent } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
@@ -101,7 +102,7 @@ export default function TerritoryPortalPage({
         type: "business",
         coordinates: { latitude: lat, longitude: lng },
         title: business.name,
-        status: "active",
+        status: EntityStatus.ACTIVE,
         url: getBusinessUrl(business, urls.business, businessUrls.canonical),
         metadata: {
           category: getBusinessCategoryLabel(business.category),

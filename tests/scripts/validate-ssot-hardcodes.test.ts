@@ -4,12 +4,20 @@ import { describe, expect, it } from "vitest";
 
 import {
   DEFENSIVE_LOCAL_BOUNDS,
+  HARDCODE_SCAN_DIRS,
   findHardcodeViolations,
 } from "../../tools/architecture/validate-ssot-hardcodes";
 
 const LIMIT_VIOLATION_TYPE = "Limite operacional hardcoded";
 
 describe("validate-ssot-hardcodes defensive local bounds", () => {
+  it("covers the app runtime together with core, modules and shared runtime components", () => {
+    expect(HARDCODE_SCAN_DIRS).toContain("src/app");
+    expect(HARDCODE_SCAN_DIRS).toContain("src/core");
+    expect(HARDCODE_SCAN_DIRS).toContain("src/modules");
+    expect(HARDCODE_SCAN_DIRS).toContain("src/shared/components");
+  });
+
   it("registers only the reviewed local bounds with ownership and rationale", () => {
     expect(DEFENSIVE_LOCAL_BOUNDS).toEqual([
       expect.objectContaining({
