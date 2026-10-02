@@ -9,13 +9,19 @@ import {
   X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
-import { messagingRoutes } from "@/core/messaging";
-import { ACCOUNT_PATHS } from "@/core/routing/config/account";
-import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { cn } from "@/shared/utils/cn";
 
+interface TerritoryTopbarNavigation {
+  home: string;
+  territorySelector: string;
+  notifications: string;
+  login: string;
+  account: string;
+  messages: string;
+}
+
 interface TerritoryTopbarProps {
+  navigation: TerritoryTopbarNavigation;
   territoryName: string;
   contextLabel: string;
   isAuthenticated: boolean;
@@ -35,6 +41,7 @@ interface TerritoryTopbarProps {
 }
 
 export function TerritoryTopbar({
+  navigation,
   territoryName,
   contextLabel,
   isAuthenticated,
@@ -44,7 +51,6 @@ export function TerritoryTopbar({
   showMobileSearch = true,
   flushDesktop = false,
   compactMobile = false,
-  messagesHref = messagingRoutes.inbox(),
   profileLabel,
   profileAvatarUrl,
 }: TerritoryTopbarProps) {
@@ -121,7 +127,7 @@ export function TerritoryTopbar({
         )}
       >
         <Link
-          to={STATIC_ROUTE_PATHS.home}
+          to={navigation.home}
           className="group flex min-h-11 min-w-0 shrink-0 items-center rounded-territory pr-1 lg:order-1"
           aria-label="Achegue-se — início"
         >
@@ -131,7 +137,7 @@ export function TerritoryTopbar({
         </Link>
 
         <Link
-          to={`${STATIC_ROUTE_PATHS.home}?trocar=territorio`}
+          to={navigation.territorySelector}
           className="group col-span-2 row-start-2 flex min-h-10 min-w-0 items-center gap-2 rounded-xl px-1 hover:bg-white/10 lg:order-2 lg:col-auto lg:row-auto lg:px-3"
           aria-label={`Trocar território. Você está em ${territoryName}.`}
         >
@@ -155,7 +161,7 @@ export function TerritoryTopbar({
 
         <div className="ml-auto flex items-center gap-1.5 lg:order-4 sm:gap-2">
           <Link
-            to={isAuthenticated ? STATIC_ROUTE_PATHS.notifications : AUTH_PATHS.login}
+            to={isAuthenticated ? navigation.notifications : navigation.login}
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun"
             aria-label={
               isAuthenticated && unreadCount > 0
@@ -171,7 +177,7 @@ export function TerritoryTopbar({
             ) : null}
           </Link>
           <Link
-            to={isAuthenticated ? messagesHref : AUTH_PATHS.login}
+            to={isAuthenticated ? navigation.messages : navigation.login}
             className="relative hidden h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:flex"
             aria-label="Conversas"
           >
@@ -179,7 +185,7 @@ export function TerritoryTopbar({
           </Link>
           {!isAuthenticated ? (
             <Link
-              to={AUTH_PATHS.login}
+              to={navigation.login}
               className="group inline-flex min-h-10 items-center gap-2 rounded-full px-1.5 text-sm font-semibold text-white hover:bg-white/10 sm:px-2"
               aria-label="Entrar"
             >
@@ -190,7 +196,7 @@ export function TerritoryTopbar({
             </Link>
           ) : (
             <Link
-              to={ACCOUNT_PATHS.home}
+              to={navigation.account}
               className="flex h-10 max-w-[9rem] items-center gap-2 rounded-full bg-white/10 px-1.5 text-sm font-semibold text-white hover:bg-white/15 sm:px-2 sm:pr-3"
               aria-label="Abrir minha conta"
             >
