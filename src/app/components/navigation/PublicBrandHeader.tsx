@@ -33,7 +33,7 @@ export function PublicBrandHeader({
   return (
     <header className="pt-header">
       <div className="pt-container pt-header-inner">
-        <Link className="pt-brand" to="/" aria-label="Achegue-se — início">
+        <Link className="pt-brand" to={APP_GLOBAL_PATHS.home} aria-label="Achegue-se — início">
           <BrandMark />
           <strong>achegue-se</strong>
         </Link>
