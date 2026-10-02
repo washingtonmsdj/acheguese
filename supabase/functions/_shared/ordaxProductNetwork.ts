@@ -13,6 +13,7 @@ export interface OrdaxProductNetworkServerConfig {
 }
 
 export interface OrdaxProductNetworkRequest {
+  readonly method: "GET";
   readonly url: string;
   readonly headers: Readonly<Record<string, string>>;
 }
@@ -133,6 +134,7 @@ function request(
   if (params) url.search = params.toString();
 
   return Object.freeze({
+    method: "GET" as const,
     url: url.toString(),
     headers: Object.freeze({
       Accept: "application/json",
@@ -237,10 +239,12 @@ function requireNullableText(
   value: unknown,
   maximum: number,
   label: string,
+  minimum = 0,
 ): string | null {
   if (value === null) return null;
   if (
     typeof value !== "string" ||
+    value.length < minimum ||
     value.length > maximum ||
     containsControlCharacter(value)
   ) {
@@ -308,6 +312,7 @@ function validateSpace(
       input.region_label,
       120,
       "OrdaX Space region label",
+      1,
     ),
     categories: requireCategories(input.categories),
   };
