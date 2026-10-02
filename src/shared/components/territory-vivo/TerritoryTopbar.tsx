@@ -9,6 +9,10 @@ import {
   X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { messagingRoutes } from "@/core/messaging";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { cn } from "@/shared/utils/cn";
 
 interface TerritoryTopbarProps {
@@ -40,7 +44,7 @@ export function TerritoryTopbar({
   showMobileSearch = true,
   flushDesktop = false,
   compactMobile = false,
-  messagesHref = "/mensagens",
+  messagesHref = messagingRoutes.inbox(),
   profileLabel,
   profileAvatarUrl,
 }: TerritoryTopbarProps) {
@@ -117,7 +121,7 @@ export function TerritoryTopbar({
         )}
       >
         <Link
-          to="/"
+          to={STATIC_ROUTE_PATHS.home}
           className="group flex min-h-11 min-w-0 shrink-0 items-center rounded-territory pr-1 lg:order-1"
           aria-label="Achegue-se — início"
         >
@@ -127,7 +131,7 @@ export function TerritoryTopbar({
         </Link>
 
         <Link
-          to="/?trocar=territorio"
+          to={`${STATIC_ROUTE_PATHS.home}?trocar=territorio`}
           className="group col-span-2 row-start-2 flex min-h-10 min-w-0 items-center gap-2 rounded-xl px-1 hover:bg-white/10 lg:order-2 lg:col-auto lg:row-auto lg:px-3"
           aria-label={`Trocar território. Você está em ${territoryName}.`}
         >
@@ -167,7 +171,7 @@ export function TerritoryTopbar({
             ) : null}
           </Link>
           <Link
-            to={isAuthenticated ? messagesHref : "/login"}
+            to={isAuthenticated ? messagesHref : AUTH_PATHS.login}
             className="relative hidden h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:flex"
             aria-label="Conversas"
           >
@@ -175,7 +179,7 @@ export function TerritoryTopbar({
           </Link>
           {!isAuthenticated ? (
             <Link
-              to="/login"
+              to={AUTH_PATHS.login}
               className="group inline-flex min-h-10 items-center gap-2 rounded-full px-1.5 text-sm font-semibold text-white hover:bg-white/10 sm:px-2"
               aria-label="Entrar"
             >
