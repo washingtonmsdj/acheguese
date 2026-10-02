@@ -9,6 +9,7 @@ import { Route, Routes } from "react-router-dom";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import { AuthEntrySessionGate } from "@/app/routes/AuthEntrySessionGate";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { centralRoutes } from "@/core/routing/config/centralRoutes";
 import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 
@@ -77,7 +78,7 @@ export function AppRoutes() {
         />
         <Route path={AUTH_PATHS.termsAcceptance} element={<AceiteTermosPage />} />
         <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
-        <Route path="/admin/*" element={<AdminRoutes />} />
+        <Route path={`${centralRoutes.admin.home}/*`} element={<AdminRoutes />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     );
@@ -107,8 +108,8 @@ export function AppRoutes() {
       <Route path={STATIC_ROUTE_PATHS.onboarding} element={<OnboardingPage />} />
       <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
 
-      <Route path="/central/*" element={<CentralRoutes />} />
-      <Route path="/admin/*" element={<AdminRoutes />} />
+      <Route path={`${centralRoutes.home}/*`} element={<CentralRoutes />} />
+      <Route path={`${centralRoutes.admin.home}/*`} element={<AdminRoutes />} />
       <Route path="/*" element={<AppLayoutRoutes />} />
     </Routes>
   );
