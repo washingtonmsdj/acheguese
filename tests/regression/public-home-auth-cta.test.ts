@@ -19,8 +19,9 @@ describe("public home auth CTA", () => {
     expect(entry).toContain("SessionService.getCurrentUser()");
     expect(entry).not.toContain("supabase.auth.");
 
-    expect(entry).toContain('const ACCOUNT_PATH = "/conta";');
-    expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
+    expect(entry).toContain('import { ACCOUNT_PATHS } from "@/core/routing/config/account";');
+    expect(entry).toContain("buildLoginPath(ACCOUNT_PATHS.home)");
+    expect(entry).not.toContain('const ACCOUNT_PATH = "/conta";');
     expect(entry).toContain('isAuthenticated ? "Minha conta" : "Entrar"');
     expect(entry).toContain('isAuthenticated ? "Minha conta"');
     expect(entry).not.toContain('href="/login"');
