@@ -98,6 +98,8 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/central/pages/CentralHubPage.tsx',
   'src/modules/central/pages/CentralEmpresasPage.tsx',
   'src/modules/central/pages/CentralEmpresasPage.css',
+  'src/core/profiles/components/hub/BusinessModulesSection.tsx',
+  'src/core/profiles/components/ProfileMembersManager.tsx',
   'src/modules/profile/pages/ContaHubPage.tsx',
   'src/modules/profile/pages/ContaHubLayout.tsx',
   'src/modules/profile/pages/ContaEditarPerfilPage.tsx',
@@ -192,6 +194,8 @@ const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:blue|cyan|teal|emerald|green|lime|rose|red|amber|yellow|slate|gray)-\d{2,3}(?:\/\d+)?\b/;
 const NON_SEMANTIC_PALETTE_COLOR_RE = /\b(?:text|bg|border|from|via|to)-(?:orange|emerald|green|lime|rose|red|pink|sky|cyan|violet|purple|amber|yellow|teal|blue)-\d{2,3}(?:\/\d+)?\b/;
+const BUSINESS_DIRECT_BRAND_PRIMITIVE_RE = /var\(--brand-[a-z0-9-]+\)/;
+const BUSINESS_EXTRABOLD_RE = /(?:font-weight\s*:\s*800\b|\bfont-extrabold\b|\bfont-\[800\]\b)/;
 const DIRECT_RUNTIME_FONT_RE = /\b(?:Arial|Helvetica),?\s*(?:sans-serif)?\b/;
 const SEMANTIC_STATUS_RUNTIME_FILES = new Set([
   'src/modules/profile/pages/ContaSegurancaPage.tsx',
@@ -378,6 +382,15 @@ function main(): void {
 
   for (const relative of MIGRATED_RUNTIME_FILES) {
     const content = readRequired(relative, violations);
+    const isBusinessManagementSurface =
+      relative.startsWith('src/modules/business/dashboard/') ||
+      relative === 'src/modules/central/pages/CentralEmpresasPage.tsx' ||
+      relative === 'src/modules/central/pages/CentralEmpresasPage.css' ||
+      relative === 'src/core/profiles/components/hub/BusinessModulesSection.tsx' ||
+      relative === 'src/modules/business/pages/EditarEmpresaPage.tsx' ||
+      relative === 'src/modules/business/pages/EditarEmpresaPage.css' ||
+      relative === 'src/modules/business/pages/CriarEmpresaPage.tsx' ||
+      relative === 'src/modules/business/pages/CriarEmpresaPage.css';
     if (RAW_RUNTIME_COLOR_RE.test(content)) {
       violations.push(
         `${relative}: raw runtime color found after SSOT migration; use semantic CSS/Tailwind tokens.`,
@@ -387,7 +400,7 @@ function main(): void {
       violations.push(`${relative}: legacy font found after Plus Jakarta Sans migration.`);
     }
     if (
-      (relative.startsWith('src/modules/business/dashboard/') ||
+      (isBusinessManagementSurface ||
         SEMANTIC_STATUS_RUNTIME_FILES.has(relative)) &&
       NON_SEMANTIC_STATUS_COLOR_RE.test(content)
     ) {
@@ -413,6 +426,16 @@ function main(): void {
     ) {
       violations.push(
         `${relative}: direct font stack found in MapLibre runtime; use the canonical --font-sans token.`,
+      );
+    }
+    if (isBusinessManagementSurface && BUSINESS_DIRECT_BRAND_PRIMITIVE_RE.test(content)) {
+      violations.push(
+        `${relative}: direct brand primitive found in Business management; consume semantic tokens or shared design-system components instead.`,
+      );
+    }
+    if (isBusinessManagementSurface && BUSINESS_EXTRABOLD_RE.test(content)) {
+      violations.push(
+        `${relative}: 800/extrabold typography found in Business management; reserve 800 for approved display/wordmark usage and use 600/700 for UI hierarchy.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);

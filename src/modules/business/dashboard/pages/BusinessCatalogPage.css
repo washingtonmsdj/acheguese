@@ -35,7 +35,6 @@
   flex: 1;
   min-width: 0;
 }
-.business-catalog__heading h1,
 .business-catalog__heading h2 {
   font-size: var(--business-heading-size, 1.25rem);
   font-weight: var(--business-heading-weight, 600);
@@ -52,10 +51,7 @@
   margin-top: 5px;
 }
 .business-catalog__heading > button {
-  background: hsl(var(--brand-solar));
-  color: hsl(var(--brand-petroleum));
   min-height: 44px;
-  border-radius: 999px;
   align-self: center;
   flex-shrink: 0;
 }
@@ -349,11 +345,6 @@
 }
 .business-catalog__dialog footer button {
   min-height: 44px;
-  border-radius: 999px;
-}
-.business-catalog__dialog footer button[type="submit"] {
-  background: hsl(var(--brand-solar));
-  color: hsl(var(--brand-petroleum));
 }
 .business-catalog__hint {
   font-size: 11px;
@@ -384,9 +375,6 @@
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 16px;
-  }
-  .business-catalog__heading h1 {
-    font-size: var(--business-heading-size, 1.125rem);
   }
   .business-catalog__heading > svg {
     width: 40px;

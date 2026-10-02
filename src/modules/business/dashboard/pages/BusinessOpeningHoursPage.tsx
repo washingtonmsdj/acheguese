@@ -126,7 +126,7 @@ export function BusinessOpeningHoursView({
       <header className="business-hours-page__heading">
         <Clock aria-hidden="true" />
         <div>
-          <h1>Horário de funcionamento</h1>
+          <h1 className="business-management-title">Horário de funcionamento</h1>
           <p>
             Defina quando sua empresa atende. Revise a prévia antes de salvar.
           </p>

@@ -30,12 +30,8 @@
   flex: 1;
   min-width: 0;
 }
-.business-hours-page__heading h1 {
+.business-hours-page__heading .business-management-title {
   margin: 4px 0;
-  font-size: var(--business-heading-size, 1.25rem);
-  font-weight: var(--business-heading-weight, 600);
-  letter-spacing: -0.025em;
-  line-height: var(--business-heading-line-height, 1.3);
 }
 .business-hours-page__heading p {
   margin: 0;
@@ -90,21 +86,8 @@
   min-height: 44px;
   flex: 0 1 auto;
   padding-inline: 20px;
-  border-radius: var(--radius-full);
   height: auto;
   white-space: normal;
-}
-.business-hours-page__actions .business-hours-page__save {
-  background: hsl(var(--brand-solar));
-  color: hsl(var(--brand-petroleum));
-  border-radius: var(--radius-full);
-  font-weight: 700;
-}
-.business-hours-page__actions .business-hours-page__save:hover {
-  background: hsl(var(--brand-solar) / 0.85);
-}
-.business-hours-page__actions .business-hours-page__save:disabled {
-  opacity: 0.55;
 }
 .business-hours-page__preview-heading {
   display: flex;
@@ -204,9 +187,7 @@
   .business-hours-page__heading p {
     font-size: var(--type-caption);
   }
-  .business-hours-page__heading h1 {
-    font-size: var(--business-heading-size, 1.125rem);
-    line-height: 1.3;
+  .business-hours-page__heading .business-management-title {
     margin-block: 4px;
   }
   .business-hours-page__heading {
