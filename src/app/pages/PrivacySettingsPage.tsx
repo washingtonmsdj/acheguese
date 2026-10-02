@@ -576,9 +576,27 @@ export default function PrivacySettingsPage() {
                 <Surface className="p-4 sm:p-5">
                   <div className="flex items-start gap-3">
                     <Download className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-                    <div className="min-w-0 flex-1"><h2 className="font-heading text-base font-bold text-territory-ink">Exportar meus dados</h2><p className="mt-1 text-sm leading-5 text-territory-muted">Baixe uma cópia dos dados disponíveis para sua conta.</p></div>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="font-heading text-base font-bold text-territory-ink">
+                        {exportAvailable ? "Exportar meus dados" : "Exportação automática indisponível"}
+                      </h2>
+                      <p className="mt-1 text-sm leading-5 text-territory-muted">
+                        {exportAvailable
+                          ? "Baixe uma cópia dos dados disponíveis para sua conta."
+                          : "A exportação automática ainda não foi certificada. Solicite seus dados pelo canal de proteção de dados."}
+                      </p>
+                    </div>
                   </div>
-                  <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.exportData)}>Exportar</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-4 min-h-11 w-full"
+                    onClick={() =>
+                      navigate(exportAvailable ? ACCOUNT_PATHS.exportData : DATA_PROTECTION_CONTACT_PATH)
+                    }
+                  >
+                    {exportAvailable ? "Exportar" : "Solicitar meus dados"}
+                  </Button>
                 </Surface>
 
                 <Surface className="px-4 sm:px-5">
