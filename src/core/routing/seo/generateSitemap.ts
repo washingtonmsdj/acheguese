@@ -6,6 +6,7 @@
  */
 
 import { logger } from '@/shared/utils/logger';
+import { APP_GLOBAL_PATHS } from '@/core/routing/config/global';
 import {
   PRIVACY_POLICY_PATH,
   SUPPORT_PATH,
@@ -268,8 +269,8 @@ function collectSitemapUrls(
           },
         ]
       : []),
-    { path: '/como-funciona', priority: 0.7, changefreq: 'monthly' as const },
-    { path: '/sobre', priority: 0.6, changefreq: 'monthly' as const },
+    { path: APP_GLOBAL_PATHS.howItWorks, priority: 0.7, changefreq: 'monthly' as const },
+    { path: APP_GLOBAL_PATHS.about, priority: 0.6, changefreq: 'monthly' as const },
     { path: SUPPORT_PATH, priority: 0.6, changefreq: 'monthly' as const },
     { path: TERMS_OF_SERVICE_PATH, priority: 0.3, changefreq: 'monthly' as const },
     { path: PRIVACY_POLICY_PATH, priority: 0.3, changefreq: 'monthly' as const },
