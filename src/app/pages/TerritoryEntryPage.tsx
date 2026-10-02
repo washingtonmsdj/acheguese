@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { getStateByCode } from "@/core/location/data/brazilianStates";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
   getPublicTerritoryGroupPresentation,
@@ -14,7 +15,8 @@ const LAUNCH_CITY = TERRITORY_CONFIG.launch.city;
 const LAUNCH_COMMUNITY_SLUG = TERRITORY_CONFIG.launch.community.slug;
 const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
 const LAUNCH_COMMUNITY_DISCOVERY_LABEL = LAUNCH_COMMUNITY_NAME.replace(/^Complexo do /, "");
-const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUpperCase();
+const LAUNCH_STATE_LABEL =
+  getStateByCode(LAUNCH_STATE)?.name ?? LAUNCH_STATE.toLocaleUpperCase("pt-BR");
 const LAUNCH_PLACE_LABEL = [TERRITORY_CONFIG.launch.name, LAUNCH_STATE_LABEL]
   .filter(Boolean)
   .join(" · ");
