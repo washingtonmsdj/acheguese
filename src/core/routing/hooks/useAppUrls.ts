@@ -24,7 +24,9 @@ import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import { AUTH_PATHS } from '@/core/auth/constants/authFlow';
 import { ACCOUNT_PATHS } from '@/core/routing/config/account';
+import { STATIC_ROUTE_PATHS } from '@/core/routing/config/staticRoutePaths';
 import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { messagingRoutes } from '@/core/messaging';
@@ -225,20 +227,20 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Auth
     auth: {
-      login: '/login',
-      register: '/cadastro',
-      onboarding: '/onboarding',
+      login: AUTH_PATHS.login,
+      register: AUTH_PATHS.signup,
+      onboarding: STATIC_ROUTE_PATHS.onboarding,
     },
     
     // Globais
-    home: '/',
+    home: STATIC_ROUTE_PATHS.home,
     settings: ACCOUNT_PATHS.preferences,
     messages: messagingRoutes.inbox(),
-    map: `/mapa${cityBase}`,
+    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, cityBase),
     ranking: '/ranking',
     gamification: '/gamificacao',
     search: buildModuleTerritoryUrl(MODULE_SLUGS.search, cityBase),
-    notifications: '/notificacoes',
+    notifications: STATIC_ROUTE_PATHS.notifications,
     jobs: jobPublicRoutes.list({ state: active.state, city: active.city }),
     family: {
       home: ACCOUNT_PATHS.home,
