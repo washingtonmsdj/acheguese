@@ -29,6 +29,8 @@ import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoute
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { messagingRoutes } from '@/core/messaging';
 import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
+import { AUTH_PATHS } from '@/core/auth/constants/authFlow';
+import { APP_GLOBAL_PATHS } from '@/core/routing/config/global';
 
 export interface AppUrls {
   // Módulos territoriais
@@ -225,20 +227,20 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Auth
     auth: {
-      login: '/login',
-      register: '/cadastro',
-      onboarding: '/onboarding',
+      login: AUTH_PATHS.login,
+      register: AUTH_PATHS.signup,
+      onboarding: AUTH_PATHS.onboarding,
     },
     
     // Globais
-    home: '/',
+    home: APP_GLOBAL_PATHS.home,
     settings: ACCOUNT_PATHS.preferences,
     messages: messagingRoutes.inbox(),
     map: `/mapa${cityBase}`,
     ranking: '/ranking',
     gamification: '/gamificacao',
     search: buildModuleTerritoryUrl(MODULE_SLUGS.search, cityBase),
-    notifications: '/notificacoes',
+    notifications: APP_GLOBAL_PATHS.notifications,
     jobs: jobPublicRoutes.list({ state: active.state, city: active.city }),
     family: {
       home: ACCOUNT_PATHS.home,
