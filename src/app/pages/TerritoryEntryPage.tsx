@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { buildLoginPath } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { APP_GLOBAL_PATHS } from "@/core/routing/config/global";
 import { getStateByCode } from "@/core/location/data/brazilianStates";
 import {
   getPublicTerritoryGroupPresentation,
@@ -210,7 +211,7 @@ export default function TerritoryEntryPage() {
 
           <nav className="ag-nav" aria-label="Navegação principal">
             <a href="#descobrir">Por perto</a>
-            <a href="/como-funciona">Como funciona</a>
+            <a href={APP_GLOBAL_PATHS.howItWorks}>Como funciona</a>
             <a href={launchBusinessUrl}>Para negócios</a>
           </nav>
 
@@ -410,8 +411,8 @@ export default function TerritoryEntryPage() {
             <p>A cidade acontece quando a gente se encontra.</p>
           </div>
           <nav aria-label="Links do rodapé">
-            <a href="/sobre">Sobre</a>
-            <a href="/como-funciona">Como funciona</a>
+            <a href={APP_GLOBAL_PATHS.about}>Sobre</a>
+            <a href={APP_GLOBAL_PATHS.howItWorks}>Como funciona</a>
             <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
             <a href={ACCOUNT_PATHS.accessibility}>Acessibilidade</a>
           </nav>
