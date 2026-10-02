@@ -219,6 +219,10 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
         page.getByRole("heading", { name: "Apresentação e detalhes", exact: true }),
       ).toBeVisible({ timeout: 20_000 });
       await page.getByRole("button", { name: "Salvar alterações" }).click();
+      await page.waitForURL(
+        (url) => url.pathname === businessManagementRoutes.dados(profileId!),
+        { timeout: 40_000 },
+      );
 
       await page.goto("/central/empresas", { waitUntil: "domcontentloaded" });
       await expect(page.getByText(renamedName, { exact: true }).first()).toBeVisible({
