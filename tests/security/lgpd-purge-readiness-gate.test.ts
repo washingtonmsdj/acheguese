@@ -63,8 +63,8 @@ describe('LGPD destructive purge readiness gate', () => {
       blockingReferenceCount: 28,
       authUsersBlockingReferenceCount: 20,
       profilesBlockingReferenceCount: 8,
-      nullableBlockingReferenceCount: 25,
-      requiredBlockingReferenceCount: 3,
+      nullableBlockingReferenceCount: 24,
+      requiredBlockingReferenceCount: 4,
       classifiedReferenceCount: 28,
       unclassifiedReferenceCount: 0,
       decisionCounts: {
@@ -117,7 +117,7 @@ describe('LGPD destructive purge readiness gate', () => {
     expect(purgeMatrix.implementationComplete).toBe(false);
   });
 
-  it('records the three non-null RESTRICT references that cannot be solved by SET NULL', () => {
+  it('records required profile blockers that cannot be solved by SET NULL', () => {
     const required = purgeMatrix.blockingReferences
       .filter((entry) => entry.nullable === false)
       .map((entry) => entry.constraint)
@@ -127,10 +127,11 @@ describe('LGPD destructive purge readiness gate', () => {
       'communication_publications_author_profile_id_fkey',
       'community_user_moderation_actions_actor_profile_id_fkey',
       'trust_admin_actions_applied_by_profile_id_fkey',
+      'vagas_owner_profile_id_fkey',
     ]);
     expect(
       purgeMatrix.blockingReferences.filter((entry) => entry.nullable === true),
-    ).toHaveLength(25);
+    ).toHaveLength(24);
   });
 
   it('requires the purge matrix and an explicit implementation certification before delete rollout', () => {

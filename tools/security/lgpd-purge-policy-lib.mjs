@@ -14,6 +14,7 @@ const ALLOWED_NON_FK_CLASSIFICATIONS = new Set([
   "explicit-subject-cleanup-required",
 ]);
 const ALLOWED_PROFILE_HARD_BLOCKER_DELETE_ACTIONS = new Set([
+  "NO ACTION",
   "RESTRICT",
   "SET NULL",
 ]);
@@ -103,11 +104,28 @@ function validateProfileDeletionFanout(profileDeletionFanout) {
     requireNonEmptyString(blocker.classification, `${blocker.column}.classification`);
   }
 
-  requireUniqueColumns(
+  const nullableNoActionColumns = requireUniqueColumns(
     profileDeletionFanout.nullableNoActionReferences,
     "profileDeletionFanout.nullableNoActionReferences",
   );
-  if (profileDeletionFanout.nullableNoActionReferences.length !== snapshot.noAction) {
+  const requiredNoActionColumns = new Set(
+    profileDeletionFanout.hardBlockers
+      .filter((blocker) => blocker.onDelete === "NO ACTION")
+      .map((blocker) => blocker.column),
+  );
+  if (
+    [...requiredNoActionColumns].some((column) =>
+      nullableNoActionColumns.has(column),
+    )
+  ) {
+    throw new Error(
+      "profile NO ACTION reference cannot be both nullable and a hard blocker",
+    );
+  }
+  if (
+    nullableNoActionColumns.size + requiredNoActionColumns.size !==
+    snapshot.noAction
+  ) {
     throw new Error("profile NO ACTION reference count drifted from snapshot");
   }
 

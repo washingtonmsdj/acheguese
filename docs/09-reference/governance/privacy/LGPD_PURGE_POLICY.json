@@ -2,7 +2,7 @@
   "schemaVersion": "lgpd-purge-policy/v1",
   "authority": "account-deletion-irreversible-phase",
   "projectRef": "xhdowzacfujckjelqhtd",
-  "catalogSnapshotDate": "2026-08-21",
+  "catalogSnapshotDate": "2026-10-02",
   "rolloutReady": false,
   "rules": {
     "authUserHardDeleteMustBeLast": true,
@@ -19,8 +19,8 @@
     "directAuthDeleteFromBrowser": false
   },
   "remoteFoundation": {
-    "accountDeletionRequestsExists": false,
-    "requestRpcExists": false,
+    "accountDeletionRequestsExists": true,
+    "requestRpcExists": true,
     "cancelRpcExists": true,
     "pgCronInstalled": true,
     "pgNetInstalled": true
@@ -59,11 +59,11 @@
   },
   "profileDeletionFanout": {
     "snapshot": {
-      "totalForeignKeys": 157,
-      "cascade": 106,
+      "totalForeignKeys": 172,
+      "cascade": 114,
       "noAction": 5,
       "restrict": 3,
-      "setNull": 43,
+      "setNull": 50,
       "setNullOnNotNullColumn": 1
     },
     "hardBlockers": [
@@ -93,18 +93,23 @@
         "constraint": "classified_reports_reporter_id_fkey",
         "remoteDefinition": "FOREIGN KEY (reporter_id) REFERENCES profiles(id) ON DELETE SET NULL",
         "gitBaseline": "20260529102000 creates reporter_id REFERENCES profiles(id) ON DELETE CASCADE; 20260714118000 requires reporter_id NOT NULL"
+      },
+      {
+        "column": "public.vagas.owner_profile_id",
+        "onDelete": "NO ACTION",
+        "nullable": false,
+        "classification": "schema-or-retention-resolution-required"
       }
     ],
     "nullableNoActionReferences": [
       "public.comments.business_id",
       "public.comments.professional_id",
       "public.issue_blocked_terms.created_by",
-      "public.operational_verifications.verified_by",
-      "public.vagas.owner_profile_id"
+      "public.operational_verifications.verified_by"
     ],
     "cascadeReview": {
       "status": "full-domain-review-required",
-      "count": 106,
+      "count": 114,
       "reason": "profile deletion currently cascades through authored, shared, transactional, moderation and safety records; cascade semantics alone do not prove that destroying the whole row is appropriate for account deletion",
       "highRiskExamples": [
         "public.community_direct_message_reports.reported_profile_id",
@@ -268,7 +273,7 @@
     {
       "id": "PURGE-007",
       "severity": "critical",
-      "reason": "classify the 106 profile CASCADE references, resolve 3 non-null RESTRICT references, and repair the classified_reports SET NULL/NOT NULL drift before profiles can be deleted safely"
+      "reason": "classify the 114 profile CASCADE references, resolve 4 required profile blockers (3 RESTRICT plus public.vagas.owner_profile_id NO ACTION), and repair the classified_reports SET NULL/NOT NULL drift before profiles can be deleted safely"
     }
   ],
   "notes": [
