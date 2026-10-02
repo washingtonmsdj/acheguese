@@ -7,6 +7,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyAuthenticatedSubject } from "../_shared/verifiedJwt.ts";
 import { requireOperationalAccount } from "../_shared/accountOperational.ts";
 import {
   auditLog,
@@ -101,14 +102,14 @@ async function requireUser(
     return jsonResponse({ error: "Missing or invalid authorization header" }, 401, ALLOWED_METHODS, req);
   }
 
-  const { data, error } = await supabaseAdmin.auth.getUser(token);
-  if (error || !data.user) {
+  const verified = await verifyAuthenticatedSubject(supabaseAdmin, token);
+  if (!verified) {
     return jsonResponse({ error: "Invalid or expired token" }, 401, ALLOWED_METHODS, req);
   }
 
   return {
-    userId: data.user.id,
-    isProjectAdmin: await isProjectAdmin(supabaseAdmin, data.user.id),
+    userId: verified.userId,
+    isProjectAdmin: await isProjectAdmin(supabaseAdmin, verified.userId),
   };
 }
 
