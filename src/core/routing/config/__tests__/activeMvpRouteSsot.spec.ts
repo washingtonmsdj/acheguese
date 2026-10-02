@@ -5,6 +5,7 @@ import {
   ACCOUNT_PATHS,
   ACCOUNT_ROUTE_PATTERNS,
 } from "@/core/routing/config/account";
+import { centralRoutes } from "@/core/routing/config/centralRoutes";
 import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import {
   DATA_PROTECTION_CONTACT_PATH,
@@ -30,6 +31,8 @@ describe("active MVP route SSOT", () => {
     expect(STATIC_ROUTE_PATHS.notifications).toBe("/notificacoes");
     expect(STATIC_ROUTE_PATHS.howItWorks).toBe("/como-funciona");
     expect(STATIC_ROUTE_PATHS.about).toBe("/sobre");
+    expect(centralRoutes.home).toBe("/central");
+    expect(centralRoutes.admin.home).toBe("/admin");
 
     expect(ACCOUNT_PATHS.home).toBe("/conta");
     expect(ACCOUNT_ROUTE_PATTERNS.editProfile).toBe("/conta/editar/:profileId");
@@ -48,6 +51,10 @@ describe("active MVP route SSOT", () => {
     expect(appRoutes).toContain("STATIC_ROUTE_PATHS.howItWorks");
     expect(appRoutes).toContain("STATIC_ROUTE_PATHS.about");
     expect(appRoutes).toContain("SUPPORT_PATH");
+    expect(appRoutes).toContain("centralRoutes.home");
+    expect(appRoutes).toContain("centralRoutes.admin.home");
+    expect(appRoutes).not.toContain('path="/central/*"');
+    expect(appRoutes).not.toContain('path="/admin/*"');
 
     expect(appLayout).toContain("buildAppModulePath(APP_MODULE_SLUGS.business)");
     expect(appLayout).toContain("buildAppModulePath(APP_MODULE_SLUGS.map)");
