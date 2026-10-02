@@ -2,6 +2,7 @@ import { Navigation } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { NEARBY_RADIUS_OPTIONS_KM } from "../config/nearbyConfig";
+import { formatNearbyDistance } from "../utils/nearbyDistance";
 
 
 interface NearbyFiltersProps {
@@ -34,7 +35,7 @@ export function NearbyFilters({
             onClick={() => onRadiusChange(radiusKmOption)}
             className="h-8 rounded-full px-3 text-xs"
           >
-            {radiusKmOption < 1 ? `${radiusKmOption * 1000}m` : `${radiusKmOption}km`}
+            {formatNearbyDistance(radiusKmOption * 1000)}
           </Button>
         ))}
       </div>
