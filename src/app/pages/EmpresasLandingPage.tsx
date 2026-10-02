@@ -90,15 +90,15 @@ function LandingTopBar({
 }) {
   return (
     <section className="mx-auto w-full max-w-7xl px-4 pb-4 pt-3 sm:px-6">
-      <div className="flex flex-col gap-3 lg:rounded-[26px] lg:border lg:border-white/10 lg:bg-[linear-gradient(180deg,rgba(9,18,24,0.98),rgba(7,14,20,0.98))] lg:px-5 lg:py-4">
+      <div className="flex flex-col gap-3 lg:rounded-[26px] lg:border lg:border-territory-on-image/10 lg:bg-territory-image-overlay lg:px-5 lg:py-4">
         <div className="hidden lg:flex lg:items-center lg:gap-5">
-          <Link to="/" className="flex items-center gap-3 text-white">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/14 text-teal-300">
+          <Link to="/" className="flex items-center gap-3 text-territory-on-image">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/14 text-primary">
               <MapPin className="h-5 w-5" />
             </span>
             <span className="min-w-0">
               <span className="block text-[1.55rem] font-semibold leading-none">Achegue-se</span>
-              <span className="block pt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-teal-200/78">
+              <span className="block pt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary/78">
                 Seu bairro, mais perto.
               </span>
             </span>
@@ -108,23 +108,23 @@ function LandingTopBar({
             <button
               type="button"
               onClick={onOpenLocationDialog}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/82 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm font-medium text-territory-on-image/82 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
             >
-              <MapPin className="h-4 w-4 text-teal-300" />
+              <MapPin className="h-4 w-4 text-primary" />
               {locationLabel}
             </button>
 
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/38" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-territory-on-image/38" />
               <Input
                 type="search"
                 value={searchQuery}
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder="Buscar empresa ou estabelecimento no bairro"
                 aria-label="Buscar empresas no bairro"
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-16 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
+                className="h-12 rounded-2xl border-territory-on-image/10 bg-territory-on-image/[0.03] pl-11 pr-16 text-territory-on-image placeholder:text-territory-on-image/36 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
               />
-              <span className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-lg border border-white/10 bg-black/20 px-2 py-1 text-[0.68rem] font-medium text-white/42 sm:inline-flex">
+              <span className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-lg border border-territory-on-image/10 bg-territory-image-overlay/20 px-2 py-1 text-[0.68rem] font-medium text-territory-on-image/42 sm:inline-flex">
                 Ctrl + K
               </span>
             </div>
@@ -133,13 +133,13 @@ function LandingTopBar({
           <div className="flex items-center gap-3">
             <Link
               to={secondaryHref}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm font-semibold text-territory-on-image transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
             >
               {secondaryLabel}
             </Link>
             <Link
               to={primaryHref}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               {primaryLabel}
             </Link>
@@ -148,13 +148,13 @@ function LandingTopBar({
 
         <div className="space-y-3 lg:hidden">
           <div className="flex items-center justify-between gap-3">
-            <Link to="/" className="flex min-w-0 items-center gap-2 text-white">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-500/14 text-teal-300">
+            <Link to="/" className="flex min-w-0 items-center gap-2 text-territory-on-image">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/14 text-primary">
                 <MapPin className="h-4.5 w-4.5" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[1.3rem] font-semibold leading-none">Achegue-se</span>
-                <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-teal-200/72">
+                <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
                   Seu bairro, mais perto.
                 </span>
               </span>
@@ -163,14 +163,14 @@ function LandingTopBar({
             <div className="flex items-center gap-2">
               <Link
                 to={secondaryHref}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/74 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/74 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
                 aria-label={secondaryLabel}
               >
                 <CircleUserRound className="h-4.5 w-4.5" />
               </Link>
               <Link
                 to={primaryHref}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-teal-500 text-slate-950 transition-colors hover:bg-teal-400"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
                 aria-label={primaryLabel}
               >
                 <UserRoundPlus className="h-4.5 w-4.5" />
@@ -181,28 +181,28 @@ function LandingTopBar({
           <button
             type="button"
             onClick={onOpenLocationDialog}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/82 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm font-medium text-territory-on-image/82 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
           >
-            <MapPin className="h-4 w-4 text-teal-300" />
+            <MapPin className="h-4 w-4 text-primary" />
             {locationLabel}
           </button>
 
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-white/38" />
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-territory-on-image/38" />
               <Input
                 type="search"
                 value={searchQuery}
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder="Buscar empresa no bairro"
                 aria-label="Buscar empresas no bairro"
-                className="h-11 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-4 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
+                className="h-11 rounded-2xl border-territory-on-image/10 bg-territory-on-image/[0.03] pl-11 pr-4 text-territory-on-image placeholder:text-territory-on-image/36 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
               />
             </div>
             <button
               type="button"
               onClick={onOpenFilters}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/78 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/78 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
               aria-label="Abrir filtros e ordenacao"
             >
               <SlidersHorizontal className="h-4.5 w-4.5" />
@@ -494,17 +494,17 @@ export default function EmpresasLandingPage({
       <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
         <SheetContent
           side="bottom"
-          className="max-h-[82vh] overflow-y-auto rounded-t-[28px] border-white/10 bg-[#081118] px-4 pb-8 pt-5 text-white"
+          className="max-h-[82vh] overflow-y-auto rounded-t-[28px] border-territory-on-image/10 bg-territory-image-overlay px-4 pb-8 pt-5 text-territory-on-image"
         >
           <SheetHeader className="text-left">
-            <SheetTitle className="text-left text-xl text-white">Filtros do bairro</SheetTitle>
-            <SheetDescription className="text-left text-white/52">
+            <SheetTitle className="text-left text-xl text-territory-on-image">Filtros do bairro</SheetTitle>
+            <SheetDescription className="text-left text-territory-on-image/52">
               Ajuste categorias, filtros rapidos e ordenacao da vitrine.
             </SheetDescription>
           </SheetHeader>
 
           <div className="mt-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-territory-on-image/42">
               Categorias
             </p>
             <div className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -514,8 +514,8 @@ export default function EmpresasLandingPage({
                     icon: CATEGORIES[0]?.icon ?? Search,
                     label: "Tudo",
                     count: String(businessesToShow.length),
-                    iconColor: "text-white/70",
-                    bg: "bg-black/20",
+                    iconColor: "text-territory-on-image/70",
+                    bg: "bg-territory-image-overlay/20",
                     slug: "all",
                   }}
                   isActive={activeCategory === "all"}
@@ -534,7 +534,7 @@ export default function EmpresasLandingPage({
           </div>
 
           <div className="mt-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-territory-on-image/42">
               Filtros rapidos
             </p>
             <div className="flex flex-wrap gap-2">
@@ -550,7 +550,7 @@ export default function EmpresasLandingPage({
           </div>
 
           <div className="mt-5">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/42">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-territory-on-image/42">
               Ordenacao
             </p>
             <div className="grid grid-cols-1 gap-2">
@@ -569,13 +569,13 @@ export default function EmpresasLandingPage({
                   className={[
                     "flex min-h-12 items-center justify-between rounded-2xl border px-4 text-sm font-medium transition-colors",
                     sortBy === value
-                      ? "border-teal-400/35 bg-teal-400/12 text-teal-100"
-                      : "border-white/10 bg-white/[0.03] text-white/74 hover:border-white/20 hover:bg-white/[0.05]",
+                      ? "border-primary/35 bg-primary/12 text-primary"
+                      : "border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/74 hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]",
                   ].join(" ")}
                   aria-pressed={sortBy === value}
                 >
                   <span>{label}</span>
-                  <span className={sortBy === value ? "text-teal-200" : "text-white/28"}>•</span>
+                  <span className={sortBy === value ? "text-primary" : "text-territory-on-image/28"}>•</span>
                 </button>
               ))}
             </div>
@@ -584,7 +584,7 @@ export default function EmpresasLandingPage({
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(false)}
-            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-teal-500 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-teal-400"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Ver {filteredBusinesses.length} resultados
           </button>
