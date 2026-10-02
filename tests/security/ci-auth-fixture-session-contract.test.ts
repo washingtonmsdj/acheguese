@@ -64,14 +64,20 @@ describe("CI Auth fixture session boundary", () => {
     expect(edgeFunction).toContain('"fixture_credentials_rejected"');
     expect(edgeFunction).toContain('"fixture_account_unavailable"');
     expect(edgeFunction).toContain('"auth_rate_limited"');
+    expect(edgeFunction).toContain('"auth_upstream_timeout"');
     expect(edgeFunction).toContain('"auth_upstream_unavailable"');
     expect(edgeFunction).toContain('"fixture_auth_failed"');
+    expect(edgeFunction).toContain("createBoundedAuthFetch");
+    expect(edgeFunction).toContain("authFetch.didTimeout()");
     expect(edgeFunction).toContain("sanitizedUpstreamAuthCode");
     expect(edgeFunction).toContain("upstreamStatus:");
     expect(edgeFunction).toContain("upstreamCode: sanitizedUpstreamAuthCode(error)");
     expect(edgeFunction).toContain("authLatencyMs");
     expect(edgeFunction).not.toContain("upstreamMessage");
     expect(edgeFunction).toContain("return fixtureAuthFailureResponse(req, failure)");
+    expect(edgeFunction).toContain(
+      'return { code: "auth_upstream_timeout", status: 503 }',
+    );
     expect(edgeFunction).toContain(
       'return { code: "auth_upstream_unavailable", status: 503 }',
     );
@@ -148,6 +154,13 @@ describe("CI Auth fixture session boundary", () => {
     expect(deployWorkflow).toContain(
       'details: { reason: "github_oidc_rejected" }',
     );
+    expect(deployWorkflow).toContain(
+      '"supabase/functions/ci-auth-fixture-session/authUpstreamFetch.ts"',
+    );
+    expect(deployWorkflow).toContain("requiredTimeoutMarkers");
+    expect(deployWorkflow).toContain("CI_AUTH_UPSTREAM_TIMEOUT_MS = 10_000");
+    expect(deployWorkflow).toContain("AuthUpstreamTimeoutError");
+    expect(deployWorkflow).toContain('"auth_upstream_timeout"');
     expect(deployWorkflow).not.toContain("--no-verify-jwt");
     expect(deployWorkflow).toContain(
       '$entry.Contains("SUPABASE_SERVICE_ROLE_KEY")',
