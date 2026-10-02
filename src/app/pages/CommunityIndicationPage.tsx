@@ -5,8 +5,12 @@ import {
   registerCommunityInterest,
   type CommunityInterestRole,
 } from "@/core/routing/services";
-import { getStateByCode } from "@/core/location/data/brazilianStates";
+import {
+  BRAZILIAN_STATES,
+  getStateByCode,
+} from "@/core/location/data/brazilianStates";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { addCountryPrefix } from "@/core/routing/utils/pathNormalization";
 import { buildPublicTerritoryBaseUrlFromInput } from "@/core/routing/utils/territoryUrls";
 import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/shared/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
@@ -91,11 +95,9 @@ export default function CommunityIndicationPage() {
 
       const result = await registerCommunityInterest({
         communityId: null,
-        communitySlug: normalizedCity,
-        territoryPath: buildPublicTerritoryBaseUrlFromInput(
-          state,
-          city,
-          neighborhood,
+        communitySlug: normalizedNeighborhood,
+        territoryPath: addCountryPrefix(
+          buildPublicTerritoryBaseUrlFromInput(state, city, neighborhood),
         ),
         fullName: name.trim(),
         email,
@@ -205,7 +207,17 @@ export default function CommunityIndicationPage() {
 
             <label className="community-indication-field">
               <span>Estado</span>
-              <input value={state} onChange={(event) => setState(event.target.value)} required />
+              <select
+                value={state}
+                onChange={(event) => setState(event.target.value)}
+                required
+              >
+                {BRAZILIAN_STATES.map((option) => (
+                  <option key={option.code} value={option.name}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="community-indication-field">
               <span>Cidade</span>
