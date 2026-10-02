@@ -529,7 +529,25 @@ export default function PrivacySettingsPage() {
               {cancellingDeletion ? "Cancelando..." : "Cancelar solicitação"}
             </Button>
             <p className="mt-2 text-center text-xs text-territory-muted">Disponível enquanto o cancelamento for permitido.</p>
-            <Button type="button" variant="link" className="mt-1 w-full text-territory-brand" onClick={() => navigate(ACCOUNT_PATHS.exportData)}><Download className="mr-2 h-4 w-4" aria-hidden="true" />Exportar meus dados</Button>
+            <Button
+              type="button"
+              variant="link"
+              className="mt-1 w-full text-territory-brand"
+              onClick={() =>
+                navigate(
+                  exportAvailable
+                    ? ACCOUNT_PATHS.exportData
+                    : DATA_PROTECTION_CONTACT_PATH,
+                )
+              }
+            >
+              {exportAvailable ? (
+                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+              ) : (
+                <MessageCircleMore className="mr-2 h-4 w-4" aria-hidden="true" />
+              )}
+              {exportAvailable ? "Exportar meus dados" : "Solicitar meus dados"}
+            </Button>
 
             <Surface className="mt-4 px-4 sm:px-5">
               <LinkRow icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} title="Perfis e equipes" description="Confira o impacto nos perfis que você administra." onClick={() => navigate(ACCOUNT_PATHS.profiles)} />
@@ -673,7 +691,24 @@ export default function PrivacySettingsPage() {
                     <Textarea id="delete-reason" value={deleteReason} onChange={(event) => setDeleteReason(event.target.value.slice(0, 500))} disabled={deleting} className="mt-2 min-h-[92px]" placeholder="Conte-nos, se quiser." maxLength={500} />
                     <p className="mt-1 text-right text-xs text-territory-muted">{deleteReason.length}/500</p>
                   </div>
-                  <Button type="button" variant="link" disabled={deleting} className="h-auto p-0 text-territory-brand" onClick={() => { setShowDeleteConfirm(false); navigate(ACCOUNT_PATHS.exportData); }}>Exportar meus dados antes</Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    disabled={deleting}
+                    className="h-auto p-0 text-territory-brand"
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      navigate(
+                        exportAvailable
+                          ? ACCOUNT_PATHS.exportData
+                          : DATA_PROTECTION_CONTACT_PATH,
+                      );
+                    }}
+                  >
+                    {exportAvailable
+                      ? "Exportar meus dados antes"
+                      : "Solicitar meus dados antes"}
+                  </Button>
                   <label className="flex cursor-pointer items-start gap-2 text-sm text-territory-ink">
                     <input type="checkbox" checked={deleteAcknowledged} onChange={(event) => setDeleteAcknowledged(event.target.checked)} disabled={deleting} className="mt-0.5 h-4 w-4 rounded border-territory-border" />
                     <span>Entendi as consequências da solicitação.</span>
