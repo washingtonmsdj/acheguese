@@ -535,7 +535,8 @@
       "risk": "Critical",
       "label": "authenticated privacy RPC broker",
       "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
+        "from\\s+[\"\\']\\.\\.\\/_shared\\/verifiedJwt\\.ts[\"\\']",
+        "verifyAuthenticatedSubject\\s*\\(\\s*supabaseAdmin\\s*,\\s*token\\s*\\)"
       ]
     },
     "process-timeouts": {
@@ -569,7 +570,8 @@
       "risk": "Critical",
       "label": "authenticated profile RPC broker",
       "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
+        "from\\s+[\"\\']\\.\\.\\/_shared\\/verifiedJwt\\.ts[\"\\']",
+        "verifyAuthenticatedSubject\\s*\\(\\s*supabaseAdmin\\s*,\\s*token\\s*\\)"
       ]
     },
     "role-rpc": {
@@ -577,7 +579,8 @@
       "risk": "Critical",
       "label": "authenticated role RPC broker",
       "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
+        "from\\s+[\"\\']\\.\\.\\/_shared\\/verifiedJwt\\.ts[\"\\']",
+        "verifyAuthenticatedSubject\\s*\\(\\s*supabaseAdmin\\s*,\\s*token\\s*\\)"
       ]
     },
     "send-email": {
@@ -611,7 +614,8 @@
       "risk": "Critical",
       "label": "authenticated session RPC broker",
       "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
+        "from\\s+[\"\\']\\.\\.\\/_shared\\/verifiedJwt\\.ts[\"\\']",
+        "verifyAuthenticatedSubject\\s*\\(\\s*supabaseAdmin\\s*,\\s*token\\s*\\)"
       ]
     },
     "subscribe-push": {
