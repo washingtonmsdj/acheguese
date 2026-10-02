@@ -6,6 +6,7 @@
  * legal constants, territorial builders, business route helpers, etc.).
  */
 export const APP_PATHS = {
+  home: "/",
   search: "/busca",
   aiSearch: "/buscar",
   notifications: "/notificacoes",
