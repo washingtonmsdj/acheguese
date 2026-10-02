@@ -409,7 +409,7 @@ export default function TerritoryEntryPage() {
           </div>
           <nav aria-label="Links do rodapé">
             <a href={STATIC_ROUTE_PATHS.about}>Sobre</a>
-            <a href="/como-funciona">Como funciona</a>
+            <a href={STATIC_ROUTE_PATHS.howItWorks}>Como funciona</a>
             <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
             <a href={ACCOUNT_PATHS.accessibility}>Acessibilidade</a>
           </nav>
