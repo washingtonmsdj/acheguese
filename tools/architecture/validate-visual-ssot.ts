@@ -130,6 +130,8 @@ const MIGRATED_RUNTIME_FILES = [
   'src/core/nearby/components/NearbySection.tsx',
   'src/core/nearby/components/NearbyBusinessCta.tsx',
   'src/core/nearby/components/NearbyQuickRoutes.tsx',
+  'src/core/business/pages/CategoryBusinessPage.tsx',
+  'src/core/business/config/categoryFilters.ts',
   'src/modules/business/pages/CriarEmpresaPage.tsx',
   'src/modules/business/pages/CriarEmpresaPage.css',
   'src/modules/business/company/pages/EmpresaDetailLayout.tsx',
@@ -164,6 +166,7 @@ const MIGRATED_RUNTIME_FILES = [
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:blue|cyan|teal|emerald|green|lime|rose|red|amber|yellow|slate|gray)-\d{2,3}(?:\/\d+)?\b/;
+const NON_SEMANTIC_PALETTE_COLOR_RE = /\b(?:text|bg|border|from|via|to)-(?:orange|emerald|green|lime|rose|red|pink|sky|cyan|violet|purple|amber|yellow|teal|blue)-\d{2,3}(?:\/\d+)?\b/;
 const SEMANTIC_STATUS_RUNTIME_FILES = new Set([
   'src/modules/profile/pages/ContaSegurancaPage.tsx',
   'src/app/pages/PrivacySettingsPage.tsx',
@@ -342,6 +345,17 @@ function main(): void {
     ) {
       violations.push(
         `${relative}: non-semantic status color found; use success, warning, destructive, info or muted tokens.`,
+      );
+    }
+    if (
+      (
+        relative === 'src/core/business/pages/CategoryBusinessPage.tsx' ||
+        relative === 'src/core/business/config/categoryFilters.ts'
+      ) &&
+      NON_SEMANTIC_PALETTE_COLOR_RE.test(content)
+    ) {
+      violations.push(
+        `${relative}: direct Tailwind palette color found in Business category surface; use canonical semantic/territory tokens.`,
       );
     }
     validateApprovedFontWeights(relative, content, violations);
