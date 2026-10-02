@@ -24,6 +24,7 @@ describe("nearby MVP boundary", () => {
   const filters = read("src/core/nearby/components/NearbyFilters.tsx");
   const section = read("src/core/nearby/components/NearbySection.tsx");
   const territorialLayout = read("src/core/routing/components/TerritorialLayout.tsx");
+  const nearbyConfig = read("src/core/nearby/config/nearbyConfig.ts");
 
   it("uses location quality rather than fallback coordinates as personal proximity truth", () => {
     expect(page).toContain("useTerritorialContextOptional");
@@ -98,9 +99,9 @@ describe("nearby MVP boundary", () => {
 
   it("never renders personal distance or a user marker from a territorial center", () => {
     expect(card).toContain("const hasRealDistance =");
-    expect(card).toContain("showProximity &&");
-    expect(card).toContain("business.distanceMeters > 0");
-    expect(card).toContain("business.distanceMeters < 100000");
+    expect(card).toContain("isPreciseNearbyDistance");
+    expect(card).not.toContain("100000");
+    expect(nearbyConfig).toContain("showProximity && Number.isFinite(meters) && meters > 0");
     expect(card).toContain("em linha reta");
     expect(card).not.toContain("getWalkingTime");
     expect(card).not.toContain("<Clock");
@@ -120,10 +121,12 @@ describe("nearby MVP boundary", () => {
     expect(page).toContain('className="nb-no-results"');
   });
 
-  it("does not retain fake cross-module category filters", () => {
+  it("uses the canonical Business taxonomy instead of local category aliases", () => {
+    expect(page).toContain("BUSINESS_CATEGORY_OPTIONS");
+    expect(page).toContain("getBusinessCategoryLabel");
+    expect(page).not.toContain('value: "alimentacao"');
+    expect(page).not.toContain('value: "mercados"');
+    expect(page).not.toContain('value: "beleza"');
     expect(filters).not.toContain("QUICK_CATEGORIES");
-    expect(filters).not.toContain("Turismo");
-    expect(filters).not.toContain("Servicos");
-    expect(filters).not.toContain("Alimentacao");
   });
 });

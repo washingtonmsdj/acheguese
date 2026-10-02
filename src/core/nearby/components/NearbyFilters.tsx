@@ -1,14 +1,9 @@
 import { Navigation } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { NEARBY_RADIUS_OPTIONS_KM } from "../config/nearbyConfig";
+import { formatNearbyDistance } from "../utils/nearbyDistance";
 
-const RADIUS_OPTIONS = [
-  { value: 1, label: "1km" },
-  { value: 2, label: "2km" },
-  { value: 5, label: "5km" },
-  { value: 10, label: "10km" },
-  { value: 20, label: "20km" },
-];
 
 interface NearbyFiltersProps {
   radiusKm: number;
@@ -32,15 +27,15 @@ export function NearbyFilters({
         {showProximity ? "Raio:" : "Recorte a partir do centro:"}
       </span>
       <div className="flex flex-wrap gap-1.5">
-        {RADIUS_OPTIONS.map((option) => (
+        {NEARBY_RADIUS_OPTIONS_KM.map((radiusKmOption) => (
           <Button
-            key={option.value}
+            key={radiusKmOption}
             size="sm"
-            variant={radiusKm === option.value ? "default" : "outline"}
-            onClick={() => onRadiusChange(option.value)}
+            variant={radiusKm === radiusKmOption ? "default" : "outline"}
+            onClick={() => onRadiusChange(radiusKmOption)}
             className="h-8 rounded-full px-3 text-xs"
           >
-            {option.label}
+            {formatNearbyDistance(radiusKmOption * 1000)}
           </Button>
         ))}
       </div>

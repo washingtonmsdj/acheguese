@@ -5,6 +5,7 @@ import {
   useSpatialSearchHybrid,
 } from "@/core/geospatial/hooks/useSpatialSearch";
 import type { NearbyBusiness } from "../domain/types";
+import { NEARBY_DETAILS_STALE_TIME_MS } from "../config/nearbyConfig";
 
 export interface UseNearbyBusinessesOptions {
   radiusKm: number;
@@ -108,7 +109,7 @@ export function useNearbyBusinesses(options: UseNearbyBusinessesOptions) {
       });
     },
     enabled: providerEnabled && ids.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: NEARBY_DETAILS_STALE_TIME_MS,
   });
 
   return {
