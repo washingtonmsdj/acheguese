@@ -1,4 +1,5 @@
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 
 type PublicEnv = Partial<Record<string, string>>;
@@ -13,7 +14,7 @@ const launchCommunitySlug = publicEnv.VITE_LAUNCH_COMMUNITY_SLUG?.trim() || "";
 const launchCommunityName =
   publicEnv.VITE_LAUNCH_COMMUNITY_NAME?.trim() || launchName;
 
-export const LAUNCH_CITY_PATH = launchState && launchCity ? `/${launchState}/${launchCity}` : "/brasil";
+export const LAUNCH_CITY_PATH = launchState && launchCity ? `/${launchState}/${launchCity}` : STATIC_ROUTE_PATHS.brazilShowcase;
 export const LAUNCH_COMMUNITY_TERRITORY_PATH = launchCommunitySlug
   ? `${LAUNCH_CITY_PATH}/${launchCommunitySlug}`
   : LAUNCH_CITY_PATH;
