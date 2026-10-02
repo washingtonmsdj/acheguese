@@ -22,8 +22,7 @@ const TURNSTILE_REQUIRED =
 const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
 const LAUNCH_CITY_NAME = TERRITORY_CONFIG.launch.name;
 const LAUNCH_STATE_NAME =
-  getStateByCode(TERRITORY_CONFIG.launch.state)?.name ||
-  TERRITORY_CONFIG.launch.state.toLocaleUpperCase("pt-BR");
+  getStateByCode(TERRITORY_CONFIG.launch.state)?.name ?? "";
 
 const RELATIONSHIP_OPTIONS: { value: CommunityInterestRole; label: string }[] = [
   { value: "morador", label: "Moro aqui" },
@@ -58,6 +57,7 @@ export default function CommunityIndicationPage() {
   const phoneDigits = contact.replace(/\D/g, "");
   const validContact = isEmail || (phoneDigits.length >= 10 && phoneDigits.length <= 15);
   const canSubmit =
+    state.trim().length > 0 &&
     name.trim().length >= 2 &&
     city.trim().length >= 2 &&
     neighborhood.trim().length >= 2 &&
@@ -88,7 +88,6 @@ export default function CommunityIndicationPage() {
 
     setSubmitState({ status: "submitting" });
     try {
-      const normalizedCity = slugifyTerritory(city.trim());
       const normalizedNeighborhood = slugifyTerritory(neighborhood.trim());
       const phone = isEmail ? null : contact.trim();
       const email = isEmail ? contact.trim().toLowerCase() : null;
@@ -212,6 +211,9 @@ export default function CommunityIndicationPage() {
                 onChange={(event) => setState(event.target.value)}
                 required
               >
+                <option value="" disabled>
+                  Selecione um estado
+                </option>
                 {BRAZILIAN_STATES.map((option) => (
                   <option key={option.code} value={option.name}>
                     {option.name}
