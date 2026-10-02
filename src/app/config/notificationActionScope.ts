@@ -4,13 +4,14 @@ import {
 } from "./lifecycleRegistry";
 import type { PlatformCapabilityKey } from "./platformCapabilityRegistry";
 import type { ProductModuleKey } from "./productModuleRegistry";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import {
   APP_MODULE_SLUGS,
   getAppModuleSlugFromPath,
   type AppModuleSlug,
 } from "@/shared/config/moduleSlugs";
 
-export const NOTIFICATION_INBOX_PATH = "/notificacoes";
+export const NOTIFICATION_INBOX_PATH = STATIC_ROUTE_PATHS.notifications;
 export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
 
 type NotificationLifecycleSurfaceKey =
