@@ -179,11 +179,11 @@ export function TerritoryBusinessDetail({
       : "Horário não informado";
   const headerLocation = [business.business_city, business.business_state]
     .filter(Boolean)
-    .join(", ") || "Salvador, BA";
+    .join(", ") || territoryName;
   const whatsappHref = whatsappUrl(whatsapp);
-  const serviceModes = (business.modos_atendimento || ["Presencial"])
-    .map(humanizeLabel)
-    .join(", ");
+  const serviceModes = business.modos_atendimento?.length
+    ? business.modos_atendimento.map(humanizeLabel).join(", ")
+    : "Consulte a empresa";
   const shortDescription = business.description?.split(".")[0]?.trim() || "Negócio local";
   const heroDescription = shortDescription.length > 82
     ? `${shortDescription.slice(0, 79).trimEnd()}…`
@@ -239,7 +239,7 @@ export function TerritoryBusinessDetail({
 
       <header className="bd-header">
         <div className="bd-container bd-header-inner">
-          <Link className="bd-brand" to="/" aria-label="Achegue-se — início">
+          <Link className="bd-brand" to={STATIC_ROUTE_PATHS.home} aria-label="Achegue-se — início">
             <BrandMark /><strong>achegue-se</strong>
           </Link>
           <nav className="bd-main-nav" aria-label="Navegação principal">
