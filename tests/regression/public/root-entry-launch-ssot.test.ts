@@ -19,7 +19,7 @@ describe("public root launch territory SSOT", () => {
     );
     expect(entry).toContain("TERRITORY_CONFIG.launch.name");
     expect(entry).toContain(
-      'const LAUNCH_STATE_LABEL = LAUNCH_STATE === "ba" ? "Bahia" : LAUNCH_STATE.toUpperCase();',
+      "const LAUNCH_STATE_LABEL = getStateByCode(LAUNCH_STATE)?.name ?? LAUNCH_STATE.toUpperCase();",
     );
     expect(entry).toContain("const launchBusinessUrl = LAUNCH_URLS.business");
     expect(entry).toContain("const launchMapUrl = LAUNCH_URLS.map");
@@ -68,11 +68,15 @@ describe("public root launch territory SSOT", () => {
     expect(entry).toContain("getPublicTerritoryGroupPresentation(launchTerritory.group)");
     expect(entry).toContain("const launchCommunityGenitiveLabel =");
     expect(entry).toContain("Empresas, mapa, busca e o que está perto de você {launchCommunityGenitiveLabel},");
-    expect(entry).toContain("`do ${LAUNCH_COMMUNITY_NAME}`");
+    expect(entry).toContain("`do ${launchCommunityPresentation.label}`");
+    expect(entry).toContain("const launchCommunityLocativeLabel =");
 
     expect(entry).not.toContain("launchCommunityDefiniteLabel");
     expect(entry).not.toContain("launchCommunitySentenceLabel");
     expect(entry).not.toContain("launchCommunityOriginLabel");
+    expect(entry).not.toContain("Agora no Complexo");
+    expect(entry).not.toContain("Comece pelo Complexo");
+    expect(entry).not.toContain("Complexo do Nordeste de Amaralina para tornar visível");
   });
 
   it("keeps root navigation on the active launch URL owners", () => {
