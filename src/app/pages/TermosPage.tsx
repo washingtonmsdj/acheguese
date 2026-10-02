@@ -236,7 +236,7 @@ export default function TermosPage() {
               ))}
             </div>
 
-            <div className="mt-5 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+            <div className="mt-5 rounded-2xl border border-warning/25 bg-warning/10 p-4">
               <h3 className="text-sm font-semibold text-foreground">
                 Como a moderação escala
               </h3>
@@ -246,7 +246,7 @@ export default function TermosPage() {
                     key={step}
                     className="flex items-start gap-3 text-sm leading-6 text-muted-foreground"
                   >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-xs font-semibold text-amber-700 dark:text-amber-300">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-warning/15 text-xs font-semibold text-warning-foreground">
                       {index + 1}
                     </span>
                     <span>{step}</span>
