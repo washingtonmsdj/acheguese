@@ -176,6 +176,8 @@ describe("public territorial surface audit", () => {
     expect(indicationSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
     expect(indicationSource).toContain("addCountryPrefix(");
     expect(indicationSource).toContain("communitySlug: normalizedNeighborhood");
+    expect(indicationSource).toContain("to={LAUNCH_URLS.portal}");
+    expect(indicationSource).not.toContain("to={LAUNCH_URLS.community}");
     expect(indicationSource).not.toContain("territoryPath: `/ba/");
     expect(indicationSource).not.toContain("Complexo do Nordeste de Amaralina");
 
