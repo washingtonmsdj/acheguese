@@ -154,6 +154,13 @@ describe("CI Auth fixture session boundary", () => {
     expect(deployWorkflow).toContain(
       'details: { reason: "github_oidc_rejected" }',
     );
+    expect(deployWorkflow).toContain(
+      '"supabase/functions/ci-auth-fixture-session/authUpstreamFetch.ts"',
+    );
+    expect(deployWorkflow).toContain("requiredTimeoutMarkers");
+    expect(deployWorkflow).toContain("CI_AUTH_UPSTREAM_TIMEOUT_MS = 10_000");
+    expect(deployWorkflow).toContain("AuthUpstreamTimeoutError");
+    expect(deployWorkflow).toContain('"auth_upstream_timeout"');
     expect(deployWorkflow).not.toContain("--no-verify-jwt");
     expect(deployWorkflow).toContain(
       '$entry.Contains("SUPABASE_SERVICE_ROLE_KEY")',
