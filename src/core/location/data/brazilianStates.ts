@@ -47,7 +47,26 @@ export const BRAZILIAN_STATES: BrazilianState[] = [
 export const BRAZILIAN_REGIONS = ['Norte', 'Nordeste', 'Centro-Oeste', 'Sudeste', 'Sul'] as const;
 
 export function getStateByCode(code: string): BrazilianState | undefined {
-  return BRAZILIAN_STATES.find(s => s.code === code.toLowerCase());
+  return BRAZILIAN_STATES.find(s => s.code === code.trim().toLowerCase());
+}
+
+function normalizeStateLookup(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase("pt-BR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+export function getStateByNameOrCode(value: string): BrazilianState | undefined {
+  const normalized = normalizeStateLookup(value);
+  if (!normalized) return undefined;
+
+  return BRAZILIAN_STATES.find(
+    (state) =>
+      state.code === normalized ||
+      normalizeStateLookup(state.name) === normalized,
+  );
 }
 
 export function getStatesByRegion(region: string): BrazilianState[] {
