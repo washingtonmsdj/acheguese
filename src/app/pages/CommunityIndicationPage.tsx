@@ -5,7 +5,9 @@ import {
   registerCommunityInterest,
   type CommunityInterestRole,
 } from "@/core/routing/services";
-import { LAUNCH_URLS } from "@/core/routing/config/territory";
+import { getStateByCode } from "@/core/location/data/brazilianStates";
+import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { buildPublicTerritoryBaseUrlFromInput } from "@/core/routing/utils/territoryUrls";
 import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/shared/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { slugifyTerritory } from "@/shared/utils/slugify";
@@ -13,6 +15,11 @@ import { slugifyTerritory } from "@/shared/utils/slugify";
 const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
 const TURNSTILE_REQUIRED =
   COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction && import.meta.env.PROD;
+const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
+const LAUNCH_CITY_NAME = TERRITORY_CONFIG.launch.name;
+const LAUNCH_STATE_NAME =
+  getStateByCode(TERRITORY_CONFIG.launch.state)?.name ||
+  TERRITORY_CONFIG.launch.state.toLocaleUpperCase("pt-BR");
 
 const RELATIONSHIP_OPTIONS: { value: CommunityInterestRole; label: string }[] = [
   { value: "morador", label: "Moro aqui" },
@@ -30,7 +37,7 @@ type SubmitState =
 export default function CommunityIndicationPage() {
   const navigate = useNavigate();
   const mountedAtRef = useRef(Date.now());
-  const [state, setState] = useState("Bahia");
+  const [state, setState] = useState(LAUNCH_STATE_NAME);
   const [city, setCity] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [relationship, setRelationship] = useState<CommunityInterestRole>("morador");
@@ -85,7 +92,11 @@ export default function CommunityIndicationPage() {
       const result = await registerCommunityInterest({
         communityId: null,
         communitySlug: normalizedCity,
-        territoryPath: `/ba/${normalizedCity}/${normalizedNeighborhood}`,
+        territoryPath: buildPublicTerritoryBaseUrlFromInput(
+          state,
+          city,
+          neighborhood,
+        ),
         fullName: name.trim(),
         email,
         phone,
@@ -140,13 +151,13 @@ export default function CommunityIndicationPage() {
               <span>{city} · {state}</span>
             </div>
             <p className="community-indication-copy">
-              Estamos começando pelo Complexo do Nordeste de Amaralina.
+              Estamos começando por {LAUNCH_COMMUNITY_NAME}.
               <br />
               A expansão será por etapas, sem prazo artificial.
             </p>
             <div className="community-indication-actions">
               <Link className="community-indication-primary" to={LAUNCH_URLS.community}>
-                <span>Explorar o Complexo</span>
+                <span>Explorar {LAUNCH_COMMUNITY_NAME}</span>
                 <ArrowRight aria-hidden="true" />
               </Link>
               <Link className="community-indication-secondary" to="/cadastro">
@@ -214,8 +225,8 @@ export default function CommunityIndicationPage() {
             <div className="community-indication-note is-starting">
               <Megaphone aria-hidden="true" />
               <span>
-                Hoje, começamos pelo Complexo
-                <strong>do Nordeste de Amaralina, em Salvador.</strong>
+                Hoje, começamos por
+                <strong>{LAUNCH_COMMUNITY_NAME}, em {LAUNCH_CITY_NAME}.</strong>
               </span>
             </div>
 
