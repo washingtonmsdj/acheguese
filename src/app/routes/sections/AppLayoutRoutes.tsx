@@ -10,6 +10,8 @@ import {
 } from "@/app/config/lifecycleRegistry";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { messagingRoutes } from "@/core/messaging";
+import { ACCOUNT_PATHS, ACCOUNT_ROUTE_PATTERNS } from "@/core/routing/config/account";
+import { STATIC_ROUTE_PATHS } from "@/core/routing/config/staticRoutePaths";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import {
   TERRITORIAL_ROUTE_PARAMS,
@@ -20,7 +22,12 @@ import {
   buildTerritorialModuleRoutePath,
   buildTerritorialRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
-import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
+import {
+  DATA_PROTECTION_CONTACT_PATH,
+  PRIVACY_POLICY_PATH,
+  TERMS_OF_SERVICE_PATH,
+} from "@/shared/constants/legal";
 
 import * as P from "../activeLazyImports";
 import {
@@ -63,7 +70,7 @@ export function AppLayoutRoutes() {
         {notificationsEnabled ? (
           <>
             <Route
-              path="/notificacoes"
+              path={STATIC_ROUTE_PATHS.notifications}
               element={protectedElement(<P.NotificationsPage />)}
             />
             <Route
@@ -80,42 +87,42 @@ export function AppLayoutRoutes() {
         {accountEnabled ? (
           <>
             <Route
-              path="/conta/preferencias"
+              path={ACCOUNT_PATHS.preferences}
               element={protectedElement(<P.ContaPreferenciasPage />)}
             />
             <Route
-              path="/conta/notificacoes"
+              path={ACCOUNT_PATHS.notifications}
               element={protectedElement(<P.NotificationPreferencesPage />)}
             />
             <Route
-              path="/conta/privacidade"
+              path={ACCOUNT_PATHS.privacy}
               element={protectedElement(<P.PrivacySettingsPage />)}
             />
             <Route
-              path="/conta/perfil/configuracoes"
+              path={ACCOUNT_PATHS.profileSettings}
               element={protectedElement(<P.ProfileSettingsPage />)}
             />
             <Route
-              path="/conta/seguranca"
+              path={ACCOUNT_PATHS.security}
               element={protectedElement(<P.ContaSegurancaPage />)}
             />
             <Route
-              path="/conta/enderecos"
+              path={ACCOUNT_PATHS.addresses}
               element={protectedElement(<P.ContaEnderecosPage />)}
             />
             <Route
-              path="/conta/editar/:profileId"
+              path={ACCOUNT_ROUTE_PATTERNS.editProfile}
               element={protectedElement(<P.ContaEditarPerfilPage />)}
             />
-            <Route path="/conta" element={protectedElement(<P.ContaPage />)} />
+            <Route path={ACCOUNT_PATHS.home} element={protectedElement(<P.ContaPage />)} />
           </>
         ) : null}
 
         {businessEnabled ? (
           <>
-            <Route path="/empresas" element={<P.EmpresasLandingPage />} />
+            <Route path={buildAppModulePath(APP_MODULE_SLUGS.business)} element={<P.EmpresasLandingPage />} />
             <Route
-              path="/empresas/cadastrar"
+              path={buildAppModulePath(APP_MODULE_SLUGS.business, "cadastrar")}
               element={protectedElement(
                 <P.EmpresasCadastroLandingPage
                   header={<AuthBrandHeader showBack={false} />}
@@ -139,16 +146,16 @@ export function AppLayoutRoutes() {
           </>
         ) : null}
 
-        {mapEnabled ? <Route path="/mapa" element={<P.MapaPage />} /> : null}
+        {mapEnabled ? <Route path={buildAppModulePath(APP_MODULE_SLUGS.map)} element={<P.MapaPage />} /> : null}
 
         {nearbyEnabled ? (
-          <Route path="/perto-de-mim" element={<P.NearbyPage />} />
+          <Route path={buildAppModulePath(APP_MODULE_SLUGS.nearby)} element={<P.NearbyPage />} />
         ) : null}
 
         {searchEnabled ? (
           <>
-            <Route path="/busca" element={<P.BuscaPage />} />
-            <Route path="/buscar" element={<P.BuscarPage />} />
+            <Route path={buildAppModulePath(APP_MODULE_SLUGS.search)} element={<P.BuscaPage />} />
+            <Route path={STATIC_ROUTE_PATHS.searchAlias} element={<P.BuscarPage />} />
             <Route
               path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
               element={<P.ActiveTerritorialLayout />}
@@ -166,10 +173,10 @@ export function AppLayoutRoutes() {
           </>
         ) : null}
 
-        <Route path="/termos" element={<P.TermosPage />} />
-        <Route path="/privacidade" element={<P.PrivacidadePage />} />
+        <Route path={TERMS_OF_SERVICE_PATH} element={<P.TermosPage />} />
+        <Route path={PRIVACY_POLICY_PATH} element={<P.PrivacidadePage />} />
         <Route path="/offline-settings" element={<P.OfflineSettingsPage />} />
-        <Route path="/dpo" element={<P.DPOContactPage />} />
+        <Route path={DATA_PROTECTION_CONTACT_PATH} element={<P.DPOContactPage />} />
 
         {renderAppLayoutRouteDescriptors(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES)}
 
