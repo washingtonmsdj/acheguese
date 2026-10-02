@@ -154,4 +154,26 @@ describe("public territorial surface audit", () => {
     );
   });
 
+  it("keeps active public navigation on canonical route SSOT", () => {
+    const entrySource = readProjectFile("src/app/pages/TerritoryEntryPage.tsx");
+    const businessDetailShell = readProjectFile(
+      "src/modules/business/company/pages/EmpresaDetailLayout.tsx",
+    );
+
+    expect(entrySource).toContain('ACCOUNT_PATHS');
+    expect(entrySource).toContain('buildLoginPath(ACCOUNT_PATHS.home)');
+    expect(entrySource).toContain('href={ACCOUNT_PATHS.accessibility}');
+    expect(entrySource).not.toContain('const ACCOUNT_PATH = "/conta"');
+    expect(entrySource).not.toContain('href="/conta/preferencias#acessibilidade"');
+
+    expect(businessDetailShell).toContain('to={LAUNCH_URLS.search}');
+    expect(businessDetailShell).toContain('navigate(ACCOUNT_PATHS.home)');
+    expect(businessDetailShell).toContain('navigate(TERMS_OF_SERVICE_PATH)');
+    expect(businessDetailShell).toContain('navigate(PRIVACY_POLICY_PATH)');
+    expect(businessDetailShell).not.toContain('to="/buscar"');
+    expect(businessDetailShell).not.toContain("navigate('/conta')");
+    expect(businessDetailShell).not.toContain("navigate('/termos')");
+    expect(businessDetailShell).not.toContain("navigate('/privacidade')");
+  });
+
 });
