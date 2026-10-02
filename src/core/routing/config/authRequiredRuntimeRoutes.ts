@@ -12,7 +12,7 @@ const AUTH_REQUIRED_RUNTIME_PREFIXES = [
 
 const AUTH_REQUIRED_RUNTIME_EXACT_PATHS = new Set<string>([
   STATIC_ROUTE_PATHS.notifications,
-  "/settings/email-logs",
+  STATIC_ROUTE_PATHS.emailLogs,
   buildAppModulePath(APP_MODULE_SLUGS.business, "cadastrar"),
 ]);
 
