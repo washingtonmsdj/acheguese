@@ -104,7 +104,7 @@ export function AppRoutes() {
       <Route path={STATIC_ROUTE_PATHS.howItWorks} element={<ComoFuncionaPage />} />
       <Route path={STATIC_ROUTE_PATHS.about} element={<AboutPage />} />
       <Route path={SUPPORT_PATH} element={<ContactPage />} />
-      <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route path={STATIC_ROUTE_PATHS.onboarding} element={<OnboardingPage />} />
       <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
 
       <Route path="/central/*" element={<CentralRoutes />} />
