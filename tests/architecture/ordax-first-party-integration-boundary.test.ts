@@ -218,6 +218,13 @@ describe("OrdaX first-party integration boundary", () => {
     );
     expect(contract.runtime_gate.ordax_product_oauth_redirect_registered).toBe(false);
     expect(contract.runtime_gate.ordax_product_oauth_listener_deployed).toBe(false);
+    expect(contract.runtime_gate.ordax_product_network_resource_source_available).toBe(true);
+    expect(contract.runtime_gate.ordax_product_network_public_runtime_enabled).toBe(false);
+    expect(contract.runtime_gate.ordax_product_network_routes).toEqual({
+      space: "GET /product/network/v1/space",
+      directory: "GET /product/network/v1/directory",
+      communities: "GET /product/network/v1/communities",
+    });
     expect(contract.runtime_gate.initial_oauth_scopes).toEqual([
       "network.space.read",
       "network.directory.read",
