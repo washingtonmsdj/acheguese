@@ -1,6 +1,6 @@
 {
   "schemaVersion": "lgpd-purge-matrix/v1",
-  "observedAt": "2026-09-18",
+  "observedAt": "2026-10-02",
   "source": "live-schema:xhdowzacfujckjelqhtd",
   "implementationComplete": false,
   "rules": {
@@ -20,8 +20,8 @@
     "blockingReferenceCount": 28,
     "authUsersBlockingReferenceCount": 20,
     "profilesBlockingReferenceCount": 8,
-    "nullableBlockingReferenceCount": 25,
-    "requiredBlockingReferenceCount": 3,
+    "nullableBlockingReferenceCount": 24,
+    "requiredBlockingReferenceCount": 4,
     "classifiedReferenceCount": 28,
     "unclassifiedReferenceCount": 0,
     "decisionCounts": {
@@ -279,7 +279,7 @@
       "source": "public.vagas",
       "target": "public.profiles",
       "deleteAction": "NO ACTION",
-      "nullable": true,
+      "nullable": false,
       "decision": "block-purge",
       "decisionSource": "LGPD_PURGE_POLICY.profileDeletionFanout"
     }
