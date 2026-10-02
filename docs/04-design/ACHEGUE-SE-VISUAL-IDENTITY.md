@@ -61,7 +61,7 @@ Ainda é necessário verificar com leitor de tela, zoom real a 200%, teclado vir
 
 Já consomem o contrato consolidado: shell de autenticação, login, cadastro, confirmação de cadastro, primeiro acesso, aceite de termos, recuperação de senha, confirmação de troca de e-mail, página pública de pré-lançamento e e-mails transacionais. A página de pré-lançamento preserva diferenças editoriais usando tokens de categoria, sem reintroduzir Manrope/Bricolage.
 
-A entrada territorial pública (`TerritoryEntryPage`) já consome os tokens canônicos de marca e não mantém mais paleta ou fonte locais. Superfícies públicas territoriais mais amplas ainda devem preservar a semântica funcional de mapa, métricas, alertas, categorias e estados durante sua migração; nenhuma delas deve ser marcada como totalmente migrada enquanto valores funcionais não estiverem classificados em tokens explícitos.
+A entrada territorial pública (`TerritoryEntryPage`) e o guia público (`ComoFuncionaPage`) já consomem os tokens canônicos de marca e não mantêm mais paleta ou fonte locais. O `PublicBrandHeader` também usa apenas os primitivos canônicos no wordmark/ícone. O Portal territorial mais amplo ainda deve preservar a semântica funcional de mapa, métricas, alertas, categorias e estados durante sua migração; ele não deve ser marcado como totalmente migrado enquanto valores funcionais não estiverem classificados em tokens explícitos.
 
 ## Regra para novas alterações
 
