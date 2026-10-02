@@ -154,4 +154,26 @@ describe("public territorial surface audit", () => {
     );
   });
 
+  it("keeps launch territory copy and indication paths projected from canonical SSOT", () => {
+    const entrySource = readProjectFile("src/app/pages/TerritoryEntryPage.tsx");
+    const guideSource = readProjectFile("src/app/pages/ComoFuncionaPage.tsx");
+    const indicationSource = readProjectFile("src/app/pages/CommunityIndicationPage.tsx");
+
+    expect(entrySource).toContain("TERRITORY_CONFIG");
+    expect(entrySource).toContain("LAUNCH_COMMUNITY_NAME");
+    expect(entrySource).not.toContain("Complexo do Nordeste de Amaralina");
+
+    expect(guideSource).toContain("TERRITORY_CONFIG.launch.community.name");
+    expect(guideSource).toContain("getStateByCode(TERRITORY_CONFIG.launch.state)");
+    expect(guideSource).not.toContain('|| "Salvador"');
+    expect(guideSource).not.toContain('|| "Complexo do Nordeste de Amaralina"');
+
+    expect(indicationSource).toContain("BRAZILIAN_STATES.map");
+    expect(indicationSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
+    expect(indicationSource).toContain("addCountryPrefix(");
+    expect(indicationSource).toContain("communitySlug: normalizedNeighborhood");
+    expect(indicationSource).not.toContain("territoryPath: `/ba/");
+    expect(indicationSource).not.toContain("Complexo do Nordeste de Amaralina");
+  });
+
 });
