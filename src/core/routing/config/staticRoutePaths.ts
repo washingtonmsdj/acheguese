@@ -5,5 +5,6 @@ export const STATIC_ROUTE_PATHS = {
   about: "/sobre",
   howItWorks: "/como-funciona",
   notifications: "/notificacoes",
+  onboarding: "/onboarding",
   searchAlias: `/${TERRITORIAL_ROUTE_STATIC_SEGMENTS.searchAlias}`,
 } as const;
