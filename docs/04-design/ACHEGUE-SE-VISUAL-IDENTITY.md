@@ -61,7 +61,7 @@ Ainda é necessário verificar com leitor de tela, zoom real a 200%, teclado vir
 
 Já consomem o contrato consolidado: shell de autenticação, login, cadastro, confirmação de cadastro, primeiro acesso, aceite de termos, recuperação de senha, confirmação de troca de e-mail, página pública de pré-lançamento e e-mails transacionais. A página de pré-lançamento preserva diferenças editoriais usando tokens de categoria, sem reintroduzir Manrope/Bricolage.
 
-A entrada territorial pública (`TerritoryEntryPage`), o guia público (`ComoFuncionaPage`) e o Portal territorial (`TerritoryPortalPage`) já consomem os tokens canônicos de marca e não mantêm paleta ou fonte locais. O `PublicBrandHeader` também usa apenas os primitivos canônicos. No Portal, estados funcionais permanecem semânticos (por exemplo, sucesso, foco e avaliação), enquanto seletores públicos obsoletos foram removidos em vez de receber novos tokens.
+A entrada territorial pública (`TerritoryEntryPage`), o guia público (`ComoFuncionaPage`) e o Portal territorial (`TerritoryPortalPage`) já consomem os tokens canônicos de marca e não mantêm paleta ou fonte locais. O `PublicBrandHeader` também usa apenas os primitivos canônicos. No Portal, estados funcionais permanecem semânticos (por exemplo, sucesso, foco e avaliação), enquanto seletores públicos obsoletos foram removidos em vez de receber novos tokens. As superfícies ativas do MVP para Mapa, Perto de mim e Busca também estão sob o gate visual; o shell do mapa e a experiência Nearby consomem tokens semânticos, preservando cores funcionais por intenção.
 
 ## Regra para novas alterações
 
