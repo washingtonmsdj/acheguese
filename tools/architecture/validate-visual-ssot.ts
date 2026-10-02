@@ -113,6 +113,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/app/pages/TerritoryPortalPage.tsx',
   'src/app/pages/TerritoryPortalPage.css',
   'src/core/maps/pages/MapaTerritorialExplorer.css',
+  'src/core/nearby/components/NearbyCard.tsx',
   'src/modules/business/pages/CriarEmpresaPage.tsx',
   'src/modules/business/pages/CriarEmpresaPage.css',
   'src/modules/business/company/pages/EmpresaDetailLayout.tsx',
