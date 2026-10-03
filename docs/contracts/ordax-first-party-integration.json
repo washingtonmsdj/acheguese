@@ -90,6 +90,11 @@
       "space": "GET /product/network/v1/space",
       "directory": "GET /product/network/v1/directory",
       "communities": "GET /product/network/v1/communities"
-    }
+    },
+    "ordax_product_oauth_pending_transaction_source_available": true,
+    "ordax_product_oauth_pending_state_persisted_as_sha256_only": true,
+    "ordax_product_oauth_pkce_verifier_server_only": true,
+    "ordax_product_oauth_pending_store_implemented": false,
+    "ordax_product_oauth_callback_runtime_enabled": false
   }
 }
