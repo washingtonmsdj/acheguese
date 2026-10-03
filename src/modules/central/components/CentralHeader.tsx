@@ -18,7 +18,11 @@ interface CentralHeaderProps {
   readonly showNavigation?: boolean;
 }
 
-export function CentralHeader({ billingEnabled, brand, showNavigation = true }: CentralHeaderProps) {
+export function CentralHeader({
+  billingEnabled,
+  brand,
+  showNavigation = true,
+}: CentralHeaderProps) {
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
 
   const handleLogout = async () => {
@@ -27,36 +31,54 @@ export function CentralHeader({ billingEnabled, brand, showNavigation = true }: 
   };
 
   return (
-    <header className="sticky top-0 z-40 flex h-14 w-full items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-sm">
-      {showNavigation ? <SidebarTrigger className="text-muted-foreground hover:text-foreground md:mr-2" /> : null}
+    <header className="sticky top-0 z-40 flex h-14 w-full items-center gap-3 border-b border-territory-border bg-territory-surface/80 px-4 text-territory-ink backdrop-blur-sm">
+      {showNavigation ? (
+        <SidebarTrigger className="text-territory-muted hover:text-territory-ink md:mr-2" />
+      ) : null}
       <div className="min-w-0 shrink-0">{brand}</div>
 
       <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-3">
         <MultiProfileSwitcher compact />
         <a
           href={publicHomeUrl}
-          className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="hidden items-center gap-1.5 text-xs text-territory-muted transition-colors hover:text-territory-ink sm:inline-flex"
           aria-label="Voltar ao site"
         >
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline">Ver site</span>
         </a>
         {billingEnabled ? (
-          <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+          <Link
+            to="/planos"
+            className="hidden text-xs text-territory-muted transition-colors hover:text-territory-ink sm:inline"
+          >
             Planos
           </Link>
         ) : null}
-        <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+        <Link
+          to="/sobre"
+          className="hidden text-xs text-territory-muted transition-colors hover:text-territory-ink sm:inline"
+        >
           Sobre
         </Link>
-        <Link to="/notificacoes" aria-label="Notificações" className="inline-flex h-10 w-10 shrink-0 items-center justify-center text-muted-foreground hover:text-foreground">
+        <Link
+          to="/notificacoes"
+          aria-label="Notificações"
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
+        >
           <Bell className="h-5 w-5" />
         </Link>
-        <Link to="/conta" className="hidden text-sm sm:inline" aria-label="Minha conta">Conta</Link>
+        <Link
+          to="/conta"
+          className="hidden text-sm text-territory-ink transition-colors hover:text-territory-brand sm:inline"
+          aria-label="Minha conta"
+        >
+          Conta
+        </Link>
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground"
+          className="h-10 w-10 shrink-0 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
           aria-label="Sair da conta"
           onClick={handleLogout}
         >
