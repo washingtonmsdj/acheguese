@@ -9,6 +9,7 @@ const ABOUT_PATH = "src/app/pages/AboutPage.tsx";
 const CONTACT_PATH = "src/app/pages/ContactPage.tsx";
 const TERMS_PATH = "src/app/pages/TermosPage.tsx";
 const PRIVACY_PATH = "src/app/pages/PrivacidadePage.tsx";
+const DPO_PATH = "src/app/pages/DPOContactPage.tsx";
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -32,11 +33,14 @@ describe("public information shell territory visual SSOT", () => {
     }
 
     expect(shell).toContain("readonly onBack: () => void");
+    expect(shell).toContain('type PublicInfoPageShellWidth = "standard" | "wide";');
+    expect(shell).toContain('width = "standard"');
+    expect(shell).toContain('width === "wide" ? "max-w-6xl" : "max-w-5xl"');
     expect(shell).not.toContain("react-router-dom");
   });
 
   it("keeps public information consumers projected through the shared shell", () => {
-    for (const pagePath of [ABOUT_PATH, CONTACT_PATH, TERMS_PATH, PRIVACY_PATH]) {
+    for (const pagePath of [ABOUT_PATH, CONTACT_PATH, TERMS_PATH, PRIVACY_PATH, DPO_PATH]) {
       const page = read(pagePath);
 
       expect(page).toContain('import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";');
@@ -111,5 +115,34 @@ describe("public information shell territory visual SSOT", () => {
     expect(page).toContain('to="/termos"');
     expect(page).toContain('to="/dpo"');
     expect(page).toContain("onBack={() => navigate(-1)}");
+  });
+
+  it("preserves DPO request, anti-abuse and fail-closed contracts", () => {
+    const page = read(DPO_PATH);
+
+    for (const contract of [
+      "PrivacyService.createDPORequest",
+      "DPOContactSchema",
+      "DPO_REQUEST_ANTI_ABUSE_CONFIG",
+      "TURNSTILE_SITE_KEY",
+      "TURNSTILE_REQUIRED",
+      "TurnstileWidget",
+      "REQUEST_TYPE_OPTIONS",
+      "RIGHTS",
+      "getDpoEmail()",
+      "getDpoName()",
+      "buildMailtoUrl(dpoEmail)",
+      'value: "portability"',
+      'value: "deletion"',
+      "Canal temporariamente indisponível: proteção anti-spam não configurada.",
+      "Ela será analisada conforme o direito exercido e os prazos aplicáveis da LGPD.",
+      "onBack={() => navigate(-1)}",
+      'width="wide"',
+    ]) {
+      expect(page).toContain(contract);
+    }
+
+    expect(page).toContain("contactMutation.isPending || !turnstileSatisfied");
+    expect(page).toContain('variant: "destructive"');
   });
 });
