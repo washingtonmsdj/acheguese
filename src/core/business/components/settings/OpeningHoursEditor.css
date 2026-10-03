@@ -11,7 +11,7 @@
   row-gap: 8px;
   min-width: 0;
   padding: 8px 0;
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--territory-border));
 }
 .opening-hours-editor__heading {
   grid-column: 1 / -1;
@@ -33,10 +33,10 @@
   min-height: 44px;
   max-width: 160px;
   padding: 6px 8px;
-  border: 1px solid hsl(var(--border));
-  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--territory-border));
+  color: hsl(var(--territory-ink));
   border-radius: var(--radius-md);
-  background: hsl(var(--card));
+  background: hsl(var(--territory-surface));
   font-size: 13px;
 }
 .opening-hours-editor__times {
@@ -50,22 +50,22 @@
   gap: 4px;
   min-width: 0;
   font-size: 12px;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
 }
 .opening-hours-editor__times input {
   width: 100%;
   min-width: 0;
   min-height: 44px;
-  color: hsl(var(--foreground));
+  color: hsl(var(--territory-ink));
   border-radius: var(--radius-md);
-  background: hsl(var(--card));
+  background: hsl(var(--territory-surface));
   font-variant-numeric: tabular-nums;
 }
 .opening-hours-editor__hint {
   margin: 4px 0;
   font-size: 12px;
   line-height: 1.5;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
 }
 .opening-hours-editor__copy {
   grid-column: 2;
@@ -79,28 +79,28 @@
   white-space: normal;
   text-align: left;
   justify-content: center;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--territory-border));
   border-radius: var(--radius-md);
-  color: hsl(var(--primary));
+  color: hsl(var(--territory-brand));
 }
 .opening-hours-editor__error {
   grid-column: 1 / -1;
   color: hsl(var(--destructive));
 }
 .opening-hours-editor__heading select:focus-visible {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid hsl(var(--territory-brand));
   outline-offset: 2px;
 }
 .opening-hours-editor__mobile-state { display:none; }
 .opening-hours-editor__switch, .opening-hours-editor__unset {
   position:relative; display:grid; place-items:center; flex:none; width:44px; height:44px;
-  border:0; border-radius:8px; background:transparent; color:hsl(var(--muted-foreground)); cursor:pointer;
+  border:0; border-radius:8px; background:transparent; color:hsl(var(--territory-muted)); cursor:pointer;
 }
-.opening-hours-editor__switch::before { content:""; width:34px; height:20px; border-radius:999px; background:hsl(var(--muted-foreground)/.3); }
-.opening-hours-editor__switch::after { content:""; position:absolute; width:16px; height:16px; left:7px; top:14px; border-radius:50%; background:hsl(var(--card)); box-shadow:0 1px 3px #0002; transition:transform .15s; }
-.opening-hours-editor__switch[aria-checked="true"]::before { background:hsl(var(--primary)); }
+.opening-hours-editor__switch::before { content:""; width:34px; height:20px; border-radius:999px; background:hsl(var(--territory-muted)/.3); }
+.opening-hours-editor__switch::after { content:""; position:absolute; width:16px; height:16px; left:7px; top:14px; border-radius:50%; background:hsl(var(--territory-surface)); box-shadow:0 1px 3px #0002; transition:transform .15s; }
+.opening-hours-editor__switch[aria-checked="true"]::before { background:hsl(var(--territory-brand)); }
 .opening-hours-editor__switch[aria-checked="true"]::after { transform:translateX(14px); }
-.opening-hours-editor__switch:focus-visible, .opening-hours-editor__unset:focus-visible { outline:2px solid hsl(var(--primary)); outline-offset:2px; }
+.opening-hours-editor__switch:focus-visible, .opening-hours-editor__unset:focus-visible { outline:2px solid hsl(var(--territory-brand)); outline-offset:2px; }
 @container (max-width: 579px) {
   .opening-hours-editor__day:not([data-mode="unknown"]) .opening-hours-editor__heading select { display:none; }
   .opening-hours-editor__mobile-state { display:flex; align-items:center; gap:2px; }
@@ -127,7 +127,7 @@
     grid-column: 2;
     grid-row: 1;
     font-size: 12px;
-    color: hsl(var(--muted-foreground));
+    color: hsl(var(--territory-muted));
   }
   .opening-hours-editor__times label:first-child { grid-column: 1; grid-row: 1; }
   .opening-hours-editor__times label:last-child { grid-column: 3; grid-row: 1; }
