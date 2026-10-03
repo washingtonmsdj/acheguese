@@ -108,6 +108,35 @@ describe("Business Central navigation certification", () => {
       /path="(mensagens|avaliacoes|estatisticas|analytics|planos)"/,
     );
   });
+  it("preserves canonical territory data required by owner public-page actions", () => {
+    const queries = readFileSync(
+      "src/core/profiles/services/profile.external-data.queries.ts",
+      "utf8",
+    );
+    const mapper = readFileSync(
+      "src/core/profiles/services/profile.service.rules.ts",
+      "utf8",
+    );
+    const snapshot = readFileSync(
+      "src/core/profiles/services/profile.workspace.business-modules.ts",
+      "utf8",
+    );
+
+    expect(queries).toContain("profiles(name, neighborhood, city)");
+    expect(queries).toContain(
+      "location:locations!location_id(geographic_path)",
+    );
+    expect(queries).toContain(
+      "geographic_path: firstRelation(location)?.geographic_path ?? null",
+    );
+    expect(mapper).toContain(
+      "geographic_path: business.geographic_path || null",
+    );
+    expect(snapshot).toContain(
+      "business.slug && business.geographic_path",
+    );
+  });
+
   it("excludes deleted companies from the active owner workspace", () => {
     const queries = readFileSync(
       "src/core/profiles/services/profile.external-data.queries.ts",

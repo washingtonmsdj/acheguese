@@ -34,21 +34,39 @@ interface ProfileExternalDataDbClient {
 
 const profileExternalDataDb = supabase as unknown as ProfileExternalDataDbClient;
 
-type BusinessQueryRow = BusinessRow & {
-  created_at?: string | null;
-  profiles?:
-    | {
-        name?: string | null;
-        neighborhood?: string | null;
-        city?: string | null;
-      }
-    | Array<{
-        name?: string | null;
-        neighborhood?: string | null;
-        city?: string | null;
-      }>
-    | null;
+type BusinessProfileRelation = {
+  name?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
 };
+
+type BusinessLocationRelation = {
+  geographic_path?: string | null;
+};
+
+type BusinessQueryRow = Omit<BusinessRow, "profiles" | "geographic_path"> & {
+  created_at?: string | null;
+  profiles?: BusinessProfileRelation | BusinessProfileRelation[] | null;
+  location?: BusinessLocationRelation | BusinessLocationRelation[] | null;
+};
+
+function firstRelation<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+function normalizeBusinessQueryRows(
+  rows: readonly BusinessQueryRow[],
+): BusinessRow[] {
+  return rows.map((row) => {
+    const { location, profiles, ...business } = row;
+    return {
+      ...business,
+      profiles: firstRelation(profiles),
+      geographic_path: firstRelation(location)?.geographic_path ?? null,
+    };
+  });
+}
 
 export async function getUserBusinessesByProfilesQuery(
   profileIds: string[],
@@ -69,7 +87,9 @@ export async function getUserBusinessesByProfilesQuery(
       is_verified,
       slug,
       description,
-      created_at
+      created_at,
+      profiles(name, neighborhood, city),
+      location:locations!location_id(geographic_path)
     `,
     )
     .in("profile_id", profileIds)
@@ -80,7 +100,7 @@ export async function getUserBusinessesByProfilesQuery(
     throw error;
   }
 
-  return data ?? [];
+  return normalizeBusinessQueryRows(data ?? []);
 }
 
 export async function getUserBusinessesQuery(profileId: string): Promise<BusinessRow[]> {
@@ -108,7 +128,7 @@ export async function getUserBusinessesQuery(profileId: string): Promise<Busines
     throw error;
   }
 
-  return data ?? [];
+  return normalizeBusinessQueryRows(data ?? []);
 }
 
 export async function searchProfilesByNameQuery(
@@ -154,5 +174,5 @@ export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessR
     .eq("status", "active");
 
   if (error) return [];
-  return businesses ?? [];
+  return normalizeBusinessQueryRows(businesses ?? []);
 }
