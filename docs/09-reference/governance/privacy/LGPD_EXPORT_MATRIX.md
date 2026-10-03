@@ -1,6 +1,6 @@
 # LGPD Export Matrix — Achegue-se
 
-**Status:** CANÔNICO / IMPLEMENTAÇÃO PENDENTE  
+**Status:** CANÔNICO / SOURCE COVERAGE COMPLETA / ROLLOUT PENDENTE  
 **Versão:** v1  
 **Arquivo machine-readable:** `LGPD_EXPORT_MATRIX.json`  
 **Escopo:** exportação self-service do titular / Art. 18 LGPD
@@ -111,9 +111,9 @@ Uma futura inclusão só pode usar uma query explícita limitada a `user_id = au
 
 `application_logs`, `function_audit`, audit logs privados, rate-limit tables e equivalentes não entram em bloco. Fatos que dizem respeito ao titular devem ser expostos por seções resumidas e deliberadas, nunca por dump de log.
 
-## Fontes classificadas mas ainda não implementadas no handler
+## Cobertura de source reconciliada
 
-A auditoria de completude de 2026-09-16 confirmou fontes pessoais ativas ou ainda retidas que agora já constam da matriz, mas **ainda não têm query no `user-export-data`**:
+A lista de fontes que estava pendente na auditoria de 2026-09-16 já foi implementada no source atual do `user-export-data` com ownership e whitelists explícitos:
 
 - `public.profile_username_history`;
 - `public.profile_slug_history`;
@@ -128,7 +128,9 @@ A auditoria de completude de 2026-09-16 confirmou fontes pessoais ativas ou aind
 - `public.role_history`;
 - `public.user_recommended_businesses`.
 
-Essa lista é deliberadamente um bloqueio de rollout, não autorização de deploy. Enquanto qualquer fonte aprovada da matriz não estiver implementada com ownership e whitelist explícitos, `LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE` deve permanecer `false`.
+A regressão `tests/security/lgpd-export-matrix-coverage.test.ts` percorre todas as seções não excluídas de `LGPD_EXPORT_MATRIX.json` e exige que cada fonte pública esteja conectada explicitamente ao handler. Ela também mantém proibidos caminhos amplos/legados e verifica redaction de campos sensíveis nas fontes adicionadas.
+
+Isso **não promove rollout**. `LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE=false` continua intencionalmente fechado porque ainda faltam certificação de integração, ambiente não-prod, probes e same-SHA smoke antes de qualquer deploy/feature enable. Source coverage e release certification são gates separados.
 
 ## Campos legados proibidos no novo handler
 
@@ -142,7 +144,7 @@ A reescrita não pode voltar a depender de:
 - `conversation_participants` para dump de conversa;
 - `public.user_sessions` como autoridade de sessão.
 
-## Critério para considerar a matriz implementada
+## Critério para considerar a exportação certificada
 
 A matriz só deixa o status `IMPLEMENTAÇÃO PENDENTE` quando o source de `user-export-data`:
 
