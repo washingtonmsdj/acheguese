@@ -216,27 +216,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       );
       if (compact) map.addControl(new maplibregl.FullscreenControl(), 'top-right');
 
-      const updateDriverPath = () => {
-        const source = map.getSource('driver-path');
-        const activeLocation = locationOverride ?? location;
-        if (!source || !activeLocation) return;
-        const coordinates = [
-          originLat != null && originLon != null ? [originLon, originLat] : null,
-          [activeLocation.longitude, activeLocation.latitude],
-          destinationLat != null && destinationLon != null
-            ? [destinationLon, destinationLat]
-            : null,
-        ].filter(
-          (coordinate): coordinate is [number, number] => coordinate !== null,
-        );
-        if (coordinates.length < 2) return;
-        (source as GeoJSONSource).setData({
-          type: 'Feature',
-          geometry: { type: 'LineString', coordinates },
-          properties: {},
-        });
-      };
-
       map.on('error', (event) => {
         if (disposed || initialLoadCompleted) return;
         failMapInitialization(event.error ?? new Error('MapLibre runtime error'));
@@ -300,7 +279,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
 
           initialLoadCompleted = true;
           setMapReady(true);
-          updateDriverPath();
         } catch (loadError) {
           failMapInitialization(loadError);
         }
@@ -313,7 +291,14 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       disposed = true;
       resetMapRuntime(false);
     };
-  }, [mapRetryKey]); // initialization inputs are intentionally captured per map instance
+  }, [
+    compact,
+    destinationLat,
+    destinationLon,
+    mapRetryKey,
+    originLat,
+    originLon,
+  ]);
 
   useEffect(() => {
     const map = mapRef.current;

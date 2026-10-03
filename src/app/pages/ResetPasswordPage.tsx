@@ -118,9 +118,9 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // PASSWORD_RECOVERY + replay de claims verificados são a única autoridade
-    // para liberar a mutação. Query, hash, user persistido e tokens presentes
-    // na URL jamais promovem a tela para "reset" por conta própria.
+    // PASSWORD_RECOVERY + replay de claims verificados sÃ£o a Ãºnica autoridade
+    // para liberar a mutaÃ§Ã£o. Query, hash, user persistido e tokens presentes
+    // na URL jamais promovem a tela para "reset" por conta prÃ³pria.
     const unsubscribe = AuthService.onPasswordRecovery(() => setView("reset"));
     const timeout = window.setTimeout(() => {
       setView((current) => (current === "checking" ? "invalid" : current));
@@ -135,7 +135,7 @@ export default function ResetPasswordPage() {
   const sendRecovery = async (nextView: "sent" = "sent") => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
-      toast({ title: "Informe um e-mail válido", variant: "destructive" });
+      toast({ title: "Informe um e-mail vÃ¡lido", variant: "destructive" });
       return;
     }
 
@@ -147,8 +147,8 @@ export default function ResetPasswordPage() {
     }
     if (!requestTurnstile.isReady) {
       toast({
-        title: "Verificação necessária",
-        description: "Conclua a verificação de segurança antes de enviar.",
+        title: "VerificaÃ§Ã£o necessÃ¡ria",
+        description: "Conclua a verificaÃ§Ã£o de seguranÃ§a antes de enviar.",
         variant: "destructive",
       });
       return;
@@ -167,16 +167,16 @@ export default function ResetPasswordPage() {
       setResendCooldown(getRecoveryCooldownSeconds(normalizedEmail));
     } catch (error) {
       if (isAuthRateLimitError(error)) {
-        // O Auth é autoritativo. Espelhamos a janela apenas para evitar cliques
+        // O Auth Ã© autoritativo. Espelhamos a janela apenas para evitar cliques
         // repetidos e reload como bypass visual enquanto o servidor limita.
         startPasswordRecoveryResendCooldown(normalizedEmail);
         setResendCooldown(getRecoveryCooldownSeconds(normalizedEmail));
       }
       toast({
-        title: "Não foi possível enviar agora",
+        title: "NÃ£o foi possÃ­vel enviar agora",
         description: getAuthErrorMessage(
           error,
-          "Confira sua conexão e tente novamente.",
+          "Confira sua conexÃ£o e tente novamente.",
         ),
         variant: "destructive",
       });
@@ -207,7 +207,7 @@ export default function ResetPasswordPage() {
         return;
       }
       toast({
-        title: "Não foi possível salvar a nova senha",
+        title: "NÃ£o foi possÃ­vel salvar a nova senha",
         description: getAuthErrorMessage(error),
         variant: "destructive",
       });
@@ -225,9 +225,9 @@ export default function ResetPasswordPage() {
       setView("success");
     } catch {
       toast({
-        title: "Ainda não foi possível encerrar a sessão temporária",
+        title: "Ainda nÃ£o foi possÃ­vel encerrar a sessÃ£o temporÃ¡ria",
         description:
-          "Não repita a troca de senha. Tente encerrar a sessão novamente antes de entrar com a nova senha.",
+          "NÃ£o repita a troca de senha. Tente encerrar a sessÃ£o novamente antes de entrar com a nova senha.",
         variant: "destructive",
       });
     } finally {
@@ -244,7 +244,7 @@ export default function ResetPasswordPage() {
         : view === "reset"
           ? "Nova senha"
           : view === "dispose-error"
-            ? "Finalizar recuperação"
+            ? "Finalizar recuperaÃ§Ã£o"
             : view === "success"
               ? "Senha atualizada"
               : view === "invalid"
@@ -266,7 +266,7 @@ export default function ResetPasswordPage() {
         <title>{title} | Achegue-se</title>
         <meta
           name="description"
-          content="Recupere o acesso à sua conta Achegue-se com segurança."
+          content="Recupere o acesso Ã  sua conta Achegue-se com seguranÃ§a."
         />
       </Helmet>
 
@@ -281,36 +281,36 @@ export default function ResetPasswordPage() {
           className="mx-auto w-full max-w-[430px] px-6 pb-5 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
         >
           <section className="hidden lg:block" aria-label="Recuperar acesso">
-            <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-primary">
-              Vamos ajudar<br />você a voltar.
+            <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-territory-brand">
+              Vamos ajudar<br />vocÃª a voltar.
             </h1>
-            <p className="mt-4 max-w-[350px] text-[17px] leading-6 text-foreground">
-              Use o e-mail cadastrado, mesmo que entre com @usuário.
+            <p className="mt-4 max-w-[350px] text-[17px] leading-6 text-territory-ink">
+              Use o e-mail cadastrado, mesmo que entre com @usuÃ¡rio.
             </p>
             <img
               src="/auth/recovery-hero.webp"
-              alt="Ilustração de um território e placas de orientação"
+              alt="IlustraÃ§Ã£o de um territÃ³rio e placas de orientaÃ§Ã£o"
               className="mt-5 w-full max-w-[390px] object-cover"
             />
           </section>
 
-          <section className="w-full lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
+          <section className="w-full lg:rounded-xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-7 lg:shadow-md">
             {view === "request" ? (
               <div>
-                <h1 className="font-heading text-[31px] font-extrabold leading-[1.05] tracking-[-0.045em] text-foreground lg:text-[24px]">
+                <h1 className="font-heading text-[31px] font-extrabold leading-[1.05] tracking-[-0.045em] text-territory-ink lg:text-[24px]">
                   <span className="lg:hidden">
                     Vamos recuperar<br />seu acesso.
                   </span>
                   <span className="hidden lg:inline">E-mail cadastrado</span>
                 </h1>
-                <p className="mt-2 text-[14px] leading-5 text-muted-foreground lg:hidden">
+                <p className="mt-2 text-[14px] leading-5 text-territory-muted lg:hidden">
                   Informe o e-mail usado na sua conta.
                 </p>
 
                 <div className="mt-6 space-y-2 lg:mt-7">
                   <Label
                     htmlFor="recovery-email"
-                    className="text-[14px] font-semibold text-foreground"
+                    className="text-[14px] font-semibold text-territory-ink"
                   >
                     E-mail
                   </Label>
@@ -328,24 +328,24 @@ export default function ResetPasswordPage() {
                         void sendRecovery();
                       }
                     }}
-                    className="h-11 rounded-lg border-input bg-card px-3 text-[16px] shadow-none"
+                    className="h-11 rounded-lg border-territory-border bg-territory-surface px-3 text-[16px] shadow-none"
                   />
-                  <p className="text-[11px] leading-4 text-muted-foreground lg:hidden">
-                    A recuperação é feita por e-mail, mesmo quando você entra com
-                    @usuário.
+                  <p className="text-[11px] leading-4 text-territory-muted lg:hidden">
+                    A recuperaÃ§Ã£o Ã© feita por e-mail, mesmo quando vocÃª entra com
+                    @usuÃ¡rio.
                   </p>
                 </div>
 
                 {requestTurnstile.enabled ? (
                   <div className="mt-4">{requestGate}</div>
                 ) : (
-                  <div className="mt-4 flex items-start gap-3 rounded-xl bg-muted px-4 py-3 lg:hidden">
-                    <AuthConceptIcon name="shield" className="text-primary" />
+                  <div className="mt-4 flex items-start gap-3 rounded-xl bg-territory-raised px-4 py-3 lg:hidden">
+                    <AuthConceptIcon name="shield" className="text-territory-brand" />
                     <div>
-                      <p className="text-[12px] font-semibold text-foreground">
-                        Verificação de segurança
+                      <p className="text-[12px] font-semibold text-territory-ink">
+                        VerificaÃ§Ã£o de seguranÃ§a
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-[11px] text-territory-muted">
                         Conclua quando solicitada.
                       </p>
                     </div>
@@ -360,42 +360,42 @@ export default function ResetPasswordPage() {
                     resendCooldown > 0 ||
                     !requestTurnstile.isReady
                   }
-                  className="mt-5 flex h-11 w-full items-center justify-center rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
+                  className="mt-5 flex h-11 w-full items-center justify-center rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {sending
-                    ? "Enviando…"
+                    ? "Enviandoâ€¦"
                     : resendCooldown > 0
                       ? `Aguarde ${resendCooldown}s`
-                      : "Enviar link de recuperação"}
+                      : "Enviar link de recuperaÃ§Ã£o"}
                 </button>
 
-                <p className="mt-4 hidden text-center text-[11px] leading-4 text-muted-foreground lg:block">
-                  Se houver uma conta associada, enviaremos as instruções.
+                <p className="mt-4 hidden text-center text-[11px] leading-4 text-territory-muted lg:block">
+                  Se houver uma conta associada, enviaremos as instruÃ§Ãµes.
                 </p>
 
                 <button
                   type="button"
                   onClick={() => navigate(AUTH_PATHS.login)}
-                  className="mx-auto mt-4 block min-h-10 rounded px-2 text-[13px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:hidden"
+                  className="mx-auto mt-4 block min-h-10 rounded px-2 text-[13px] text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:hidden"
                 >
                   Voltar para entrar
                 </button>
 
-                <div className="mt-6 flex items-start gap-3 rounded-xl bg-muted px-4 py-3 lg:hidden">
-                  <AuthConceptIcon name="help" className="text-primary" />
-                  <p className="text-[11px] leading-5 text-muted-foreground">
-                    Não consegue acessar esse e-mail?<br />
+                <div className="mt-6 flex items-start gap-3 rounded-xl bg-territory-raised px-4 py-3 lg:hidden">
+                  <AuthConceptIcon name="help" className="text-territory-brand" />
+                  <p className="text-[11px] leading-5 text-territory-muted">
+                    NÃ£o consegue acessar esse e-mail?<br />
                     <Link
                       to={SUPPORT_PATH}
-                      className="font-medium text-primary underline underline-offset-2"
+                      className="font-medium text-territory-brand underline underline-offset-2"
                     >
                       Preciso de ajuda
                     </Link>
                   </p>
                 </div>
 
-                <div className="my-5 hidden h-px bg-border lg:block" />
-                <div className="hidden space-y-2 text-center text-[12px] text-primary lg:block">
+                <div className="my-5 hidden h-px bg-territory-border lg:block" />
+                <div className="hidden space-y-2 text-center text-[12px] text-territory-brand lg:block">
                   <button
                     type="button"
                     onClick={() => navigate(AUTH_PATHS.login)}
@@ -408,7 +408,7 @@ export default function ResetPasswordPage() {
                       to={SUPPORT_PATH}
                       className="rounded px-2 py-1 underline underline-offset-2"
                     >
-                      Não tenho acesso ao e-mail
+                      NÃ£o tenho acesso ao e-mail
                     </Link>
                   </div>
                 </div>
@@ -417,28 +417,28 @@ export default function ResetPasswordPage() {
 
             {view === "sent" ? (
               <div className="text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-territory-brand/10 text-territory-brand">
                   <span style={{ transform: "scale(1.55)" }}>
                     <AuthConceptIcon name="mail" />
                   </span>
                 </div>
-                <h1 className="mt-4 font-heading text-[28px] font-extrabold leading-[1.05] tracking-[-0.04em] text-foreground">
+                <h1 className="mt-4 font-heading text-[28px] font-extrabold leading-[1.05] tracking-[-0.04em] text-territory-ink">
                   Confira sua caixa<br />de entrada
                 </h1>
-                <p className="mx-auto mt-3 max-w-[310px] text-[13px] leading-5 text-muted-foreground">
-                  Se houver uma conta associada a esse e-mail, você receberá as
-                  instruções de recuperação.
+                <p className="mx-auto mt-3 max-w-[310px] text-[13px] leading-5 text-territory-muted">
+                  Se houver uma conta associada a esse e-mail, vocÃª receberÃ¡ as
+                  instruÃ§Ãµes de recuperaÃ§Ã£o.
                 </p>
 
-                <div className="mt-5 rounded-xl bg-muted p-3 text-left">
-                  <p className="text-[11px] text-muted-foreground">E-mail informado</p>
-                  <p className="mt-0.5 break-all text-[14px] font-medium text-foreground">
+                <div className="mt-5 rounded-xl bg-territory-raised p-3 text-left">
+                  <p className="text-[11px] text-territory-muted">E-mail informado</p>
+                  <p className="mt-0.5 break-all text-[14px] font-medium text-territory-ink">
                     {email}
                   </p>
                 </div>
-                <div className="mt-3 flex items-center gap-3 rounded-xl bg-info/10 p-3 text-left text-[11px] text-muted-foreground">
+                <div className="mt-3 flex items-center gap-3 rounded-xl bg-info/10 p-3 text-left text-[11px] text-territory-muted">
                   <AuthConceptIcon name="info" className="text-info" />
-                  <span>Confira também o spam.</span>
+                  <span>Confira tambÃ©m o spam.</span>
                 </div>
 
                 {requestTurnstile.enabled ? (
@@ -453,15 +453,15 @@ export default function ResetPasswordPage() {
                     resendCooldown > 0 ||
                     !requestTurnstile.isReady
                   }
-                  className="mt-5 h-11 w-full rounded-lg border border-border bg-card text-[14px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
+                  className="mt-5 h-11 w-full rounded-lg border border-territory-border bg-territory-surface text-[14px] font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                 >
                   {sending
-                    ? "Enviando…"
+                    ? "Enviandoâ€¦"
                     : resendCooldown > 0
                       ? `Reenviar em ${resendCooldown}s`
                       : "Reenviar link"}
                 </button>
-                <p className="mt-2 text-[10.5px] text-muted-foreground">
+                <p className="mt-2 text-[10.5px] text-territory-muted">
                   O reenvio pode exigir uma breve espera.
                 </p>
 
@@ -472,15 +472,15 @@ export default function ResetPasswordPage() {
                     setEmail("");
                     setResendCooldown(0);
                   }}
-                  className="mt-4 min-h-10 rounded px-2 text-[13px] font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="mt-4 min-h-10 rounded px-2 text-[13px] font-medium text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   Usar outro e-mail
                 </button>
-                <div className="my-4 h-px bg-border" />
+                <div className="my-4 h-px bg-territory-border" />
                 <button
                   type="button"
                   onClick={() => navigate(AUTH_PATHS.login)}
-                  className="min-h-10 rounded px-2 text-[13px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="min-h-10 rounded px-2 text-[13px] text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   Voltar para entrar
                 </button>
@@ -489,25 +489,25 @@ export default function ResetPasswordPage() {
 
             {view === "checking" ? (
               <div role="status" className="py-16 text-center">
-                <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-border border-t-primary" />
-                <h1 className="font-heading text-xl font-bold text-foreground">
-                  Validando seu link…
+                <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-territory-border border-t-territory-brand" />
+                <h1 className="font-heading text-xl font-bold text-territory-ink">
+                  Validando seu linkâ€¦
                 </h1>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Aguarde enquanto confirmamos a recuperação.
+                <p className="mt-2 text-sm text-territory-muted">
+                  Aguarde enquanto confirmamos a recuperaÃ§Ã£o.
                 </p>
               </div>
             ) : null}
 
             {view === "reset" ? (
               <form onSubmit={saveNewPassword} noValidate>
-                <h1 className="font-heading text-[25px] font-extrabold leading-tight tracking-[-0.035em] text-foreground">
+                <h1 className="font-heading text-[25px] font-extrabold leading-tight tracking-[-0.035em] text-territory-ink">
                   Escolha uma nova senha
                 </h1>
                 <div className="mt-3 space-y-1.5">
                   <Label
                     htmlFor="new-password"
-                    className="text-[13px] font-semibold text-foreground"
+                    className="text-[13px] font-semibold text-territory-ink"
                   >
                     Nova senha
                   </Label>
@@ -515,7 +515,7 @@ export default function ResetPasswordPage() {
                     id="new-password"
                     autoComplete="new-password"
                     invalid={Boolean(form.formState.errors.newPassword)}
-                    className="h-11 rounded-lg border-input bg-card shadow-none"
+                    className="h-11 rounded-lg border-territory-border bg-territory-surface shadow-none"
                     aria-describedby={
                       form.formState.errors.newPassword
                         ? "new-password-error"
@@ -531,7 +531,7 @@ export default function ResetPasswordPage() {
                 <div className="mt-3 space-y-1.5">
                   <Label
                     htmlFor="confirm-new-password"
-                    className="text-[13px] font-semibold text-foreground"
+                    className="text-[13px] font-semibold text-territory-ink"
                   >
                     Confirmar nova senha
                   </Label>
@@ -539,7 +539,7 @@ export default function ResetPasswordPage() {
                     id="confirm-new-password"
                     autoComplete="new-password"
                     invalid={Boolean(form.formState.errors.confirmNewPassword)}
-                    className="h-11 rounded-lg border-input bg-card shadow-none"
+                    className="h-11 rounded-lg border-territory-border bg-territory-surface shadow-none"
                     aria-describedby={
                       form.formState.errors.confirmNewPassword
                         ? "confirm-password-error"
@@ -553,7 +553,7 @@ export default function ResetPasswordPage() {
                   />
                 </div>
 
-                <p className="mt-3 text-[12px] font-semibold text-foreground">
+                <p className="mt-3 text-[12px] font-semibold text-territory-ink">
                   Sua senha deve conter:
                 </p>
                 <ul className="mt-2 space-y-1">
@@ -563,7 +563,7 @@ export default function ResetPasswordPage() {
                       className={`flex items-center gap-2 text-[11px] ${
                         requirement.satisfied
                           ? "text-success"
-                          : "text-muted-foreground"
+                          : "text-territory-muted"
                       }`}
                     >
                       <span
@@ -576,30 +576,30 @@ export default function ResetPasswordPage() {
                   ))}
                 </ul>
 
-                <div className="mt-4 flex items-start gap-3 rounded-xl bg-muted px-4 py-3 text-[11px] leading-4 text-muted-foreground">
-                  <AuthConceptIcon name="lightbulb" className="text-primary" />
+                <div className="mt-4 flex items-start gap-3 rounded-xl bg-territory-raised px-4 py-3 text-[11px] leading-4 text-territory-muted">
+                  <AuthConceptIcon name="lightbulb" className="text-territory-brand" />
                   <span>
-                    Use uma senha que você não utiliza em outros serviços.
+                    Use uma senha que vocÃª nÃ£o utiliza em outros serviÃ§os.
                   </span>
                 </div>
 
                 <button
                   type="submit"
                   disabled={form.formState.isSubmitting}
-                  className="mt-4 h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
+                  className="mt-4 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {form.formState.isSubmitting
-                    ? "Salvando…"
+                    ? "Salvandoâ€¦"
                     : "Salvar nova senha"}
                 </button>
 
                 <nav
                   aria-label="Links legais"
-                  className="mt-4 text-center text-[10.5px] leading-4 text-muted-foreground"
+                  className="mt-4 text-center text-[10.5px] leading-4 text-territory-muted"
                 >
                   <span
                     aria-hidden="true"
-                    className="mx-auto mb-3 block h-px w-8 bg-border"
+                    className="mx-auto mb-3 block h-px w-8 bg-territory-border"
                   />
                   <Link
                     to={TERMS_OF_SERVICE_PATH}
@@ -607,12 +607,12 @@ export default function ResetPasswordPage() {
                   >
                     Termos de Uso
                   </Link>
-                  <span aria-hidden="true"> · </span>
+                  <span aria-hidden="true"> Â· </span>
                   <Link
                     to={PRIVACY_POLICY_PATH}
                     className="underline underline-offset-2"
                   >
-                    Política de Privacidade
+                    PolÃ­tica de Privacidade
                   </Link>
                 </nav>
               </form>
@@ -625,12 +625,12 @@ export default function ResetPasswordPage() {
                     <AuthConceptIcon name="warning" />
                   </span>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">Senha atualizada</p>
-                    <h1 className="mt-1 font-heading text-[18px] font-extrabold text-foreground">
-                      Falta encerrar a sessão temporária.
+                    <p className="text-[11px] text-territory-muted">Senha atualizada</p>
+                    <h1 className="mt-1 font-heading text-[18px] font-extrabold text-territory-ink">
+                      Falta encerrar a sessÃ£o temporÃ¡ria.
                     </h1>
-                    <p className="mt-2 text-[12px] leading-5 text-muted-foreground">
-                      Sua nova senha já foi salva. Por segurança, não repita a troca de senha: tente apenas encerrar esta sessão de recuperação.
+                    <p className="mt-2 text-[12px] leading-5 text-territory-muted">
+                      Sua nova senha jÃ¡ foi salva. Por seguranÃ§a, nÃ£o repita a troca de senha: tente apenas encerrar esta sessÃ£o de recuperaÃ§Ã£o.
                     </p>
                   </div>
                 </div>
@@ -638,15 +638,15 @@ export default function ResetPasswordPage() {
                   type="button"
                   onClick={() => void retryRecoverySessionDisposal()}
                   disabled={disposingRecoverySession}
-                  className="mt-4 h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
+                  className="mt-4 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {disposingRecoverySession
-                    ? "Encerrando sessão…"
-                    : "Tentar encerrar sessão"}
+                    ? "Encerrando sessÃ£oâ€¦"
+                    : "Tentar encerrar sessÃ£o"}
                 </button>
                 <Link
                   to={SUPPORT_PATH}
-                  className="mx-auto mt-3 flex min-h-9 w-fit items-center gap-2 rounded px-2 text-[11px] text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="mx-auto mt-3 flex min-h-9 w-fit items-center gap-2 rounded px-2 text-[11px] text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   <AuthConceptIcon name="help" />
                   Preciso de ajuda
@@ -661,11 +661,11 @@ export default function ResetPasswordPage() {
                     <AuthConceptIcon name="check" />
                   </span>
                   <div>
-                    <p className="text-[11px] text-muted-foreground">Após salvar</p>
-                    <h1 className="mt-2 font-heading text-[18px] font-extrabold text-foreground">
+                    <p className="text-[11px] text-territory-muted">ApÃ³s salvar</p>
+                    <h1 className="mt-2 font-heading text-[18px] font-extrabold text-territory-ink">
                       Senha atualizada.
                     </h1>
-                    <p className="text-[12px] text-muted-foreground">
+                    <p className="text-[12px] text-territory-muted">
                       Entre com a nova senha.
                     </p>
                   </div>
@@ -677,7 +677,7 @@ export default function ResetPasswordPage() {
                       replace: true,
                     })
                   }
-                  className="mt-4 h-11 w-full rounded-lg bg-primary text-[14px] font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="mt-4 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-bold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   Ir para entrar
                 </button>
@@ -691,18 +691,18 @@ export default function ResetPasswordPage() {
                     <AuthConceptIcon name="warning" />
                   </span>
                 </div>
-                <h1 className="mt-5 font-heading text-[27px] font-extrabold leading-[1.06] tracking-[-0.04em] text-foreground">
-                  Este link não está<br />mais disponível.
+                <h1 className="mt-5 font-heading text-[27px] font-extrabold leading-[1.06] tracking-[-0.04em] text-territory-ink">
+                  Este link nÃ£o estÃ¡<br />mais disponÃ­vel.
                 </h1>
-                <p className="mt-3 text-[13px] leading-5 text-muted-foreground">
-                  Ele pode ter expirado ou já ter sido usado.
+                <p className="mt-3 text-[13px] leading-5 text-territory-muted">
+                  Ele pode ter expirado ou jÃ¡ ter sido usado.
                   <br />Solicite um novo link.
                 </p>
 
                 <div className="mt-6 space-y-1.5 text-left">
                   <Label
                     htmlFor="expired-email"
-                    className="text-[13px] font-semibold text-foreground"
+                    className="text-[13px] font-semibold text-territory-ink"
                   >
                     E-mail
                   </Label>
@@ -712,7 +712,7 @@ export default function ResetPasswordPage() {
                     autoComplete="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="h-11 rounded-lg border-input bg-card shadow-none"
+                    className="h-11 rounded-lg border-territory-border bg-territory-surface shadow-none"
                   />
                 </div>
                 {requestTurnstile.enabled ? (
@@ -726,10 +726,10 @@ export default function ResetPasswordPage() {
                     resendCooldown > 0 ||
                     !requestTurnstile.isReady
                   }
-                  className="mt-4 h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
+                  className="mt-4 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {sending
-                    ? "Enviando…"
+                    ? "Enviandoâ€¦"
                     : resendCooldown > 0
                       ? `Aguarde ${resendCooldown}s`
                       : "Enviar novo link"}
@@ -737,18 +737,18 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => navigate(AUTH_PATHS.login)}
-                  className="mx-auto mt-4 block min-h-10 rounded px-2 text-[13px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="mx-auto mt-4 block min-h-10 rounded px-2 text-[13px] text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   Voltar para entrar
                 </button>
-                <div className="mt-6 flex items-start gap-3 rounded-xl bg-info/10 p-4 text-left text-[11px] leading-5 text-muted-foreground">
+                <div className="mt-6 flex items-start gap-3 rounded-xl bg-info/10 p-4 text-left text-[11px] leading-5 text-territory-muted">
                   <AuthConceptIcon name="info" className="text-info" />
                   <p>
-                    Sua senha não foi alterada por este link.
+                    Sua senha nÃ£o foi alterada por este link.
                     <br />
                     <Link
                       to={SUPPORT_PATH}
-                      className="font-medium text-primary underline underline-offset-2"
+                      className="font-medium text-territory-brand underline underline-offset-2"
                     >
                       Preciso de ajuda
                     </Link>

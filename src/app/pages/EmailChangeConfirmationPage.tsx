@@ -125,14 +125,14 @@ export default function EmailChangeConfirmationPage() {
           tabIndex={-1}
           className="mx-auto flex min-h-[calc(100dvh-140px)] w-full max-w-[430px] items-center px-6 py-8 focus:outline-none lg:max-w-[520px]"
         >
-          <section className="w-full rounded-xl border border-border bg-card p-6 text-center shadow-md lg:p-8">
+          <section className="w-full rounded-xl border border-territory-border bg-territory-surface p-6 text-center shadow-md lg:p-8">
             {state === "checking" ? (
               <div role="status" aria-live="polite">
-                <span className="mx-auto block h-10 w-10 animate-spin rounded-full border-2 border-border border-t-primary" />
-                <h1 className="mt-5 font-heading text-[25px] font-extrabold tracking-[-0.035em] text-foreground">
+                <span className="mx-auto block h-10 w-10 animate-spin rounded-full border-2 border-territory-border border-t-territory-brand" />
+                <h1 className="mt-5 font-heading text-[25px] font-extrabold tracking-[-0.035em] text-territory-ink">
                   Confirmando seu novo e-mail…
                 </h1>
-                <p className="mt-2 text-sm leading-5 text-muted-foreground">
+                <p className="mt-2 text-sm leading-5 text-territory-muted">
                   Aguarde enquanto concluímos esta etapa com o serviço de autenticação.
                 </p>
               </div>
@@ -143,15 +143,15 @@ export default function EmailChangeConfirmationPage() {
                 <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/10 text-success">
                   <AuthConceptIcon name="check" />
                 </span>
-                <h1 className="mt-5 font-heading text-[26px] font-extrabold tracking-[-0.04em] text-foreground">
+                <h1 className="mt-5 font-heading text-[26px] font-extrabold tracking-[-0.04em] text-territory-ink">
                   Confirmação recebida
                 </h1>
-                <p className="mx-auto mt-2 max-w-[350px] text-sm leading-5 text-muted-foreground">
+                <p className="mx-auto mt-2 max-w-[350px] text-sm leading-5 text-territory-muted">
                   Esta etapa foi processada. Se outra mensagem de confirmação tiver sido enviada, conclua também essa etapa antes de conferir seus dados de acesso.
                 </p>
                 <Link
                   to={accountAccessTarget}
-                  className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-extrabold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg bg-territory-sun px-4 text-sm font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   {user ? "Voltar para Dados de acesso" : "Entrar e conferir meus dados"}
                 </Link>
@@ -163,15 +163,15 @@ export default function EmailChangeConfirmationPage() {
                 <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10 text-destructive">
                   <AuthConceptIcon name="warning" />
                 </span>
-                <h1 className="mt-5 font-heading text-[26px] font-extrabold tracking-[-0.04em] text-foreground">
+                <h1 className="mt-5 font-heading text-[26px] font-extrabold tracking-[-0.04em] text-territory-ink">
                   Não foi possível concluir esta confirmação
                 </h1>
-                <p className="mx-auto mt-2 max-w-[350px] text-sm leading-5 text-muted-foreground">
+                <p className="mx-auto mt-2 max-w-[350px] text-sm leading-5 text-territory-muted">
                   O link pode ter expirado, já ter sido usado ou não corresponder a uma troca de e-mail iniciada pela conta.
                 </p>
                 <Link
                   to={accountAccessTarget}
-                  className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg border border-border bg-card px-4 text-sm font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="mt-6 flex min-h-11 w-full items-center justify-center rounded-lg border border-territory-border bg-territory-surface px-4 text-sm font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   {user ? "Voltar para Dados de acesso" : "Entrar na minha conta"}
                 </Link>

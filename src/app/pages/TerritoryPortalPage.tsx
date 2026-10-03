@@ -22,6 +22,7 @@ import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
 import { getBusinessUrl, normalizeRealBusinessEntry } from "@/app/features/business-landing/utils";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
+import { mapEntityProjection } from "@/core/maps/services/MapEntityProjectionService";
 import type { MapMarker } from "@/core/maps/types/core";
 
 import "./TerritoryPortalPage.css";
@@ -97,14 +98,26 @@ export default function TerritoryPortalPage({
         (lat === 0 && lng === 0)
       ) return [];
 
+      const projected = mapEntityProjection.projectEntity(
+        {
+          id: business.id,
+          name: business.name,
+          latitude: lat,
+          longitude: lng,
+          status: EntityStatus.ACTIVE,
+          category: business.category,
+          rating: business.rating || undefined,
+        },
+        "business",
+        { includeMetadata: true },
+      );
+      if (!projected) return [];
+
       return [{
-        id: business.id,
-        type: "business",
-        coordinates: { latitude: lat, longitude: lng },
-        title: business.name,
-        status: EntityStatus.ACTIVE,
+        ...projected,
         url: getBusinessUrl(business, urls.business, businessUrls.canonical),
         metadata: {
+          ...projected.metadata,
           category: getBusinessCategoryLabel(business.category),
           rating: business.rating || undefined,
           is_verified: business.is_verified,

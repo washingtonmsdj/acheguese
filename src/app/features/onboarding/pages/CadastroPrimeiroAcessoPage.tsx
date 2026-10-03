@@ -71,7 +71,7 @@ function ConceptSelect({
 }: ConceptSelectProps) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-semibold text-foreground" htmlFor={id}>
+      <label className="mb-1 block text-[11px] font-semibold text-territory-ink" htmlFor={id}>
         {label}
       </label>
       <div className="relative">
@@ -80,7 +80,7 @@ function ConceptSelect({
           value={value}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-full appearance-none rounded-md border border-input bg-card px-3 pr-10 text-[13px] text-foreground shadow-none outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
+          className="h-10 w-full appearance-none rounded-md border border-territory-border bg-territory-surface px-3 pr-10 text-[13px] text-territory-ink shadow-none outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:bg-territory-raised disabled:text-territory-muted"
         >
           <option value="">{placeholder}</option>
           {options.map((item) => (
@@ -299,9 +299,9 @@ export default function CadastroPrimeiroAcessoPage() {
 
   if (sessionLoading || loadingProfile) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-background text-muted-foreground">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-territory-canvas text-territory-muted">
         <div role="status" className="flex items-center gap-3 text-sm">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary motion-reduce:animate-none" />
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-territory-border border-t-territory-brand motion-reduce:animate-none" />
           Preparando sua conta…
         </div>
       </div>
@@ -318,24 +318,24 @@ export default function CadastroPrimeiroAcessoPage() {
         <div className="auth-concept-canvas min-h-[100dvh]">
           <AuthBrandHeader showBack={false} />
           <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[430px] px-6 pb-8 pt-6 focus:outline-none">
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-md">
+            <section className="rounded-2xl border border-territory-border bg-territory-surface p-5 shadow-md">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-warning/10 text-warning">
                 <AuthConceptIcon name="info" />
               </span>
-              <h1 className="mt-4 font-heading text-[25px] font-extrabold tracking-[-0.035em] text-foreground">Seu acesso foi confirmado.</h1>
-              <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
+              <h1 className="mt-4 font-heading text-[25px] font-extrabold tracking-[-0.035em] text-territory-ink">Seu acesso foi confirmado.</h1>
+              <p className="mt-2 text-[13px] leading-5 text-territory-muted">
                 Ainda não conseguimos carregar seu perfil pessoal. Isso pode acontecer por alguns segundos logo após a criação da conta.
               </p>
               <button
                 type="button"
                 onClick={() => void loadProfile()}
-                className="mt-5 h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="mt-5 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 Tentar carregar novamente
               </button>
               <Link
                 to={SUPPORT_PATH}
-                className="mx-auto mt-3 flex min-h-10 w-fit items-center gap-2 rounded px-2 text-[12px] text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                className="mx-auto mt-3 flex min-h-10 w-fit items-center gap-2 rounded px-2 text-[12px] text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
               >
                 <AuthConceptIcon name="help" />
                 Preciso de ajuda
@@ -377,35 +377,35 @@ export default function CadastroPrimeiroAcessoPage() {
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/10 text-success">
               <span style={{ transform: "scale(1.35)" }}><AuthConceptIcon name="check" /></span>
             </span>
-            <h1 className="mt-3 font-heading text-[28px] font-extrabold leading-tight tracking-[-0.04em] text-primary lg:text-[34px]">
+            <h1 className="mt-3 font-heading text-[28px] font-extrabold leading-tight tracking-[-0.04em] text-territory-brand lg:text-[34px]">
               Tudo pronto, {displayName.split(" ")[0]}.
             </h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">Sua conta foi criada com sucesso.</p>
+            <p className="mt-1 text-[13px] text-territory-muted">Sua conta foi criada com sucesso.</p>
           </div>
 
           <div className="lg:mt-6 lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-4">
             <div>
-              <section className="mt-4 rounded-xl border border-border bg-card p-3 lg:mt-0 lg:p-4">
+              <section className="mt-4 rounded-xl border border-territory-border bg-territory-surface p-3 lg:mt-0 lg:p-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
                     <AuthConceptIcon name="person" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-bold text-foreground">{displayName}</p>
-                    {username ? <p className="truncate text-[11px] text-muted-foreground">{username}</p> : null}
-                    <p className="text-[11px] text-muted-foreground">Perfil pessoal</p>
+                    <p className="truncate text-[13px] font-bold text-territory-ink">{displayName}</p>
+                    {username ? <p className="truncate text-[11px] text-territory-muted">{username}</p> : null}
+                    <p className="text-[11px] text-territory-muted">Perfil pessoal</p>
                   </div>
                 </div>
 
                 {shouldOfferUsernameChoice && !editingUsername ? (
-                  <div className="mt-3 rounded-lg bg-muted px-3 py-2.5">
-                    <p className="text-[10.5px] leading-4 text-muted-foreground">
+                  <div className="mt-3 rounded-lg bg-territory-raised px-3 py-2.5">
+                    <p className="text-[10.5px] leading-4 text-territory-muted">
                       O identificador atual foi criado automaticamente. Você pode escolher um @usuário mais fácil de lembrar agora.
                     </p>
                     <button
                       type="button"
                       onClick={beginUsernameEdit}
-                      className="mt-1 min-h-8 rounded px-1 text-[11.5px] font-bold text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                      className="mt-1 min-h-8 rounded px-1 text-[11.5px] font-bold text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                     >
                       Escolher meu @usuário
                     </button>
@@ -413,12 +413,12 @@ export default function CadastroPrimeiroAcessoPage() {
                 ) : null}
 
                 {editingUsername ? (
-                  <div className="mt-3 rounded-lg border border-border bg-background p-3">
-                    <label htmlFor="first-access-username" className="text-[11px] font-bold text-foreground">
+                  <div className="mt-3 rounded-lg border border-territory-border bg-territory-canvas p-3">
+                    <label htmlFor="first-access-username" className="text-[11px] font-bold text-territory-ink">
                       Seu @usuário
                     </label>
                     <div className="relative mt-1">
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-muted-foreground">@</span>
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-territory-muted">@</span>
                       <input
                         id="first-access-username"
                         value={usernameDraft}
@@ -439,12 +439,12 @@ export default function CadastroPrimeiroAcessoPage() {
                             usernameAvailability.reset();
                           }
                         }}
-                        className="h-10 w-full rounded-md border border-input bg-card pl-8 pr-3 text-[14px] text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:bg-muted"
+                        className="h-10 w-full rounded-md border border-territory-border bg-territory-surface pl-8 pr-3 text-[14px] text-territory-ink outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:bg-territory-raised"
                       />
                     </div>
                     <div id="first-access-username-status" aria-live="polite" className="mt-1 min-h-4 text-[10.5px] leading-4">
                       {usernameAvailability.isChecking ? (
-                        <span className="text-muted-foreground">Verificando disponibilidade…</span>
+                        <span className="text-territory-muted">Verificando disponibilidade…</span>
                       ) : availabilityMatchesDraft && usernameAvailability.result?.status === "available" ? (
                         <span className="font-medium text-success">Nome de usuário disponível.</span>
                       ) : availabilityMatchesDraft && usernameAvailability.result?.status !== "available" ? (
@@ -455,7 +455,7 @@ export default function CadastroPrimeiroAcessoPage() {
                           )}
                         </span>
                       ) : (
-                        <span className="text-muted-foreground">Use letras, números e _.</span>
+                        <span className="text-territory-muted">Use letras, números e _.</span>
                       )}
                     </div>
                     <div className="mt-2 flex gap-2">
@@ -463,7 +463,7 @@ export default function CadastroPrimeiroAcessoPage() {
                         type="button"
                         onClick={() => void saveUsername()}
                         disabled={savingUsername || usernameAvailability.isChecking || usernameDraft.length < 3}
-                        className="h-9 flex-1 rounded-lg bg-primary px-3 text-[11px] font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
+                        className="h-9 flex-1 rounded-lg bg-territory-sun px-3 text-[11px] font-bold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                       >
                         {savingUsername ? "Salvando…" : "Salvar @usuário"}
                       </button>
@@ -471,7 +471,7 @@ export default function CadastroPrimeiroAcessoPage() {
                         type="button"
                         onClick={cancelUsernameEdit}
                         disabled={savingUsername}
-                        className="h-9 rounded-lg border border-border bg-card px-3 text-[11px] font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
+                        className="h-9 rounded-lg border border-territory-border bg-territory-surface px-3 text-[11px] font-bold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                       >
                         Agora não
                       </button>
@@ -487,21 +487,21 @@ export default function CadastroPrimeiroAcessoPage() {
                       <AuthConceptIcon name={returnIcon} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[12px] font-bold text-foreground">{returnCardTitle}</p>
-                      <p className="text-[11px] leading-4 text-muted-foreground">{returnCardDescription}</p>
+                      <p className="text-[12px] font-bold text-territory-ink">{returnCardTitle}</p>
+                      <p className="text-[11px] leading-4 text-territory-muted">{returnCardDescription}</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => leaveFirstAccess(redirectTo)}
-                    className="mt-3 h-10 w-full rounded-lg bg-primary px-3 text-[13px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                    className="mt-3 h-10 w-full rounded-lg bg-territory-sun px-3 text-[13px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
                     {returnButtonLabel}
                   </button>
                   <button
                     type="button"
                     onClick={() => leaveFirstAccess(redirectTo)}
-                    className="mx-auto mt-1 block min-h-9 rounded px-2 text-[11px] text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                    className="mx-auto mt-1 block min-h-9 rounded px-2 text-[11px] text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                   >
                     Completar meu perfil depois
                   </button>
@@ -510,26 +510,26 @@ export default function CadastroPrimeiroAcessoPage() {
                 <Link
                   to="/"
                   onClick={() => completeFirstAccessJourney()}
-                  className="mt-3 flex h-10 items-center justify-center rounded-lg bg-primary text-[12px] font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="mt-3 flex h-10 items-center justify-center rounded-lg bg-territory-sun text-[12px] font-bold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   Explorar o Achegue-se
                 </Link>
               )}
 
-              <Link to="/conta" onClick={() => completeFirstAccessJourney()} className="mt-3 flex min-h-11 items-center gap-3 rounded-xl bg-muted px-3 text-[11px] font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
-                <AuthConceptIcon name="users" className="text-primary" />
+              <Link to="/conta" onClick={() => completeFirstAccessJourney()} className="mt-3 flex min-h-11 items-center gap-3 rounded-xl bg-territory-raised px-3 text-[11px] font-medium text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
+                <AuthConceptIcon name="users" className="text-territory-brand" />
                 Outros perfis ficam em Meus perfis.
               </Link>
             </div>
 
-            <section className="mt-3 rounded-xl border border-border bg-card p-3 lg:mt-0 lg:p-4">
+            <section className="mt-3 rounded-xl border border-territory-border bg-territory-surface p-3 lg:mt-0 lg:p-4">
               <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
                   <AuthConceptIcon name="pin" />
                 </span>
                 <div className="flex-1">
-                  <p className="text-[12px] font-bold text-foreground">Seu vínculo com o território</p>
-                  <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
+                  <p className="text-[12px] font-bold text-territory-ink">Seu vínculo com o território</p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-territory-muted">
                     Conte pra gente sua cidade e bairro para ver conteúdos mais relevantes.
                   </p>
                 </div>
@@ -577,21 +577,21 @@ export default function CadastroPrimeiroAcessoPage() {
                     disabled={!cityId || loadingNeighborhoods || saving}
                     onChange={setNeighborhoodId}
                   />
-                  <button type="button" onClick={() => void saveTerritory()} disabled={saving || !neighborhoodId} className="h-10 w-full rounded-lg bg-primary text-[12px] font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55">
+                  <button type="button" onClick={() => void saveTerritory()} disabled={saving || !neighborhoodId} className="h-10 w-full rounded-lg bg-territory-sun text-[12px] font-bold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55">
                     {saving ? "Salvando…" : "Salvar cidade e bairro"}
                   </button>
                 </div>
               ) : (
                 <div className="mt-3 space-y-2">
-                  <button type="button" onClick={() => setShowTerritoryForm(true)} className="h-10 w-full rounded-lg border border-border bg-card text-[12px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
+                  <button type="button" onClick={() => setShowTerritoryForm(true)} className="h-10 w-full rounded-lg border border-territory-border bg-territory-surface text-[12px] font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
                     Informar cidade e bairro
                   </button>
-                  <button type="button" onClick={() => leaveFirstAccess(redirectTo)} className="h-10 w-full rounded-lg border border-border bg-card text-[12px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
+                  <button type="button" onClick={() => leaveFirstAccess(redirectTo)} className="h-10 w-full rounded-lg border border-territory-border bg-territory-surface text-[12px] font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
                     Agora não
                   </button>
                 </div>
               )}
-              <p className="mt-2 text-[10.5px] leading-4 text-muted-foreground">Você pode explorar o Achegue-se mesmo morando em outro lugar.</p>
+              <p className="mt-2 text-[10.5px] leading-4 text-territory-muted">Você pode explorar o Achegue-se mesmo morando em outro lugar.</p>
             </section>
           </div>
         </main>

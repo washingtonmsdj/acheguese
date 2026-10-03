@@ -254,33 +254,33 @@ export default function AceiteTermosPage() {
         >
           <section className="hidden lg:block" aria-label="Participação e confiança">
             <div className="max-w-[510px]">
-              <p className="text-[12px] font-bold uppercase tracking-[0.17em] text-primary">
+              <p className="text-[12px] font-bold uppercase tracking-[0.17em] text-territory-brand">
                 Conta e comunidade
               </p>
-              <h1 className="mt-3 max-w-[470px] font-heading text-[46px] font-extrabold leading-[.95] tracking-[-0.05em] text-primary">
+              <h1 className="mt-3 max-w-[470px] font-heading text-[46px] font-extrabold leading-[.95] tracking-[-0.05em] text-territory-brand">
                 Entre sabendo<br />como cuidamos<br />desse espaço.
               </h1>
-              <p className="mt-5 max-w-[430px] text-[17px] leading-6 text-foreground">
+              <p className="mt-5 max-w-[430px] text-[17px] leading-6 text-territory-ink">
                 O Achegue-se conecta pessoas, perfis e territórios. Por isso,
                 participação e privacidade precisam começar com regras claras.
               </p>
 
               <div className="mt-8 grid max-w-[500px] gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-card/75 p-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="rounded-2xl border border-territory-border bg-territory-surface/75 p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
                     <AuthConceptIcon name="shield" />
                   </span>
-                  <p className="mt-3 text-[13px] font-bold text-foreground">Regras transparentes</p>
-                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                  <p className="mt-3 text-[13px] font-bold text-territory-ink">Regras transparentes</p>
+                  <p className="mt-1 text-[12px] leading-5 text-territory-muted">
                     Termos e diretrizes ficam disponíveis antes do aceite.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border bg-card/75 p-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="rounded-2xl border border-territory-border bg-territory-surface/75 p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
                     <AuthConceptIcon name="users" />
                   </span>
-                  <p className="mt-3 text-[13px] font-bold text-foreground">Convivência responsável</p>
-                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                  <p className="mt-3 text-[13px] font-bold text-territory-ink">Convivência responsável</p>
+                  <p className="mt-1 text-[12px] leading-5 text-territory-muted">
                     As Diretrizes da Comunidade fazem parte da experiência real
                     do produto.
                   </p>
@@ -289,27 +289,27 @@ export default function AceiteTermosPage() {
             </div>
           </section>
 
-          <section className="w-full lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
+          <section className="w-full lg:rounded-xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-7 lg:shadow-md">
             <div className="flex items-start gap-3 lg:block">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary lg:hidden">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand lg:hidden">
                 <AuthConceptIcon name="shield" />
               </span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary lg:hidden">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-territory-brand lg:hidden">
                   Conta e comunidade
                 </p>
-                <h1 className="mt-1 font-heading text-[27px] font-extrabold leading-tight tracking-[-0.04em] text-foreground lg:mt-0 lg:text-[24px]">
+                <h1 className="mt-1 font-heading text-[27px] font-extrabold leading-tight tracking-[-0.04em] text-territory-ink lg:mt-0 lg:text-[24px]">
                   Antes de continuar
                 </h1>
-                <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
+                <p className="mt-2 text-[13px] leading-5 text-territory-muted">
                   Revise os Termos de Uso e as Diretrizes da Comunidade para
                   concluir seu acesso.
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 flex items-start gap-3 rounded-xl bg-muted px-4 py-3 text-muted-foreground">
-              <AuthConceptIcon name="info" className="mt-0.5 text-primary" />
+            <div className="mt-5 flex items-start gap-3 rounded-xl bg-territory-raised px-4 py-3 text-territory-muted">
+              <AuthConceptIcon name="info" className="mt-0.5 text-territory-brand" />
               <p className="text-[11.5px] leading-5">
                 Entrar com Google não pula esta etapa. O aceite é registrado na
                 sua conta e pode ser consultado depois.
@@ -317,15 +317,15 @@ export default function AceiteTermosPage() {
             </div>
 
             {hasSpecificReturnContext ? (
-              <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-territory-border bg-territory-surface px-3.5 py-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-brand/10 text-territory-brand">
                   <AuthConceptIcon name={returnContextIcon} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10.5px] text-muted-foreground">
+                  <p className="text-[10.5px] text-territory-muted">
                     Depois dos termos, você volta para
                   </p>
-                  <p className="truncate text-[12.5px] font-bold text-foreground">
+                  <p className="truncate text-[12.5px] font-bold text-territory-ink">
                     {returnContext.label}
                   </p>
                 </div>
@@ -335,9 +335,9 @@ export default function AceiteTermosPage() {
             {state === "checking" ? (
               <div
                 role="status"
-                className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-muted-foreground"
+                className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-territory-muted"
               >
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-territory-border border-t-territory-brand" />
                 Verificando o aceite da sua conta…
               </div>
             ) : null}
@@ -348,10 +348,10 @@ export default function AceiteTermosPage() {
                   role="alert"
                   className="rounded-xl border border-warning/30 bg-warning/10 p-4"
                 >
-                  <p className="text-[13px] font-bold text-foreground">
+                  <p className="text-[13px] font-bold text-territory-ink">
                     Não foi possível concluir a entrada com Google
                   </p>
-                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                  <p className="mt-1 text-[12px] leading-5 text-territory-muted">
                     O acesso foi cancelado ou interrompido antes de criar uma
                     sessão. Seu destino foi preservado para você tentar novamente.
                   </p>
@@ -359,7 +359,7 @@ export default function AceiteTermosPage() {
                 <Link
                   to={oauthRetryPath}
                   onClick={clearFailedOAuthJourney}
-                  className="flex h-11 w-full items-center justify-center rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="flex h-11 w-full items-center justify-center rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   {journeyIntent === AUTH_JOURNEY_INTENTS.signup
                     ? "Voltar para criar conta"
@@ -370,15 +370,15 @@ export default function AceiteTermosPage() {
 
             {state === "signed-out" ? (
               <div className="mt-6 space-y-4">
-                <div className="rounded-xl border border-border bg-muted p-4">
-                  <p className="text-[13px] font-bold text-foreground">Sua sessão não está disponível</p>
-                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                <div className="rounded-xl border border-territory-border bg-territory-raised p-4">
+                  <p className="text-[13px] font-bold text-territory-ink">Sua sessão não está disponível</p>
+                  <p className="mt-1 text-[12px] leading-5 text-territory-muted">
                     Entre novamente para que o aceite seja associado à conta correta.
                   </p>
                 </div>
                 <Link
                   to={loginPath}
-                  className="flex h-11 w-full items-center justify-center rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="flex h-11 w-full items-center justify-center rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   Voltar para entrar
                 </Link>
@@ -391,10 +391,10 @@ export default function AceiteTermosPage() {
                   role="alert"
                   className="rounded-xl border border-warning/30 bg-warning/10 p-4"
                 >
-                  <p className="text-[13px] font-bold text-foreground">
+                  <p className="text-[13px] font-bold text-territory-ink">
                     Não foi possível verificar seus termos
                   </p>
-                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
+                  <p className="mt-1 text-[12px] leading-5 text-territory-muted">
                     Não vamos assumir se esta conta já aceitou uma versão anterior. Tente carregar novamente antes de continuar.
                   </p>
                 </div>
@@ -404,7 +404,7 @@ export default function AceiteTermosPage() {
                     setState("checking");
                     setConsentCheckAttempt((attempt) => attempt + 1);
                   }}
-                  className="h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  className="h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   Tentar verificar novamente
                 </button>
@@ -413,30 +413,30 @@ export default function AceiteTermosPage() {
 
             {state === "needs-acceptance" ? (
               <div className="mt-6 space-y-4">
-                <div className="rounded-xl border border-border bg-muted p-4">
+                <div className="rounded-xl border border-territory-border bg-territory-raised p-4">
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="terms-acceptance"
                       checked={accepted}
                       onCheckedChange={(checked) => setAccepted(checked === true)}
                       disabled={submitting}
-                      className="mt-0.5 h-5 w-5 rounded-[3px] border-primary"
+                      className="mt-0.5 h-5 w-5 rounded-[3px] border-territory-brand"
                     />
                     <Label
                       htmlFor="terms-acceptance"
-                      className="cursor-pointer text-[13px] font-normal leading-5 text-foreground"
+                      className="cursor-pointer text-[13px] font-normal leading-5 text-territory-ink"
                     >
                       Li e aceito os Termos de Uso, incluindo as Diretrizes da
                       Comunidade.
                     </Label>
                   </div>
-                  <p className="mt-3 pl-8 text-[11px] leading-4 text-muted-foreground">
+                  <p className="mt-3 pl-8 text-[11px] leading-4 text-territory-muted">
                     Abra os{" "}
                     <Link
                       to={TERMS_OF_SERVICE_PATH}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-primary underline underline-offset-2"
+                      className="font-medium text-territory-brand underline underline-offset-2"
                     >
                       Termos
                     </Link>{" "}
@@ -445,7 +445,7 @@ export default function AceiteTermosPage() {
                       to={COMMUNITY_GUIDELINES_PATH}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-primary underline underline-offset-2"
+                      className="font-medium text-territory-brand underline underline-offset-2"
                     >
                       Diretrizes da comunidade
                     </Link>{" "}
@@ -457,11 +457,11 @@ export default function AceiteTermosPage() {
                   type="button"
                   disabled={!accepted || submitting}
                   onClick={() => void handleAccept()}
-                  className="h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {submitting ? "Registrando…" : "Aceitar e continuar"}
                 </button>
-                <p className="text-center text-[10.5px] leading-4 text-muted-foreground">
+                <p className="text-center text-[10.5px] leading-4 text-territory-muted">
                   Versão dos termos: {TERMS_OF_SERVICE_VERSION}
                 </p>
               </div>

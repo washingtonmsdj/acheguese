@@ -6,6 +6,7 @@ import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { MAP_DEFAULT_COORDINATES } from "@/shared/config/mapDefaults";
+import { mapEntityProjection } from "@/core/maps/services/MapEntityProjectionService";
 import type { MapMarker } from "@/core/maps/types/core";
 import {
   markPublicRootMapReady,
@@ -130,16 +131,31 @@ export default function TerritoryEntryMapRuntime({
   }, [resolved]);
   const renderedMarkers = useMemo<MapMarker[]>(() => {
     if (!showTerritoryReference || !territoryReference) return markers;
-    const territoryReferenceMarker: MapMarker = {
-      id: "territory-reference",
-      type: "user_location",
-      coordinates: territoryReference,
-      title: territoryLabel,
-      subtitle: "Referência territorial",
-      status: EntityStatus.ACTIVE,
-      metadata: { isTerritoryReference: true },
-    };
-    return [...markers, territoryReferenceMarker];
+
+    const projected = mapEntityProjection.projectEntity(
+      {
+        id: "territory-reference",
+        name: territoryLabel,
+        latitude: territoryReference.latitude,
+        longitude: territoryReference.longitude,
+        status: EntityStatus.ACTIVE,
+      },
+      "user_location",
+      { includeMetadata: true },
+    );
+    if (!projected) return markers;
+
+    return [
+      ...markers,
+      {
+        ...projected,
+        subtitle: "Referência territorial",
+        metadata: {
+          ...projected.metadata,
+          isTerritoryReference: true,
+        },
+      },
+    ];
   }, [markers, showTerritoryReference, territoryLabel, territoryReference]);
   const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved, {
     enabled: boundaryStarted,

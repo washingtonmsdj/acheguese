@@ -175,7 +175,7 @@ export default function CadastroConfirmacaoPage() {
           className="mx-auto w-full max-w-[430px] px-6 pb-5 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
         >
           <section className="hidden lg:block" aria-label="Confirmação de e-mail">
-            <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-primary">
+            <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-territory-brand">
               Só falta<br />confirmar<br />seu e-mail.
             </h1>
             <img
@@ -186,14 +186,14 @@ export default function CadastroConfirmacaoPage() {
           </section>
 
           {!email ? (
-            <section className="w-full text-center lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
+            <section className="w-full text-center lg:rounded-xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-7 lg:shadow-md">
               <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-warning/10 text-warning">
                 <span style={{ transform: "scale(1.45)" }}><AuthConceptIcon name="info" /></span>
               </span>
-              <h1 className="mt-4 font-heading text-[27px] font-extrabold leading-tight tracking-[-0.04em] text-foreground">
+              <h1 className="mt-4 font-heading text-[27px] font-extrabold leading-tight tracking-[-0.04em] text-territory-ink">
                 Vamos localizar sua inscrição.
               </h1>
-              <p className="mx-auto mt-2 max-w-[330px] text-[13px] leading-5 text-muted-foreground">
+              <p className="mx-auto mt-2 max-w-[330px] text-[13px] leading-5 text-territory-muted">
                 {startedFromLogin
                   ? "O e-mail pendente não está disponível neste navegador. Volte para entrar e informe o endereço novamente."
                   : "O e-mail pendente não está disponível neste navegador. Reinicie o cadastro para informar o endereço correto, ou entre se você já confirmou a conta."}
@@ -201,53 +201,53 @@ export default function CadastroConfirmacaoPage() {
               <button
                 type="button"
                 onClick={handleChangeEmail}
-                className="mt-6 h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                className="mt-6 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 {startedFromLogin ? "Voltar para entrar" : "Voltar para criar conta"}
               </button>
               <button
                 type="button"
                 onClick={() => navigate(backToLogin)}
-                className="mx-auto mt-2 block min-h-10 rounded px-2 text-[13px] font-medium text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                className="mx-auto mt-2 block min-h-10 rounded px-2 text-[13px] font-medium text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
               >
                 Já confirmei — entrar
               </button>
               <Link
                 to={SUPPORT_PATH}
-                className="mx-auto mt-3 flex min-h-10 w-fit items-center gap-2 rounded px-2 text-[12px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                className="mx-auto mt-3 flex min-h-10 w-fit items-center gap-2 rounded px-2 text-[12px] text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
               >
                 <AuthConceptIcon name="help" />
                 Preciso de ajuda
               </Link>
             </section>
           ) : (
-            <section className="w-full text-center lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:text-left lg:shadow-md">
+            <section className="w-full text-center lg:rounded-xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-7 lg:text-left lg:shadow-md">
               <img
                 src="/auth/confirm-envelope.webp"
                 alt="Envelope amarelo com uma mensagem"
                 className="mx-auto h-[104px] w-[110px] object-contain lg:hidden"
               />
-              <h1 className="mt-2 font-heading text-[29px] font-extrabold leading-tight tracking-[-0.04em] text-foreground lg:mt-0 lg:text-[24px]">
+              <h1 className="mt-2 font-heading text-[29px] font-extrabold leading-tight tracking-[-0.04em] text-territory-ink lg:mt-0 lg:text-[24px]">
                 <span className="lg:hidden">Confira seu e-mail</span>
                 <span className="hidden lg:inline">Confira sua caixa de entrada</span>
               </h1>
-              <p className="mt-2 text-[14px] leading-5 text-muted-foreground">
+              <p className="mt-2 text-[14px] leading-5 text-territory-muted">
                 {startedFromLogin ? "Sua conta ainda aguarda confirmação em " : "Enviamos um link para "}
-                <span className="font-bold text-foreground">{email}</span>.
+                <span className="font-bold text-territory-ink">{email}</span>.
               </p>
 
               <ol className="mt-6 space-y-3 text-left">
-                <li className="flex items-center gap-3 text-[13px] text-foreground">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[12px] font-bold text-foreground">1</span>
+                <li className="flex items-center gap-3 text-[13px] text-territory-ink">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-territory-raised text-[12px] font-bold text-territory-ink">1</span>
                   <span>Abra a mensagem do Achegue-se.</span>
                 </li>
-                <li className="flex items-center gap-3 text-[13px] text-foreground">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[12px] font-bold text-foreground">2</span>
+                <li className="flex items-center gap-3 text-[13px] text-territory-ink">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-territory-raised text-[12px] font-bold text-territory-ink">2</span>
                   <span className="lg:hidden">Toque em Confirmar e-mail.</span>
                   <span className="hidden lg:inline">Clique em Confirmar e-mail.</span>
                 </li>
-                <li className="flex items-center gap-3 text-[13px] text-foreground">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-[12px] font-bold text-foreground">3</span>
+                <li className="flex items-center gap-3 text-[13px] text-territory-ink">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-territory-raised text-[12px] font-bold text-territory-ink">3</span>
                   <span>Volte para continuar.</span>
                 </li>
               </ol>
@@ -255,8 +255,8 @@ export default function CadastroConfirmacaoPage() {
               <div className="mt-6 flex items-start gap-3 rounded-xl bg-warning/10 px-4 py-3 text-left leading-[18px] lg:hidden">
                 <span className="mt-0.5 text-warning"><AuthConceptIcon name="info" /></span>
                 <div>
-                  <p className="mb-0 text-[12px] font-bold leading-[18px] text-foreground">Não encontrou?</p>
-                  <p className="mb-0 text-[11.5px] leading-[18px] text-muted-foreground">Confira a pasta de spam.</p>
+                  <p className="mb-0 text-[12px] font-bold leading-[18px] text-territory-ink">Não encontrou?</p>
+                  <p className="mb-0 text-[11.5px] leading-[18px] text-territory-muted">Confira a pasta de spam.</p>
                 </div>
               </div>
 
@@ -276,7 +276,7 @@ export default function CadastroConfirmacaoPage() {
                 onClick={handleResend}
                 disabled={resendDisabled}
                 aria-live="polite"
-                className="mt-4 h-11 w-full rounded-lg border border-border bg-card text-[14px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55 lg:mt-6"
+                className="mt-4 h-11 w-full rounded-lg border border-territory-border bg-territory-surface text-[14px] font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55 lg:mt-6"
               >
                 {isResending ? "Reenviando…" : cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar e-mail"}
               </button>
@@ -284,33 +284,33 @@ export default function CadastroConfirmacaoPage() {
               <button
                 type="button"
                 onClick={handleChangeEmail}
-                className="mx-auto mt-2 block min-h-10 rounded px-2 text-[12px] font-medium text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:mx-auto"
+                className="mx-auto mt-2 block min-h-10 rounded px-2 text-[12px] font-medium text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:mx-auto"
               >
                 {startedFromLogin ? "Usar outro e-mail" : "Informei o e-mail errado"}
               </button>
 
-              <p className="mt-1 hidden text-center text-[11px] text-muted-foreground lg:block">
+              <p className="mt-1 hidden text-center text-[11px] text-territory-muted lg:block">
                 Confira também a pasta de spam.
               </p>
 
-              <div className="my-5 h-px bg-border" />
-              <div className="flex items-start gap-3 text-left text-muted-foreground lg:hidden">
-                <AuthConceptIcon name="clock" className="mt-0.5 text-primary" />
+              <div className="my-5 h-px bg-territory-border" />
+              <div className="flex items-start gap-3 text-left text-territory-muted lg:hidden">
+                <AuthConceptIcon name="clock" className="mt-0.5 text-territory-brand" />
                 <p className="mb-0 text-[11px] leading-4">Sua conta ainda aguarda confirmação.</p>
               </div>
-              <div className="my-5 h-px bg-border lg:hidden" />
+              <div className="my-5 h-px bg-territory-border lg:hidden" />
 
               <div className="flex justify-center lg:hidden">
                 <Link
                   to={SUPPORT_PATH}
-                  className="flex min-h-10 items-center gap-3 rounded px-2 text-[13px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="flex min-h-10 items-center gap-3 rounded px-2 text-[13px] text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   <AuthConceptIcon name="help" />
                   Preciso de ajuda
                 </Link>
               </div>
 
-              <nav aria-label="Ações de confirmação" className="hidden items-center justify-center text-[11px] text-primary lg:flex">
+              <nav aria-label="Ações de confirmação" className="hidden items-center justify-center text-[11px] text-territory-brand lg:flex">
                 <Link to={SUPPORT_PATH} className="underline underline-offset-2">Ajuda</Link>
               </nav>
             </section>

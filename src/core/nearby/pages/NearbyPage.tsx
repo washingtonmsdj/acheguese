@@ -112,7 +112,14 @@ export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const [activeCategory, setActiveCategory] = useState<NearbyCategoryFilter>("all");
   const [sortMode, setSortMode] = useState<SortMode>("distance");
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const resolved: ResolvedTerritory | null = territorialContext?.resolved ?? (activeTerritory?.location ? { kind: "location", location: activeTerritory.location } : null);
+  const resolved = useMemo<ResolvedTerritory | null>(
+    () =>
+      territorialContext?.resolved ??
+      (activeTerritory?.location
+        ? { kind: "location", location: activeTerritory.location }
+        : null),
+    [activeTerritory?.location, territorialContext?.resolved],
+  );
   const routeFallbackLocation = territorialContext ? resolved?.kind === "location" ? resolved.location : null : undefined;
   const businessUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business) : buildAppModulePath(APP_MODULE_SLUGS.business);
   const mapUrl = territorialContext ? buildModuleTerritoryUrl(MODULE_SLUGS.map, territorialContext.baseUrl) : activeLocation ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map) : buildAppModulePath(APP_MODULE_SLUGS.map);
