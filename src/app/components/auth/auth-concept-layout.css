@@ -2,8 +2,8 @@
    Keep presentation here instead of coupling editorial artwork sizing to icon styles. */
 
 .auth-concept-canvas {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background-color: hsl(var(--territory-canvas));
+  color: hsl(var(--territory-ink));
 }
 
 @media (min-width: 1024px) {
@@ -11,12 +11,12 @@
     background-image:
       radial-gradient(
         circle at 16% 32%,
-        hsl(var(--primary) / 0.1),
+        hsl(var(--territory-brand) / 0.1),
         transparent 31%
       ),
       radial-gradient(
         circle at 70% 18%,
-        hsl(var(--accent) / 0.13),
+        hsl(var(--territory-sun) / 0.13),
         transparent 30%
       );
   }
@@ -55,16 +55,16 @@
  */
 main#main-content:has(#login-identifier) input:-webkit-autofill,
 main#main-content:has(#cadastro-password) input:-webkit-autofill {
-  -webkit-text-fill-color: hsl(var(--foreground));
-  caret-color: hsl(var(--primary));
-  box-shadow: 0 0 0 1000px hsl(var(--card)) inset;
+  -webkit-text-fill-color: hsl(var(--territory-ink));
+  caret-color: hsl(var(--territory-brand));
+  box-shadow: 0 0 0 1000px hsl(var(--territory-surface)) inset;
   transition: background-color 9999s ease-out 0s;
 }
 
 main#main-content:has(#login-identifier) input:autofill,
 main#main-content:has(#cadastro-password) input:autofill {
-  background: hsl(var(--card));
-  color: hsl(var(--foreground));
+  background: hsl(var(--territory-surface));
+  color: hsl(var(--territory-ink));
 }
 
 @media (min-width: 1024px) {

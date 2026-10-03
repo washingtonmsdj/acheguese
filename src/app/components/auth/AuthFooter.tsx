@@ -16,7 +16,7 @@ export function AuthFooter() {
 
   return (
     <footer
-      className="bg-background pt-2 text-muted-foreground lg:hidden"
+      className="bg-territory-canvas pt-2 text-territory-muted lg:hidden"
       style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
     >
       <nav

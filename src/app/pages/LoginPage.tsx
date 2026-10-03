@@ -329,10 +329,10 @@ export default function LoginPage() {
         >
           <section className="hidden lg:block" aria-label="Sobre sua conta">
             <div className="max-w-[430px]">
-              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-primary">
+              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-territory-brand">
                 Seu lugar,<br />mais perto.
               </h1>
-              <p className="mt-4 max-w-[340px] text-[17px] leading-6 text-foreground">
+              <p className="mt-4 max-w-[340px] text-[17px] leading-6 text-territory-ink">
                 Uma conta para participar e gerenciar seus perfis.
               </p>
               <img
@@ -343,33 +343,33 @@ export default function LoginPage() {
             </div>
           </section>
 
-          <section className="w-full lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
+          <section className="w-full lg:rounded-xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-7 lg:shadow-md">
             <div className="lg:hidden">
-              <h1 className="max-w-[245px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-primary">
+              <h1 className="max-w-[245px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-territory-brand">
                 Bom ter você por aqui.
               </h1>
-              <p className="mt-1.5 text-[15px] leading-[21px] text-foreground">
+              <p className="mt-1.5 text-[15px] leading-[21px] text-territory-ink">
                 Entre para continuar sua conversa.
               </p>
             </div>
 
             <div className="hidden lg:block">
-              <h2 className="font-heading text-[24px] font-extrabold tracking-[-0.035em] text-foreground">
+              <h2 className="font-heading text-[24px] font-extrabold tracking-[-0.035em] text-territory-ink">
                 Entre na sua conta
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-territory-muted">
                 Depois de entrar, você volta ao que estava fazendo.
               </p>
             </div>
 
             {hasReturnContext ? (
-              <div className="mt-4 flex min-h-[58px] items-center gap-3 rounded-xl bg-muted px-3.5 py-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <div className="mt-4 flex min-h-[58px] items-center gap-3 rounded-xl bg-territory-raised px-3.5 py-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-territory-brand/10 text-territory-brand">
                   <AuthConceptIcon name={returnContextIcon} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-muted-foreground">Você voltará para</p>
-                  <p className="text-[13px] font-bold leading-snug text-foreground">
+                  <p className="text-[11px] text-territory-muted">Você voltará para</p>
+                  <p className="text-[13px] font-bold leading-snug text-territory-ink">
                     {returnContext.label}
                   </p>
                 </div>
@@ -380,9 +380,9 @@ export default function LoginPage() {
             {showEmailConfirmationProgress ? (
               <div
                 role="status"
-                className="mt-4 flex items-start gap-3 rounded-xl bg-muted px-3.5 py-3 text-muted-foreground"
+                className="mt-4 flex items-start gap-3 rounded-xl bg-territory-raised px-3.5 py-3 text-territory-muted"
               >
-                <span className="mt-0.5 h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
+                <span className="mt-0.5 h-4 w-4 animate-spin rounded-full border-2 border-territory-border border-t-territory-brand" />
                 <p className="text-[12px] leading-4">
                   <strong>Confirmando seu e-mail…</strong>{" "}
                   Aguarde enquanto validamos o link.
@@ -425,7 +425,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <Label
                   htmlFor="login-identifier"
-                  className="text-[14px] font-semibold text-foreground"
+                  className="text-[14px] font-semibold text-territory-ink"
                 >
                   E-mail ou @usuário
                 </Label>
@@ -437,7 +437,7 @@ export default function LoginPage() {
                   spellCheck={false}
                   disabled={isBusy}
                   className={cn(
-                    "h-11 rounded-lg border-input bg-card px-3 text-[16px] shadow-none",
+                    "h-11 rounded-lg border-territory-border bg-territory-surface px-3 text-[16px] shadow-none",
                     errors.identifier && "border-destructive",
                   )}
                   aria-describedby={
@@ -454,7 +454,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <Label
                   htmlFor="login-password"
-                  className="text-[14px] font-semibold text-foreground"
+                  className="text-[14px] font-semibold text-territory-ink"
                 >
                   Senha
                 </Label>
@@ -466,7 +466,7 @@ export default function LoginPage() {
                   aria-describedby={
                     errors.password ? "login-password-error" : undefined
                   }
-                  className="h-11 rounded-lg border-input bg-card text-[16px] shadow-none"
+                  className="h-11 rounded-lg border-territory-border bg-territory-surface text-[16px] shadow-none"
                   {...register("password")}
                 />
                 <InlineFieldError
@@ -477,7 +477,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleForgotPassword}
                   disabled={isBusy}
-                  className="ml-auto block min-h-8 rounded px-1 text-[12px] font-medium text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="ml-auto block min-h-8 rounded px-1 text-[12px] font-medium text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   Esqueci minha senha
                 </button>
@@ -495,7 +495,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isBusy || !turnstile.isReady}
-                className="flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-[15px] font-extrabold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
+                className="flex h-11 w-full items-center justify-center rounded-lg bg-territory-sun px-4 text-[15px] font-extrabold text-territory-ink shadow-sm transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
               >
                 {pendingAction === "login" ? "Entrando…" : "Entrar"}
               </button>
@@ -503,16 +503,16 @@ export default function LoginPage() {
 
             {googleAuthAvailable ? (
               <>
-                <div className="my-4 flex items-center gap-3 text-[12px] text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" />
+                <div className="my-4 flex items-center gap-3 text-[12px] text-territory-muted">
+                  <span className="h-px flex-1 bg-territory-border" />
                   <span>ou</span>
-                  <span className="h-px flex-1 bg-border" />
+                  <span className="h-px flex-1 bg-territory-border" />
                 </div>
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
                   disabled={isBusy}
-                  className="flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card text-[14px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
+                  className="flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-territory-border bg-territory-surface text-[14px] font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                 >
                   <AuthConceptIcon name="google" />
                   {pendingAction === "google"
@@ -522,34 +522,34 @@ export default function LoginPage() {
               </>
             ) : null}
 
-            <p className="mt-4 text-center text-[12px] text-foreground">
+            <p className="mt-4 text-center text-[12px] text-territory-ink">
               Ainda não tem conta?{" "}
               <Link
                 to={buildSignupPath(redirectTo)}
-                className="font-medium text-primary underline underline-offset-2"
+                className="font-medium text-territory-brand underline underline-offset-2"
               >
                 Criar minha conta
               </Link>
             </p>
 
-            <div className="my-4 h-px bg-border lg:hidden" />
+            <div className="my-4 h-px bg-territory-border lg:hidden" />
             <Link
               to="/"
-              className="flex min-h-10 items-center justify-between rounded-lg px-1 text-[13px] font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:hidden"
+              className="flex min-h-10 items-center justify-between rounded-lg px-1 text-[13px] font-medium text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:hidden"
             >
               <span>Continuar explorando sem conta</span>
               <AuthConceptIcon name="chevron-right" className="h-4 w-4" />
             </Link>
 
-            <div className="mt-4 flex items-start gap-3 text-muted-foreground">
-              <span className="mt-0.5 flex h-7 w-7 items-center justify-center text-primary lg:h-6 lg:w-6">
+            <div className="mt-4 flex items-start gap-3 text-territory-muted">
+              <span className="mt-0.5 flex h-7 w-7 items-center justify-center text-territory-brand lg:h-6 lg:w-6">
                 <AuthConceptIcon name="shield-filled" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold text-foreground lg:hidden">
+                <p className="text-[11px] font-semibold text-territory-ink lg:hidden">
                   Verificação de segurança
                 </p>
-                <p className="text-[10.5px] leading-4 text-muted-foreground">
+                <p className="text-[10.5px] leading-4 text-territory-muted">
                   <span className="lg:hidden">
                     Seus dados são protegidos e criptografados.
                   </span>
@@ -562,7 +562,7 @@ export default function LoginPage() {
 
             <nav
               aria-label="Links legais"
-              className="mt-3 hidden items-center justify-center gap-2 text-[11px] text-primary lg:flex"
+              className="mt-3 hidden items-center justify-center gap-2 text-[11px] text-territory-brand lg:flex"
             >
               <Link
                 to={TERMS_OF_SERVICE_PATH}
