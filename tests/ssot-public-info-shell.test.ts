@@ -11,6 +11,7 @@ const TERMS_PATH = "src/app/pages/TermosPage.tsx";
 const PRIVACY_PATH = "src/app/pages/PrivacidadePage.tsx";
 const DPO_PATH = "src/app/pages/DPOContactPage.tsx";
 const OFFLINE_SETTINGS_PATH = "src/app/pages/OfflineSettingsPage.tsx";
+const STATUS_PATH = "src/app/pages/StatusPage.tsx";
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -48,6 +49,7 @@ describe("public information shell territory visual SSOT", () => {
       PRIVACY_PATH,
       DPO_PATH,
       OFFLINE_SETTINGS_PATH,
+      STATUS_PATH,
     ]) {
       const page = read(pagePath);
 
@@ -152,6 +154,24 @@ describe("public information shell territory visual SSOT", () => {
 
     expect(page).toContain("contactMutation.isPending || !turnstileSatisfied");
     expect(page).toContain('variant: "destructive"');
+  });
+
+  it("preserves Status truthfulness and public contact contracts", () => {
+    const page = read(STATUS_PATH);
+
+    for (const contract of [
+      "PLATFORM_BRAND.name",
+      "Não publicado",
+      "não possui uma fonte pública dedicada",
+      "não infere o estado",
+      'to="/contato"',
+      "onBack={() => navigate(-1)}",
+    ]) {
+      expect(page).toContain(contract);
+    }
+
+    expect(page).not.toContain("uptimeStatus");
+    expect(page).not.toContain("operationalStatus");
   });
 
   it("preserves Offline Settings cache, status and confirmation contracts", () => {
