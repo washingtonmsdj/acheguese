@@ -8,6 +8,7 @@ const SHELL_PATH = "src/app/components/public/PublicInfoPageShell.tsx";
 const ABOUT_PATH = "src/app/pages/AboutPage.tsx";
 const CONTACT_PATH = "src/app/pages/ContactPage.tsx";
 const TERMS_PATH = "src/app/pages/TermosPage.tsx";
+const PRIVACY_PATH = "src/app/pages/PrivacidadePage.tsx";
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -35,7 +36,7 @@ describe("public information shell territory visual SSOT", () => {
   });
 
   it("keeps public information consumers projected through the shared shell", () => {
-    for (const pagePath of [ABOUT_PATH, CONTACT_PATH, TERMS_PATH]) {
+    for (const pagePath of [ABOUT_PATH, CONTACT_PATH, TERMS_PATH, PRIVACY_PATH]) {
       const page = read(pagePath);
 
       expect(page).toContain('import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";');
@@ -96,6 +97,18 @@ describe("public information shell territory visual SSOT", () => {
     expect(page).toContain("COMMUNITY_GUIDELINE_ENFORCEMENT_STEPS");
     expect(page).toContain("TERMS_SECTIONS");
     expect(page).toContain('to="/privacidade"');
+    expect(page).toContain('to="/dpo"');
+    expect(page).toContain("onBack={() => navigate(-1)}");
+  });
+
+  it("preserves Privacy LGPD content and legal navigation contracts", () => {
+    const page = read(PRIVACY_PATH);
+
+    expect(page).toContain("POLICY_SECTIONS");
+    expect(page).toContain("COMMUNITY_GUIDELINES_PATH");
+    expect(page).toContain("Lei Geral de Proteção de Dados Pessoais");
+    expect(page).toContain("Marco Civil da Internet");
+    expect(page).toContain('to="/termos"');
     expect(page).toContain('to="/dpo"');
     expect(page).toContain("onBack={() => navigate(-1)}");
   });

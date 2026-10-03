@@ -1,6 +1,5 @@
 import { Helmet } from "react-helmet-async";
 import {
-  ArrowLeft,
   Bell,
   Database,
   Eye,
@@ -12,8 +11,8 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";
 import { COMMUNITY_GUIDELINES_PATH } from "@/core/legal/termsOfService";
-import { Button } from "@/shared/components/ui/button";
 
 const POLICY_SECTIONS = [
   {
@@ -113,139 +112,113 @@ export default function PrivacidadePage() {
         <title>Política de privacidade</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.26))]">
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8"
-        >
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
-            <div className="flex items-start gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 rounded-full"
-                onClick={() => navigate(-1)}
-                type="button"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  LGPD e governança
-                </p>
-                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Política de privacidade
-                </h1>
-                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Última atualização: março de 2026. Versão pública de leitura.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
-            <div className="space-y-3">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                Transparência de dados
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                Como o Achegue-se trata dados pessoais
-              </h2>
-              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Este resumo público organiza as bases principais de coleta, uso,
-                compartilhamento, segurança e direitos do titular. Para
-                solicitações operacionais, use o fluxo de privacidade da conta
-                ou o canal do encarregado de dados.
-              </p>
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-2">
-              <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
-                LGPD
-              </span>
-              <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
-                Dados pessoais
-              </span>
-              <span className="rounded-full border border-border/60 bg-background/70 px-3 py-1 text-xs font-medium text-foreground">
-                Direitos do titular
-              </span>
-            </div>
-          </section>
-
-          <section className="mt-5 rounded-3xl border border-primary/20 bg-primary/5 p-4 shadow-sm sm:p-5">
-            <p className="text-sm leading-6 text-foreground">
-              Esta política se alinha à Lei Geral de Proteção de Dados Pessoais
-              e ao Marco Civil da Internet. O tratamento de dados deve seguir
-              necessidade, finalidade, segurança e transparência.
+      <PublicInfoPageShell
+        eyebrow="LGPD e governança"
+        title="Política de privacidade"
+        description="Última atualização: março de 2026. Versão pública de leitura."
+        onBack={() => navigate(-1)}
+      >
+        <section className="rounded-3xl border border-territory-border/70 bg-territory-surface/90 p-5 shadow-sm sm:p-6">
+          <div className="space-y-3">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-territory-brand">
+              Transparência de dados
             </p>
-          </section>
-
-          <div className="mt-5 space-y-4">
-            {POLICY_SECTIONS.map((section) => {
-              const Icon = section.icon;
-
-              return (
-                <section
-                  key={section.title}
-                  className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-base font-semibold text-foreground sm:text-lg">
-                        {section.title}
-                      </h3>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 space-y-3">
-                    {section.paragraphs.map((paragraph) => (
-                      <p
-                        key={paragraph}
-                        className="text-sm leading-6 text-muted-foreground"
-                      >
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+            <h2 className="text-2xl font-semibold tracking-tight text-territory-ink sm:text-[2rem]">
+              Como o Achegue-se trata dados pessoais
+            </h2>
+            <p className="max-w-3xl text-sm leading-6 text-territory-muted">
+              Este resumo público organiza as bases principais de coleta, uso,
+              compartilhamento, segurança e direitos do titular. Para
+              solicitações operacionais, use o fluxo de privacidade da conta
+              ou o canal do encarregado de dados.
+            </p>
           </div>
 
-          <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-3">
-              <p className="text-sm leading-6 text-muted-foreground">
-                Veja também os documentos complementares e o canal de contato
-                para assuntos de dados pessoais.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  to="/termos"
-                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  Termos de uso
-                </Link>
-                <Link
-                  to={COMMUNITY_GUIDELINES_PATH}
-                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  Diretrizes da comunidade
-                </Link>
-                <Link
-                  to="/dpo"
-                  className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-                >
-                  Falar com o DPO
-                </Link>
-              </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <span className="rounded-full border border-territory-brand/20 bg-territory-brand/10 px-3 py-1 text-xs font-medium text-territory-brand">
+              LGPD
+            </span>
+            <span className="rounded-full border border-territory-border/60 bg-territory-canvas/70 px-3 py-1 text-xs font-medium text-territory-ink">
+              Dados pessoais
+            </span>
+            <span className="rounded-full border border-territory-border/60 bg-territory-canvas/70 px-3 py-1 text-xs font-medium text-territory-ink">
+              Direitos do titular
+            </span>
+          </div>
+        </section>
+
+        <section className="mt-5 rounded-3xl border border-territory-brand/20 bg-territory-brand/5 p-4 shadow-sm sm:p-5">
+          <p className="text-sm leading-6 text-territory-ink">
+            Esta política se alinha à Lei Geral de Proteção de Dados Pessoais
+            e ao Marco Civil da Internet. O tratamento de dados deve seguir
+            necessidade, finalidade, segurança e transparência.
+          </p>
+        </section>
+
+        <div className="mt-5 space-y-4">
+          {POLICY_SECTIONS.map((section) => {
+            const Icon = section.icon;
+
+            return (
+              <section
+                key={section.title}
+                className="rounded-3xl border border-territory-border/70 bg-territory-surface/90 p-5 shadow-sm sm:p-6"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="rounded-2xl bg-territory-brand/10 p-2.5 text-territory-brand">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-base font-semibold text-territory-ink sm:text-lg">
+                      {section.title}
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {section.paragraphs.map((paragraph) => (
+                    <p
+                      key={paragraph}
+                      className="text-sm leading-6 text-territory-muted"
+                    >
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <section className="mt-5 rounded-3xl border border-territory-border/70 bg-territory-surface/90 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-3">
+            <p className="text-sm leading-6 text-territory-muted">
+              Veja também os documentos complementares e o canal de contato
+              para assuntos de dados pessoais.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/termos"
+                className="text-sm font-medium text-territory-brand underline-offset-4 hover:underline"
+              >
+                Termos de uso
+              </Link>
+              <Link
+                to={COMMUNITY_GUIDELINES_PATH}
+                className="text-sm font-medium text-territory-brand underline-offset-4 hover:underline"
+              >
+                Diretrizes da comunidade
+              </Link>
+              <Link
+                to="/dpo"
+                className="text-sm font-medium text-territory-brand underline-offset-4 hover:underline"
+              >
+                Falar com o DPO
+              </Link>
             </div>
-          </section>
-        </main>
-      </div>
+          </div>
+        </section>
+      </PublicInfoPageShell>
     </>
   );
 }
