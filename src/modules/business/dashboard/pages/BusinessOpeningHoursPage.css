@@ -3,7 +3,7 @@
   display: grid;
   gap: var(--business-section-gap, 16px);
   font-family: var(--font-sans);
-  color: hsl(var(--foreground));
+  color: hsl(var(--territory-ink));
 }
 .business-hours-page__heading {
   display: flex;
@@ -11,9 +11,9 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: var(--business-panel-padding, 16px);
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--territory-border));
   border-radius: var(--business-panel-radius, 16px);
-  background: hsl(var(--card));
+  background: hsl(var(--territory-surface));
 }
 .business-hours-page__heading > svg {
   flex: none;
@@ -22,9 +22,9 @@
   height: 24px;
   padding: 12px;
   border-radius: var(--radius-xl);
-  background: hsl(var(--primary) / 0.08);
+  background: hsl(var(--territory-brand) / 0.08);
   margin-top: 0;
-  color: hsl(var(--primary));
+  color: hsl(var(--territory-brand));
 }
 .business-hours-page__heading > div {
   flex: 1;
@@ -37,7 +37,7 @@
   margin: 0;
   font-size: 13px;
   line-height: 1.5;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
   overflow-wrap: anywhere;
 }
 .business-hours-page__heading a {
@@ -45,11 +45,11 @@
   align-items: center;
   gap: 6px;
   min-height: 44px;
-  color: hsl(var(--primary));
+  color: hsl(var(--territory-brand));
   font-size: 13px;
   font-weight: 600;
   align-self: center;
-  border: 1px solid hsl(var(--primary) / 0.3);
+  border: 1px solid hsl(var(--territory-brand) / 0.3);
   border-radius: var(--radius-md);
   padding: 8px 12px;
 }
@@ -63,8 +63,8 @@
 .business-hours-page__preview {
   min-width: 0;
   padding: var(--business-panel-padding, 16px);
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border));
+  background: hsl(var(--territory-surface));
+  border: 1px solid hsl(var(--territory-border));
   border-radius: var(--business-panel-radius, 16px);
 }
 .business-hours-page__form fieldset {
@@ -80,7 +80,7 @@
   justify-content: space-between;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid hsl(var(--border));
+  border-top: 1px solid hsl(var(--territory-border));
 }
 .business-hours-page__actions button {
   min-height: 44px;
@@ -93,7 +93,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: hsl(var(--primary));
+  color: hsl(var(--territory-brand));
 }
 .business-hours-page__preview-heading > svg { flex: none; }
 .business-hours-page__preview-heading h2 { flex: 1; min-width: 0; }
@@ -106,7 +106,7 @@
 .business-hours-page__preview p {
   font-size: 12px;
   line-height: 1.5;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
 }
 .business-hours-page__preview dl {
   margin: 16px 0;
@@ -116,7 +116,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--territory-border));
   font-size: 13px;
 }
 .business-hours-page__preview dd {
@@ -129,7 +129,7 @@
   color: hsl(var(--destructive));
 }
 .business-hours-page__preview dd[data-state="unknown"] {
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
 }
 .business-hours-page__error {
   color: hsl(var(--destructive));
@@ -164,8 +164,8 @@
     height: 44px;
     border: 0;
     border-radius: var(--radius-md);
-    background: hsl(var(--primary) / 0.06);
-    color: hsl(var(--primary));
+    background: hsl(var(--territory-brand) / 0.06);
+    color: hsl(var(--territory-brand));
     cursor: pointer;
   }
   .business-hours-page__preview-heading button[aria-expanded="true"] svg {
@@ -177,7 +177,7 @@
     bottom: 0;
     z-index: 10;
     padding-block: 12px max(12px, env(safe-area-inset-bottom));
-    background: hsl(var(--card));
+    background: hsl(var(--territory-surface));
   }
   .business-hours-page__heading > svg {
     width: 20px;
