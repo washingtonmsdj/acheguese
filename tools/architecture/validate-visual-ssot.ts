@@ -201,7 +201,7 @@ const LEGACY_BUSINESS_PRIMITIVE_RE =
 const LEGACY_BUSINESS_GENERIC_UTILITY_RE =
   /\b(?:text|bg|border|ring)-(?:primary|secondary|border)(?:\/(?:\[[^\]]+\]|\d+))?(?![-\w])/;
 
-const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesk)/;
+const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const NON_SEMANTIC_STATUS_COLOR_RE = /\b(?:text|bg|border)-(?:blue|cyan|teal|emerald|green|lime|rose|red|amber|yellow|slate|gray)-\d{2,3}(?:\/\d+)?\b/;
 const NON_SEMANTIC_PALETTE_COLOR_RE = /\b(?:text|bg|border|from|via|to)-(?:orange|emerald|green|lime|rose|red|pink|sky|cyan|violet|purple|amber|yellow|teal|blue)-\d{2,3}(?:\/\d+)?\b/;
