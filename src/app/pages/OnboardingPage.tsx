@@ -52,20 +52,20 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-background">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-territory-canvas text-territory-ink">
       {/* Header */}
       <header
-        className="shrink-0 bg-background"
+        className="shrink-0 bg-territory-canvas"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex items-center justify-between px-4 pb-3 pt-5">
           <button
             onClick={() => navigate(-1)}
-            className="-ml-1 flex min-h-11 items-center gap-1 rounded-full px-1.5 py-1 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="-ml-1 flex min-h-11 items-center gap-1 rounded-full px-1.5 py-1 text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/40"
             aria-label="Voltar"
           >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="text-[17px] font-semibold leading-none">
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-[17px] font-semibold leading-none">
               {titleCase(cityName)}, {stateName.toUpperCase()}
             </span>
           </button>
@@ -73,7 +73,7 @@ export default function OnboardingPage() {
           <button
             onClick={() => setShowSearch((v) => !v)}
             aria-label={showSearch ? "Fechar busca" : "Buscar bairro"}
-            className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="flex h-11 w-11 items-center justify-center rounded-full text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/40"
           >
             {showSearch ? <RotateCcw className="h-5 w-5" /> : <Search className="h-5 w-5" />}
           </button>
@@ -82,7 +82,7 @@ export default function OnboardingPage() {
         {showSearch ? (
           <div className="px-4 pb-2">
             <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" />
               <input
                 autoFocus
                 type="search"
@@ -90,7 +90,7 @@ export default function OnboardingPage() {
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar bairro"
                 aria-label="Buscar bairro"
-                className="h-10 w-full rounded-full border border-border bg-muted/50 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                className="h-10 w-full rounded-full border border-territory-border bg-territory-raised/50 pl-10 pr-4 text-sm text-territory-ink placeholder:text-territory-muted focus:border-territory-brand focus:bg-territory-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
               />
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function OnboardingPage() {
 
       {/* Content */}
       <main className="flex min-h-0 flex-1 flex-col px-4">
-        <h1 className="shrink-0 pt-1 font-display text-[26px] font-semibold leading-[1.18] text-foreground">
+        <h1 className="shrink-0 pt-1 font-display text-[26px] font-semibold leading-[1.18] text-territory-ink">
           Escolha um bairro para
           <br />
           ver o que acontece por lá.
@@ -109,11 +109,11 @@ export default function OnboardingPage() {
           {isLoading && neighborhoods.length === 0 ? (
             <div className="space-y-1">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-[68px] animate-pulse rounded-xl bg-muted/50" />
+                <div key={i} className="h-[68px] animate-pulse rounded-xl bg-territory-raised/50" />
               ))}
             </div>
           ) : visible.length === 0 ? (
-            <p className="mt-4 text-[15px] text-muted-foreground">
+            <p className="mt-4 text-[15px] text-territory-muted">
               {hasQuery
                 ? `Nenhum bairro encontrado para "${query}".`
                 : "Nenhum bairro ativo. Você pode continuar pela visão municipal."}
@@ -124,16 +124,16 @@ export default function OnboardingPage() {
               className="h-full overflow-y-auto pr-1"
             >
               {visible.map((neighborhood) => (
-                <li key={neighborhood} className="border-b border-border/70 last:border-b-0">
+                <li key={neighborhood} className="border-b border-territory-border/70 last:border-b-0">
                   <button
                     data-testid={`neighborhood-option-${normalize(neighborhood).replace(/\s+/g, "-")}`}
                     onClick={() => handleSelect(neighborhood)}
-                    className="group flex min-h-[68px] w-full items-center justify-between gap-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    className="group flex min-h-[68px] w-full items-center justify-between gap-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
                   >
-                    <span className="text-[18px] font-medium leading-tight text-foreground group-hover:text-primary">
+                    <span className="text-[18px] font-medium leading-tight text-territory-ink group-hover:text-territory-brand">
                       {neighborhood}
                     </span>
-                    <ChevronRight className="h-5 w-5 text-muted-foreground/70 transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+                    <ChevronRight className="h-5 w-5 text-territory-muted/70 transition-transform group-hover:translate-x-0.5 group-hover:text-territory-brand" />
                   </button>
                 </li>
               ))}
@@ -148,7 +148,7 @@ export default function OnboardingPage() {
           {canShowMore ? (
             <button
               onClick={() => setShowAll(true)}
-              className="min-h-11 rounded-full px-5 text-[16px] font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="min-h-11 rounded-full px-5 text-[16px] font-semibold text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/40"
             >
               Ver todos os bairros
             </button>
@@ -157,7 +157,7 @@ export default function OnboardingPage() {
           {(showAll || hasQuery) && neighborhoods.length > 0 ? (
             <button
               onClick={onConfirm}
-              className="text-[13px] text-muted-foreground underline-offset-4 hover:underline"
+              className="text-[13px] text-territory-muted underline-offset-4 transition-colors hover:text-territory-ink hover:underline"
             >
               Continuar sem escolher bairro
             </button>
