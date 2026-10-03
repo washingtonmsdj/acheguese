@@ -100,4 +100,31 @@ describe("Business edit flow (G6)", () => {
       "to={businessManagementRoutes.edit(businessId)}",
     );
   });
+
+  it("projects the active editor from the canonical territory visual SSOT", () => {
+    const editorCss = read("src/modules/business/pages/EditarEmpresaPage.css");
+
+    for (const legacyPrimitive of [
+      "var(--primary)",
+      "var(--card)",
+      "var(--border)",
+      "var(--foreground)",
+      "var(--muted)",
+      "var(--muted-foreground)",
+    ]) {
+      expect(editorCss).not.toContain(legacyPrimitive);
+    }
+
+    for (const territoryToken of [
+      "var(--territory-brand)",
+      "var(--territory-surface)",
+      "var(--territory-surface-raised)",
+      "var(--territory-border)",
+      "var(--territory-ink)",
+      "var(--territory-muted)",
+      "var(--territory-focus)",
+    ]) {
+      expect(editorCss).toContain(territoryToken);
+    }
+  });
 });
