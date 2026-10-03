@@ -7,6 +7,10 @@ const source = readFileSync(
   join(ROOT, "supabase/functions/user-export-data/index.ts"),
   "utf8",
 );
+const policy = readFileSync(
+  join(ROOT, "supabase/functions/_shared/lgpdExportPolicy.ts"),
+  "utf8",
+);
 const matrix = JSON.parse(
   readFileSync(
     join(
@@ -52,11 +56,11 @@ describe("user-export-data v2", () => {
   it("paginates required sections and fails closed instead of truncating", () => {
     expect(source).toContain("async function requireAllRows(");
     expect(source).toContain("const PAGE_SIZE = 500;");
-    expect(source).toContain("const MAX_ROWS_PER_SECTION = 50_000;");
+    expect(policy).toContain("export const MAX_ROWS_PER_SECTION = 50_000;");
     expect(source).toContain("query.range(from, to)");
     expect(source).toContain("enforceSectionLimit(section, rows)");
     expect(source).toContain("EXPORT_SECTION_FAILED:${section}");
-    expect(source).toContain("EXPORT_SECTION_TOO_LARGE:${section}");
+    expect(policy).toContain("EXPORT_SECTION_TOO_LARGE:${section}");
     expect(source).toContain('overflow_behavior: "fail-closed"');
     expect(source).toContain("EXPORT_AUTH_USER_UNAVAILABLE");
     expect(source).toContain("EXPORT_AUDIT_FAILED");
@@ -111,41 +115,41 @@ describe("user-export-data v2", () => {
   });
 
   it("redacts ride details by the subject role", () => {
-    expect(source).toContain("function sanitizeRides(");
-    expect(source).toContain("const isPassenger = Boolean(");
-    expect(source).toContain("const isDriver = Boolean(");
-    expect(source).toContain("subject_roles: subjectRoles");
-    expect(source).toContain(
+    expect(policy).toContain("export function sanitizeRides(");
+    expect(policy).toContain("const isPassenger = Boolean(");
+    expect(policy).toContain("const isDriver = Boolean(");
+    expect(policy).toContain("subject_roles: subjectRoles");
+    expect(policy).toContain(
       "origin: isPassenger ? row.origin : undefined",
     );
-    expect(source).toContain(
+    expect(policy).toContain(
       "destination: isPassenger ? row.destination : undefined",
     );
-    expect(source).not.toContain("observation: row.observation");
-    expect(source).not.toMatch(/return\s*\{[^}]*passenger_profile_id/s);
-    expect(source).not.toMatch(/return\s*\{[^}]*driver_profile_id/s);
+    expect(policy).not.toContain("observation: row.observation");
+    expect(policy).not.toMatch(/return\s*\{[^}]*passenger_profile_id/s);
+    expect(policy).not.toMatch(/return\s*\{[^}]*driver_profile_id/s);
   });
 
   it("redacts order financial splits by the subject role", () => {
-    expect(source).toContain("function sanitizeOrders(");
-    expect(source).toContain("const isCustomer = Boolean(");
-    expect(source).toContain("const isMerchant = Boolean(");
-    expect(source).toContain("const isCourier = Boolean(");
-    expect(source).toContain(
+    expect(policy).toContain("export function sanitizeOrders(");
+    expect(policy).toContain("const isCustomer = Boolean(");
+    expect(policy).toContain("const isMerchant = Boolean(");
+    expect(policy).toContain("const isCourier = Boolean(");
+    expect(policy).toContain(
       "merchant_net_amount: isMerchant ? row.merchant_net_amount : undefined",
     );
-    expect(source).toContain(
+    expect(policy).toContain(
       "courier_amount: isCourier ? row.courier_amount : undefined",
     );
-    expect(source).toContain(
+    expect(policy).toContain(
       "payment_method: isCustomer ? row.payment_method : undefined",
     );
-    expect(source).not.toContain("notes: row.notes");
-    expect(source).not.toContain("source_reference: row.source_reference");
-    expect(source).not.toContain("source_id: row.source_id");
-    expect(source).not.toMatch(/return\s*\{[^}]*customer_profile_id/s);
-    expect(source).not.toMatch(/return\s*\{[^}]*merchant_profile_id/s);
-    expect(source).not.toMatch(/return\s*\{[^}]*courier_profile_id/s);
+    expect(policy).not.toContain("notes: row.notes");
+    expect(policy).not.toContain("source_reference: row.source_reference");
+    expect(policy).not.toContain("source_id: row.source_id");
+    expect(policy).not.toMatch(/return\s*\{[^}]*customer_profile_id/s);
+    expect(policy).not.toMatch(/return\s*\{[^}]*merchant_profile_id/s);
+    expect(policy).not.toMatch(/return\s*\{[^}]*courier_profile_id/s);
   });
 
   it("exports only messages authored by subject-owned profiles", () => {
@@ -185,7 +189,7 @@ describe("user-export-data v2", () => {
   });
 
   it("exports subject report submissions without target or moderation identifiers", () => {
-    expect(source).toContain("function sanitizeReports(kind: string");
+    expect(policy).toContain("export function sanitizeReports(");
     for (const kind of [
       "community",
       "direct_message",
