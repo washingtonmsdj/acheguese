@@ -62,10 +62,15 @@ export function BusinessModulesSection({
       title="Empresas e gestão"
       description="Gestão das empresas vinculadas, páginas públicas e recursos já habilitados."
       action={
-        showCreateAction ? <Button className="gap-2" onClick={onCreateBusiness}>
-          <Sparkles className="h-4 w-4" />
-          Nova empresa
-        </Button> : null
+        showCreateAction ? (
+          <Button
+            className="gap-2 bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
+            onClick={onCreateBusiness}
+          >
+            <Sparkles className="h-4 w-4" />
+            Nova empresa
+          </Button>
+        ) : null
       }
     >
       {businessModules.length === 0 ? (
@@ -77,7 +82,7 @@ export function BusinessModulesSection({
             onAction={onCreateBusiness}
           />
         ) : (
-          <div className="rounded-2xl border border-dashed border-border bg-background p-6 text-sm text-muted-foreground">
+          <div className="rounded-2xl border border-dashed border-territory-border bg-territory-surface p-6 text-sm text-territory-muted">
             Este perfil não possui empresas administradas no momento.
           </div>
         )
@@ -117,10 +122,10 @@ function SummaryCard({
   description: string;
 }) {
   return (
-    <div className="business-management-stat rounded-2xl border border-border bg-background p-4">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-2 text-xl font-semibold text-foreground">{value}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+    <div className="business-management-stat rounded-2xl border border-territory-border bg-territory-raised p-4">
+      <p className="text-xs uppercase tracking-wide text-territory-muted">{label}</p>
+      <p className="mt-2 text-xl font-semibold text-territory-ink">{value}</p>
+      <p className="mt-1 text-xs text-territory-muted">{description}</p>
     </div>
   );
 }
@@ -145,11 +150,11 @@ function BusinessModuleCard({
   ].filter(Boolean) as string[];
 
   return (
-    <div className="business-management-card rounded-2xl border border-border bg-background p-4">
+    <div className="business-management-card rounded-2xl border border-territory-border bg-territory-surface p-4">
       <div className="business-management-card__body flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="break-words text-base font-semibold text-foreground">{business.name}</h3>
+            <h3 className="break-words text-base font-semibold text-territory-ink">{business.name}</h3>
             {business.verified ? (
               <Badge
                 variant="outline"
@@ -159,7 +164,7 @@ function BusinessModuleCard({
               </Badge>
             ) : null}
             {business.isPremium ? (
-              <Badge className="h-5 bg-accent px-2 text-[10px] text-accent-foreground">
+              <Badge className="h-5 bg-territory-sun px-2 text-[10px] text-territory-ink">
                 Premium
               </Badge>
             ) : null}
@@ -175,7 +180,7 @@ function BusinessModuleCard({
             ) : null}
           </div>
 
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-territory-muted">
             {business.neighborhood || "Bairro não informado"}
             {business.city ? `, ${business.city}` : ""}
           </p>
@@ -188,7 +193,7 @@ function BusinessModuleCard({
                 </Badge>
               ))
             ) : (
-              <Badge variant="outline" className="text-[10px] text-muted-foreground">
+              <Badge variant="outline" className="text-[10px] text-territory-muted">
                 Gestão empresarial ativa
               </Badge>
             )}
@@ -196,7 +201,11 @@ function BusinessModuleCard({
         </div>
 
         <div className="business-management-actions flex flex-wrap gap-2 xl:justify-end">
-          <Button size="sm" className="gap-1.5" onClick={() => onNavigate(business.dashboardUrl)}>
+          <Button
+            size="sm"
+            className="gap-1.5 bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
+            onClick={() => onNavigate(business.dashboardUrl)}
+          >
             Gerenciar empresa
           </Button>
           {billingEnabled ? (
@@ -244,7 +253,7 @@ function BusinessModuleCard({
               className="gap-1.5"
               onClick={() => onCopy(business.shareUrl!, "link da empresa")}
             >
-            Copiar link
+              Copiar link
             </Button>
           ) : null}
         </div>
