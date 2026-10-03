@@ -147,7 +147,7 @@ export async function searchProfilesByNameQuery(
     throw error;
   }
 
-  return normalizeBusinessQueryRows(data ?? []);
+  return data ?? [];
 }
 
 export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessRow[]> {
