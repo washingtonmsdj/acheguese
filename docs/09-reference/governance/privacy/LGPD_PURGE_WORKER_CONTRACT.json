@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "lgpd-purge-worker-contract/v1",
+  "authority": "account-deletion-irreversible-worker",
+  "runtimeEnabled": false,
+  "deployAuthorized": false,
+  "schedulerAuthorized": false,
+  "currentStatus": "foundation-only",
+  "claim": {
+    "mustBeAtomic": true,
+    "eligibleRequestStatus": "scheduled",
+    "requiresDueAtOrBeforeNow": true,
+    "requiresLeaseToken": true,
+    "requiresLeaseExpiry": true,
+    "requiresAttemptCounter": true,
+    "requiresLastAttemptTimestamp": true,
+    "concurrentDoubleClaim": "forbidden"
+  },
+  "idempotency": {
+    "completedRequestBehavior": "no-op-success",
+    "cancelledRequestBehavior": "not-eligible",
+    "processingLeaseActiveBehavior": "not-eligible",
+    "expiredLeaseBehavior": "retry-claim-allowed",
+    "failedRequestBehavior": "retry-only-after-explicit-policy",
+    "authDeleteMustBeLast": true
+  },
+  "failureHandling": {
+    "required": true,
+    "persistFailureCode": true,
+    "persistAttemptCount": true,
+    "persistLastAttemptAt": true,
+    "partialFailureBehavior": "persist-failed-state-and-require-idempotent-retry",
+    "silentRetryLoop": "forbidden"
+  },
+  "orderedPhases": [
+    "revalidate-live-catalog",
+    "revoke-auth-sessions",
+    "detach-approved-auth-user-references",
+    "anonymize-retained-audit-identifiers",
+    "delete-explicit-subject-cleanup-records",
+    "resolve-profile-fanout",
+    "cleanup-storage-by-owner-id",
+    "delete-auth-user-last",
+    "finalize-request-with-retention-policy"
+  ],
+  "hardPreconditions": {
+    "purgePolicyRolloutReady": true,
+    "purgeMatrixImplementationComplete": true,
+    "zeroUnclassifiedReferences": true,
+    "zeroBlockPurgeReferences": true,
+    "liveCatalogRevalidation": true,
+    "storageCleanupCertified": true,
+    "sessionRevocationCertified": true,
+    "profileFanoutCertified": true,
+    "requestRetentionCertified": true,
+    "nonProductionRecoveryCertified": true
+  },
+  "forbidden": [
+    "reuse-user-delete-account-as-worker",
+    "direct-browser-auth-delete",
+    "deploy-while-runtimeEnabled-false",
+    "schedule-while-schedulerAuthorized-false",
+    "continue-after-required-query-failure",
+    "delete-auth-user-before-dependent-cleanup",
+    "treat-cascade-as-retention-policy",
+    "retry-without-persisted-attempt-state"
+  ],
+  "notes": [
+    "This contract defines worker safety requirements only; it does not authorize destructive purge.",
+    "No Edge Function, cron job, database mutation or production rollout is authorized by this file.",
+    "The current account_deletion_requests schema does not yet prove the lease and attempt-state capabilities required by this contract."
+  ]
+}
