@@ -177,8 +177,8 @@ export function BusinessImageUploader({
     <div className={cn("space-y-3", className)}>
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-foreground">{config.title}</h3>
-        <p className="text-xs text-muted-foreground mt-0.5">{config.description}</p>
+        <h3 className="text-sm font-semibold text-territory-ink">{config.title}</h3>
+        <p className="text-xs text-territory-muted mt-0.5">{config.description}</p>
       </div>
 
       {/* Upload Area */}
@@ -187,8 +187,8 @@ export function BusinessImageUploader({
           "relative rounded-xl border-2 border-dashed transition-all overflow-hidden",
           getAspectRatioClass(finalAspectRatio),
           dragActive
-            ? "border-primary bg-primary/5"
-            : "border-border hover:border-primary/50",
+            ? "border-territory-brand bg-territory-brand/5"
+            : "border-territory-border hover:border-territory-brand/50",
           uploading && "opacity-50 pointer-events-none",
           !preview && "min-h-[200px]"
         )}
@@ -231,8 +231,8 @@ export function BusinessImageUploader({
             {/* Loading overlay */}
             {uploading && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <div className="bg-card rounded-lg p-4 flex items-center gap-3">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <div className="bg-territory-surface text-territory-ink rounded-lg p-4 flex items-center gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-territory-brand" />
                   <span className="text-sm font-medium">Enviando...</span>
                 </div>
               </div>
@@ -243,24 +243,24 @@ export function BusinessImageUploader({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 hover:bg-secondary/50 transition-colors"
+            className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 hover:bg-territory-raised transition-colors"
             disabled={uploading}
           >
             {uploading ? (
               <>
-                <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                <p className="text-sm font-medium text-foreground">Enviando...</p>
+                <Loader2 className="h-10 w-10 text-territory-brand animate-spin" />
+                <p className="text-sm font-medium text-territory-ink">Enviando...</p>
               </>
             ) : (
               <>
-                <div className="rounded-full bg-primary/10 p-4">
-                  <ImageIcon className="h-8 w-8 text-primary" />
+                <div className="rounded-full bg-territory-brand/10 p-4">
+                  <ImageIcon className="h-8 w-8 text-territory-brand" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-foreground mb-1">
+                  <p className="text-sm font-medium text-territory-ink mb-1">
                     Clique para selecionar ou arraste aqui
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-territory-muted">
                     PNG, JPG ou WEBP até {finalMaxSize}MB
                   </p>
                 </div>
@@ -281,7 +281,7 @@ export function BusinessImageUploader({
 
       {/* Status indicator */}
       {preview && !uploading && (
-        <div className="flex items-center gap-2 text-xs text-emerald-600">
+        <div className="flex items-center gap-2 text-xs text-success">
           <Check className="h-3.5 w-3.5" />
           <span>Imagem carregada</span>
         </div>
