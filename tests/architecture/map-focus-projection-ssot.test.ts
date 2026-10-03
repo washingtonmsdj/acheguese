@@ -29,5 +29,6 @@ describe("Map focus marker projection SSOT", () => {
     expect(focusProjection).not.toContain("type: 'user_location'");
     expect(focusProjection).not.toContain("coordinates: {");
     expect(focusProjection).not.toContain("EntityStatus.ACTIVE");
+    expect(focusProjection).not.toContain("status: 'active'");
   });
 });

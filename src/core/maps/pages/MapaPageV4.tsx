@@ -745,7 +745,6 @@ export default function MapaPageV4({
         name: focusTarget.name,
         latitude: focusTarget.latitude,
         longitude: focusTarget.longitude,
-        status: 'active',
       },
       'user_location',
     );
