@@ -8,6 +8,9 @@ on:
       - "supabase/**"
       - "package.json"
       - "package-lock.json"
+      - "tools/security/validate-npm-audit-residuals.mjs"
+      - "tests/security/dependency-audit-residuals.test.ts"
+      - "docs/09-reference/governance/security/DEPENDENCY_AUDIT_RESIDUALS.json"
       - ".gitleaks.toml"
       - ".gitleaksignore"
       - ".github/workflows/security-scan.yml"
@@ -50,10 +53,21 @@ jobs:
         continue-on-error: true
         run: npm audit --omit=dev --audit-level=moderate
 
-      - name: Run npm audit (full tree high and critical gate)
+      - name: Capture npm audit (full tree high and critical)
         id: npm_audit
+        shell: bash
+        run: |
+          set +e
+          npm audit --audit-level=high --json > npm-audit-full.json
+          audit_exit=$?
+          set -e
+          echo "raw_exit_code=$audit_exit" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Validate governed full-tree audit residuals
+        id: npm_audit_full_residuals
         continue-on-error: true
-        run: npm audit --audit-level=high
+        run: node tools/security/validate-npm-audit-residuals.mjs npm-audit-full.json
 
       - name: Run Semgrep Security Scan
         id: semgrep
@@ -142,7 +156,8 @@ jobs:
             echo "| --- | --- |"
             echo "| ESLint security | ${{ steps.eslint_security.outcome }} |"
             echo "| npm audit (production moderate+) | ${{ steps.npm_audit_production.outcome }} |"
-            echo "| npm audit (full tree high/critical) | ${{ steps.npm_audit.outcome }} |"
+            echo "| npm audit (full tree raw capture) | exit ${{ steps.npm_audit.outputs.raw_exit_code }} |"
+            echo "| npm audit (full tree residual-aware gate) | ${{ steps.npm_audit_full_residuals.outcome }} |"
             echo "| Semgrep | ${{ steps.semgrep.outcome }} |"
             echo "| Gitleaks | ${{ steps.gitleaks.outcome }} |"
             echo "| XSS patterns | ${{ steps.xss_patterns.outcome }} |"
@@ -159,6 +174,7 @@ jobs:
           name: security-report
           path: |
             security-report.md
+            npm-audit-full.json
             gitleaks-report.json
           if-no-files-found: warn
           retention-days: 7
@@ -169,7 +185,7 @@ jobs:
         env:
           ESLINT_OUTCOME: ${{ steps.eslint_security.outcome }}
           NPM_PROD_OUTCOME: ${{ steps.npm_audit_production.outcome }}
-          NPM_FULL_OUTCOME: ${{ steps.npm_audit.outcome }}
+          NPM_FULL_RESIDUAL_OUTCOME: ${{ steps.npm_audit_full_residuals.outcome }}
           SEMGREP_OUTCOME: ${{ steps.semgrep.outcome }}
           GITLEAKS_OUTCOME: ${{ steps.gitleaks.outcome }}
           XSS_OUTCOME: ${{ steps.xss_patterns.outcome }}
@@ -179,7 +195,7 @@ jobs:
           for entry in \
             "ESLint security=$ESLINT_OUTCOME" \
             "npm audit production=$NPM_PROD_OUTCOME" \
-            "npm audit full=$NPM_FULL_OUTCOME" \
+            "npm audit full residual-aware=$NPM_FULL_RESIDUAL_OUTCOME" \
             "Semgrep=$SEMGREP_OUTCOME" \
             "Gitleaks=$GITLEAKS_OUTCOME" \
             "XSS patterns=$XSS_OUTCOME" \

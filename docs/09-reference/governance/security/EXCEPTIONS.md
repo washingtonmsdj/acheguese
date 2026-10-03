@@ -631,3 +631,67 @@ Achados residuais do Supabase Advisor tambem devem continuar registrados no
 relatorio canonico:
 
 - [Advisor remoto Supabase](../../audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md)
+
+## EXC-2026-10-02-BRACES-TAILWIND3-DEV-ONLY
+
+Status: aberta
+Risco: High
+Area: Other
+Responsavel: Tech/security owner
+Criada em: 2026-10-02
+Valida ate: 2026-10-17
+Validacao: local
+
+### Contexto
+
+O advisory `GHSA-vfj7-8cjw-p6xm` passou a classificar `braces@3.0.3`
+como High. Essa e a versao mais recente da linha 3.x atualmente resolvida pela
+cadeia de build do Tailwind 3. O `npm audit` oferece apenas migracao forçada
+para Tailwind 4 como remediacao automatica, o que e uma mudanca major e nao
+deve ser aplicada sem migracao visual/arquitetural dedicada.
+
+### Regra Afetada
+
+O full-tree audit bloqueia qualquer finding High/Critical, inclusive
+dependencias exclusivamente de desenvolvimento.
+
+### Risco
+
+Um padrao de glob profundamente aninhado pode causar exaustao de stack no
+processo que usa `braces`. O risco permanece relevante para tooling local/CI,
+mas nao e runtime do produto.
+
+### Mitigacao Temporaria
+
+`tailwindcss-animate` foi reclassificado como `devDependency` e o lockfile
+foi reconciliado para provar que `braces`, `chokidar`, `micromatch`,
+`fast-glob`, `tailwindcss` e `lovable-tagger` permanecem `dev=true`.
+O `npm audit --omit=dev --audit-level=moderate` continua sendo gate
+obrigatorio e precisa ficar limpo.
+
+O full-tree continua executado em JSON e e validado por
+`validate-npm-audit-residuals.mjs`. O validator aceita somente o advisory
+exato `GHSA-vfj7-8cjw-p6xm`, a versao `braces@3.0.3`, o conjunto fechado de
+meta-pacotes registrado e somente enquanto todos permanecem dev-only. Qualquer
+novo advisory, pacote, severidade, reachability de producao ou expiracao volta
+a bloquear o CI.
+
+### Plano De Remocao
+
+Remover esta excecao imediatamente quando ocorrer qualquer um dos eventos:
+
+- release corrigida compativel com a linha Tailwind 3;
+- migracao certificada para Tailwind 4;
+- qualquer pacote afetado entrar no grafo de producao;
+- mudanca de advisory/severidade/caminho.
+
+A validade termina em 2026-10-17 mesmo sem evento externo.
+
+### Evidencias
+
+- `Dependency Lock Preflight` confirma manifest/lock coerentes;
+- `npm audit --omit=dev --audit-level=moderate` ficou verde apos a
+  reclassificacao;
+- `DEPENDENCY_AUDIT_RESIDUALS.json` registra o residual executavel;
+- `tests/security/dependency-audit-residuals.test.ts` impede ampliacao
+  silenciosa da excecao.
