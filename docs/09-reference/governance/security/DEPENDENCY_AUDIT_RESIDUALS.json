@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dependency-audit-residuals/v1",
+  "authority": "security-dependency-audit",
+  "residuals": [
+    {
+      "id": "EXC-2026-10-02-BRACES-TAILWIND3-DEV-ONLY",
+      "package": "braces",
+      "installedVersion": "3.0.3",
+      "advisory": "GHSA-vfj7-8cjw-p6xm",
+      "severity": "high",
+      "scope": "development-only",
+      "validUntil": "2026-10-17",
+      "productionAuditMustPass": true,
+      "allowedMetaPackages": [
+        "braces",
+        "chokidar",
+        "fast-glob",
+        "lovable-tagger",
+        "micromatch",
+        "tailwindcss"
+      ],
+      "removalTriggers": [
+        "a patched braces 3.x release becomes available to the Tailwind 3 dependency graph",
+        "the project completes its Tailwind 4 migration",
+        "any listed package becomes production-reachable",
+        "the advisory id, severity or dependency path changes"
+      ],
+      "rationale": "The advisory is currently reachable only through Tailwind 3 build tooling. Production npm audit must remain clean; the exception is invalid if any affected package is production-reachable."
+    }
+  ]
+}
