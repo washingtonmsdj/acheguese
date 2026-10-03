@@ -122,6 +122,7 @@
     --territory-disabled: var(--semantic-disabled);
     --territory-disabled-foreground: var(--semantic-disabled-foreground);
     --territory-on-image: 0 0% 100%;
+    --territory-action-on-image: 171 77% 56%;
     --territory-image-overlay: 178 55% 12%;
 
     /* ==========================================================
@@ -219,6 +220,7 @@
     --territory-disabled: var(--semantic-disabled);
     --territory-disabled-foreground: var(--semantic-disabled-foreground);
     --territory-on-image: 0 0% 100%;
+    --territory-action-on-image: 171 77% 56%;
     --territory-image-overlay: 178 55% 12%;
 
     /* Semantic content category tokens - light mode */

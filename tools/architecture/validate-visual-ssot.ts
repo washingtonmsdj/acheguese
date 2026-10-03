@@ -169,6 +169,7 @@ const MIGRATED_RUNTIME_FILES = [
 ] as const;
 
 const BUSINESS_SEMANTIC_TOKEN_FILES = [
+  'src/app/pages/EmpresasLandingPage.tsx',
   'src/core/business/constants/serviceModes.ts',
   'src/core/business/constants/paymentMethods.ts',
   'src/core/business/constants/facilities.ts',
