@@ -10,7 +10,7 @@ const STEP_LABELS = ["Identidade", "Contato e local", "Apresentação"] as const
 export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
   return (
     <div
-      className="business-edit-progress rounded-[24px] border border-border bg-card p-3 sm:p-4"
+      className="business-edit-progress rounded-[24px] border border-territory-border bg-territory-surface p-3 sm:p-4"
       aria-label={`Etapa ${currentStep} de ${totalSteps}`}
     >
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
@@ -25,10 +25,10 @@ export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
               className={[
                 "relative overflow-hidden rounded-2xl border px-3 py-3 transition-colors",
                 isCurrent
-                  ? "border-primary/25 bg-primary/[0.07]"
+                  ? "border-territory-brand/25 bg-territory-brand/[0.07]"
                   : isCompleted
-                    ? "border-primary/15 bg-primary/[0.03]"
-                    : "border-border bg-background/60",
+                    ? "border-territory-brand/15 bg-territory-brand/[0.03]"
+                    : "border-territory-border bg-territory-raised/60",
               ].join(" ")}
               aria-current={isCurrent ? "step" : undefined}
             >
@@ -37,23 +37,23 @@ export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
                   className={[
                     "flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold",
                     isCurrent
-                      ? "bg-primary text-primary-foreground shadow-sm"
+                      ? "bg-territory-brand text-territory-on-image shadow-sm"
                       : isCompleted
-                        ? "bg-primary/12 text-primary"
-                        : "bg-muted text-muted-foreground",
+                        ? "bg-territory-brand/12 text-territory-brand"
+                        : "bg-territory-raised text-territory-muted",
                   ].join(" ")}
                 >
                   {isCompleted ? <CheckCircle2 className="h-4.5 w-4.5" /> : step}
                 </span>
 
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-territory-muted">
                     Etapa {step}
                   </p>
                   <p
                     className={[
                       "mt-0.5 text-sm font-semibold",
-                      isCurrent || isCompleted ? "text-foreground" : "text-muted-foreground",
+                      isCurrent || isCompleted ? "text-territory-ink" : "text-territory-muted",
                     ].join(" ")}
                   >
                     {label}
@@ -62,7 +62,7 @@ export function StepProgress({ currentStep, totalSteps }: StepProgressProps) {
               </div>
 
               {isCurrent ? (
-                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />
+                <span className="absolute inset-x-0 bottom-0 h-0.5 bg-territory-brand" />
               ) : null}
             </div>
           );
