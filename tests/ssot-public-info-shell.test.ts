@@ -10,6 +10,7 @@ const CONTACT_PATH = "src/app/pages/ContactPage.tsx";
 const TERMS_PATH = "src/app/pages/TermosPage.tsx";
 const PRIVACY_PATH = "src/app/pages/PrivacidadePage.tsx";
 const DPO_PATH = "src/app/pages/DPOContactPage.tsx";
+const OFFLINE_SETTINGS_PATH = "src/app/pages/OfflineSettingsPage.tsx";
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -40,7 +41,14 @@ describe("public information shell territory visual SSOT", () => {
   });
 
   it("keeps public information consumers projected through the shared shell", () => {
-    for (const pagePath of [ABOUT_PATH, CONTACT_PATH, TERMS_PATH, PRIVACY_PATH, DPO_PATH]) {
+    for (const pagePath of [
+      ABOUT_PATH,
+      CONTACT_PATH,
+      TERMS_PATH,
+      PRIVACY_PATH,
+      DPO_PATH,
+      OFFLINE_SETTINGS_PATH,
+    ]) {
       const page = read(pagePath);
 
       expect(page).toContain('import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";');
@@ -144,5 +152,37 @@ describe("public information shell territory visual SSOT", () => {
 
     expect(page).toContain("contactMutation.isPending || !turnstileSatisfied");
     expect(page).toContain('variant: "destructive"');
+  });
+
+  it("preserves Offline Settings cache, status and confirmation contracts", () => {
+    const page = read(OFFLINE_SETTINGS_PATH);
+
+    for (const contract of [
+      "useOfflineMode()",
+      "isOnline",
+      "isServiceWorkerReady",
+      "hasCriticalData",
+      "cacheCriticalData",
+      "clearCache",
+      "handleSaveCriticalData",
+      "handleClearCache",
+      "OfflineDataStatus",
+      "ConfirmActionDialog",
+      "clearCacheDialogOpen",
+      "emergencyContacts",
+      "importantAlerts",
+      "buildingInfo",
+      "toast.success",
+      "toast.error",
+      "onBack={() => navigate(-1)}",
+    ]) {
+      expect(page).toContain(contract);
+    }
+
+    expect(page).toContain("disabled={!isServiceWorkerReady}");
+    expect(page).toContain("disabled={!hasCriticalData}");
+    expect(page).toContain("onConfirm={handleClearCache}");
+    expect(page).toContain("await cacheCriticalData({");
+    expect(page).toContain("await clearCache()");
   });
 });
