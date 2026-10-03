@@ -7,6 +7,7 @@ const ROOT = process.cwd();
 const SHELL_PATH = "src/app/components/public/PublicInfoPageShell.tsx";
 const ABOUT_PATH = "src/app/pages/AboutPage.tsx";
 const CONTACT_PATH = "src/app/pages/ContactPage.tsx";
+const TERMS_PATH = "src/app/pages/TermosPage.tsx";
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -33,8 +34,8 @@ describe("public information shell territory visual SSOT", () => {
     expect(shell).not.toContain("react-router-dom");
   });
 
-  it("keeps About and Contact projected through the shared shell", () => {
-    for (const pagePath of [ABOUT_PATH, CONTACT_PATH]) {
+  it("keeps public information consumers projected through the shared shell", () => {
+    for (const pagePath of [ABOUT_PATH, CONTACT_PATH, TERMS_PATH]) {
       const page = read(pagePath);
 
       expect(page).toContain('import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";');
@@ -81,6 +82,21 @@ describe("public information shell territory visual SSOT", () => {
     expect(page).toContain('to="/dpo"');
     expect(page).toContain('to="/sobre"');
     expect(page).toContain('to="/privacidade"');
+    expect(page).toContain("onBack={() => navigate(-1)}");
+  });
+
+  it("preserves Terms legal authority and community contracts", () => {
+    const page = read(TERMS_PATH);
+
+    expect(page).toContain("VITE_LEGAL_FORUM");
+    expect(page).toContain("TERMS_OF_SERVICE_UPDATED_LABEL");
+    expect(page).toContain("TERMS_OF_SERVICE_VERSION");
+    expect(page).toContain("COMMUNITY_GUIDELINES_ANCHOR");
+    expect(page).toContain("COMMUNITY_GUIDELINES_PATH");
+    expect(page).toContain("COMMUNITY_GUIDELINE_ENFORCEMENT_STEPS");
+    expect(page).toContain("TERMS_SECTIONS");
+    expect(page).toContain('to="/privacidade"');
+    expect(page).toContain('to="/dpo"');
     expect(page).toContain("onBack={() => navigate(-1)}");
   });
 });
