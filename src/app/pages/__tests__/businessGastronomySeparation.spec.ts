@@ -33,12 +33,16 @@ describe('business and gastronomy public page separation', () => {
     const source = readProjectFile(
       'src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx',
     );
+    const menuSectionSource = readProjectFile(
+      'src/modules/business/gastronomy/pages/GastronomyDetailMenuSection.tsx',
+    );
     const seoSource = readProjectFile(
       'src/modules/business/gastronomy/pages/GastronomyDetailSeo.tsx',
     );
 
     expect(source).toContain('usePublicGastronomySnapshot');
-    expect(source).toContain('MenuItemCard');
+    expect(source).toContain('GastronomyDetailMenuSection');
+    expect(menuSectionSource).toContain('MenuItemCard');
     expect(source).toContain('MenuItemDetailDrawer');
     expect(source).toContain('StickyOrderBar');
     expect(source).toContain('GastronomyDetailSeo');
@@ -51,38 +55,37 @@ describe('business and gastronomy public page separation', () => {
     expect(source).toContain('business={business}');
   });
 
-  it('keeps company save and recommendation CTAs accessible', () => {
+  it('keeps save and recommendation actions accessible on the active company detail', () => {
     const pageSource = readProjectFile('src/app/pages/EmpresaDetailLandingPage.tsx');
-    const sectionSource = readProjectFile(
-      'src/modules/business/company/sections/EmpresaCTAsSection.tsx',
-    );
-    const actionButtonSource = readProjectFile(
-      'src/modules/business/company/components/ctas/ActionButton.tsx',
+    const detailSource = readProjectFile(
+      'src/modules/business/company/pages/TerritoryBusinessDetail.tsx',
     );
 
-    expect(pageSource).toContain('loading: recommendLoading');
     expect(pageSource).toContain(
       'const institutionalBusinessDataId = snapshot?.identity.businessId ?? undefined',
     );
     expect(pageSource).toContain('useCanonicalBusinessFavorite(');
-    expect(pageSource).toContain('institutionalBusinessDataId,');
     expect(pageSource).toContain('useBusinessRecommendation(institutionalBusinessDataId)');
+    expect(pageSource).toContain('loading: recommendationLoading');
     expect(pageSource).toContain(
-      'BusinessHoursService.getOperationConfig(\n        institutionalBusinessDataId,',
+      'BusinessHoursService.getOperationConfig(institutionalBusinessDataId)',
     );
     expect(pageSource).not.toContain(
       'BusinessHoursService.getOperationConfig(snapshotBusiness.id)',
     );
-    expect(pageSource).toContain('recommendLoading={recommendLoading}');
+    expect(pageSource).toContain('isRecommended={isRecommended}');
+    expect(pageSource).toContain('recommendationLoading={recommendationLoading}');
+    expect(pageSource).toContain(
+      'onToggleRecommendation={() => void toggleRecommendation()}',
+    );
     expect(pageSource).toContain('const robotsContent = snapshot.seo.robots');
     expect(pageSource).not.toContain('communityAliasOverride');
-    expect(sectionSource).toContain("label={isFavorite ? 'Salvo' : 'Salvar'}");
-    expect(sectionSource).toContain("label={hasRecommended ? 'Recomendado' : 'Recomendar'}");
-    expect(sectionSource).toContain('ariaPressed={isFavorite}');
-    expect(sectionSource).toContain('ariaPressed={hasRecommended}');
-    expect(sectionSource).toContain('disabled={recommendLoading}');
-    expect(actionButtonSource).toContain('type="button"');
-    expect(actionButtonSource).toContain('aria-pressed={ariaPressed}');
-    expect(actionButtonSource).toContain('disabled={disabled}');
+
+    expect(detailSource).toContain('aria-pressed={isFavorite}');
+    expect(detailSource).toContain('{isFavorite ? "Salvo" : "Salvar"}');
+    expect(detailSource).toContain('aria-pressed={isRecommended}');
+    expect(detailSource).toContain('{isRecommended ? "Recomendado" : "Recomendar"}');
+    expect(detailSource).toContain('disabled={recommendationLoading}');
+    expect(detailSource).toContain('onClick={onToggleRecommendation}');
   });
 });

@@ -27,6 +27,7 @@ import {
   ShoppingBag,
   Star,
   Store,
+  ThumbsUp,
   Utensils,
 } from "lucide-react";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
@@ -52,7 +53,10 @@ interface TerritoryBusinessDetailProps {
   territoryUrl: string;
   businessDirectoryUrl: string;
   isFavorite: boolean;
+  isRecommended: boolean;
+  recommendationLoading: boolean;
   onToggleFavorite: () => void;
+  onToggleRecommendation: () => void;
   onShare: () => void;
   onRoute: () => void;
   onMessage?: () => void;
@@ -137,7 +141,10 @@ export function TerritoryBusinessDetail({
   territoryUrl,
   businessDirectoryUrl,
   isFavorite,
+  isRecommended,
+  recommendationLoading,
   onToggleFavorite,
+  onToggleRecommendation,
   onShare,
   onRoute,
   onMessage,
@@ -288,6 +295,14 @@ export function TerritoryBusinessDetail({
                   </span>
                   <button type="button" onClick={onToggleFavorite} aria-pressed={isFavorite}>
                     <Heart className={isFavorite ? "is-filled" : ""} /><span>{isFavorite ? "Salvo" : "Salvar"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onToggleRecommendation}
+                    aria-pressed={isRecommended}
+                    disabled={recommendationLoading}
+                  >
+                    <ThumbsUp /><span>{isRecommended ? "Recomendado" : "Recomendar"}</span>
                   </button>
                   <button className="bd-share-button" type="button" onClick={onShare} aria-label="Compartilhar empresa"><Share2 /><span>Compartilhar</span></button>
                 </div>

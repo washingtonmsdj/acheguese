@@ -19,7 +19,9 @@ describe("public territorial surface audit", () => {
     expect(pageSource).toContain("territoryFilter: moduleTerritory.territoryFilter");
     expect(pageSource).not.toContain("useSpatialSearchHybrid");
     expect(pageSource).not.toContain("useRobustGeolocation");
-    expect(pageSource).toContain("locationIds: moduleTerritory.resolvedLocationIds");
+    expect(pageSource).toContain("useModuleTerritoryFilter({");
+    expect(pageSource).toContain("routeResolved: resolved");
+    expect(pageSource).toContain("activeMemberIds,");
     expect(pageSource).toContain("normalizeRealBusinessEntry");
     expect(pageSource).not.toContain("isLaunchBusinessCategoryEnabled");
     expect(pageSource).toContain(

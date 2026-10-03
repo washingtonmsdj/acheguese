@@ -15,6 +15,7 @@ import { buildLoginPath } from "@/core/auth/constants/authFlow";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
 import { useCanonicalBusinessFavorite } from "@/modules/business/hooks/useCanonicalBusinessFavorite";
+import { useBusinessRecommendation } from "@/modules/business/hooks/useBusinessRecommendation";
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
 import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
@@ -92,6 +93,11 @@ export default function EmpresaDetailLandingPage(
   const { isFavorite, toggleFavorite } = useCanonicalBusinessFavorite(
     institutionalBusinessDataId,
   );
+  const {
+    isRecommended,
+    toggleRecommendation,
+    loading: recommendationLoading,
+  } = useBusinessRecommendation(institutionalBusinessDataId);
   const { products: rawProducts } = useBusinessProducts(snapshotBusiness?.id);
 
   const normalizedProducts = useMemo<CompanyProduct[]>(
@@ -250,7 +256,7 @@ export default function EmpresaDetailLandingPage(
     return () => {
       cancelled = true;
     };
-  }, [snapshotBusiness?.id, snapshotBusiness?.category]);
+  }, [snapshotBusiness?.id, snapshotBusiness?.category, snapshotBusiness?.profile_id]);
 
   const handleShare = async () => {
     const shareData = {
@@ -282,7 +288,7 @@ export default function EmpresaDetailLandingPage(
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-territory-canvas">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
           <Skeleton className="h-10 w-32" />
           <Skeleton className="h-64 sm:h-72 w-full rounded-2xl" />
@@ -301,12 +307,12 @@ export default function EmpresaDetailLandingPage(
 
   if (!snapshot || !snapshotBusiness) {
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
+      <div className="min-h-screen bg-territory-canvas flex flex-col">
+        <nav className="sticky top-0 z-50 bg-territory-surface/95 backdrop-blur-md border-b border-territory-border">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 flex items-center h-14">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-2 text-territory-muted hover:text-territory-ink transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
               <span className="text-sm font-medium">Voltar</span>
@@ -314,14 +320,14 @@ export default function EmpresaDetailLandingPage(
           </div>
         </nav>
         <div className="flex-1 flex flex-col items-center justify-center px-4 text-center">
-          <Store className="h-16 w-16 text-muted-foreground/30 mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Empresa não encontrada</h1>
-          <p className="text-muted-foreground mb-6">
+          <Store className="h-16 w-16 text-territory-muted/30 mb-4" />
+          <h1 className="text-2xl font-bold text-territory-ink mb-2">Empresa não encontrada</h1>
+          <p className="text-territory-muted mb-6">
             A empresa que você procura não existe ou foi removida.
           </p>
           <Button
             onClick={() => navigate(LAUNCH_URLS.business)}
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg"
+            className="bg-territory-sun hover:bg-territory-sun/90 text-territory-ink font-semibold rounded-lg"
           >
             <ArrowLeft className="h-4 w-4 mr-2" /> Ver empresas
           </Button>
@@ -441,7 +447,10 @@ export default function EmpresaDetailLandingPage(
         territoryUrl={territoryUrl}
         businessDirectoryUrl={businessDirectoryUrl}
         isFavorite={isFavorite}
+        isRecommended={isRecommended}
+        recommendationLoading={recommendationLoading}
         onToggleFavorite={() => void toggleFavorite()}
+        onToggleRecommendation={() => void toggleRecommendation()}
         onShare={() => void handleShare()}
         onRoute={handleRoute}
         onMessage={canMessageBusiness ? () => void handleMessage() : undefined}
