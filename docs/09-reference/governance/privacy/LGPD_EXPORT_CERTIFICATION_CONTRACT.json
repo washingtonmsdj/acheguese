@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "lgpd-export-certification-contract/v1",
+  "authority": "subject-data-export-release",
+  "sourceCoverageComplete": true,
+  "runtimeEnabled": false,
+  "releaseCertified": false,
+  "promotionAuthorized": false,
+  "matrixVersion": "lgpd-export-matrix/v1",
+  "requiredPreconditions": {
+    "matrixSourceCoverageComplete": true,
+    "staticSecurityTestsGreen": true,
+    "heavyGateGreen": true,
+    "nonProductionIntegrationCertified": true,
+    "positiveAndNegativeProbesCertified": true,
+    "sameShaSmokeCertified": true,
+    "noRequiredSectionFailure": true
+  },
+  "requiredScenarios": [
+    {"id":"empty-subject","requirement":"Authenticated subject with no optional domain rows receives a valid export with required metadata and empty sections."},
+    {"id":"multiple-profiles","requirement":"All owned profiles are included and profile-scoped rows are limited to those owned profile ids."},
+    {"id":"shared-row-redaction","requirement":"Mobility, orders and other shared rows omit counterparty identifiers and operational third-party fields."},
+    {"id":"sent-messages-only","requirement":"Messaging sections include only rows sent by subject-owned profiles and never dump full threads."},
+    {"id":"required-section-failure","requirement":"Any required query failure aborts the entire export; partial exports are forbidden."},
+    {"id":"section-overflow","requirement":"A section exceeding the configured row bound fails closed instead of truncating silently."},
+    {"id":"auth-user-unavailable","requirement":"Failure to resolve the authoritative Auth user aborts the export."},
+    {"id":"secret-and-provider-redaction","requirement":"Provider tokens, refresh tokens, app metadata, push credentials, session tokens and internal storage references never appear."},
+    {"id":"dpo-ledger-isolation","requirement":"Public or unbound DPO request rows remain excluded from self-service export and are never correlated by requester email."},
+    {"id":"audit-and-format-metadata","requirement":"Successful export records matrix/format metadata and an audit event without serializing secrets."}
+  ],
+  "evidenceRequired": {
+    "exactSourceSha": true,
+    "deployedRuntimeSha": true,
+    "edgeFunctionVersion": true,
+    "matrixVersion": true,
+    "testRunId": true,
+    "positiveProbe": true,
+    "negativeProbe": true,
+    "redactionProbe": true
+  },
+  "promotionRules": {
+    "implementationCompleteFlagMayChangeOnlyAfterAllEvidence": true,
+    "releaseCertifiedFlagMayChangeOnlyAfterAllEvidence": true,
+    "featureFlagMayEnableOnlyAfterReleaseCertified": true,
+    "productionDeployBeforeCertification": false,
+    "partialCertification": "forbidden"
+  },
+  "forbidden": [
+    "select-star",
+    "silent-required-query-failure",
+    "partial-export-on-required-section-error",
+    "full-conversation-dump",
+    "third-party-identifier-leak",
+    "provider-token-export",
+    "service-role-key-in-client",
+    "promote-on-source-coverage-alone",
+    "production-only-certification"
+  ],
+  "notes": [
+    "Source coverage is complete, but source coverage alone does not certify release.",
+    "This contract does not authorize deployment or changing LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE.",
+    "The authenticated production smoke blocker in issue #305 must not be bypassed to promote export rollout."
+  ]
+}
