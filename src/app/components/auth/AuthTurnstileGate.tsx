@@ -30,7 +30,7 @@ export function AuthTurnstileGate({
   return (
     <div
       className={cn(
-        "flex flex-col items-center gap-1 rounded-2xl border border-border/60 bg-background/60 p-3",
+        "flex flex-col items-center gap-1 rounded-2xl border border-territory-border/60 bg-territory-surface/60 p-3",
         className,
       )}
       data-testid="auth-turnstile-gate"
@@ -42,7 +42,7 @@ export function AuthTurnstileGate({
         onError={onError}
         action={action}
       />
-      <p className="text-[0.7rem] text-muted-foreground">
+      <p className="text-[0.7rem] text-territory-muted">
         Protegido por Cloudflare Turnstile
       </p>
     </div>

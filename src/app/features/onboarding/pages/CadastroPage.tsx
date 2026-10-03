@@ -180,10 +180,10 @@ export default function CadastroPage() {
         >
           <section className="hidden lg:block" aria-label="Sobre o cadastro">
             <div className="max-w-[430px]">
-              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-primary">
+              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-territory-brand">
                 Comece<br />por você.
               </h1>
-              <p className="mt-4 max-w-[360px] text-[17px] leading-6 text-foreground">
+              <p className="mt-4 max-w-[360px] text-[17px] leading-6 text-territory-ink">
                 Seu perfil pessoal é o primeiro. Outros perfis podem ser criados depois.
               </p>
               <img
@@ -192,36 +192,36 @@ export default function CadastroPage() {
                 className="mt-5 w-full max-w-[390px] object-cover"
               />
               <div className="mt-3 max-w-[360px] -rotate-1">
-                <p className="font-heading text-base font-semibold italic text-primary">
+                <p className="font-heading text-base font-semibold italic text-territory-brand">
                   Pode participar mesmo morando fora do Complexo.
                 </p>
-                <span aria-hidden="true" className="mt-1 block h-[3px] w-12 rotate-[-4deg] rounded-full bg-accent" />
+                <span aria-hidden="true" className="mt-1 block h-[3px] w-12 rotate-[-4deg] rounded-full bg-territory-sun" />
               </div>
             </div>
           </section>
 
-          <section className="w-full lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
+          <section className="w-full lg:rounded-xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-7 lg:shadow-md">
             <div className="lg:hidden">
-              <h1 className="max-w-[284px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-primary">
+              <h1 className="max-w-[284px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-territory-brand">
                 Comece pelo seu perfil pessoal.
               </h1>
-              <p className="mt-1.5 max-w-[330px] text-[15px] leading-[21px] text-foreground">
+              <p className="mt-1.5 max-w-[330px] text-[15px] leading-[21px] text-territory-ink">
                 Depois, adicione perfis de negócio ou profissional.
               </p>
             </div>
 
-            <h2 className="hidden font-heading text-[24px] font-extrabold tracking-[-0.035em] text-foreground lg:block">
+            <h2 className="hidden font-heading text-[24px] font-extrabold tracking-[-0.035em] text-territory-ink lg:block">
               Criar minha conta
             </h2>
 
             {redirectTo !== "/" ? (
-              <div className="mt-4 flex items-center gap-3 rounded-xl bg-muted px-3.5 py-2.5" role="status">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <div className="mt-4 flex items-center gap-3 rounded-xl bg-territory-raised px-3.5 py-2.5" role="status">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-brand/10 text-territory-brand">
                   <AuthConceptIcon name="store" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-muted-foreground">Após concluir o acesso, você volta para</p>
-                  <p className="text-[13px] font-bold leading-snug text-foreground">{returnContext.label}</p>
+                  <p className="text-[11px] text-territory-muted">Após concluir o acesso, você volta para</p>
+                  <p className="text-[13px] font-bold leading-snug text-territory-ink">{returnContext.label}</p>
                 </div>
               </div>
             ) : null}
@@ -232,15 +232,15 @@ export default function CadastroPage() {
                   type="button"
                   onClick={() => void handleGoogleSignup()}
                   disabled={authBusy}
-                  className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card text-[14px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
+                  className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-territory-border bg-territory-surface text-[14px] font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                 >
                   <AuthConceptIcon name="google" />
                   {googleLoading ? "Abrindo Google…" : "Continuar com Google"}
                 </button>
-                <div className="my-4 flex items-center gap-3 text-[12px] text-muted-foreground">
-                  <span className="h-px flex-1 bg-border" />
+                <div className="my-4 flex items-center gap-3 text-[12px] text-territory-muted">
+                  <span className="h-px flex-1 bg-territory-border" />
                   <span>ou crie com e-mail</span>
-                  <span className="h-px flex-1 bg-border" />
+                  <span className="h-px flex-1 bg-territory-border" />
                 </div>
               </div>
             ) : null}
@@ -263,7 +263,7 @@ export default function CadastroPage() {
                   name="name"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-foreground">
+                      <FormLabel className="text-[14px] font-semibold text-territory-ink">
                         <span className="lg:hidden">Nome</span>
                         <span className="hidden lg:inline">Nome completo</span>
                       </FormLabel>
@@ -274,7 +274,7 @@ export default function CadastroPage() {
                           autoComplete="name"
                           disabled={authBusy}
                           className={cn(
-                            "h-11 rounded-lg border-input bg-card px-3 text-[16px] shadow-none",
+                            "h-11 rounded-lg border-territory-border bg-territory-surface px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
                           )}
                         />
@@ -289,9 +289,9 @@ export default function CadastroPage() {
                   name="username"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-foreground">Nome de usuário</FormLabel>
+                      <FormLabel className="text-[14px] font-semibold text-territory-ink">Nome de usuário</FormLabel>
                       <div className="relative">
-                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-muted-foreground">@</span>
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-territory-muted">@</span>
                         <FormControl>
                           <Input
                             {...field}
@@ -313,7 +313,7 @@ export default function CadastroPage() {
                               }
                             }}
                             className={cn(
-                              "h-11 rounded-lg border-input bg-card pl-8 pr-3 text-[16px] shadow-none",
+                              "h-11 rounded-lg border-territory-border bg-territory-surface pl-8 pr-3 text-[16px] shadow-none",
                               fieldState.error && "border-destructive",
                               usernameAvailability.result?.identifier === username &&
                                 usernameAvailability.result.status === "available" &&
@@ -324,7 +324,7 @@ export default function CadastroPage() {
                       </div>
                       <div id="cadastro-username-status" aria-live="polite" className="min-h-4 text-[11.5px] leading-4">
                         {usernameAvailability.isChecking ? (
-                          <span className="text-muted-foreground">Verificando disponibilidade…</span>
+                          <span className="text-territory-muted">Verificando disponibilidade…</span>
                         ) : usernameAvailability.result?.identifier === username && usernameAvailability.result.status === "available" ? (
                           <span className="font-medium text-success">Nome de usuário disponível.</span>
                         ) : usernameAvailability.result?.identifier === username && usernameAvailability.result.status !== "available" ? (
@@ -348,7 +348,7 @@ export default function CadastroPage() {
                             ) : null}
                           </span>
                         ) : (
-                          <span className="text-muted-foreground">
+                          <span className="text-territory-muted">
                             <span className="lg:hidden">Seu identificador público.</span>
                             <span className="hidden lg:inline">Seu identificador público. Use letras, números e _.</span>
                           </span>
@@ -364,7 +364,7 @@ export default function CadastroPage() {
                   name="email"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-foreground">E-mail</FormLabel>
+                      <FormLabel className="text-[14px] font-semibold text-territory-ink">E-mail</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -374,7 +374,7 @@ export default function CadastroPage() {
                           spellCheck={false}
                           disabled={authBusy}
                           className={cn(
-                            "h-11 rounded-lg border-input bg-card px-3 text-[16px] shadow-none",
+                            "h-11 rounded-lg border-territory-border bg-territory-surface px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
                           )}
                         />
@@ -389,7 +389,7 @@ export default function CadastroPage() {
                   name="password"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-foreground">Senha</FormLabel>
+                      <FormLabel className="text-[14px] font-semibold text-territory-ink">Senha</FormLabel>
                       <FormControl>
                         <PasswordInput
                           {...field}
@@ -398,10 +398,10 @@ export default function CadastroPage() {
                           invalid={Boolean(fieldState.error)}
                           strengthValue={password}
                           showStrength={false}
-                          className="h-11 rounded-lg border-input bg-card text-[16px] shadow-none"
+                          className="h-11 rounded-lg border-territory-border bg-territory-surface text-[16px] shadow-none"
                         />
                       </FormControl>
-                      <p className="text-[11.5px] leading-4 text-muted-foreground">
+                      <p className="text-[11.5px] leading-4 text-territory-muted">
                         <span className="lg:hidden">{MOBILE_PASSWORD_HINT}</span>
                         <span className="hidden lg:inline">{DESKTOP_PASSWORD_HINT}</span>
                       </p>
@@ -423,17 +423,17 @@ export default function CadastroPage() {
                             onCheckedChange={(checked) => field.onChange(checked === true)}
                             disabled={authBusy}
                             aria-invalid={Boolean(fieldState.error)}
-                            className="mt-0.5 h-5 w-5 rounded-[3px] border-primary"
+                            className="mt-0.5 h-5 w-5 rounded-[3px] border-territory-brand"
                           />
                         </FormControl>
                         <Label
                           htmlFor="cadastro-terms-acceptance"
-                          className="cursor-pointer text-[13px] font-normal leading-[18px] text-foreground"
+                          className="cursor-pointer text-[13px] font-normal leading-[18px] text-territory-ink"
                         >
                           Aceito os{" "}
-                          <Link className="text-primary underline underline-offset-2" to={TERMS_OF_SERVICE_PATH} target="_blank" rel="noreferrer">Termos</Link>{" "}
+                          <Link className="text-territory-brand underline underline-offset-2" to={TERMS_OF_SERVICE_PATH} target="_blank" rel="noreferrer">Termos</Link>{" "}
                           e as{" "}
-                          <Link className="text-primary underline underline-offset-2" to={COMMUNITY_GUIDELINES_PATH} target="_blank" rel="noreferrer">Diretrizes da comunidade</Link>.
+                          <Link className="text-territory-brand underline underline-offset-2" to={COMMUNITY_GUIDELINES_PATH} target="_blank" rel="noreferrer">Diretrizes da comunidade</Link>.
                         </Label>
                       </div>
                       <FormMessage className="pl-8 text-xs" />
@@ -441,7 +441,7 @@ export default function CadastroPage() {
                   )}
                 />
 
-                <details className="group rounded-xl bg-muted text-foreground lg:hidden">
+                <details className="group rounded-xl bg-territory-raised text-territory-ink lg:hidden">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 text-[12px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
                     <AuthConceptIcon name="info" />
                     <span className="flex-1">Como usamos seus dados</span>
@@ -450,7 +450,7 @@ export default function CadastroPage() {
                       className="h-4 w-4 transition-transform group-open:rotate-90"
                     />
                   </summary>
-                  <p className="px-3 pb-3 pl-11 text-[11px] leading-4 text-muted-foreground">
+                  <p className="px-3 pb-3 pl-11 text-[11px] leading-4 text-territory-muted">
                     Usamos os dados necessários para criar sua identidade, proteger o acesso e operar sua conta. Cidade e bairro podem ser informados depois.
                   </p>
                 </details>
@@ -459,7 +459,7 @@ export default function CadastroPage() {
                   to={PRIVACY_POLICY_PATH}
                   target="_blank"
                   rel="noreferrer"
-                  className="hidden min-h-8 items-center text-[12px] font-medium text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:inline-flex"
+                  className="hidden min-h-8 items-center text-[12px] font-medium text-territory-brand underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:inline-flex"
                 >
                   Como usamos seus dados
                 </Link>
@@ -482,18 +482,18 @@ export default function CadastroPage() {
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="mt-1 flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-[15px] font-extrabold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="mt-1 flex h-11 w-full items-center justify-center rounded-lg bg-territory-sun px-4 text-[15px] font-extrabold text-territory-ink shadow-sm transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {loading ? "Criando conta…" : "Criar minha conta"}
                 </button>
 
-                <p className="text-center text-[11.5px] text-muted-foreground">
+                <p className="text-center text-[11.5px] text-territory-muted">
                   <span className="lg:hidden">Você pode se cadastrar de qualquer lugar.</span>
                   <span className="hidden lg:inline">
                     Já tem conta?{" "}
                     <Link
                       to={buildLoginPath(redirectTo)}
-                      className="font-medium text-primary underline underline-offset-2"
+                      className="font-medium text-territory-brand underline underline-offset-2"
                     >
                       Entrar
                     </Link>

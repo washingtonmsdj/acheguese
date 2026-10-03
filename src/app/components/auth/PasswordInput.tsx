@@ -23,10 +23,10 @@ export interface PasswordInputProps extends PasswordInputBaseProps {
 
 const strengthColor: Record<number, string> = {
   0: "bg-transparent",
-  1: "bg-destructive",
-  2: "bg-amber-500",
-  3: "bg-emerald-500",
-  4: "bg-primary",
+  1: "bg-territory-error",
+  2: "bg-territory-warning",
+  3: "bg-territory-success",
+  4: "bg-territory-brand",
 };
 
 /** Campo de senha compartilhado do fluxo de autenticação. */
@@ -102,7 +102,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
           <button
             type="button"
             onClick={() => setVisible((current) => !current)}
-            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
             aria-pressed={visible}
             aria-controls={id}
@@ -112,27 +112,27 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
         </div>
 
         {showCapsLockHint && focused && capsLock ? (
-          <p role="status" aria-live="polite" className="text-xs font-medium text-amber-600">
+          <p role="status" aria-live="polite" className="text-xs font-medium text-territory-warning">
             Caps Lock ativado
           </p>
         ) : null}
 
         {showStrength && strengthValue ? (
-          <div className="space-y-2 rounded-2xl border border-border/60 bg-secondary/35 p-3">
+          <div className="space-y-2 rounded-2xl border border-territory-border/60 bg-territory-raised/35 p-3">
             <div className="flex items-center gap-2">
               <div className="flex flex-1 gap-1">
                 {[1, 2, 3, 4].map((tick) => (
                   <span
                     key={tick}
                     className={cn(
-                      "h-1.5 flex-1 rounded-full bg-border/60 transition-colors",
+                      "h-1.5 flex-1 rounded-full bg-territory-border/60 transition-colors",
                       strength.level >= tick && strengthColor[strength.level],
                     )}
                   />
                 ))}
               </div>
               {strength.label ? (
-                <span className="text-[0.7rem] font-medium text-muted-foreground">
+                <span className="text-[0.7rem] font-medium text-territory-muted">
                   {strength.label}
                 </span>
               ) : null}
@@ -144,7 +144,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
                     key={requirement.id}
                     className={cn(
                       "text-xs",
-                      requirement.satisfied ? "text-emerald-600" : "text-muted-foreground",
+                      requirement.satisfied ? "text-territory-success" : "text-territory-muted",
                     )}
                   >
                     {requirement.satisfied ? "✓" : "•"} {requirement.label}
