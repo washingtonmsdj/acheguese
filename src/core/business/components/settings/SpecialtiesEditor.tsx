@@ -80,11 +80,11 @@ export function SpecialtiesEditor({
     <div className={cn("space-y-4", className)}>
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-          <Award className="h-4 w-4 text-primary" />
+        <h3 className="text-sm font-semibold text-territory-ink flex items-center gap-2">
+          <Award className="h-4 w-4 text-territory-brand" />
           Especialidades
         </h3>
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="text-xs text-territory-muted mt-0.5">
           Adicione até {maxTags} especialidades que destacam sua empresa
         </p>
       </div>
@@ -92,7 +92,7 @@ export function SpecialtiesEditor({
       {/* Current specialties */}
       {specialties.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="text-xs font-semibold text-territory-muted uppercase tracking-wider">
             Suas Especialidades ({specialties.length}/{maxTags})
           </p>
           <div className="flex flex-wrap gap-2">
@@ -164,8 +164,8 @@ export function SpecialtiesEditor({
 
       {/* Suggestions */}
       {filteredSuggestions.length > 0 && specialties.length < maxTags && (
-        <div className="space-y-2 pt-3 border-t border-border">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+        <div className="space-y-2 pt-3 border-t border-territory-border">
+          <p className="text-xs font-semibold text-territory-muted uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="h-3 w-3" />
             Sugestões
           </p>
@@ -175,7 +175,7 @@ export function SpecialtiesEditor({
                 key={suggestion}
                 type="button"
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="inline-flex items-center gap-1.5 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/40 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 bg-territory-brand/5 hover:bg-territory-brand/10 text-territory-brand border border-territory-brand/20 hover:border-territory-brand/40 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
               >
                 <Plus className="h-3 w-3" />
                 {suggestion}
@@ -187,8 +187,8 @@ export function SpecialtiesEditor({
 
       {/* Help text */}
       {specialties.length === 0 && (
-        <div className="bg-secondary/50 rounded-lg p-3 text-xs text-muted-foreground">
-          <p className="mb-1 flex items-center gap-1.5 font-medium">
+        <div className="bg-territory-raised rounded-lg p-3 text-xs text-territory-muted">
+          <p className="mb-1 flex items-center gap-1.5 font-medium text-territory-ink">
             <Lightbulb className="h-3.5 w-3.5" />
             Dica:
           </p>
@@ -201,11 +201,11 @@ export function SpecialtiesEditor({
 
       {/* Limit warning */}
       {specialties.length >= maxTags && (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-amber-600">
+        <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 text-xs text-territory-ink">
           <p className="font-medium">
             Limite atingido: {maxTags} especialidades
           </p>
-          <p className="mt-1 text-amber-600/80">
+          <p className="mt-1 text-territory-muted">
             Remova uma especialidade para adicionar outra
           </p>
         </div>
