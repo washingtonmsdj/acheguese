@@ -16,6 +16,10 @@ const handler = readFileSync(
   join(ROOT, "supabase/functions/user-export-data/index.ts"),
   "utf8",
 );
+const policy = readFileSync(
+  join(ROOT, "supabase/functions/_shared/lgpdExportPolicy.ts"),
+  "utf8",
+);
 const rollout = readFileSync(
   join(ROOT, "src/core/privacy/config/privacyRollout.ts"),
   "utf8",
@@ -88,9 +92,9 @@ describe("LGPD export release certification contract", () => {
 
   it("ratchets current fail-closed handler behavior", () => {
     expect(handler).toContain("EXPORT_SECTION_FAILED:");
-    expect(handler).toContain("EXPORT_SECTION_TOO_LARGE:");
+    expect(policy).toContain("EXPORT_SECTION_TOO_LARGE:");
     expect(handler).toContain("EXPORT_AUTH_USER_UNAVAILABLE");
-    expect(handler).toContain("const MAX_ROWS_PER_SECTION = 50_000;");
+    expect(policy).toContain("export const MAX_ROWS_PER_SECTION = 50_000;");
     expect(coverageTest).toContain(".select('*')");
     expect(coverageTest).toContain('.select("*")');
     expect(coverageTest).toContain(".from('user_sessions')");
