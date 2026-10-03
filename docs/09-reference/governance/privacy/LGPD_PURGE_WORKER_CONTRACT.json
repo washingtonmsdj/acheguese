@@ -13,7 +13,8 @@
     "requiresLeaseExpiry": true,
     "requiresAttemptCounter": true,
     "requiresLastAttemptTimestamp": true,
-    "concurrentDoubleClaim": "forbidden"
+    "concurrentDoubleClaim": "forbidden",
+    "expiredProcessingLeaseReclaimAllowed": true
   },
   "idempotency": {
     "completedRequestBehavior": "no-op-success",

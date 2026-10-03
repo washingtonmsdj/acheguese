@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "lgpd-purge-claim-schema-contract/v1",
+  "authority": "account-deletion-purge-claim",
+  "implementationStatus": "contract-only",
+  "runtimeEnabled": false,
+  "migrationAuthorized": false,
+  "requiredColumns": {
+    "lease_token": {
+      "type": "uuid",
+      "nullable": true,
+      "browserWritable": false
+    },
+    "lease_expires_at": {
+      "type": "timestamptz",
+      "nullable": true,
+      "browserWritable": false
+    },
+    "attempt_count": {
+      "type": "integer",
+      "nullable": false,
+      "default": 0,
+      "minimum": 0,
+      "browserWritable": false
+    },
+    "last_attempt_at": {
+      "type": "timestamptz",
+      "nullable": true,
+      "browserWritable": false
+    },
+    "last_failure_code": {
+      "type": "text",
+      "nullable": true,
+      "maxLength": 120,
+      "browserWritable": false
+    }
+  },
+  "claimRpc": {
+    "schema": "private",
+    "name": "claim_due_account_deletion_request",
+    "browserExecutable": false,
+    "serviceRoleExecutable": true,
+    "mustBeAtomic": true,
+    "eligibility": {
+      "initialClaim": {
+        "status": "scheduled",
+        "scheduledPurgeAtLteNow": true
+      },
+      "expiredLeaseReclaim": {
+        "status": "processing",
+        "leaseExpired": true
+      },
+      "failedStatusAutoEligible": false
+    },
+    "mutation": {
+      "status": "processing",
+      "setsLeaseToken": true,
+      "setsLeaseExpiry": true,
+      "incrementsAttemptCount": true,
+      "setsLastAttemptAt": true,
+      "clearsFailureCode": true
+    },
+    "concurrency": {
+      "doubleClaimForbidden": true,
+      "rowLockRequired": true,
+      "skipLockedRequired": true,
+      "singleRowPerClaim": true
+    }
+  },
+  "failureRpc": {
+    "schema": "private",
+    "name": "fail_account_deletion_request",
+    "browserExecutable": false,
+    "serviceRoleExecutable": true,
+    "requiresMatchingLeaseToken": true,
+    "statusAfterFailure": "failed",
+    "persistsFailureCode": true,
+    "clearsLease": true
+  },
+  "completionRpc": {
+    "schema": "private",
+    "name": "complete_account_deletion_request",
+    "browserExecutable": false,
+    "serviceRoleExecutable": true,
+    "requiresMatchingLeaseToken": true,
+    "statusAfterCompletion": "completed",
+    "clearsLease": true
+  },
+  "retryPolicy": {
+    "failedRequestAutoRetry": false,
+    "expiredProcessingLeaseCanBeReclaimed": true,
+    "silentLoopForbidden": true,
+    "manualOrExplicitPolicyRequiredForFailed": true
+  },
+  "hardGuards": [
+    "no-browser-grants",
+    "no-public-execute",
+    "no-auth-delete-in-claim-rpc",
+    "no-profile-delete-in-claim-rpc",
+    "no-storage-delete-in-claim-rpc",
+    "no-scheduler-while-rollout-disabled"
+  ],
+  "notes": [
+    "This file specifies the database contract needed by the irreversible purge worker; it does not authorize DDL or deployment.",
+    "The live database must be revalidated before any migration is authored or applied.",
+    "Claiming only transfers one due request into a leased processing state; destructive purge phases remain separate and fail-closed."
+  ]
+}

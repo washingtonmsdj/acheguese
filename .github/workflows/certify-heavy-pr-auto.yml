@@ -107,6 +107,7 @@ jobs:
           npx vitest --run `
             tests/security/lgpd-purge-policy-security.test.ts `
             tests/security/lgpd-purge-worker-contract.test.ts `
+            tests/security/lgpd-purge-claim-schema-contract.test.ts `
             tests/security/account-operational-edge-policy.test.ts `
             tests/security/session-rpc-auth-authority-security.test.ts `
             --pool=threads `
