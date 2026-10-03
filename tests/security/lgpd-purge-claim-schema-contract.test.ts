@@ -71,6 +71,7 @@ describe("LGPD purge claim schema contract", () => {
       requiresLeaseExpiry: true,
       requiresAttemptCounter: true,
       requiresLastAttemptTimestamp: true,
+      expiredProcessingLeaseReclaimAllowed: true,
     });
   });
 
@@ -81,9 +82,15 @@ describe("LGPD purge claim schema contract", () => {
       serviceRoleExecutable: true,
       mustBeAtomic: true,
       eligibility: {
-        status: "scheduled",
-        scheduledPurgeAtLteNow: true,
-        leaseMissingOrExpired: true,
+        initialClaim: {
+          status: "scheduled",
+          scheduledPurgeAtLteNow: true,
+        },
+        expiredLeaseReclaim: {
+          status: "processing",
+          leaseExpired: true,
+        },
+        failedStatusAutoEligible: false,
       },
       mutation: {
         status: "processing",
