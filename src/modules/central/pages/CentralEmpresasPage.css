@@ -17,7 +17,7 @@
 .central-business-page .business-management-card h3{width:100%;overflow-wrap:anywhere;line-height:1.45}
 .central-business-page .business-management-actions{width:100%;justify-content:flex-start;margin-top:auto;padding-top:1rem;border-top:1px solid hsl(var(--territory-border))}
 .central-business-page .business-management-actions button{min-height:2.75rem;height:auto;white-space:normal;line-height:1.35}
-.central-business-page .business-management-actions button:first-child{background:hsl(var(--territory-brand));color:hsl(var(--territory-brand-foreground))}
+.central-business-page .business-management-actions button:first-child{background:hsl(var(--territory-sun));color:hsl(var(--territory-ink))}
 @container business-central (max-width:640px){
  .central-business-heading{gap:.85rem;margin-bottom:1rem;border-radius:1rem}
  .central-business-heading .central-business-create{width:100%}
