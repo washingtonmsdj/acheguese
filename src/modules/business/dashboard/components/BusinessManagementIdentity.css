@@ -8,7 +8,7 @@
   border: 1px solid hsl(var(--business-border, var(--territory-border)));
   border-radius: var(--business-panel-radius, 16px);
   background: hsl(var(--business-surface, var(--territory-surface)));
-  color: hsl(var(--foreground));
+  color: hsl(var(--territory-ink));
 }
 .business-management-identity__image {
   display: grid;
@@ -66,7 +66,7 @@
   margin: 7px 0 0;
   font-size: 12px;
   line-height: 1.5;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
   overflow-wrap: anywhere;
 }
 .business-management-identity__copy p svg {

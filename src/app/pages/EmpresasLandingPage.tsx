@@ -93,12 +93,12 @@ function LandingTopBar({
       <div className="flex flex-col gap-3 lg:rounded-[26px] lg:border lg:border-territory-on-image/10 lg:bg-territory-image-overlay lg:px-5 lg:py-4">
         <div className="hidden lg:flex lg:items-center lg:gap-5">
           <Link to="/" className="flex items-center gap-3 text-territory-on-image">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/14 text-primary">
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-territory-action-on-image/14 text-territory-action-on-image">
               <MapPin className="h-5 w-5" />
             </span>
             <span className="min-w-0">
               <span className="block text-[1.55rem] font-semibold leading-none">Achegue-se</span>
-              <span className="block pt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary/78">
+              <span className="block pt-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-territory-action-on-image/78">
                 Seu bairro, mais perto.
               </span>
             </span>
@@ -110,7 +110,7 @@ function LandingTopBar({
               onClick={onOpenLocationDialog}
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm font-medium text-territory-on-image/82 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
             >
-              <MapPin className="h-4 w-4 text-primary" />
+              <MapPin className="h-4 w-4 text-territory-action-on-image" />
               {locationLabel}
             </button>
 
@@ -122,7 +122,7 @@ function LandingTopBar({
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder="Buscar empresa ou estabelecimento no bairro"
                 aria-label="Buscar empresas no bairro"
-                className="h-12 rounded-2xl border-territory-on-image/10 bg-territory-on-image/[0.03] pl-11 pr-16 text-territory-on-image placeholder:text-territory-on-image/36 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
+                className="h-12 rounded-2xl border-territory-on-image/10 bg-territory-on-image/[0.03] pl-11 pr-16 text-territory-on-image placeholder:text-territory-on-image/36 focus-visible:ring-territory-action-on-image/30 focus-visible:ring-offset-0"
               />
               <span className="pointer-events-none absolute right-4 top-1/2 hidden -translate-y-1/2 rounded-lg border border-territory-on-image/10 bg-territory-image-overlay/20 px-2 py-1 text-[0.68rem] font-medium text-territory-on-image/42 sm:inline-flex">
                 Ctrl + K
@@ -139,7 +139,7 @@ function LandingTopBar({
             </Link>
             <Link
               to={primaryHref}
-              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-territory-action-on-image px-4 text-sm font-semibold text-territory-image-overlay transition-colors hover:bg-territory-action-on-image/90"
             >
               {primaryLabel}
             </Link>
@@ -149,12 +149,12 @@ function LandingTopBar({
         <div className="space-y-3 lg:hidden">
           <div className="flex items-center justify-between gap-3">
             <Link to="/" className="flex min-w-0 items-center gap-2 text-territory-on-image">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/14 text-primary">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-territory-action-on-image/14 text-territory-action-on-image">
                 <MapPin className="h-4.5 w-4.5" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[1.3rem] font-semibold leading-none">Achegue-se</span>
-                <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                <span className="block pt-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-territory-action-on-image/72">
                   Seu bairro, mais perto.
                 </span>
               </span>
@@ -170,7 +170,7 @@ function LandingTopBar({
               </Link>
               <Link
                 to={primaryHref}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground transition-colors hover:bg-primary/90"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-territory-action-on-image text-territory-image-overlay transition-colors hover:bg-territory-action-on-image/90"
                 aria-label={primaryLabel}
               >
                 <UserRoundPlus className="h-4.5 w-4.5" />
@@ -183,7 +183,7 @@ function LandingTopBar({
             onClick={onOpenLocationDialog}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm font-medium text-territory-on-image/82 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
           >
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="h-4 w-4 text-territory-action-on-image" />
             {locationLabel}
           </button>
 
@@ -196,7 +196,7 @@ function LandingTopBar({
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder="Buscar empresa no bairro"
                 aria-label="Buscar empresas no bairro"
-                className="h-11 rounded-2xl border-territory-on-image/10 bg-territory-on-image/[0.03] pl-11 pr-4 text-territory-on-image placeholder:text-territory-on-image/36 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
+                className="h-11 rounded-2xl border-territory-on-image/10 bg-territory-on-image/[0.03] pl-11 pr-4 text-territory-on-image placeholder:text-territory-on-image/36 focus-visible:ring-territory-action-on-image/30 focus-visible:ring-offset-0"
               />
             </div>
             <button
@@ -569,13 +569,13 @@ export default function EmpresasLandingPage({
                   className={[
                     "flex min-h-12 items-center justify-between rounded-2xl border px-4 text-sm font-medium transition-colors",
                     sortBy === value
-                      ? "border-primary/35 bg-primary/12 text-primary"
+                      ? "border-territory-action-on-image/35 bg-territory-action-on-image/12 text-territory-action-on-image"
                       : "border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/74 hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]",
                   ].join(" ")}
                   aria-pressed={sortBy === value}
                 >
                   <span>{label}</span>
-                  <span className={sortBy === value ? "text-primary" : "text-territory-on-image/28"}>•</span>
+                  <span className={sortBy === value ? "text-territory-action-on-image" : "text-territory-on-image/28"}>•</span>
                 </button>
               ))}
             </div>
@@ -584,7 +584,7 @@ export default function EmpresasLandingPage({
           <button
             type="button"
             onClick={() => setMobileFiltersOpen(false)}
-            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-territory-action-on-image px-4 text-sm font-semibold text-territory-image-overlay transition-colors hover:bg-territory-action-on-image/90"
           >
             Ver {filteredBusinesses.length} resultados
           </button>

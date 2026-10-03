@@ -32,6 +32,7 @@ import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/Ma
 import './MapaTerritorialExplorer.css';
 import { useMapViewportFetch, type LayerFetcher } from '../hooks/useMapViewportFetch';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
+import { mapEntityProjection } from '@/core/maps/services/MapEntityProjectionService';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
@@ -49,7 +50,6 @@ import {
 } from '@/core/routing/utils/territoryUrls';
 import { boundaryService } from '@/core/geospatial';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
-import { EntityStatus } from '@/shared/types/enums';
 import { LocationStatus, type Location } from '@/core/location/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type {
@@ -89,16 +89,16 @@ function MvpMapHeader({
   nearbyHref: string | null;
 }) {
   return (
-    <section className="map-page-header rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
+    <section className="map-page-header rounded-[24px] border border-territory-border bg-territory-surface px-4 py-4 shadow-sm sm:px-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-territory-brand">
             {territoryName}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold text-foreground">
+          <h1 className="mt-1 text-2xl font-semibold text-territory-ink">
             {mapLabel}
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          <p className="mt-1 max-w-2xl text-sm text-territory-muted">
             Explore o território, filtre as camadas disponíveis e abra cada lugar para saber mais.
           </p>
         </div>
@@ -111,7 +111,7 @@ function MvpMapHeader({
               <Link
                 key={`${link.label}:${link.href}`}
                 to={link.href}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-territory-border px-3 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised"
               >
                 <Layers3 className="h-4 w-4" aria-hidden="true" />
                 {link.label}
@@ -120,7 +120,7 @@ function MvpMapHeader({
             {nearbyHref && (
               <Link
                 to={nearbyHref}
-                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-territory-border px-3 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-raised"
               >
                 <Navigation className="h-4 w-4" aria-hidden="true" />
                 Perto de mim
@@ -739,19 +739,27 @@ export default function MapaPageV4({
   const focusMarkers = React.useMemo(() => {
     if (!focusTarget) return [] as MapMarker[];
 
-    return [
+    const projected = mapEntityProjection.projectEntity(
       {
         id: 'focus-target',
-        type: 'user_location',
-        coordinates: {
-          latitude: focusTarget.latitude,
-          longitude: focusTarget.longitude,
-        },
-        title: focusTarget.name,
-        status: EntityStatus.ACTIVE,
-        metadata: { focusTarget: true },
+        name: focusTarget.name,
+        latitude: focusTarget.latitude,
+        longitude: focusTarget.longitude,
       },
-    ] satisfies MapMarker[];
+      'user_location',
+    );
+
+    if (!projected) return [] as MapMarker[];
+
+    return [
+      {
+        ...projected,
+        metadata: {
+          ...projected.metadata,
+          focusTarget: true,
+        },
+      },
+    ];
   }, [focusTarget]);
 
   const allMarkers = React.useMemo(

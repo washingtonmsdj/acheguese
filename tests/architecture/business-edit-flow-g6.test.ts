@@ -77,27 +77,62 @@ describe("Business edit flow (G6)", () => {
     expect(lifecycle).not.toContain("/edit-business/");
   });
 
-  it("routes dashboard edit CTAs to the real editor instead of the read-only details page", () => {
-    const details = read(
-      "src/modules/business/dashboard/pages/BusinessDetailsPage.tsx",
-    );
-    const ads = read(
-      "src/modules/business/dashboard/pages/BusinessAdsPage.tsx",
-    );
-    const settings = read(
-      "src/modules/business/dashboard/pages/BusinessSettingsPage.tsx",
-    );
+  it("projects the active editor from the canonical territory visual SSOT", () => {
+    const editorCss = read("src/modules/business/pages/EditarEmpresaPage.css");
 
-    expect(details).toContain(
-      "to={businessManagementRoutes.edit(businessId)}",
-    );
-    expect(details).toContain("Editar dados");
-    expect(ads).toContain("to={businessManagementRoutes.edit(businessId)}");
-    expect(ads).not.toContain(
-      '<Link to={businessManagementRoutes.dados(businessId)}>\n              <Button variant="outline" size="sm">\n                Editar dados',
-    );
-    expect(settings).toContain(
-      "to={businessManagementRoutes.edit(businessId)}",
-    );
+    for (const legacyPrimitive of [
+      "var(--primary)",
+      "var(--card)",
+      "var(--border)",
+      "var(--foreground)",
+      "var(--muted)",
+      "var(--muted-foreground)",
+    ]) {
+      expect(editorCss).not.toContain(legacyPrimitive);
+    }
+
+    for (const territoryToken of [
+      "var(--territory-brand)",
+      "var(--territory-surface)",
+      "var(--territory-surface-raised)",
+      "var(--territory-border)",
+      "var(--territory-ink)",
+      "var(--territory-muted)",
+      "var(--territory-focus)",
+    ]) {
+      expect(editorCss).toContain(territoryToken);
+    }
+
+    const innerVisualConsumers = [
+      "src/core/business/components/SettingsTab.tsx",
+      "src/modules/business/components/edit/BasicInfoStep.tsx",
+      "src/modules/business/components/edit/ContactStep.tsx",
+      "src/modules/business/components/edit/ExtrasStep.tsx",
+      "src/modules/business/components/edit/StepProgress.tsx",
+    ];
+
+    for (const relativePath of innerVisualConsumers) {
+      const content = read(relativePath);
+
+      for (const genericUtility of [
+        "bg-primary",
+        "text-primary",
+        "border-primary",
+        "border-border",
+        "bg-card",
+        "text-foreground",
+        "text-muted-foreground",
+        "bg-background",
+        "bg-muted",
+        "ring-ring",
+      ]) {
+        expect(content, `${relativePath}: ${genericUtility}`).not.toContain(genericUtility);
+      }
+
+      expect(content, `${relativePath}: territory surface`).toContain("territory-surface");
+      expect(content, `${relativePath}: territory border`).toContain("territory-border");
+      expect(content, `${relativePath}: territory ink`).toContain("territory-ink");
+      expect(content, `${relativePath}: territory brand`).toContain("territory-brand");
+    }
   });
 });

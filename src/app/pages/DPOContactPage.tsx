@@ -5,7 +5,6 @@ import { useMutation } from "@tanstack/react-query";
 import { Helmet } from "react-helmet-async";
 import {
   AlertTriangle,
-  ArrowLeft,
   CheckCircle,
   ChevronRight,
   Clock,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { DPO_REQUEST_ANTI_ABUSE_CONFIG } from "@/core/privacy/config/dpoAntiAbuse";
 import { PrivacyService } from "@/core/privacy";
@@ -110,6 +110,9 @@ const RELATED_LINKS = [
   { label: "Política de privacidade", to: "/privacidade" },
   { label: "Termos de uso", to: "/termos" },
 ] as const;
+
+const FIELD_CLASS =
+  "border-territory-border bg-territory-canvas text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-brand";
 
 export default function DPOContactPage() {
   const navigate = useNavigate();
@@ -222,327 +225,309 @@ export default function DPOContactPage() {
         <title>Contato com o DPO</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.3))]">
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className="mx-auto w-full max-w-6xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8"
-        >
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
-            <div className="flex items-start gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 rounded-full"
-                onClick={() => navigate(-1)}
-                type="button"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Privacidade e LGPD
-                </p>
-                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Contato com o encarregado de dados
-                </h1>
-                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Canal oficial para pedidos de titular, denúncias e temas de tratamento de dados.
-                </p>
-              </div>
-            </div>
+      <PublicInfoPageShell
+        eyebrow="Privacidade e LGPD"
+        title="Contato com o encarregado de dados"
+        description="Canal oficial para pedidos de titular, denúncias e temas de tratamento de dados."
+        onBack={() => navigate(-1)}
+        width="wide"
+      >
+        <section className="rounded-3xl border border-territory-border/70 bg-territory-surface/90 p-5 shadow-sm sm:p-6">
+          <div className="space-y-3">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-territory-brand">
+              Atendimento regulatório
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-territory-ink sm:text-[2rem]">
+              Solicite acesso, correção, exclusão ou reporte uma violação
+            </h2>
+            <p className="max-w-3xl text-sm leading-6 text-territory-muted">
+              Use este formulário quando o assunto envolver direitos do titular, incidentes de dados,
+              consentimentos, compartilhamento ou qualquer demanda formal ligada a privacidade.
+            </p>
           </div>
 
-          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
-            <div className="space-y-3">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                Atendimento regulatório
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                Solicite acesso, correção, exclusão ou reporte uma violação
-              </h2>
-              <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-                Use este formulário quando o assunto envolver direitos do titular, incidentes de dados,
-                consentimentos, compartilhamento ou qualquer demanda formal ligada a privacidade.
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-territory-border/60 bg-territory-canvas/60 p-4">
+              <p className="text-sm font-semibold text-territory-ink">Prazo aplicável</p>
+              <p className="mt-1 text-sm text-territory-muted">
+                O prazo varia conforme o direito exercido; confirmação e acesso possuem regras próprias na LGPD.
               </p>
             </div>
-
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                <p className="text-sm font-semibold text-foreground">Prazo aplicável</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  O prazo varia conforme o direito exercido; confirmação e acesso possuem regras próprias na LGPD.
-                </p>
-              </div>
-              <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                <p className="text-sm font-semibold text-foreground">Canal formal</p>
-                <p className="mt-1 text-sm text-muted-foreground">Registro interno com rastreabilidade e status.</p>
-              </div>
-              <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                <p className="text-sm font-semibold text-foreground">Escopo</p>
-                <p className="mt-1 text-sm text-muted-foreground">Conta, consentimentos, exportação, exclusão e incidentes.</p>
-              </div>
+            <div className="rounded-2xl border border-territory-border/60 bg-territory-canvas/60 p-4">
+              <p className="text-sm font-semibold text-territory-ink">Canal formal</p>
+              <p className="mt-1 text-sm text-territory-muted">Registro interno com rastreabilidade e status.</p>
             </div>
-          </section>
+            <div className="rounded-2xl border border-territory-border/60 bg-territory-canvas/60 p-4">
+              <p className="text-sm font-semibold text-territory-ink">Escopo</p>
+              <p className="mt-1 text-sm text-territory-muted">Conta, consentimentos, exportação, exclusão e incidentes.</p>
+            </div>
+          </div>
+        </section>
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
-            <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-              <CardHeader>
-                <CardTitle>Enviar solicitação</CardTitle>
-                <CardDescription>
-                  Preencha o formulário com contexto suficiente para análise do pedido.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit(onValid)} className="space-y-6">
-                  <div
-                    className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden"
-                    aria-hidden="true"
-                  >
-                    <Label htmlFor="dpo-website">Website</Label>
-                    <Input
-                      id="dpo-website"
-                      name="website"
-                      value={honeypot}
-                      onChange={(event) => setHoneypot(event.target.value)}
-                      tabIndex={-1}
-                      autoComplete="off"
-                    />
-                  </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+          <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-territory-ink">Enviar solicitação</CardTitle>
+              <CardDescription className="text-territory-muted">
+                Preencha o formulário com contexto suficiente para análise do pedido.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit(onValid)} className="space-y-6">
+                <div
+                  className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden"
+                  aria-hidden="true"
+                >
+                  <Label htmlFor="dpo-website" className="text-territory-ink">Website</Label>
+                  <Input
+                    id="dpo-website"
+                    name="website"
+                    value={honeypot}
+                    onChange={(event) => setHoneypot(event.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    className={FIELD_CLASS}
+                  />
+                </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome completo</Label>
-                      <Input id="name" {...register("name")} />
-                      <InlineFieldError message={errors.name?.message} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E-mail</Label>
-                      <Input id="email" type="email" {...register("email")} />
-                      <InlineFieldError message={errors.email?.message} />
-                    </div>
-                  </div>
-
+                <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="requestType">Tipo de solicitação</Label>
-                    <Controller
-                      name="requestType"
-                      control={control}
-                      render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger id="requestType">
-                            <SelectValue placeholder="Selecione o tipo de solicitação" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {REQUEST_TYPE_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                <div className="flex flex-col items-start">
-                                  <span>{option.label}</span>
-                                  <span className="text-xs text-muted-foreground">{option.description}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                    <InlineFieldError message={errors.requestType?.message} />
+                    <Label htmlFor="name" className="text-territory-ink">Nome completo</Label>
+                    <Input id="name" {...register("name")} className={FIELD_CLASS} />
+                    <InlineFieldError message={errors.name?.message} />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="subject">Assunto</Label>
-                    <Input
-                      id="subject"
-                      {...register("subject")}
-                      placeholder="Resumo curto do pedido"
-                    />
-                    <InlineFieldError message={errors.subject?.message} />
+                    <Label htmlFor="email" className="text-territory-ink">E-mail</Label>
+                    <Input id="email" type="email" {...register("email")} className={FIELD_CLASS} />
+                    <InlineFieldError message={errors.email?.message} />
                   </div>
+                </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Mensagem detalhada</Label>
-                    <Textarea
-                      id="message"
-                      rows={7}
-                      placeholder="Explique o pedido, contexto, dados envolvidos e resultado esperado."
-                      {...register("message")}
-                    />
-                    <InlineFieldError message={errors.message?.message} />
-                  </div>
-
-                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                    <div className="flex items-start gap-3">
-                      <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        Pedidos de titular são analisados conforme o direito exercido. Para confirmação
-                        de existência e acesso, a LGPD prevê resposta simplificada imediata ou declaração
-                        completa em até 15 dias, conforme o caso.
-                      </p>
-                    </div>
-                  </div>
-
-                  {turnstileEnabled ? (
-                    <div className="space-y-2">
-                      <TurnstileWidget
-                        key={turnstileGeneration}
-                        siteKey={TURNSTILE_SITE_KEY}
-                        action={DPO_REQUEST_ANTI_ABUSE_CONFIG.turnstileAction}
-                        onVerify={(token) => {
-                          setTurnstileToken(token);
-                          setTurnstileError(null);
-                        }}
-                        onExpire={() => setTurnstileToken(null)}
-                        onError={() => {
-                          setTurnstileToken(null);
-                          setTurnstileError("Não foi possível carregar a verificação anti-spam.");
-                        }}
-                      />
-                      {turnstileError ? (
-                        <p className="text-sm text-destructive" role="alert">
-                          {turnstileError}
-                        </p>
-                      ) : null}
-                    </div>
-                  ) : TURNSTILE_REQUIRED ? (
-                    <p className="text-sm text-destructive" role="alert">
-                      Canal temporariamente indisponível: proteção anti-spam não configurada.
-                    </p>
-                  ) : null}
-
-                  <Button
-                    type="submit"
-                    className="w-full justify-center"
-                    disabled={contactMutation.isPending || !turnstileSatisfied}
-                  >
-                    {contactMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando solicitação
-                      </>
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-4 w-4" />
-                        Enviar solicitação
-                      </>
+                <div className="space-y-2">
+                  <Label htmlFor="requestType" className="text-territory-ink">Tipo de solicitação</Label>
+                  <Controller
+                    name="requestType"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger id="requestType" className={FIELD_CLASS}>
+                          <SelectValue placeholder="Selecione o tipo de solicitação" />
+                        </SelectTrigger>
+                        <SelectContent className="border-territory-border bg-territory-surface text-territory-ink">
+                          {REQUEST_TYPE_OPTIONS.map((option) => (
+                            <SelectItem
+                              key={option.value}
+                              value={option.value}
+                              className="focus:bg-territory-raised focus:text-territory-ink"
+                            >
+                              <div className="flex flex-col items-start">
+                                <span>{option.label}</span>
+                                <span className="text-xs text-territory-muted">{option.description}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     )}
-                  </Button>
-                </form>
+                  />
+                  <InlineFieldError message={errors.requestType?.message} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="subject" className="text-territory-ink">Assunto</Label>
+                  <Input
+                    id="subject"
+                    {...register("subject")}
+                    placeholder="Resumo curto do pedido"
+                    className={FIELD_CLASS}
+                  />
+                  <InlineFieldError message={errors.subject?.message} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="message" className="text-territory-ink">Mensagem detalhada</Label>
+                  <Textarea
+                    id="message"
+                    rows={7}
+                    placeholder="Explique o pedido, contexto, dados envolvidos e resultado esperado."
+                    {...register("message")}
+                    className={FIELD_CLASS}
+                  />
+                  <InlineFieldError message={errors.message?.message} />
+                </div>
+
+                <div className="rounded-2xl border border-territory-border/60 bg-territory-canvas/60 p-4">
+                  <div className="flex items-start gap-3">
+                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-territory-muted" />
+                    <p className="text-sm leading-6 text-territory-muted">
+                      Pedidos de titular são analisados conforme o direito exercido. Para confirmação
+                      de existência e acesso, a LGPD prevê resposta simplificada imediata ou declaração
+                      completa em até 15 dias, conforme o caso.
+                    </p>
+                  </div>
+                </div>
+
+                {turnstileEnabled ? (
+                  <div className="space-y-2">
+                    <TurnstileWidget
+                      key={turnstileGeneration}
+                      siteKey={TURNSTILE_SITE_KEY}
+                      action={DPO_REQUEST_ANTI_ABUSE_CONFIG.turnstileAction}
+                      onVerify={(token) => {
+                        setTurnstileToken(token);
+                        setTurnstileError(null);
+                      }}
+                      onExpire={() => setTurnstileToken(null)}
+                      onError={() => {
+                        setTurnstileToken(null);
+                        setTurnstileError("Não foi possível carregar a verificação anti-spam.");
+                      }}
+                    />
+                    {turnstileError ? (
+                      <p className="text-sm text-destructive" role="alert">
+                        {turnstileError}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : TURNSTILE_REQUIRED ? (
+                  <p className="text-sm text-destructive" role="alert">
+                    Canal temporariamente indisponível: proteção anti-spam não configurada.
+                  </p>
+                ) : null}
+
+                <Button
+                  type="submit"
+                  className="w-full justify-center bg-territory-sun text-territory-ink hover:bg-territory-sun/90 focus-visible:ring-territory-brand"
+                  disabled={contactMutation.isPending || !turnstileSatisfied}
+                >
+                  {contactMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Enviando solicitação
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Enviar solicitação
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base text-territory-ink">Informações do canal</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-sm">
+                <div className="flex items-start gap-3">
+                  <Shield className="mt-0.5 h-4 w-4 shrink-0 text-territory-muted" />
+                  <div>
+                    <p className="font-semibold text-territory-ink">Identidade do encarregado</p>
+                    {dpoName ? (
+                      <p className="text-territory-muted">{dpoName}</p>
+                    ) : (
+                      <p className="text-territory-muted">Identidade pública ainda não configurada.</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-territory-muted" />
+                  <div>
+                    <p className="font-semibold text-territory-ink">Email do DPO</p>
+                    {dpoEmail ? (
+                      <a
+                        href={buildMailtoUrl(dpoEmail) ?? undefined}
+                        className="text-territory-brand underline-offset-4 hover:underline"
+                      >
+                        {dpoEmail}
+                      </a>
+                    ) : (
+                      <p className="text-territory-muted">E-mail público ainda não configurado.</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-territory-muted" />
+                  <div>
+                    <p className="font-semibold text-territory-ink">Prazo de resposta</p>
+                    <p className="text-territory-muted">
+                      Depende do direito exercido. Para confirmação ou acesso, a declaração completa pode
+                      ser fornecida em até 15 dias.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <Shield className="mt-0.5 h-4 w-4 shrink-0 text-territory-muted" />
+                  <div>
+                    <p className="font-semibold text-territory-ink">Autoridade reguladora</p>
+                    <a
+                      href="https://www.gov.br/anpd/pt-br"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-territory-brand underline-offset-4 hover:underline"
+                    >
+                      ANPD - Autoridade Nacional de Proteção de Dados
+                    </a>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            <div className="space-y-4">
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base">Informações do canal</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 text-sm">
-                  <div className="flex items-start gap-3">
-                    <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div>
-                      <p className="font-semibold text-foreground">Identidade do encarregado</p>
-                      {dpoName ? (
-                        <p className="text-muted-foreground">{dpoName}</p>
-                      ) : (
-                        <p className="text-muted-foreground">Identidade pública ainda não configurada.</p>
-                      )}
-                    </div>
+            <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base text-territory-ink">Direitos mais comuns</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {RIGHTS.map((right) => (
+                  <div key={right} className="flex items-start gap-3">
+                    <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                    <p className="text-sm text-territory-ink">{right}</p>
                   </div>
-                  <div className="flex items-start gap-3">
-                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div>
-                      <p className="font-semibold text-foreground">Email do DPO</p>
-                      {dpoEmail ? (
-                        <a
-                          href={buildMailtoUrl(dpoEmail) ?? undefined}
-                          className="text-primary underline-offset-4 hover:underline"
-                        >
-                          {dpoEmail}
-                        </a>
-                      ) : (
-                        <p className="text-muted-foreground">E-mail público ainda não configurado.</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div>
-                      <p className="font-semibold text-foreground">Prazo de resposta</p>
-                      <p className="text-muted-foreground">
-                        Depende do direito exercido. Para confirmação ou acesso, a declaração completa pode
-                        ser fornecida em até 15 dias.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <div>
-                      <p className="font-semibold text-foreground">Autoridade reguladora</p>
-                      <a
-                        href="https://www.gov.br/anpd/pt-br"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary underline-offset-4 hover:underline"
-                      >
-                        ANPD - Autoridade Nacional de Proteção de Dados
-                      </a>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                ))}
+              </CardContent>
+            </Card>
 
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base">Direitos mais comuns</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {RIGHTS.map((right) => (
-                    <div key={right} className="flex items-start gap-3">
-                      <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                      <p className="text-sm text-foreground">{right}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base text-territory-ink">Links relacionados</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {RELATED_LINKS.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className="flex items-center justify-between rounded-2xl border border-territory-border/60 bg-territory-canvas/60 px-3 py-3 text-sm text-territory-ink transition-colors hover:bg-territory-raised"
+                  >
+                    <span>{item.label}</span>
+                    <ChevronRight className="h-4 w-4 text-territory-muted" />
+                  </Link>
+                ))}
+              </CardContent>
+            </Card>
 
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-base">Links relacionados</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {RELATED_LINKS.map((item) => (
-                    <Link
-                      key={item.to}
-                      to={item.to}
-                      className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/60 px-3 py-3 text-sm transition-colors hover:bg-muted/80"
-                    >
-                      <span>{item.label}</span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </Link>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-warning/25 bg-warning/10 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <AlertTriangle className="h-4 w-4 text-warning" />
-                    Base legal
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-start gap-3">
-                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                    <p className="text-sm leading-6 text-muted-foreground">
-                      Este canal apoia pedidos ligados aos arts. 18, 19 e 41 da LGPD, incluindo acesso,
-                      correção, exclusão, compartilhamento, consentimento e contato com o encarregado.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <Card className="rounded-3xl border-warning/25 bg-warning/10 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  Base legal
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-start gap-3">
+                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-territory-muted" />
+                  <p className="text-sm leading-6 text-territory-muted">
+                    Este canal apoia pedidos ligados aos arts. 18, 19 e 41 da LGPD, incluindo acesso,
+                    correção, exclusão, compartilhamento, consentimento e contato com o encarregado.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </main>
-      </div>
+        </div>
+      </PublicInfoPageShell>
     </>
   );
 }

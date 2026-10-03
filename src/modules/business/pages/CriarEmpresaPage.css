@@ -5,7 +5,8 @@
 .bcr-hero:before{position:absolute;inset:0;z-index:1;content:"";background:linear-gradient(90deg,hsl(var(--territory-image-overlay)/.9),hsl(var(--territory-image-overlay)/.55) 60%,hsl(var(--territory-image-overlay)/.25))}
 .bcr-hero__inner{position:relative;z-index:2;width:min(100% - 3rem,82rem);margin:auto;padding:1.2rem 0 1.7rem}
 .bcr-back{display:inline-flex;max-width:100%;min-height:2.75rem;align-items:center;gap:.4rem;border:0;background:transparent;color:hsl(var(--territory-on-image));font-size:.8rem;font-weight:700;text-align:left;cursor:pointer}
-.bcr-back:focus-visible{outline:2px solid hsl(var(--territory-focus));outline-offset:2px}\n.bcr-back span{min-width:0;overflow-wrap:anywhere}
+.bcr-back:focus-visible{outline:2px solid hsl(var(--territory-focus));outline-offset:2px}
+.bcr-back span{min-width:0;overflow-wrap:anywhere}
 .bcr-back svg,.bcr-hero__eyebrow svg{width:1rem;height:1rem}
 .bcr-hero__eyebrow{display:flex;align-items:center;gap:.4rem;margin:.55rem 0 .3rem;font-size:.75rem;font-weight:700}
 .bcr-hero h1{margin:0;font-size:clamp(2rem,3.4vw,3rem);font-weight:700;line-height:1.12;letter-spacing:-.04em}

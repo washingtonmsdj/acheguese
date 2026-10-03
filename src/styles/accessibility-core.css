@@ -87,6 +87,7 @@
   --territory-disabled: 0 0% 80%;
   --territory-disabled-foreground: 0 0% 25%;
   --territory-on-image: 0 0% 100%;
+  --territory-action-on-image: 0 0% 100%;
   --territory-image-overlay: 0 0% 0%;
 }
 

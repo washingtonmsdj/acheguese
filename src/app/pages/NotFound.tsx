@@ -1,5 +1,6 @@
-import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+
 import { trackError } from "@/shared/utils/errorTracking";
 
 const NotFound = () => {
@@ -17,16 +18,24 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">404</h1>
-        <p className="mb-4 text-xl text-muted-foreground">
-          Oops! Page not found
+    <div className="flex min-h-screen items-center justify-center bg-territory-canvas px-4 text-territory-ink">
+      <main className="w-full max-w-md rounded-3xl border border-territory-border bg-territory-surface p-8 text-center shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-territory-brand">
+          Erro 404
         </p>
-        <a href="/" className="text-primary underline hover:text-primary/90">
-          Return to Home
-        </a>
-      </div>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-territory-ink">
+          Página não encontrada
+        </h1>
+        <p className="mt-3 text-base leading-6 text-territory-muted">
+          O endereço que você tentou abrir não existe ou foi movido.
+        </p>
+        <Link
+          to="/"
+          className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-territory-sun px-5 text-sm font-semibold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/40"
+        >
+          Voltar para o início
+        </Link>
+      </main>
     </div>
   );
 };

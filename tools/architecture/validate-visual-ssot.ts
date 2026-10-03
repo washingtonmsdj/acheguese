@@ -113,6 +113,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/app/pages/TermosPage.tsx',
   'src/app/pages/DPOContactPage.tsx',
   'src/app/pages/EmpresasLandingPage.tsx',
+  'src/app/features/business-landing/pages/EmpresasLandingLayout.tsx',
   'src/app/pages/TerritoryEntryPage.tsx',
   'src/app/pages/TerritoryEntryPage.css',
   'src/app/pages/ComoFuncionaPage.tsx',
@@ -168,6 +169,7 @@ const MIGRATED_RUNTIME_FILES = [
 ] as const;
 
 const BUSINESS_SEMANTIC_TOKEN_FILES = [
+  'src/app/pages/EmpresasLandingPage.tsx',
   'src/core/business/constants/serviceModes.ts',
   'src/core/business/constants/paymentMethods.ts',
   'src/core/business/constants/facilities.ts',
@@ -176,7 +178,17 @@ const BUSINESS_SEMANTIC_TOKEN_FILES = [
   'src/core/business/components/settings/FacilitiesSelector.tsx',
   'src/core/business/components/settings/PaymentMethodsSelector.tsx',
   'src/core/business/components/settings/ServiceModesSelector.tsx',
+  'src/core/business/components/settings/OpeningHoursEditor.css',
+  'src/core/business/components/settings/BusinessImageUploader.tsx',
+  'src/core/business/components/settings/SpecialtiesEditor.tsx',
   'src/modules/business/dashboard/components/BusinessManagementIdentity.css',
+  'src/modules/business/dashboard/pages/BusinessDashboardNav.css',
+  'src/modules/business/dashboard/pages/BusinessPhotosPage.css',
+  'src/modules/business/dashboard/pages/BusinessOpeningHoursPage.css',
+  'src/modules/business/dashboard/pages/BusinessLocationPage.css',
+  'src/modules/business/dashboard/pages/BusinessCatalogPage.css',
+  'src/modules/business/pages/EditarEmpresaPage.css',
+  'src/modules/business/pages/CriarEmpresaPage.css',
   'src/modules/business/dashboard/presentation/businessStatusPresentation.ts',
   'src/modules/business/dashboard/pages/BusinessOverviewPage.tsx',
   'src/modules/business/dashboard/pages/BusinessCatalogPage.tsx',
@@ -186,7 +198,8 @@ const BUSINESS_SEMANTIC_TOKEN_FILES = [
 
 const LEGACY_BUSINESS_PALETTE_RE =
   /\b(?:text|bg|border|ring)-(?:emerald|green|amber|sky|blue|cyan|purple|pink|indigo)-\d+(?:\/\d+)?\b/;
-const LEGACY_BUSINESS_PRIMITIVE_RE = /var\(--(?:primary|card|border)\)/;
+const LEGACY_BUSINESS_PRIMITIVE_RE =
+  /var\(--(?:primary|primary-foreground|secondary|secondary-foreground|card|border|foreground|muted|muted-foreground)\)/;
 const LEGACY_BUSINESS_GENERIC_UTILITY_RE =
   /\b(?:text|bg|border|ring)-(?:primary|secondary|border)(?:\/(?:\[[^\]]+\]|\d+))?(?![-\w])/;
 
@@ -358,6 +371,24 @@ function main(): void {
     violations,
   );
 
+  const centralBreadcrumbs = readRequired(
+    'src/modules/central/components/CentralBreadcrumbs.tsx',
+    violations,
+  );
+  for (const legacyUtility of ['text-muted-foreground', 'text-foreground']) {
+    if (centralBreadcrumbs.includes(legacyUtility)) {
+      violations.push(
+        `src/modules/central/components/CentralBreadcrumbs.tsx: ${legacyUtility} is a generic theme utility; consume territory text tokens instead.`,
+      );
+    }
+  }
+  requireIncludes(
+    'src/modules/central/components/CentralBreadcrumbs.tsx',
+    centralBreadcrumbs,
+    ['text-territory-muted', 'text-territory-ink'],
+    violations,
+  );
+
   for (const relative of BUSINESS_SEMANTIC_TOKEN_FILES) {
     const content = readRequired(relative, violations);
     if (LEGACY_BUSINESS_PALETTE_RE.test(content)) {
@@ -371,11 +402,11 @@ function main(): void {
       );
     }
     if (
-      relative.endsWith('BusinessManagementIdentity.css') &&
+      relative.endsWith('.css') &&
       LEGACY_BUSINESS_PRIMITIVE_RE.test(content)
     ) {
       violations.push(
-        `${relative}: generic primary/card/border primitive found; consume the business visual projection instead.`,
+        `${relative}: generic visual primitive found; consume territory/business semantic tokens instead.`,
       );
     }
   }

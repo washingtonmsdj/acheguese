@@ -10,9 +10,9 @@
   margin: 0;
   padding: 8px 12px;
   list-style: none;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--territory-border));
   border-radius: 14px;
-  background: hsl(var(--card));
+  background: hsl(var(--territory-surface));
 }
 .business-location__steps li {
   display: flex;
@@ -20,7 +20,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
   font-size: 12px;
 }
 .business-location__steps li span {
@@ -29,18 +29,18 @@
   height: 32px;
   flex: 0 0 32px;
   place-items: center;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--territory-border));
   border-radius: 50%;
   font-weight: 700;
 }
 .business-location__steps li[aria-current="step"] {
-  color: hsl(var(--primary));
+  color: hsl(var(--territory-brand));
   font-weight: 700;
 }
 .business-location__steps li[aria-current="step"] span {
-  color: hsl(var(--primary-foreground));
-  border-color: hsl(var(--primary));
-  background: hsl(var(--primary));
+  color: hsl(var(--territory-on-image));
+  border-color: hsl(var(--territory-brand));
+  background: hsl(var(--territory-brand));
 }
 .business-location__steps li small {
   overflow: hidden;
@@ -59,9 +59,9 @@
 .business-location__panel {
   min-width: 0;
   padding: var(--business-panel-padding, 16px);
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--territory-border));
   border-radius: var(--business-panel-radius, 16px);
-  background: hsl(var(--card));
+  background: hsl(var(--territory-surface));
 }
 .business-location__panel header {
   display: flex;
@@ -70,12 +70,12 @@
 }
 .business-location__panel header > svg {
   flex-shrink: 0;
-  color: hsl(var(--primary));
+  color: hsl(var(--territory-brand));
   width: 44px;
   height: 44px;
   padding: 10px;
   border-radius: 10px;
-  background: hsl(var(--primary) / 0.08);
+  background: hsl(var(--territory-brand) / 0.08);
 }
 .business-location__panel header > div {
   min-width: 0;
@@ -84,7 +84,7 @@
   min-width: 0;
   min-height: 40px;
   border-radius: 8px;
-  background: hsl(var(--card));
+  background: hsl(var(--territory-surface));
 }
 .business-location__fields button {
   min-height: 40px;
@@ -112,7 +112,7 @@
   margin-top: 6px;
   font-size: 13px;
   line-height: 1.6;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
   overflow-wrap: anywhere;
 }
 .business-location__pin {
@@ -150,7 +150,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid hsl(var(--border));
+  border-top: 1px solid hsl(var(--territory-border));
   padding-top: 12px;
   margin-top: 12px;
 }
@@ -159,7 +159,7 @@
 }
 .business-location__note {
   padding: 12px;
-  background: hsl(var(--secondary));
+  background: hsl(var(--territory-surface-raised));
   border-radius: 10px;
 }
 .business-location__preview-label {
@@ -167,7 +167,7 @@
   margin-top: 8px;
   font-size: 12px;
   font-weight: 600;
-  color: hsl(var(--primary));
+  color: hsl(var(--territory-brand));
 }
 .business-location__preview .business-location__note {
   margin-top: 16px;
@@ -212,9 +212,9 @@
   gap: 12px;
   min-width: 0;
   padding: 14px;
-  border: 1px solid hsl(var(--border));
+  border: 1px solid hsl(var(--territory-border));
   border-radius: 12px;
-  background: hsl(var(--card));
+  background: hsl(var(--territory-surface));
   box-shadow: var(--shadow-lg);
 }
 .business-location__public-icon {
@@ -225,8 +225,8 @@
   place-items: center;
   overflow: hidden;
   border-radius: 8px;
-  background: hsl(var(--primary) / 0.08);
-  color: hsl(var(--primary));
+  background: hsl(var(--territory-brand) / 0.08);
+  color: hsl(var(--territory-brand));
 }
 .business-location__public-icon img {
   width: 100%;
@@ -253,14 +253,14 @@
 .business-location__public-copy small {
   display: block;
   margin-top: 7px;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
   font-size: 10px;
 }
 .business-location__preview-note {
   margin-top: 16px;
   padding: 12px;
   border-radius: 10px;
-  background: hsl(var(--secondary));
+  background: hsl(var(--territory-surface-raised));
   font-size: 12px;
 }
 @media (min-width: 1180px) {
@@ -343,7 +343,7 @@
     gap: 8px;
     position: sticky;
     bottom: 0;
-    background: hsl(var(--card));
+    background: hsl(var(--territory-surface));
     padding-block: 12px max(12px, env(safe-area-inset-bottom));
     z-index: 1;
   }

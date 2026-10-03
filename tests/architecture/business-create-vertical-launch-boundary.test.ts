@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
 const verticalScope = read("src/app/config/businessVerticalScope.ts");
 const createPage = read("src/modules/business/pages/CriarEmpresaPage.tsx");
+const createCss = read("src/modules/business/pages/CriarEmpresaPage.css");
 const businessLifecycle = read("tests/e2e/business-lifecycle-authenticated.spec.ts");
 const businessCreateForm = read("tests/e2e/business-create-form.spec.ts");
 
@@ -43,6 +44,19 @@ describe("MVP Business create vertical launch boundary", () => {
     expect(createPage).not.toContain(
       "getEnabledVerticals(selectedCategory, enabledVerticalKeySet)",
     );
+  });
+
+  it("keeps the active create-page CSS free from serialized rule separators", () => {
+    for (const serializedSeparator of [
+      "}\\n.",
+      "}\\n#",
+      "}\\n@",
+      "}\\r\\n.",
+      "}\\r\\n#",
+      "}\\r\\n@",
+    ]) {
+      expect(createCss).not.toContain(serializedSeparator);
+    }
   });
 
   it("certifies Business through the canonical generic Business flow instead of Education", () => {

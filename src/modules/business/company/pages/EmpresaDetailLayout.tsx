@@ -34,12 +34,12 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
               <ArrowLeft className="h-[18px] w-[18px]" />
             </button>
             <Link to={LAUNCH_URLS.business} className="flex min-w-0 items-center gap-2 text-territory-on-image">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-2xl bg-primary/14 text-primary sm:h-10 sm:w-10">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-2xl bg-territory-action-on-image/14 text-territory-action-on-image sm:h-10 sm:w-10">
                 <MapPin className="h-3.5 w-3.5 sm:h-[18px] sm:w-[18px]" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-[1.08rem] font-semibold leading-none sm:text-[1.25rem]">Achegue-se</span>
-                <span className="block pt-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.18em] text-primary/72 sm:text-[0.62rem]">
+                <span className="block pt-0.5 text-[0.54rem] font-semibold uppercase tracking-[0.18em] text-territory-action-on-image/72 sm:text-[0.62rem]">
                   Seu bairro, mais perto.
                 </span>
               </span>
@@ -51,7 +51,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
               to={LAUNCH_URLS.business}
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-[18px] border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm font-medium text-territory-on-image/78 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
             >
-              <MapPin className="h-4 w-4 text-primary" />
+              <MapPin className="h-4 w-4 text-territory-action-on-image" />
               Empresas do bairro
             </Link>
             <Link
@@ -85,7 +85,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
               className="inline-flex h-11 items-center gap-2 rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-3 text-territory-on-image/80 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]"
               aria-label="Perfil"
             >
-              <UserCircle2 className="h-6 w-6 text-primary" />
+              <UserCircle2 className="h-6 w-6 text-territory-action-on-image" />
               <span className="hidden text-sm font-semibold xl:inline">Perfil</span>
             </button>
           </div>
@@ -105,27 +105,27 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
         <div className={`${shellGutterClass} py-6`}>
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-territory-on-image/78">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/14">
-                <Home className="h-4 w-4 text-primary" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-territory-action-on-image/14">
+                <Home className="h-4 w-4 text-territory-action-on-image" />
               </div>
               <span className="text-sm font-semibold">Empresas locais</span>
             </div>
             <div className="flex items-center gap-4 text-xs text-territory-on-image/48">
               <button
                 onClick={() => navigate(LAUNCH_URLS.business)}
-                className="transition-colors hover:text-primary"
+                className="transition-colors hover:text-territory-action-on-image"
               >
                 Todas as empresas
               </button>
               <button
                 onClick={() => navigate(TERMS_OF_SERVICE_PATH)}
-                className="transition-colors hover:text-primary"
+                className="transition-colors hover:text-territory-action-on-image"
               >
                 Termos
               </button>
               <button
                 onClick={() => navigate(PRIVACY_POLICY_PATH)}
-                className="transition-colors hover:text-primary"
+                className="transition-colors hover:text-territory-action-on-image"
               >
                 Privacidade
               </button>
