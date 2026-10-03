@@ -88,7 +88,8 @@ concorrente.
 | `--territory-ink` | Texto principal. |
 | `--territory-muted` | Texto secundário. |
 | `--territory-muted-strong` | Texto secundário mais forte. |
-| `--territory-brand` / `--territory-brand-strong` | Identidade e ação. |
+| `--territory-brand` / `--territory-brand-strong` | Identidade e ação em superfícies claras/territoriais. |
+| `--territory-action-on-image` | Ação de alto contraste sobre imagem ou superfície escura fixa; independente do tema global. |
 | `--territory-warm` / `--territory-sun` | Sinalização editorial. |
 | `--territory-border` | Separação de baixa ênfase. |
 | `--territory-focus` | Foco visível por teclado. |

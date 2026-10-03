@@ -136,6 +136,7 @@ export default {
           border: "hsl(var(--territory-border))",
           focus: "hsl(var(--territory-focus))",
           "on-image": "hsl(var(--territory-on-image))",
+          "action-on-image": "hsl(var(--territory-action-on-image))",
           "image-overlay": "hsl(var(--territory-image-overlay))",
           error: "hsl(var(--territory-error))",
           success: "hsl(var(--territory-success))",
