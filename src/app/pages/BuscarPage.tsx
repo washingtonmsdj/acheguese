@@ -123,16 +123,16 @@ export default function BuscarPage() {
   ]);
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-background px-4 py-10">
+    <main className="min-h-[calc(100vh-4rem)] bg-territory-canvas px-4 py-10 text-territory-ink">
       <div className="mx-auto flex max-w-3xl flex-col gap-6">
         <header className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Procurar no bairro
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-territory-muted">
             Escreva do seu jeito: pizza, mercado, farmácia, oficina ou empresa no meu bairro.
           </p>
-          <p className="text-xs text-muted-foreground/80">
+          <p className="text-xs text-territory-muted/80">
             Procurando em: {appliedTerritoryLabel}
           </p>
         </header>
