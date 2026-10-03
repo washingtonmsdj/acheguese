@@ -46,20 +46,20 @@ export function BasicInfoStep({
   const copy = getBusinessCreateFieldCopy(category);
 
   return (
-    <section className="business-edit-section overflow-hidden border border-border bg-card">
-      <div className="border-b border-border bg-primary/5 p-4 sm:p-5">
+    <section className="business-edit-section overflow-hidden border border-territory-border bg-territory-surface">
+      <div className="border-b border-territory-border bg-territory-brand/5 p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-territory-brand/10 text-territory-brand">
             <Building2 className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-territory-brand/80">
               Etapa 1
             </p>
             <h2 className="business-management-title mt-1">
               Identidade da empresa
             </h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-territory-muted">
               Atualize as informações que ajudam moradores a reconhecer e entender seu negócio.
             </p>
           </div>
@@ -67,18 +67,18 @@ export function BasicInfoStep({
       </div>
 
       <div className="space-y-4 p-4 sm:space-y-6 sm:p-5">
-        <div className="rounded-[22px] border border-border bg-background/70 p-4">
+        <div className="rounded-[22px] border border-territory-border bg-territory-raised/70 p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <Avatar className="h-20 w-20 shrink-0 rounded-[22px] border border-border bg-card">
+            <Avatar className="h-20 w-20 shrink-0 rounded-[22px] border border-territory-border bg-territory-surface">
               <AvatarImage src={logoPreview || undefined} className="object-cover" />
-              <AvatarFallback className="rounded-[22px] bg-primary/5 text-primary">
+              <AvatarFallback className="rounded-[22px] bg-territory-brand/5 text-territory-brand">
                 {logoPreview ? <Building2 className="h-9 w-9" /> : <ImagePlus className="h-8 w-8" />}
               </AvatarFallback>
             </Avatar>
 
             <div className="min-w-0 flex-1">
-              <Label className="text-sm font-semibold text-foreground">Logo da empresa</Label>
-              <p className="mt-1 text-sm leading-5 text-muted-foreground">
+              <Label className="text-sm font-semibold text-territory-ink">Logo da empresa</Label>
+              <p className="mt-1 text-sm leading-5 text-territory-muted">
                 Use uma imagem quadrada e fácil de reconhecer nos cards, busca e página pública.
               </p>
               <input
@@ -94,12 +94,12 @@ export function BasicInfoStep({
                 size="sm"
                 onClick={() => logoRef.current?.click()}
                 disabled={uploading}
-                className="mt-3 gap-2 rounded-xl"
+                className="mt-3 gap-2 rounded-xl border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
               >
                 <Upload className="h-4 w-4" />
                 {uploading ? "Enviando..." : logoPreview ? "Trocar logo" : "Adicionar logo"}
               </Button>
-              <p className="mt-2 text-xs text-muted-foreground">Imagem de até 5 MB.</p>
+              <p className="mt-2 text-xs text-territory-muted">Imagem de até 5 MB.</p>
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@ export function BasicInfoStep({
               onChange={(e) => onNameChange(e.target.value)}
               placeholder={copy.namePlaceholder}
               maxLength={100}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
             {errors.name ? <p className="text-xs text-destructive">{errors.name}</p> : null}
           </div>
@@ -125,7 +125,7 @@ export function BasicInfoStep({
               <Label htmlFor="description">
                 Descrição <span className="text-destructive">*</span>
               </Label>
-              <span className="text-xs text-muted-foreground">{description.length}/1000</span>
+              <span className="text-xs text-territory-muted">{description.length}/1000</span>
             </div>
             <Textarea
               id="description"
@@ -134,12 +134,12 @@ export function BasicInfoStep({
               placeholder={copy.descriptionPlaceholder}
               maxLength={1000}
               rows={5}
-              className="min-h-32 rounded-xl"
+              className="min-h-32 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
             {errors.description ? (
               <p className="text-xs text-destructive">{errors.description}</p>
             ) : (
-              <p className="text-xs text-muted-foreground">Escreva pelo menos 10 caracteres.</p>
+              <p className="text-xs text-territory-muted">Escreva pelo menos 10 caracteres.</p>
             )}
           </div>
 
@@ -151,7 +151,7 @@ export function BasicInfoStep({
               id="category"
               value={category}
               onChange={(e) => onCategoryChange(e.target.value)}
-              className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground outline-none ring-offset-background transition focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none ring-offset-territory-surface transition focus-visible:ring-2 focus-visible:ring-territory-focus focus-visible:ring-offset-2"
             >
               <option value="">Selecione uma categoria</option>
               {categoryOptions.map((option) => (
@@ -164,12 +164,21 @@ export function BasicInfoStep({
           </div>
         </div>
 
-        <div className="business-edit-actions flex flex-col-reverse gap-3 border-t border-border pt-5 sm:flex-row sm:justify-between">
-          <Button type="button" variant="outline" onClick={onCancel} className="gap-2 rounded-xl sm:min-w-32">
+        <div className="business-edit-actions flex flex-col-reverse gap-3 border-t border-territory-border pt-5 sm:flex-row sm:justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="gap-2 rounded-xl border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised sm:min-w-32"
+          >
             <ArrowLeft className="h-4 w-4" />
             Cancelar
           </Button>
-          <Button type="button" onClick={onNext} className="w-full gap-2 rounded-xl sm:w-auto sm:min-w-36">
+          <Button
+            type="button"
+            onClick={onNext}
+            className="w-full gap-2 rounded-xl bg-territory-sun text-territory-ink hover:bg-territory-sun/90 sm:w-auto sm:min-w-36"
+          >
             Próximo
             <ArrowRight className="h-4 w-4" />
           </Button>
