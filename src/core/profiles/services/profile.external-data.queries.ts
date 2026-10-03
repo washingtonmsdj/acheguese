@@ -128,7 +128,7 @@ export async function getUserBusinessesQuery(profileId: string): Promise<Busines
     throw error;
   }
 
-  return data ?? [];
+  return normalizeBusinessQueryRows(data ?? []);
 }
 
 export async function searchProfilesByNameQuery(
@@ -147,7 +147,7 @@ export async function searchProfilesByNameQuery(
     throw error;
   }
 
-  return data ?? [];
+  return normalizeBusinessQueryRows(data ?? []);
 }
 
 export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessRow[]> {
@@ -174,5 +174,5 @@ export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessR
     .eq("status", "active");
 
   if (error) return [];
-  return businesses ?? [];
+  return normalizeBusinessQueryRows(businesses ?? []);
 }
