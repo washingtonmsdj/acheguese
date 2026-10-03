@@ -32,6 +32,7 @@ import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/Ma
 import './MapaTerritorialExplorer.css';
 import { useMapViewportFetch, type LayerFetcher } from '../hooks/useMapViewportFetch';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
+import { mapEntityProjection } from '@/core/maps/services/MapEntityProjectionService';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
@@ -49,7 +50,6 @@ import {
 } from '@/core/routing/utils/territoryUrls';
 import { boundaryService } from '@/core/geospatial';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
-import { EntityStatus } from '@/shared/types/enums';
 import { LocationStatus, type Location } from '@/core/location/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type {
@@ -739,19 +739,28 @@ export default function MapaPageV4({
   const focusMarkers = React.useMemo(() => {
     if (!focusTarget) return [] as MapMarker[];
 
-    return [
+    const projected = mapEntityProjection.projectEntity(
       {
         id: 'focus-target',
-        type: 'user_location',
-        coordinates: {
-          latitude: focusTarget.latitude,
-          longitude: focusTarget.longitude,
-        },
-        title: focusTarget.name,
-        status: EntityStatus.ACTIVE,
-        metadata: { focusTarget: true },
+        name: focusTarget.name,
+        latitude: focusTarget.latitude,
+        longitude: focusTarget.longitude,
+        status: 'active',
       },
-    ] satisfies MapMarker[];
+      'user_location',
+    );
+
+    if (!projected) return [] as MapMarker[];
+
+    return [
+      {
+        ...projected,
+        metadata: {
+          ...projected.metadata,
+          focusTarget: true,
+        },
+      },
+    ];
   }, [focusTarget]);
 
   const allMarkers = React.useMemo(
