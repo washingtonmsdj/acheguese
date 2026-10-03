@@ -139,7 +139,7 @@ export async function expectNotFoundPublicRoute(
     .poll(
       async () => {
         const text = await readBodyText(page);
-        return /404/.test(text) && /Page not found/i.test(text);
+        return /404/.test(text) && /Página não encontrada/i.test(text);
       },
       { timeout: DEFAULT_READY_TIMEOUT_MS },
     )
