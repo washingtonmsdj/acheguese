@@ -11,6 +11,7 @@ const policy = readFileSync(
   join(ROOT, "supabase/functions/_shared/lgpdExportPolicy.ts"),
   "utf8",
 );
+const implementation = `${source}\n${policy}`;
 const matrix = JSON.parse(
   readFileSync(
     join(
@@ -92,7 +93,7 @@ describe("user-export-data v2", () => {
       '"billing_audit_log"',
       '"user_sessions"',
     ]) {
-      expect(source).not.toContain(marker);
+      expect(implementation).not.toContain(marker);
     }
   });
 
@@ -110,7 +111,7 @@ describe("user-export-data v2", () => {
       "app_metadata:",
       "identity_data:",
     ]) {
-      expect(source).not.toContain(marker);
+      expect(implementation).not.toContain(marker);
     }
   });
 
@@ -213,7 +214,7 @@ describe("user-export-data v2", () => {
       "reviewed_by: row.reviewed_by",
       "reported_profile_id: row.reported_profile_id",
     ]) {
-      expect(source).not.toContain(marker);
+      expect(implementation).not.toContain(marker);
     }
   });
 
@@ -247,13 +248,13 @@ describe("user-export-data v2", () => {
   });
 
   it("never serializes storage/push/session secrets", () => {
-    expect(source).not.toContain('"storage_reference"');
-    expect(source).not.toContain('"object_path"');
-    expect(source).not.toContain('"sha256"');
-    expect(source).not.toContain('"p256dh"');
-    expect(source).not.toContain('"endpoint"');
-    expect(source).not.toContain('"refresh_token_hash"');
-    expect(source).not.toContain('"session_token"');
+    expect(implementation).not.toContain('"storage_reference"');
+    expect(implementation).not.toContain('"object_path"');
+    expect(implementation).not.toContain('"sha256"');
+    expect(implementation).not.toContain('"p256dh"');
+    expect(implementation).not.toContain('"endpoint"');
+    expect(implementation).not.toContain('"refresh_token_hash"');
+    expect(implementation).not.toContain('"session_token"');
   });
 
   it("aligns output keys with the canonical matrix section names", () => {
