@@ -73,7 +73,7 @@
 .business-management-field dt {
   font-size: 12px;
   line-height: 1.4;
-  color: hsl(var(--muted-foreground));
+  color: hsl(var(--territory-muted));
 }
 .business-management-field dd {
   display: flex;
@@ -144,7 +144,7 @@
     margin-top: 6px;
     font-size: 12px;
     line-height: 1.5;
-    color: hsl(var(--muted-foreground));
+    color: hsl(var(--territory-muted));
   }
 }
 .business-dashboard-nav {
@@ -174,7 +174,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.3;
-  color: hsl(var(--foreground));
+  color: hsl(var(--territory-ink));
   text-decoration: none;
   transition:
     background-color 150ms ease,
