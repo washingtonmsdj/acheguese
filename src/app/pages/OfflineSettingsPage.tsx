@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
-  ArrowLeft,
   Building2,
   CheckCircle,
   Download,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";
 import { ConfirmActionDialog } from "@/shared/components/ConfirmActionDialog";
 import { OfflineDataStatus } from "@/shared/components/offline/OfflineIndicator";
 import { Button } from "@/shared/components/ui/button";
@@ -31,6 +31,9 @@ interface StatusTileProps {
   tone?: "success" | "danger" | "neutral";
 }
 
+const FIELD_CLASS =
+  "border-territory-border bg-territory-canvas text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-brand";
+
 function StatusTile({
   active,
   inactiveLabel,
@@ -44,15 +47,11 @@ function StatusTile({
           active: "border-warning/30 bg-warning/10 text-warning",
           inactive: "border-destructive/30 bg-destructive/10 text-destructive",
         }
-      : tone === "neutral"
-        ? {
-            active: "border-success/30 bg-success/10 text-success",
-            inactive: "border-muted-foreground/30 bg-muted/30 text-muted-foreground",
-          }
-        : {
-            active: "border-success/30 bg-success/10 text-success",
-            inactive: "border-muted-foreground/30 bg-muted/30 text-muted-foreground",
-          };
+      : {
+          active: "border-success/30 bg-success/10 text-success",
+          inactive:
+            "border-territory-border/70 bg-territory-surface-raised/60 text-territory-muted",
+        };
 
   const Icon = active ? CheckCircle : XCircle;
 
@@ -64,7 +63,9 @@ function StatusTile({
         <Icon className="h-4 w-4 shrink-0" />
         <p className="text-sm font-semibold">{title}</p>
       </div>
-      <p className="mt-2 text-sm text-muted-foreground">{active ? activeLabel : inactiveLabel}</p>
+      <p className="mt-2 text-sm text-territory-muted">
+        {active ? activeLabel : inactiveLabel}
+      </p>
     </div>
   );
 }
@@ -143,259 +144,246 @@ export default function OfflineSettingsPage() {
         <title>Modo offline</title>
       </Helmet>
 
-      <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,hsl(var(--primary)/0.08),transparent_26%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--muted)/0.3))]">
-        <main className="mx-auto w-full max-w-5xl px-4 pb-10 pt-4 sm:px-6 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-4 mb-5 border-b border-border/60 bg-background/90 px-4 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:rounded-3xl sm:border sm:bg-card/85 sm:px-5 sm:shadow-sm">
-            <div className="flex items-start gap-3">
+      <PublicInfoPageShell
+        eyebrow="Disponibilidade local"
+        title="Modo offline"
+        description="Defina o que precisa continuar acessível quando o sinal cair."
+        onBack={() => navigate(-1)}
+      >
+        <section className="rounded-3xl border border-territory-border/70 bg-territory-surface/90 p-5 shadow-sm sm:p-6">
+          <div className="space-y-2">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-territory-brand">
+              Leitura local
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-territory-ink sm:text-[2rem]">
+              Contatos, avisos e dados essenciais no aparelho
+            </h2>
+            <p className="max-w-2xl text-sm leading-6 text-territory-muted">
+              O modo offline guarda informações críticas do território e da operação para
+              consultas rápidas sem depender da rede.
+            </p>
+          </div>
+        </section>
+
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
+          <div className="space-y-4">
+            <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+                  <WifiOff className="h-4 w-4" />
+                  Status do modo offline
+                </CardTitle>
+                <CardDescription className="text-territory-muted">
+                  Valide conectividade, service worker e disponibilidade de dados locais.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <StatusTile
+                    active={isOnline}
+                    title="Conexão"
+                    activeLabel="Rede ativa e sincronização disponível."
+                    inactiveLabel="Sem internet no momento."
+                    tone="danger"
+                  />
+                  <StatusTile
+                    active={isServiceWorkerReady}
+                    title="Service worker"
+                    activeLabel="Cache local pronto para uso."
+                    inactiveLabel="Ainda não inicializado."
+                    tone="neutral"
+                  />
+                  <StatusTile
+                    active={hasCriticalData}
+                    title="Dados salvos"
+                    activeLabel="Conteúdo crítico já está no dispositivo."
+                    inactiveLabel="Nenhum pacote offline salvo."
+                    tone="neutral"
+                  />
+                </div>
+
+                <div className="rounded-2xl border border-territory-border/60 bg-territory-canvas/60 p-4">
+                  <OfflineDataStatus />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+                  <Phone className="h-4 w-4" />
+                  Contatos de emergência
+                </CardTitle>
+                <CardDescription className="text-territory-muted">
+                  Números que precisam continuar acessíveis sem internet.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="portaria" className="text-territory-ink">Portaria</Label>
+                  <Input
+                    id="portaria"
+                    type="tel"
+                    value={emergencyContacts.portaria}
+                    onChange={(event) =>
+                      setEmergencyContacts((current) => ({ ...current, portaria: event.target.value }))
+                    }
+                    className={FIELD_CLASS}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sindico" className="text-territory-ink">Síndico</Label>
+                  <Input
+                    id="sindico"
+                    type="tel"
+                    value={emergencyContacts.sindico}
+                    onChange={(event) =>
+                      setEmergencyContacts((current) => ({ ...current, sindico: event.target.value }))
+                    }
+                    className={FIELD_CLASS}
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="emergencia" className="text-territory-ink">Emergência pública</Label>
+                  <Input
+                    id="emergencia"
+                    type="text"
+                    value={emergencyContacts.emergencia}
+                    disabled
+                    className={FIELD_CLASS}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+                  <Building2 className="h-4 w-4" />
+                  Informações do edifício
+                </CardTitle>
+                <CardDescription className="text-territory-muted">
+                  Base local para localização, portaria e identificação do condomínio.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="building-name" className="text-territory-ink">Nome do edifício</Label>
+                  <Input
+                    id="building-name"
+                    value={buildingInfo.name}
+                    onChange={(event) =>
+                      setBuildingInfo((current) => ({ ...current, name: event.target.value }))
+                    }
+                    className={FIELD_CLASS}
+                  />
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="building-address" className="text-territory-ink">Endereço</Label>
+                  <Input
+                    id="building-address"
+                    value={buildingInfo.address}
+                    onChange={(event) =>
+                      setBuildingInfo((current) => ({ ...current, address: event.target.value }))
+                    }
+                    className={FIELD_CLASS}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="building-cep" className="text-territory-ink">CEP</Label>
+                  <Input
+                    id="building-cep"
+                    value={buildingInfo.cep}
+                    onChange={(event) =>
+                      setBuildingInfo((current) => ({ ...current, cep: event.target.value }))
+                    }
+                    className={FIELD_CLASS}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-4">
+            <Card className="rounded-3xl border-territory-border/70 bg-territory-surface/90 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+                  <AlertTriangle className="h-4 w-4" />
+                  Avisos importantes
+                </CardTitle>
+                <CardDescription className="text-territory-muted">
+                  Conteúdo crítico que vale manter no aparelho para consulta imediata.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {importantAlerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className="rounded-2xl border border-territory-border/60 bg-territory-canvas/60 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-territory-ink">{alert.title}</p>
+                        <p className="mt-1 text-sm leading-6 text-territory-muted">{alert.content}</p>
+                      </div>
+                      <span className="shrink-0 text-xs text-territory-muted">{alert.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-3xl border-territory-brand/20 bg-territory-brand/5 text-territory-ink shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+                  <Lightbulb className="h-4 w-4 text-territory-brand" />
+                  Como usar bem
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm leading-6 text-territory-muted">
+                <p>
+                  Salve os dados offline quando estiver com internet boa, antes de deslocamentos ou dias com risco de instabilidade.
+                </p>
+                <p>
+                  Priorize números de emergência, avisos de água, energia, segurança e contatos do prédio.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <section className="mt-5 rounded-3xl border border-territory-border/70 bg-territory-surface/90 p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-territory-ink">Pacote local do dispositivo</p>
+              <p className="text-sm leading-6 text-territory-muted">
+                Salve o conjunto atual ou limpe o cache quando precisar renovar os dados.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
               <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 rounded-full"
-                onClick={() => navigate(-1)}
+                variant="outline"
+                className="w-full justify-center border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised sm:w-auto"
+                onClick={() => setClearCacheDialogOpen(true)}
+                disabled={!hasCriticalData}
                 type="button"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <Trash2 className="mr-2 h-4 w-4" />
+                Limpar cache
               </Button>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Disponibilidade local
-                </p>
-                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Modo offline
-                </h1>
-                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Defina o que precisa continuar acessível quando o sinal cair.
-                </p>
-              </div>
+              <Button
+                className="w-full justify-center bg-territory-sun text-territory-ink hover:bg-territory-sun/90 focus-visible:ring-territory-brand sm:w-auto"
+                onClick={handleSaveCriticalData}
+                disabled={!isServiceWorkerReady}
+                type="button"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Salvar offline
+              </Button>
             </div>
           </div>
-
-          <section className="rounded-3xl border border-border/70 bg-card/90 p-5 shadow-sm sm:p-6">
-            <div className="space-y-2">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                Leitura local
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                Contatos, avisos e dados essenciais no aparelho
-              </h2>
-              <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                O modo offline guarda informações críticas do território e da operação para
-                consultas rápidas sem depender da rede.
-              </p>
-            </div>
-          </section>
-
-          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(320px,1fr)]">
-            <div className="space-y-4">
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <WifiOff className="h-4 w-4" />
-                    Status do modo offline
-                  </CardTitle>
-                  <CardDescription>
-                    Valide conectividade, service worker e disponibilidade de dados locais.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <StatusTile
-                      active={isOnline}
-                      title="Conexão"
-                      activeLabel="Rede ativa e sincronização disponível."
-                      inactiveLabel="Sem internet no momento."
-                      tone="danger"
-                    />
-                    <StatusTile
-                      active={isServiceWorkerReady}
-                      title="Service worker"
-                      activeLabel="Cache local pronto para uso."
-                      inactiveLabel="Ainda não inicializado."
-                      tone="neutral"
-                    />
-                    <StatusTile
-                      active={hasCriticalData}
-                      title="Dados salvos"
-                      activeLabel="Conteúdo crítico já está no dispositivo."
-                      inactiveLabel="Nenhum pacote offline salvo."
-                      tone="neutral"
-                    />
-                  </div>
-
-                  <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                    <OfflineDataStatus />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Phone className="h-4 w-4" />
-                    Contatos de emergência
-                  </CardTitle>
-                  <CardDescription>
-                    Números que precisam continuar acessíveis sem internet.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="portaria">Portaria</Label>
-                    <Input
-                      id="portaria"
-                      type="tel"
-                      value={emergencyContacts.portaria}
-                      onChange={(event) =>
-                        setEmergencyContacts((current) => ({ ...current, portaria: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="sindico">Síndico</Label>
-                    <Input
-                      id="sindico"
-                      type="tel"
-                      value={emergencyContacts.sindico}
-                      onChange={(event) =>
-                        setEmergencyContacts((current) => ({ ...current, sindico: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="emergencia">Emergência pública</Label>
-                    <Input
-                      id="emergencia"
-                      type="text"
-                      value={emergencyContacts.emergencia}
-                      disabled
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Building2 className="h-4 w-4" />
-                    Informações do edifício
-                  </CardTitle>
-                  <CardDescription>
-                    Base local para localização, portaria e identificação do condomínio.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="building-name">Nome do edifício</Label>
-                    <Input
-                      id="building-name"
-                      value={buildingInfo.name}
-                      onChange={(event) =>
-                        setBuildingInfo((current) => ({ ...current, name: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="building-address">Endereço</Label>
-                    <Input
-                      id="building-address"
-                      value={buildingInfo.address}
-                      onChange={(event) =>
-                        setBuildingInfo((current) => ({ ...current, address: event.target.value }))
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="building-cep">CEP</Label>
-                    <Input
-                      id="building-cep"
-                      value={buildingInfo.cep}
-                      onChange={(event) =>
-                        setBuildingInfo((current) => ({ ...current, cep: event.target.value }))
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="space-y-4">
-              <Card className="rounded-3xl border-border/70 bg-card/90 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <AlertTriangle className="h-4 w-4" />
-                    Avisos importantes
-                  </CardTitle>
-                  <CardDescription>
-                    Conteúdo crítico que vale manter no aparelho para consulta imediata.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {importantAlerts.map((alert) => (
-                    <div key={alert.id} className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{alert.title}</p>
-                          <p className="mt-1 text-sm leading-6 text-muted-foreground">{alert.content}</p>
-                        </div>
-                        <span className="shrink-0 text-xs text-muted-foreground">{alert.date}</span>
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-3xl border-primary/20 bg-primary/5 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Lightbulb className="h-4 w-4 text-primary" />
-                    Como usar bem
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-                  <p>
-                    Salve os dados offline quando estiver com internet boa, antes de deslocamentos ou dias com risco de instabilidade.
-                  </p>
-                  <p>
-                    Priorize números de emergência, avisos de água, energia, segurança e contatos do prédio.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          <section className="mt-5 rounded-3xl border border-border/70 bg-card/90 p-4 shadow-sm sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-foreground">Pacote local do dispositivo</p>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Salve o conjunto atual ou limpe o cache quando precisar renovar os dados.
-                </p>
-              </div>
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                <Button
-                  variant="outline"
-                  className="w-full justify-center sm:w-auto"
-                  onClick={() => setClearCacheDialogOpen(true)}
-                  disabled={!hasCriticalData}
-                  type="button"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Limpar cache
-                </Button>
-                <Button
-                  className="w-full justify-center sm:w-auto"
-                  onClick={handleSaveCriticalData}
-                  disabled={!isServiceWorkerReady}
-                  type="button"
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Salvar offline
-                </Button>
-              </div>
-            </div>
-          </section>
-        </main>
-      </div>
+        </section>
+      </PublicInfoPageShell>
 
       <ConfirmActionDialog
         open={clearCacheDialogOpen}
