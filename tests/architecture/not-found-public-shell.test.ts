@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const PAGE_PATH = "src/app/pages/NotFound.tsx";
+const PUBLIC_ROUTE_ASSERTIONS_PATH = "tests/e2e/support/publicRouteAssertions.ts";
 
 function read(relativePath: string): string {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -19,6 +20,13 @@ describe("NotFound public shell", () => {
     expect(page).toContain("Voltar para o início");
     expect(page).not.toContain("Oops! Page not found");
     expect(page).not.toContain("Return to Home");
+  });
+
+  it("keeps public 404 E2E assertions aligned with the canonical PT-BR shell", () => {
+    const assertions = read(PUBLIC_ROUTE_ASSERTIONS_PATH);
+
+    expect(assertions).toContain("/Página não encontrada/i");
+    expect(assertions).not.toContain("/Page not found/i");
   });
 
   it("uses SPA navigation while preserving error tracking", () => {
