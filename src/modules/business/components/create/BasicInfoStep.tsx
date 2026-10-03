@@ -130,20 +130,20 @@ export function BasicInfoStep({
   const industrySelectValue = manualIndustryMode ? INDUSTRY_CUSTOM_VALUE : industry;
 
   return (
-    <section className="bcr-step-panel overflow-hidden rounded-[26px] border border-border bg-card">
-      <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
+    <section className="bcr-step-panel overflow-hidden rounded-[26px] border border-territory-border bg-territory-surface">
+      <div className="border-b border-territory-border bg-gradient-to-br from-territory-brand/10 via-territory-surface to-territory-surface px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-territory-brand/10 text-territory-brand">
             <Building2 className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-territory-brand/80">
               Etapa 1
             </p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-territory-ink">
               {contextTitle ?? "Dados básicos"}
             </h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-territory-muted">
               {contextDescription ?? "Comece com as informações principais da sua empresa."}
             </p>
           </div>
@@ -151,13 +151,13 @@ export function BasicInfoStep({
       </div>
 
       <div className="space-y-6 p-5 sm:p-6">
-        {showLogo ? <div className="rounded-[22px] border border-border bg-background/70 p-4">
-          <Label className="text-sm font-semibold text-foreground">Logo da empresa</Label>
+        {showLogo ? <div className="rounded-[22px] border border-territory-border bg-territory-raised/70 p-4">
+          <Label className="text-sm font-semibold text-territory-ink">Logo da empresa</Label>
           <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
-            <Avatar className="h-20 w-20 rounded-[20px] border border-border bg-muted">
+            <Avatar className="h-20 w-20 rounded-[20px] border border-territory-border bg-territory-raised">
               <AvatarImage src={logoPreview || undefined} />
-              <AvatarFallback className="rounded-[20px] bg-muted">
-                <Building2 className="h-8 w-8 text-muted-foreground" />
+              <AvatarFallback className="rounded-[20px] bg-territory-raised">
+                <Building2 className="h-8 w-8 text-territory-muted" />
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
@@ -172,13 +172,13 @@ export function BasicInfoStep({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="gap-2 rounded-xl"
+                className="gap-2 rounded-xl border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <Upload className="h-4 w-4" />
                 {logoPreview ? "Trocar logo" : "Adicionar logo"}
               </Button>
-              <p className="mt-2 text-xs leading-5 text-muted-foreground">
+              <p className="mt-2 text-xs leading-5 text-territory-muted">
                 Imagem quadrada, nítida e fácil de reconhecer. Até 5 MB.
               </p>
             </div>
@@ -197,7 +197,7 @@ export function BasicInfoStep({
               onChange={(event) => onNameChange(event.target.value)}
               placeholder={effectiveNamePlaceholder}
               maxLength={100}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
             {errors.name ? <p className="text-xs text-destructive">{errors.name}</p> : null}
           </div>
@@ -209,7 +209,7 @@ export function BasicInfoStep({
               value={legalName}
               onChange={(event) => onLegalNameChange(event.target.value)}
               placeholder={copy.legalNamePlaceholder}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
             {errors.legal_name ? <p className="text-xs text-destructive">{errors.legal_name}</p> : null}
           </div> : null}
@@ -221,16 +221,16 @@ export function BasicInfoStep({
               value={cnpj}
               onChange={(event) => onCnpjChange(event.target.value)}
               placeholder="00.000.000/0000-00"
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
             {errors.cnpj ? <p className="text-xs text-destructive">{errors.cnpj}</p> : null}
           </div> : null}
         </div>
 
-        <div className={simpleMode ? "" : "border-t border-border pt-6"}>
+        <div className={simpleMode ? "" : "border-t border-territory-border pt-6"}>
           {!simpleMode ? <div className="mb-4">
-            <h3 className="text-sm font-semibold text-foreground">Classificação</h3>
-            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            <h3 className="text-sm font-semibold text-territory-ink">Classificação</h3>
+            <p className="mt-1 text-xs leading-5 text-territory-muted">
               Essas informações ajudam o Achegue-se a organizar a empresa nos lugares corretos.
             </p>
           </div> : null}
@@ -246,7 +246,7 @@ export function BasicInfoStep({
                 value={category}
                 onChange={(event) => onCategoryChange(event.target.value)}
                 disabled={categoryLocked}
-                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none ring-offset-territory-surface transition focus-visible:ring-2 focus-visible:ring-territory-focus focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <option value="">Selecione uma categoria</option>
                 {categoryOptions.map((option) => (
@@ -256,7 +256,7 @@ export function BasicInfoStep({
                 ))}
               </select>
               {categoryLocked && categoryLockedHelp ? (
-                <p className="text-xs text-muted-foreground">{categoryLockedHelp}</p>
+                <p className="text-xs text-territory-muted">{categoryLockedHelp}</p>
               ) : null}
               {errors.category ? <p className="text-xs text-destructive">{errors.category}</p> : null}
             </div>
@@ -268,7 +268,7 @@ export function BasicInfoStep({
                 value={subcategory}
                 onChange={(event) => onSubcategoryChange(event.target.value)}
                 placeholder={copy.subcategoryPlaceholder}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.subcategoria ? <p className="text-xs text-destructive">{errors.subcategoria}</p> : null}
             </div> : null}
@@ -279,7 +279,7 @@ export function BasicInfoStep({
                 id="company_type"
                 value={companyType}
                 onChange={(event) => onCompanyTypeChange(event.target.value)}
-                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground"
+                className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none ring-offset-territory-surface transition focus-visible:ring-2 focus-visible:ring-territory-focus focus-visible:ring-offset-2"
               >
                 <option value="">Não informado</option>
                 {BUSINESS_COMPANY_TYPES.map((option) => (
@@ -297,7 +297,7 @@ export function BasicInfoStep({
                 id="employee_count"
                 value={employeeCount}
                 onChange={(event) => onEmployeeCountChange(event.target.value)}
-                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground"
+                className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none ring-offset-territory-surface transition focus-visible:ring-2 focus-visible:ring-territory-focus focus-visible:ring-offset-2"
               >
                 <option value="">Não informado</option>
                 {BUSINESS_EMPLOYEE_COUNTS.map((option) => (
@@ -319,7 +319,7 @@ export function BasicInfoStep({
                 placeholder="2020"
                 min={1800}
                 max={new Date().getFullYear()}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.founded_year ? <p className="text-xs text-destructive">{errors.founded_year}</p> : null}
             </div> : null}
@@ -339,7 +339,7 @@ export function BasicInfoStep({
                   setManualIndustryMode(false);
                   onIndustryChange(nextValue);
                 }}
-                className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground"
+                className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none ring-offset-territory-surface transition focus-visible:ring-2 focus-visible:ring-territory-focus focus-visible:ring-offset-2"
               >
                 <option value="">Não informado</option>
                 {industryOptions.map((option) => (
@@ -354,7 +354,7 @@ export function BasicInfoStep({
                   value={industry}
                   onChange={(event) => onIndustryChange(event.target.value)}
                   placeholder={copy.industryPlaceholder}
-                  className="h-11 rounded-xl"
+                  className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
                 />
               ) : null}
               {errors.industry ? <p className="text-xs text-destructive">{errors.industry}</p> : null}
@@ -362,7 +362,7 @@ export function BasicInfoStep({
           </div>
         </div>
 
-        <div className={simpleMode ? "" : "border-t border-border pt-6"}>
+        <div className={simpleMode ? "" : "border-t border-territory-border pt-6"}>
           <Label htmlFor="description">
             Descrição <span className="text-destructive">*</span>
           </Label>
@@ -373,9 +373,9 @@ export function BasicInfoStep({
             placeholder={effectiveDescriptionPlaceholder}
             maxLength={1000}
             rows={simpleMode ? 4 : 5}
-            className={`mt-2 rounded-xl ${simpleMode ? "min-h-24" : "min-h-32"}`}
+            className={`mt-2 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus ${simpleMode ? "min-h-24" : "min-h-32"}`}
           />
-          <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+          <div className="mt-2 flex items-center justify-between text-xs text-territory-muted">
             <span className={errors.description ? "text-destructive" : ""}>
               {errors.description || "Mínimo de 10 caracteres"}
             </span>
@@ -383,9 +383,9 @@ export function BasicInfoStep({
           </div>
         </div>
 
-        {!simpleMode ? <div className="rounded-[20px] border border-border bg-muted/25 p-4 text-sm text-muted-foreground">
-          <div className="mb-2 flex items-center gap-2 font-semibold text-foreground">
-            <FileText className="h-4 w-4 text-primary" />
+        {!simpleMode ? <div className="rounded-[20px] border border-territory-border bg-territory-raised/25 p-4 text-sm text-territory-muted">
+          <div className="mb-2 flex items-center gap-2 font-semibold text-territory-ink">
+            <FileText className="h-4 w-4 text-territory-brand" />
             Onde essas informações aparecem
           </div>
           <p className="leading-6">
@@ -394,8 +394,8 @@ export function BasicInfoStep({
         </div> : null}
 
         {showNextButton ? (
-          <div className="border-t border-border pt-6">
-            <Button type="button" onClick={onNext} className="w-full gap-2 sm:w-auto sm:min-w-48 sm:float-right">
+          <div className="border-t border-territory-border pt-6">
+            <Button type="button" onClick={onNext} className="w-full gap-2 bg-territory-sun text-territory-ink hover:bg-territory-sun/90 sm:w-auto sm:min-w-48 sm:float-right">
               Continuar
               <ArrowRight className="h-4 w-4" />
             </Button>

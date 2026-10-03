@@ -116,20 +116,20 @@ export function ContactLocationStep({
   };
 
   return (
-    <section className="bcr-step-panel overflow-hidden rounded-[26px] border border-border bg-card">
-      <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
+    <section className="bcr-step-panel overflow-hidden rounded-[26px] border border-territory-border bg-territory-surface">
+      <div className="border-b border-territory-border bg-gradient-to-br from-territory-brand/10 via-territory-surface to-territory-surface px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-territory-brand/10 text-territory-brand">
             {mode === "contact" ? <Phone className="h-5 w-5" /> : <MapPin className="h-5 w-5" />}
           </span>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-territory-brand/80">
               Etapa {mode === "contact" ? 3 : 2}
             </p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-territory-ink">
               {mode === "location" ? "Localização" : mode === "contact" ? "Contato e horário" : "Contato, endereço e funcionamento"}
             </h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-territory-muted">
               {mode === "location" ? "Selecione o território e informe onde encontrar sua empresa." : mode === "contact" ? "Mostre como as pessoas podem falar com você e quando sua empresa atende." : "Defina onde a empresa aparece, como as pessoas entram em contato e quando ela funciona."}
             </p>
           </div>
@@ -137,14 +137,14 @@ export function ContactLocationStep({
       </div>
 
       <div className="space-y-6 p-5 sm:p-6">
-        {mode !== "contact" ? <div className="rounded-[22px] border border-border bg-background/70 p-4 sm:p-5">
+        {mode !== "contact" ? <div className="rounded-[22px] border border-territory-border bg-territory-raised/70 p-4 sm:p-5">
           <div className="mb-4 flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-territory-brand/10 text-territory-brand">
               <Route className="h-4 w-4" />
             </span>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Território principal</h3>
-              <p className="mt-1 text-sm leading-5 text-muted-foreground">
+              <h3 className="text-sm font-semibold text-territory-ink">Território principal</h3>
+              <p className="mt-1 text-sm leading-5 text-territory-muted">
                 O território orienta a página pública, a busca, o mapa e resultados de proximidade.
               </p>
             </div>
@@ -157,18 +157,18 @@ export function ContactLocationStep({
             <p className="mt-2 text-xs text-destructive">{errors.location_id}</p>
           ) : null}
           {locationData ? (
-            <div className="mt-3 rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
-              Página principal em <span className="font-semibold text-foreground">{locationData.neighborhoodName}</span>, {locationData.cityName} - {locationData.stateName}.
+            <div className="mt-3 rounded-2xl border border-territory-brand/10 bg-territory-brand/5 px-4 py-3 text-sm text-territory-muted">
+              Página principal em <span className="font-semibold text-territory-ink">{locationData.neighborhoodName}</span>, {locationData.cityName} - {locationData.stateName}.
             </div>
           ) : null}
         </div> : null}
 
-        {mode !== "location" ? <div className="border-t border-border pt-6">
+        {mode !== "location" ? <div className="border-t border-territory-border pt-6">
           <div className="mb-4 flex items-center gap-2">
-            <Phone className="h-4 w-4 text-primary" />
+            <Phone className="h-4 w-4 text-territory-brand" />
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Canais de contato</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <h3 className="text-sm font-semibold text-territory-ink">Canais de contato</h3>
+              <p className="mt-0.5 text-xs text-territory-muted">
                 Informe pelo menos um canal que esteja realmente disponível.
               </p>
             </div>
@@ -181,7 +181,7 @@ export function ContactLocationStep({
                 value={phone}
                 onChange={(event) => onPhoneChange(event.target.value)}
                 placeholder={copy.phonePlaceholder}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.phone ? <p className="text-xs text-destructive">{errors.phone}</p> : null}
             </div>
@@ -193,7 +193,7 @@ export function ContactLocationStep({
                 value={whatsapp}
                 onChange={(event) => onWhatsappChange(event.target.value)}
                 placeholder={copy.whatsappPlaceholder}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.whatsapp ? <p className="text-xs text-destructive">{errors.whatsapp}</p> : null}
             </div>
@@ -206,19 +206,19 @@ export function ContactLocationStep({
                 value={email}
                 onChange={(event) => onEmailChange(event.target.value)}
                 placeholder={copy.emailPlaceholder}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.email ? <p className="text-xs text-destructive">{errors.email}</p> : null}
             </div>
           </div>
         </div> : null}
 
-        {mode !== "contact" ? <div className="border-t border-border pt-6">
+        {mode !== "contact" ? <div className="border-t border-territory-border pt-6">
           <div className="mb-4 flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="h-4 w-4 text-territory-brand" />
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Endereço físico</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <h3 className="text-sm font-semibold text-territory-ink">Endereço físico</h3>
+              <p className="mt-0.5 text-xs text-territory-muted">
                 Use um endereço que possa ser reconhecido por clientes e pelos recursos de mapa.
               </p>
             </div>
@@ -231,7 +231,7 @@ export function ContactLocationStep({
                 value={addressStreet}
                 onChange={(event) => onAddressStreetChange(event.target.value)}
                 placeholder={copy.streetPlaceholder}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.address_street ? <p className="text-xs text-destructive">{errors.address_street}</p> : null}
             </div>
@@ -243,7 +243,7 @@ export function ContactLocationStep({
                 value={addressNumber}
                 onChange={(event) => onAddressNumberChange(event.target.value)}
                 placeholder="123"
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
             </div>
 
@@ -254,7 +254,7 @@ export function ContactLocationStep({
                 value={addressComplement}
                 onChange={(event) => onAddressComplementChange(event.target.value)}
                 placeholder={copy.complementPlaceholder}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
             </div>
 
@@ -265,20 +265,20 @@ export function ContactLocationStep({
                 value={postalCode}
                 onChange={(event) => onPostalCodeChange(event.target.value)}
                 placeholder="40000-000"
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.postal_code ? <p className="text-xs text-destructive">{errors.postal_code}</p> : null}
             </div>
           </div>
         </div> : null}
 
-        {mode !== "location" ? <details className="bcr-hours border-t border-border pt-6">
+        {mode !== "location" ? <details className="bcr-hours border-t border-territory-border pt-6">
           <summary>Adicionar horário de funcionamento (opcional)</summary>
           <div className="mb-4 flex items-center gap-2">
-            <Clock3 className="h-4 w-4 text-primary" />
+            <Clock3 className="h-4 w-4 text-territory-brand" />
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Horário de funcionamento</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <h3 className="text-sm font-semibold text-territory-ink">Horário de funcionamento</h3>
+              <p className="mt-0.5 text-xs text-territory-muted">
                 O horário informado alimenta o status “aberto agora” no catálogo e no perfil público.
               </p>
             </div>
@@ -292,16 +292,16 @@ export function ContactLocationStep({
                 <div
                   key={day.key}
                   className={`grid gap-3 rounded-2xl border px-4 py-3 md:grid-cols-[150px_1fr_1fr_130px] md:items-center ${
-                    isClosed ? "border-border bg-muted/25" : "border-border bg-background/60"
+                    isClosed ? "border-territory-border bg-territory-raised/25" : "border-territory-border bg-territory-raised/60"
                   }`}
                 >
-                  <div className="text-sm font-semibold text-foreground">{day.label}</div>
+                  <div className="text-sm font-semibold text-territory-ink">{day.label}</div>
                   <Input
                     type="time"
                     value={dayValue?.open || "09:00"}
                     onChange={(event) => updateDay(day.key, { open: event.target.value })}
                     disabled={isClosed}
-                    className="h-10 rounded-xl"
+                    className="h-10 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
                     aria-label={`Abertura ${day.label}`}
                   />
                   <Input
@@ -309,10 +309,10 @@ export function ContactLocationStep({
                     value={dayValue?.close || "18:00"}
                     onChange={(event) => updateDay(day.key, { close: event.target.value })}
                     disabled={isClosed}
-                    className="h-10 rounded-xl"
+                    className="h-10 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
                     aria-label={`Fechamento ${day.label}`}
                   />
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-territory-muted">
                     <Checkbox
                       checked={isClosed}
                       onCheckedChange={(checked) => updateDay(day.key, { closed: Boolean(checked) })}
@@ -325,10 +325,10 @@ export function ContactLocationStep({
           </div>
         </details> : null}
 
-        {mode !== "location" ? <div className="border-t border-border pt-6">
+        {mode !== "location" ? <div className="border-t border-territory-border pt-6">
           <div className="mb-3">
-            <h3 className="text-sm font-semibold text-foreground">Modos de atendimento</h3>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <h3 className="text-sm font-semibold text-territory-ink">Modos de atendimento</h3>
+            <p className="mt-1 text-xs text-territory-muted">
               Marque todas as formas pelas quais a empresa atende hoje.
             </p>
           </div>
@@ -340,8 +340,8 @@ export function ContactLocationStep({
                   key={modo.id}
                   className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 text-sm transition-colors ${
                     checked
-                      ? "border-primary/30 bg-primary/5"
-                      : "border-border bg-background/50 hover:bg-muted/30"
+                      ? "border-territory-brand/30 bg-territory-brand/5"
+                      : "border-territory-border bg-territory-raised/50 hover:bg-territory-raised/30"
                   }`}
                 >
                   <Checkbox
@@ -349,8 +349,8 @@ export function ContactLocationStep({
                     onCheckedChange={(nextChecked) => handleModoToggle(modo.id, Boolean(nextChecked))}
                   />
                   <div>
-                    <div className="font-semibold text-foreground">{modo.label}</div>
-                    <div className="mt-1 leading-5 text-muted-foreground">{modo.hint}</div>
+                    <div className="font-semibold text-territory-ink">{modo.label}</div>
+                    <div className="mt-1 leading-5 text-territory-muted">{modo.hint}</div>
                   </div>
                 </label>
               );
@@ -358,12 +358,12 @@ export function ContactLocationStep({
           </div>
         </div> : null}
 
-        <div className={mode === "all" ? "flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row" : "bcr-actions"}>
-          <Button type="button" variant="outline" onClick={onBack} className="flex-1 gap-2">
+        <div className={mode === "all" ? "flex flex-col-reverse gap-3 border-t border-territory-border pt-6 sm:flex-row" : "bcr-actions"}>
+          <Button type="button" variant="outline" onClick={onBack} className="flex-1 gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised">
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
-          <Button type="button" onClick={onNext} className="flex-1 gap-2">
+          <Button type="button" onClick={onNext} className="flex-1 gap-2 bg-territory-sun text-territory-ink hover:bg-territory-sun/90">
             Continuar
             <ArrowRight className="h-4 w-4" />
           </Button>

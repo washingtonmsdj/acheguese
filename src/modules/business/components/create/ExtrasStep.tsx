@@ -77,38 +77,38 @@ export function ExtrasStep({
   };
 
   return (
-    <section className="overflow-hidden rounded-[26px] border border-border bg-card">
-      <div className="border-b border-border bg-gradient-to-br from-primary/10 via-background to-background px-5 py-5 sm:px-6">
+    <section className="overflow-hidden rounded-[26px] border border-territory-border bg-territory-surface">
+      <div className="border-b border-territory-border bg-gradient-to-br from-territory-brand/10 via-territory-surface to-territory-surface px-5 py-5 sm:px-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-territory-brand/10 text-territory-brand">
             <Sparkles className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary/80">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-territory-brand/80">
               Etapa 3
             </p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
-              Apresentação e detalhes
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-territory-ink">
+              ApresentaÃ§Ã£o e detalhes
             </h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-              Finalize a vitrine do seu {copy.entityNoun} com imagem, canais digitais e informações úteis para quem encontrar a página.
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-territory-muted">
+              Finalize a vitrine do seu {copy.entityNoun} com imagem, canais digitais e informaÃ§Ãµes Ãºteis para quem encontrar a pÃ¡gina.
             </p>
           </div>
         </div>
       </div>
 
       <div className="space-y-6 p-5 sm:p-6">
-        <div className="rounded-[22px] border border-border bg-background/70 p-4">
+        <div className="rounded-[22px] border border-territory-border bg-territory-raised/70 p-4">
           <div className="flex items-center gap-2">
-            <ImagePlus className="h-4 w-4 text-primary" />
-            <Label className="text-sm font-semibold text-foreground">Imagem de capa</Label>
+            <ImagePlus className="h-4 w-4 text-territory-brand" />
+            <Label className="text-sm font-semibold text-territory-ink">Imagem de capa</Label>
           </div>
-          <p className="mt-1 text-sm leading-5 text-muted-foreground">
-            Use uma imagem horizontal que represente bem a empresa. Você poderá trocar depois.
+          <p className="mt-1 text-sm leading-5 text-territory-muted">
+            Use uma imagem horizontal que represente bem a empresa. VocÃª poderÃ¡ trocar depois.
           </p>
 
           {capaPreview ? (
-            <div className="mt-4 overflow-hidden rounded-[18px] border border-border bg-muted">
+            <div className="mt-4 overflow-hidden rounded-[18px] border border-territory-border bg-territory-raised">
               <img
                 src={capaPreview}
                 alt="Capa da empresa"
@@ -116,7 +116,7 @@ export function ExtrasStep({
               />
             </div>
           ) : (
-            <div className="mt-4 flex h-32 items-center justify-center rounded-[18px] border border-dashed border-border bg-muted/30 text-muted-foreground">
+            <div className="mt-4 flex h-32 items-center justify-center rounded-[18px] border border-dashed border-territory-border bg-territory-raised/30 text-territory-muted">
               <div className="text-center">
                 <ImagePlus className="mx-auto h-6 w-6" />
                 <p className="mt-2 text-xs">Nenhuma capa adicionada</p>
@@ -136,22 +136,22 @@ export function ExtrasStep({
               type="button"
               variant="outline"
               size="sm"
-              className="gap-2 rounded-xl"
+              className="gap-2 rounded-xl border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
               onClick={() => fileInputRef.current?.click()}
             >
               <Upload className="h-4 w-4" />
               {capaPreview ? "Trocar capa" : "Adicionar capa"}
             </Button>
-            <p className="text-xs text-muted-foreground">Opcional · imagem horizontal recomendada.</p>
+            <p className="text-xs text-territory-muted">Opcional Â· imagem horizontal recomendada.</p>
           </div>
         </div>
 
-        <div className="border-t border-border pt-6">
+        <div className="border-t border-territory-border pt-6">
           <div className="mb-3 flex items-center gap-2">
-            <Globe2 className="h-4 w-4 text-primary" />
+            <Globe2 className="h-4 w-4 text-territory-brand" />
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Canais digitais</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <h3 className="text-sm font-semibold text-territory-ink">Canais digitais</h3>
+              <p className="mt-0.5 text-xs text-territory-muted">
                 Informe somente canais que estejam ativos e atualizados.
               </p>
             </div>
@@ -163,7 +163,7 @@ export function ExtrasStep({
                 placeholder={copy.websitePlaceholder}
                 value={website}
                 onChange={(event) => onWebsiteChange(event.target.value)}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.website ? <p className="mt-1 text-xs text-destructive">{errors.website}</p> : null}
             </div>
@@ -173,7 +173,7 @@ export function ExtrasStep({
                 placeholder={copy.instagramPlaceholder}
                 value={instagram}
                 onChange={(event) => onInstagramChange(event.target.value)}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.instagram ? <p className="mt-1 text-xs text-destructive">{errors.instagram}</p> : null}
             </div>
@@ -183,20 +183,20 @@ export function ExtrasStep({
                 placeholder={copy.facebookPlaceholder}
                 value={facebook}
                 onChange={(event) => onFacebookChange(event.target.value)}
-                className="h-11 rounded-xl"
+                className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
               />
               {errors.facebook ? <p className="mt-1 text-xs text-destructive">{errors.facebook}</p> : null}
             </div>
           </div>
         </div>
 
-        <div className="border-t border-border pt-6">
+        <div className="border-t border-territory-border pt-6">
           <div className="mb-3 flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-primary" />
+            <CreditCard className="h-4 w-4 text-territory-brand" />
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Formas de pagamento</h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Marque as opções aceitas normalmente pela empresa.
+              <h3 className="text-sm font-semibold text-territory-ink">Formas de pagamento</h3>
+              <p className="mt-0.5 text-xs text-territory-muted">
+                Marque as opÃ§Ãµes aceitas normalmente pela empresa.
               </p>
             </div>
           </div>
@@ -208,8 +208,8 @@ export function ExtrasStep({
                   key={forma}
                   className={`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition-colors ${
                     checked
-                      ? "border-primary/30 bg-primary/5 text-foreground"
-                      : "border-border bg-background/50 text-muted-foreground hover:bg-muted/30"
+                      ? "border-territory-brand/30 bg-territory-brand/5 text-territory-ink"
+                      : "border-territory-border bg-territory-raised/50 text-territory-muted hover:bg-territory-raised/30"
                   }`}
                 >
                   <Checkbox
@@ -225,7 +225,7 @@ export function ExtrasStep({
           </div>
         </div>
 
-        <div className="grid gap-4 border-t border-border pt-6 md:grid-cols-2">
+        <div className="grid gap-4 border-t border-territory-border pt-6 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="especialidades">Especialidades</Label>
             <Input
@@ -233,9 +233,9 @@ export function ExtrasStep({
               value={especialidades}
               onChange={(event) => onEspecialidadesChange(event.target.value)}
               placeholder={copy.specialtiesPlaceholder}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
-            <p className="text-xs text-muted-foreground">Separe os itens por vírgula.</p>
+            <p className="text-xs text-territory-muted">Separe os itens por vÃ­rgula.</p>
           </div>
 
           <div className="space-y-2">
@@ -245,30 +245,30 @@ export function ExtrasStep({
               value={facilidades}
               onChange={(event) => onFacilidadesChange(event.target.value)}
               placeholder={copy.facilitiesPlaceholder}
-              className="h-11 rounded-xl"
+              className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
-            <p className="text-xs text-muted-foreground">Separe os itens por vírgula.</p>
+            <p className="text-xs text-territory-muted">Separe os itens por vÃ­rgula.</p>
           </div>
         </div>
 
-        <div className="rounded-[20px] border border-border bg-background/60 p-4">
-          <Label htmlFor="status">Publicação inicial</Label>
+        <div className="rounded-[20px] border border-territory-border bg-territory-raised/60 p-4">
+          <Label htmlFor="status">PublicaÃ§Ã£o inicial</Label>
           <select
             id="status"
             value={status}
             onChange={(event) => onStatusChange(event.target.value)}
-            className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3 text-sm text-foreground"
+            className="mt-2 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none ring-offset-territory-surface transition focus-visible:ring-2 focus-visible:ring-territory-focus focus-visible:ring-offset-2"
           >
             <option value="active">Publicar agora</option>
             <option value="pending">Salvar para revisar depois</option>
           </select>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Você poderá ajustar essas informações depois pela Central da empresa.
+          <p className="mt-2 text-xs leading-5 text-territory-muted">
+            VocÃª poderÃ¡ ajustar essas informaÃ§Ãµes depois pela Central da empresa.
           </p>
         </div>
 
-        <div className="flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row">
-          <Button type="button" variant="outline" onClick={onBack} className="gap-2 sm:flex-1">
+        <div className="flex flex-col-reverse gap-3 border-t border-territory-border pt-6 sm:flex-row">
+          <Button type="button" variant="outline" onClick={onBack} className="gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised sm:flex-1">
             <ArrowLeft className="h-4 w-4" />
             Voltar
           </Button>
@@ -276,7 +276,7 @@ export function ExtrasStep({
             type="button"
             onClick={onCreate}
             disabled={isCreating}
-            className="gap-2 sm:flex-1"
+            className="gap-2 bg-territory-sun text-territory-ink hover:bg-territory-sun/90 sm:flex-1"
           >
             {isCreating ? (
               <>
