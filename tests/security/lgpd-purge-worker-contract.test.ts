@@ -49,6 +49,10 @@ const matrix = JSON.parse(
 };
 
 const config = readFileSync(join(root, "supabase/config.toml"), "utf8");
+const heavyWorkflow = readFileSync(
+  join(root, ".github/workflows/certify-heavy-pr-auto.yml"),
+  "utf8",
+);
 
 describe("LGPD purge worker safety contract", () => {
   it("keeps the irreversible worker source-only and rollout-disabled", () => {
@@ -77,6 +81,13 @@ describe("LGPD purge worker safety contract", () => {
         "persist-failed-state-and-require-idempotent-retry",
       silentRetryLoop: "forbidden",
     });
+  });
+
+  it("is enforced by the authoritative Heavy LGPD gate", () => {
+    expect(heavyWorkflow).toContain(
+      "tests/security/lgpd-purge-worker-contract.test.ts",
+    );
+    expect(heavyWorkflow).toContain("Run critical LGPD/security contract tests");
   });
 
   it("keeps Auth deletion last and cleanup/revalidation before it", () => {
