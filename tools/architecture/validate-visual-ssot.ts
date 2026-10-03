@@ -113,6 +113,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/app/pages/TermosPage.tsx',
   'src/app/pages/DPOContactPage.tsx',
   'src/app/pages/EmpresasLandingPage.tsx',
+  'src/app/features/business-landing/pages/EmpresasLandingLayout.tsx',
   'src/app/pages/TerritoryEntryPage.tsx',
   'src/app/pages/TerritoryEntryPage.css',
   'src/app/pages/ComoFuncionaPage.tsx',
