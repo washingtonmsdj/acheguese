@@ -218,6 +218,21 @@ describe("OrdaX first-party integration boundary", () => {
     );
     expect(contract.runtime_gate.ordax_product_oauth_redirect_registered).toBe(false);
     expect(contract.runtime_gate.ordax_product_oauth_listener_deployed).toBe(false);
+    expect(
+      contract.runtime_gate.ordax_product_oauth_pending_transaction_source_available,
+    ).toBe(true);
+    expect(
+      contract.runtime_gate.ordax_product_oauth_pending_state_persisted_as_sha256_only,
+    ).toBe(true);
+    expect(contract.runtime_gate.ordax_product_oauth_pkce_verifier_server_only).toBe(
+      true,
+    );
+    expect(contract.runtime_gate.ordax_product_oauth_pending_store_implemented).toBe(
+      false,
+    );
+    expect(contract.runtime_gate.ordax_product_oauth_callback_runtime_enabled).toBe(
+      false,
+    );
     expect(contract.runtime_gate.ordax_product_network_resource_source_available).toBe(true);
     expect(contract.runtime_gate.ordax_product_network_public_runtime_enabled).toBe(false);
     expect(contract.runtime_gate.ordax_product_network_routes).toEqual({
