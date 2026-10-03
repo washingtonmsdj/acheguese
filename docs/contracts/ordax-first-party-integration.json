@@ -83,6 +83,13 @@
       "network.communities.read"
     ],
     "requires_two_account_e2e": true,
-    "fake_adapter_forbidden": true
+    "fake_adapter_forbidden": true,
+    "ordax_product_network_resource_source_available": true,
+    "ordax_product_network_public_runtime_enabled": false,
+    "ordax_product_network_routes": {
+      "space": "GET /product/network/v1/space",
+      "directory": "GET /product/network/v1/directory",
+      "communities": "GET /product/network/v1/communities"
+    }
   }
 }
