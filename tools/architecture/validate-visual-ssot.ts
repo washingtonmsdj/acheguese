@@ -389,6 +389,21 @@ function main(): void {
     violations,
   );
 
+  const assistedSearch = readRequired('src/app/pages/BuscarPage.tsx', violations);
+  for (const legacyUtility of ['bg-background', 'text-muted-foreground']) {
+    if (assistedSearch.includes(legacyUtility)) {
+      violations.push(
+        `src/app/pages/BuscarPage.tsx: ${legacyUtility} is a generic theme utility; consume territory search tokens instead.`,
+      );
+    }
+  }
+  requireIncludes(
+    'src/app/pages/BuscarPage.tsx',
+    assistedSearch,
+    ['bg-territory-canvas', 'text-territory-ink', 'text-territory-muted'],
+    violations,
+  );
+
   for (const relative of BUSINESS_SEMANTIC_TOKEN_FILES) {
     const content = readRequired(relative, violations);
     if (LEGACY_BUSINESS_PALETTE_RE.test(content)) {
