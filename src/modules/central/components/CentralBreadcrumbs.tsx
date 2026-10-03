@@ -86,11 +86,11 @@ export function CentralBreadcrumbs() {
   });
 
   return (
-    <nav className="flex items-center space-x-2 text-sm text-muted-foreground px-4 py-2 overflow-x-auto">
+    <nav className="flex items-center space-x-2 text-sm text-territory-muted px-4 py-2 overflow-x-auto">
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.path} className="flex items-center shrink-0">
           {index === breadcrumbs.length - 1 ? (
-            <span className="font-medium text-foreground">
+            <span className="font-medium text-territory-ink">
               {crumb.isBusinessName && loadingBusiness ? (
                 <Skeleton className="h-4 w-24 inline-block" />
               ) : (
@@ -104,7 +104,7 @@ export function CentralBreadcrumbs() {
               <Link
                 to={crumb.path}
                 className={cn(
-                  'hover:text-foreground transition-colors',
+                  'hover:text-territory-ink transition-colors',
                   index === 0 && 'flex items-center gap-1',
                 )}
               >

@@ -371,6 +371,24 @@ function main(): void {
     violations,
   );
 
+  const centralBreadcrumbs = readRequired(
+    'src/modules/central/components/CentralBreadcrumbs.tsx',
+    violations,
+  );
+  for (const legacyUtility of ['text-muted-foreground', 'text-foreground']) {
+    if (centralBreadcrumbs.includes(legacyUtility)) {
+      violations.push(
+        `src/modules/central/components/CentralBreadcrumbs.tsx: ${legacyUtility} is a generic theme utility; consume territory text tokens instead.`,
+      );
+    }
+  }
+  requireIncludes(
+    'src/modules/central/components/CentralBreadcrumbs.tsx',
+    centralBreadcrumbs,
+    ['text-territory-muted', 'text-territory-ink'],
+    violations,
+  );
+
   for (const relative of BUSINESS_SEMANTIC_TOKEN_FILES) {
     const content = readRequired(relative, violations);
     if (LEGACY_BUSINESS_PALETTE_RE.test(content)) {
