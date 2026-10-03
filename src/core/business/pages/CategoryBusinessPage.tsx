@@ -81,20 +81,20 @@ function isBusinessOpenNow(hours: Business["horario_funcionamento"]): boolean | 
 // ── Skeleton ─────────────────────────────────────────────────────────
 function CardSkeleton() {
   return (
-    <div className="overflow-hidden rounded-xl bg-card border border-border animate-pulse">
-      <div className="h-36 bg-secondary/50" />
+    <div className="overflow-hidden rounded-xl bg-territory-surface border border-territory-border animate-pulse">
+      <div className="h-36 bg-territory-raised/50" />
       <div className="p-4 space-y-3">
         <div className="flex gap-3">
-          <div className="w-12 h-12 rounded-xl bg-secondary" />
+          <div className="w-12 h-12 rounded-xl bg-territory-raised" />
           <div className="flex-1 space-y-2">
-            <div className="h-4 bg-secondary rounded w-3/4" />
-            <div className="h-3 bg-secondary rounded w-1/2" />
+            <div className="h-4 bg-territory-raised rounded w-3/4" />
+            <div className="h-3 bg-territory-raised rounded w-1/2" />
           </div>
         </div>
-        <div className="h-3 bg-secondary rounded w-1/3" />
+        <div className="h-3 bg-territory-raised rounded w-1/3" />
         <div className="flex gap-2">
-          <div className="h-8 bg-secondary rounded flex-1" />
-          <div className="h-8 bg-secondary rounded flex-1" />
+          <div className="h-8 bg-territory-raised rounded flex-1" />
+          <div className="h-8 bg-territory-raised rounded flex-1" />
         </div>
       </div>
     </div>
@@ -257,12 +257,12 @@ export default function CategoryBusinessPage({
   // ── Fallback if unknown category ───────────────────────────────────
   if (!config) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-territory-canvas flex items-center justify-center p-4">
         <div className="text-center">
-          <Store className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-foreground mb-2">Categoria não encontrada</h1>
-          <p className="text-muted-foreground mb-4">A categoria "{categorySlug}" não existe.</p>
-          <Button onClick={() => navigate(businessUrls.list)} variant="outline">Voltar</Button>
+          <Store className="h-16 w-16 text-territory-muted mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-territory-ink mb-2">Categoria não encontrada</h1>
+          <p className="text-territory-muted mb-4">A categoria "{categorySlug}" não existe.</p>
+          <Button onClick={() => navigate(businessUrls.list)} variant="outline" className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised">Voltar</Button>
         </div>
       </div>
     );
@@ -272,14 +272,14 @@ export default function CategoryBusinessPage({
   const hasActiveFilters = activeFilterKeys.size > 0 || searchQuery.trim().length > 0;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-territory-canvas text-territory-ink flex flex-col">
       {/* ── HERO HEADER ──────────────────────────────────────────── */}
       <section className="relative border-b border-territory-border bg-gradient-to-br from-territory-brand/10 via-territory-surface to-territory-sun/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-10">
           {/* Back button */}
           <button
             onClick={() => navigate(businessUrls.list)}
-            className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-4 text-sm"
+            className="flex items-center gap-1.5 text-territory-muted hover:text-territory-ink transition-colors mb-4 text-sm"
           >
             <ArrowLeft className="h-4 w-4" /> Voltar
           </button>
@@ -289,10 +289,10 @@ export default function CategoryBusinessPage({
               <Icon className="h-7 w-7 text-territory-brand md:h-9 md:w-9" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground font-heading">
+              <h1 className="text-2xl md:text-3xl font-bold text-territory-ink font-heading">
                 {config.labelPlural}
               </h1>
-              <p className="text-sm text-muted-foreground mt-1 max-w-lg">
+              <p className="text-sm text-territory-muted mt-1 max-w-lg">
                 {getCategoryDescription(config.description, resolved)}
               </p>
             </div>
@@ -300,20 +300,20 @@ export default function CategoryBusinessPage({
 
           {/* Search */}
           <div className="mt-5 max-w-xl relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-territory-muted pointer-events-none" />
             <Input
               type="search"
               placeholder={`Buscar em ${config.labelPlural.toLowerCase()}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 h-11 bg-card border-border text-foreground placeholder:text-muted-foreground rounded-lg"
+              className="pl-10 pr-10 h-11 bg-territory-surface border-territory-border text-territory-ink placeholder:text-territory-muted rounded-lg"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-territory-raised flex items-center justify-center hover:bg-territory-raised/80 transition-colors"
               >
-                <X className="w-3.5 h-3.5 text-muted-foreground" />
+                <X className="w-3.5 h-3.5 text-territory-muted" />
               </button>
             )}
           </div>
@@ -321,7 +321,7 @@ export default function CategoryBusinessPage({
       </section>
 
       {/* ── FILTERS BAR ──────────────────────────────────────────── */}
-      <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-lg border-b border-border">
+      <div className="sticky top-0 z-40 bg-territory-surface/95 backdrop-blur-lg border-b border-territory-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
           {/* Filter chips (scrollable) */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -338,8 +338,8 @@ export default function CategoryBusinessPage({
                 className={cn(
                   "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0 border",
                   nearbyFilterActive && userPosition
-                    ? "bg-primary text-primary-foreground border-primary shadow-md"
-                    : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary",
+                    ? "bg-territory-brand text-territory-on-image border-territory-brand shadow-md"
+                    : "bg-territory-surface border-territory-border text-territory-muted hover:border-territory-brand/40 hover:text-territory-brand",
                   positionLoading && "opacity-50 cursor-wait"
                 )}
               >
@@ -359,14 +359,14 @@ export default function CategoryBusinessPage({
               className={cn(
                 "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium border transition-all shrink-0",
                 showFilters
-                  ? "bg-primary/10 border-primary/30 text-primary"
-                  : "bg-secondary border-border text-muted-foreground hover:border-primary/30"
+                  ? "bg-territory-brand/10 border-territory-brand/30 text-territory-brand"
+                  : "bg-territory-raised border-territory-border text-territory-muted hover:border-territory-brand/30"
               )}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               Filtros
               {activeFilterKeys.size > 0 && (
-                <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                <span className="bg-territory-brand text-territory-on-image text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center">
                   {activeFilterKeys.size}
                 </span>
               )}
@@ -383,8 +383,8 @@ export default function CategoryBusinessPage({
                   className={cn(
                     "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all shrink-0 border",
                     isActive
-                      ? "bg-primary text-primary-foreground border-primary shadow-md"
-                      : "bg-card border-border text-muted-foreground hover:border-primary/40 hover:text-primary"
+                      ? "bg-territory-brand text-territory-on-image border-territory-brand shadow-md"
+                      : "bg-territory-surface border-territory-border text-territory-muted hover:border-territory-brand/40 hover:text-territory-brand"
                   )}
                 >
                   <FilterIcon className="h-3.5 w-3.5" />
@@ -423,11 +423,11 @@ export default function CategoryBusinessPage({
                 <div className="pt-3 pb-1 flex items-center justify-between">
                   {/* Sort */}
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Ordenar:</span>
+                    <span className="text-xs text-territory-muted">Ordenar:</span>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="bg-secondary border border-border rounded-lg px-2.5 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                      className="bg-territory-raised border border-territory-border rounded-lg px-2.5 py-1.5 text-xs text-territory-ink focus:outline-none focus:ring-1 focus:ring-territory-focus"
                     >
                       {config.sortOptions.map((opt) => (
                         <option key={opt.id} value={opt.id}>{opt.label}</option>
@@ -437,7 +437,7 @@ export default function CategoryBusinessPage({
 
                   {hasActiveFilters && (
                     <Button size="sm" variant="ghost" onClick={clearAllFilters}
-                      className="text-xs text-muted-foreground hover:text-foreground">
+                      className="text-xs text-territory-muted hover:text-territory-ink">
                       Limpar filtros
                     </Button>
                   )}
@@ -450,12 +450,12 @@ export default function CategoryBusinessPage({
 
       {/* ── RESULTS COUNT ────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4 pb-2">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-territory-muted">
           {isLoading ? (
             "Carregando..."
           ) : (
             <>
-              <span className="font-semibold text-foreground">{filteredBusinesses.length}</span>{" "}
+              <span className="font-semibold text-territory-ink">{filteredBusinesses.length}</span>{" "}
               {filteredBusinesses.length === 1 ? "resultado" : "resultados"}
               {hasActiveFilters && " com os filtros aplicados"}
             </>
@@ -476,9 +476,9 @@ export default function CategoryBusinessPage({
         {isError && (
           <div className="text-center py-16">
             <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-foreground mb-2">Erro ao carregar</h3>
-            <p className="text-sm text-muted-foreground mb-4">{(error as Error)?.message || "Tente novamente."}</p>
-            <Button onClick={() => refetch()} variant="outline">Tentar novamente</Button>
+            <h3 className="text-lg font-bold text-territory-ink mb-2">Erro ao carregar</h3>
+            <p className="text-sm text-territory-muted mb-4">{(error as Error)?.message || "Tente novamente."}</p>
+            <Button onClick={() => refetch()} variant="outline" className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised">Tentar novamente</Button>
           </div>
         )}
 
@@ -486,14 +486,14 @@ export default function CategoryBusinessPage({
         {!isLoading && !isError && filteredBusinesses.length === 0 && (
           <div className="text-center py-16">
             <Icon className="mx-auto mb-4 h-12 w-12 text-territory-brand" />
-            <h3 className="text-lg font-bold text-foreground mb-2">Nenhum resultado</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+            <h3 className="text-lg font-bold text-territory-ink mb-2">Nenhum resultado</h3>
+            <p className="text-sm text-territory-muted mb-4">
               {hasActiveFilters
                 ? "Nenhuma empresa corresponde aos filtros. Tente ajustar."
                 : `Ainda não há ${config.labelPlural.toLowerCase()} cadastrados ${territoryLabels.emptyContext}.`}
             </p>
             {hasActiveFilters && (
-              <Button onClick={clearAllFilters} variant="outline" size="sm">Limpar filtros</Button>
+              <Button onClick={clearAllFilters} variant="outline" size="sm" className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised">Limpar filtros</Button>
             )}
           </div>
         )}
@@ -520,12 +520,12 @@ export default function CategoryBusinessPage({
                   variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
                   whileHover={{ scale: 1.01 }}
                   onClick={() => handleBusinessClick(business)}
-                  className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-primary/40 hover:shadow-lg transition-all cursor-pointer"
+                  className="group relative overflow-hidden rounded-xl bg-territory-surface border border-territory-border hover:border-territory-brand/40 hover:shadow-lg transition-all cursor-pointer"
                   role="article"
                   aria-label={`${business.name} - ${config.label}`}
                 >
                   {/* Cover */}
-                  <div className="relative h-36 bg-secondary/30 overflow-hidden">
+                  <div className="relative h-36 bg-territory-raised/30 overflow-hidden">
                     {business.banner_url ? (
                       <img
                         src={business.banner_url}
@@ -569,7 +569,7 @@ export default function CategoryBusinessPage({
                     {/* Delivery badge */}
                     {config.showDeliveryBadge && business.tem_delivery && (
                       <div className="absolute bottom-3 right-3">
-                        <Badge className="bg-accent/90 text-accent-foreground border-0 text-[10px] shadow-md">
+                        <Badge className="bg-territory-sun/90 text-territory-ink border-0 text-[10px] shadow-md">
                           <Truck className="w-3 h-3 mr-1" /> Delivery
                         </Badge>
                       </div>
@@ -584,21 +584,21 @@ export default function CategoryBusinessPage({
                         <img
                           src={business.logo_url}
                           alt={`Logo ${business.name}`}
-                          className="w-11 h-11 rounded-xl object-cover border border-border shrink-0"
+                          className="w-11 h-11 rounded-xl object-cover border border-territory-border shrink-0"
                           loading="lazy"
                         />
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <h3 className="font-bold text-foreground truncate group-hover:text-primary transition-colors text-sm">
+                          <h3 className="font-bold text-territory-ink truncate group-hover:text-territory-brand transition-colors text-sm">
                             {business.name}
                           </h3>
                           {business.is_verified && (
-                            <BadgeCheck className="w-4 h-4 text-primary shrink-0" />
+                            <BadgeCheck className="w-4 h-4 text-territory-brand shrink-0" />
                           )}
                         </div>
                         {business.subcategoria && (
-                          <p className="text-xs text-muted-foreground truncate">{business.subcategoria}</p>
+                          <p className="text-xs text-territory-muted truncate">{business.subcategoria}</p>
                         )}
                       </div>
                     </div>
@@ -611,16 +611,16 @@ export default function CategoryBusinessPage({
                             key={i}
                             className={cn(
                               "w-3.5 h-3.5",
-                              i < Math.floor(business.rating) ? "fill-warning text-warning" : "text-muted"
+                              i < Math.floor(business.rating) ? "fill-warning text-warning" : "text-territory-border"
                             )}
                           />
                         ))}
                       </div>
-                      <span className="text-xs font-semibold text-foreground">{business.rating.toFixed(1)}</span>
-                      <span className="text-xs text-muted-foreground">({business.total_reviews})</span>
+                      <span className="text-xs font-semibold text-territory-ink">{business.rating.toFixed(1)}</span>
+                      <span className="text-xs text-territory-muted">({business.total_reviews})</span>
                       {/* Distance badge */}
                       {business.distance !== null && nearbyFilterActive && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 ml-auto">
+                        <Badge variant="secondary" className="border-territory-border bg-territory-raised px-1.5 py-0 ml-auto text-[10px] text-territory-ink">
                           <Navigation className="w-3 h-3 mr-0.5" />
                           {formatDistance(business.distance)}
                         </Badge>
@@ -633,13 +633,13 @@ export default function CategoryBusinessPage({
                         {business.especialidades.slice(0, 3).map((spec) => (
                           <span
                             key={spec}
-                            className="text-[10px] bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full border border-border truncate"
+                            className="text-[10px] bg-territory-raised text-territory-muted-strong px-2 py-0.5 rounded-full border border-territory-border truncate"
                           >
                             {spec}
                           </span>
                         ))}
                         {business.especialidades.length > 3 && (
-                          <span className="text-[10px] text-muted-foreground">+{business.especialidades.length - 3}</span>
+                          <span className="text-[10px] text-territory-muted">+{business.especialidades.length - 3}</span>
                         )}
                       </div>
                     )}
@@ -668,7 +668,7 @@ export default function CategoryBusinessPage({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex-1 h-8 text-xs border-border text-muted-foreground hover:text-primary hover:border-primary/30"
+                          className="flex-1 h-8 border-territory-border bg-territory-surface text-xs text-territory-muted hover:border-territory-brand/30 hover:bg-territory-raised hover:text-territory-brand"
                           onClick={(e) => {
                             e.stopPropagation();
                             const url = buildTelUrl(business.phone);
@@ -690,12 +690,12 @@ export default function CategoryBusinessPage({
         {hasNextPage && (
           <div className="py-8 flex justify-center">
             {isFetchingNextPage ? (
-              <div className="flex items-center gap-2 text-primary">
+              <div className="flex items-center gap-2 text-territory-brand">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span className="text-sm">Carregando mais...</span>
               </div>
             ) : (
-              <Button onClick={() => loadMore()} variant="outline" size="sm">
+              <Button onClick={() => loadMore()} variant="outline" size="sm" className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised">
                 Carregar mais
               </Button>
             )}
@@ -704,7 +704,7 @@ export default function CategoryBusinessPage({
 
         {/* End message */}
         {!hasNextPage && filteredBusinesses.length > 0 && !isLoading && (
-          <p className="text-center py-8 text-muted-foreground text-sm">
+          <p className="text-center py-8 text-territory-muted text-sm">
             {territoryLabels.allResultsLabel}
           </p>
         )}
