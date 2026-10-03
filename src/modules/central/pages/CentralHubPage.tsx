@@ -38,17 +38,17 @@ export default function CentralHubPage({
   );
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8 text-territory-ink">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Central</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight text-territory-ink">Central</h1>
+          <p className="text-territory-muted">
             Hub de gestão das suas empresas no Achegue-se.
           </p>
         </div>
         <Button
           variant="outline"
-          className="w-full gap-2 sm:w-auto"
+          className="w-full gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised sm:w-auto"
           onClick={() => navigate("/")}
         >
           Ir para o site
@@ -58,26 +58,29 @@ export default function CentralHubPage({
 
       {hasBusinesses || isAdmin ? (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Suas áreas de gestão</h2>
+          <h2 className="text-lg font-semibold text-territory-ink">Suas áreas de gestão</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {hasBusinesses ? (
-              <Card className="rounded-lg border-primary/20 bg-primary/5">
+              <Card className="rounded-lg border-territory-brand/20 bg-territory-brand/[0.05] text-territory-ink">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-primary" />
+                  <CardTitle className="flex items-center gap-2 text-territory-ink">
+                    <Building2 className="h-5 w-5 text-territory-brand" />
                     Minhas Empresas
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-territory-muted">
                     Gerencie dados, operação e presença local das suas empresas.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <Badge variant="secondary">
+                    <Badge
+                      variant="secondary"
+                      className="bg-territory-raised text-territory-ink"
+                    >
                       {profileHub.businessModules.length} ativa(s)
                     </Badge>
                     <Button
-                      className="w-full sm:w-auto"
+                      className="w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 sm:w-auto"
                       onClick={() => navigate(businessManagementRoutes.list())}
                     >
                       Acessar
@@ -88,19 +91,19 @@ export default function CentralHubPage({
             ) : null}
 
             {isAdmin ? (
-              <Card className="rounded-lg border-primary/20 bg-primary/5">
+              <Card className="rounded-lg border-territory-brand/20 bg-territory-brand/[0.05] text-territory-ink">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-primary" />
+                  <CardTitle className="flex items-center gap-2 text-territory-ink">
+                    <Shield className="h-5 w-5 text-territory-brand" />
                     Administração
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-territory-muted">
                     Acesso ao painel administrativo do sistema.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button
-                    className="w-full sm:w-auto"
+                    className="w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 sm:w-auto"
                     onClick={() => navigate(centralRoutes.admin.home)}
                   >
                     Acessar admin
@@ -114,25 +117,25 @@ export default function CentralHubPage({
 
       {businessEnabled && !hasBusinesses ? (
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">Comece a gerenciar</h2>
+          <h2 className="text-lg font-semibold text-territory-ink">Comece a gerenciar</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card>
+            <Card className="border-territory-border bg-territory-surface text-territory-ink">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-territory-ink">
+                  <Building2 className="h-5 w-5 text-territory-brand" />
                   Cadastre sua empresa
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-territory-muted">
                   Crie e gerencie seu negócio no Achegue-se.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <Button
-                  className="w-full"
+                  className="w-full border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
                   variant="outline"
                   onClick={() => navigate(businessManagementRoutes.create())}
                 >
-                  <Sparkles className="mr-2 h-4 w-4" />
+                  <Sparkles className="mr-2 h-4 w-4 text-territory-brand" />
                   Criar empresa
                 </Button>
               </CardContent>
