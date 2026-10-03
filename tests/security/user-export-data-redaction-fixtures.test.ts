@@ -1,82 +1,14 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-const ROOT = process.cwd();
-const source = readFileSync(
-  join(ROOT, "supabase/functions/user-export-data/index.ts"),
-  "utf8",
-);
-
-type JsonRecord = Record<string, unknown>;
-type Sanitizer = (rows: JsonRecord[], profileIds: Set<string>) => JsonRecord[];
-
-function extractFunction(functionName: string): string {
-  const marker = `function ${functionName}(`;
-  const start = source.indexOf(marker);
-  if (start < 0) throw new Error(`Missing ${functionName} in user-export-data source`);
-
-  const openBrace = source.indexOf("{", start);
-  if (openBrace < 0) throw new Error(`Missing body for ${functionName}`);
-
-  let depth = 0;
-  let quote: "'" | '"' | "`" | null = null;
-  let escaped = false;
-
-  for (let index = openBrace; index < source.length; index += 1) {
-    const char = source[index];
-
-    if (quote) {
-      if (escaped) {
-        escaped = false;
-        continue;
-      }
-      if (char === "\\") {
-        escaped = true;
-        continue;
-      }
-      if (char === quote) quote = null;
-      continue;
-    }
-
-    if (char === "'" || char === '"' || char === "`") {
-      quote = char;
-      continue;
-    }
-    if (char === "{") depth += 1;
-    if (char === "}") {
-      depth -= 1;
-      if (depth === 0) return source.slice(start, index + 1);
-    }
-  }
-
-  throw new Error(`Unterminated ${functionName}`);
-}
-
-function loadSanitizer(functionName: string): Sanitizer {
-  const functionSource = extractFunction(functionName);
-  const compiled = ts.transpileModule(
-    `${functionSource}\nexports.sanitizer = ${functionName};`,
-    {
-      compilerOptions: {
-        module: ts.ModuleKind.CommonJS,
-        target: ts.ScriptTarget.ES2022,
-      },
-    },
-  ).outputText;
-
-  const moduleExports: { sanitizer?: Sanitizer } = {};
-  const execute = new Function("exports", compiled);
-  execute(moduleExports);
-  if (typeof moduleExports.sanitizer !== "function") {
-    throw new Error(`Unable to load ${functionName}`);
-  }
-  return moduleExports.sanitizer;
-}
-
-const sanitizeRides = loadSanitizer("sanitizeRides");
-const sanitizeOrders = loadSanitizer("sanitizeOrders");
+import {
+  MAX_ROWS_PER_SECTION,
+  enforceSectionLimit,
+  mapAuthUser,
+  redactUserMetadata,
+  sanitizeOrders,
+  sanitizeRides,
+  type JsonRecord,
+} from "../../supabase/functions/_shared/lgpdExportPolicy";
 
 const rideFixture: JsonRecord = {
   id: "ride-1",
@@ -118,7 +50,7 @@ const orderFixture: JsonRecord = {
   source_type: "business",
 };
 
-describe("user-export-data role-aware redaction fixtures", () => {
+describe("user-export-data pure LGPD policy fixtures", () => {
   it("shows passenger-private route/payment fields only to the passenger", () => {
     const passenger = sanitizeRides(
       [rideFixture],
@@ -204,5 +136,71 @@ describe("user-export-data role-aware redaction fixtures", () => {
     expect(merchantCourier.customer_profile_id).toBeUndefined();
     expect(merchantCourier.merchant_profile_id).toBeUndefined();
     expect(merchantCourier.courier_profile_id).toBeUndefined();
+  });
+
+  it("removes secret-like user metadata and non-scalar nested values", () => {
+    expect(
+      redactUserMetadata({
+        locale: "pt-BR",
+        marketing_opt_in: true,
+        refresh_token: "secret",
+        apiKey: "secret",
+        credential_hint: "secret",
+        nested: { should: "not serialize" },
+      }),
+    ).toEqual({
+      locale: "pt-BR",
+      marketing_opt_in: true,
+    });
+  });
+
+  it("maps Auth user without app metadata, identity data or provider tokens", () => {
+    const mapped = mapAuthUser({
+      id: "user-1",
+      email: "subject@example.test",
+      app_metadata: { role: "admin" },
+      user_metadata: {
+        display_name: "Subject",
+        access_token: "do-not-export",
+      },
+      identities: [
+        {
+          provider: "google",
+          identity_data: { email: "third-party@example.test" },
+          created_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+      factors: [
+        {
+          status: "verified",
+          friendly_name: "Telefone",
+          factor_type: "totp",
+          secret: "do-not-export",
+        },
+      ],
+    });
+
+    expect(mapped).not.toHaveProperty("app_metadata");
+    expect(mapped.user_metadata).toEqual({ display_name: "Subject" });
+    expect(mapped.identities).toEqual([
+      {
+        provider: "google",
+        created_at: "2026-01-01T00:00:00Z",
+        updated_at: null,
+        last_sign_in_at: null,
+      },
+    ]);
+    expect(JSON.stringify(mapped)).not.toContain("do-not-export");
+    expect(JSON.stringify(mapped)).not.toContain("third-party@example.test");
+  });
+
+  it("fails closed when a section exceeds the canonical row bound", () => {
+    const rows = Array.from(
+      { length: MAX_ROWS_PER_SECTION + 1 },
+      (_, index) => ({ id: `row-${index}` }),
+    );
+    expect(() => enforceSectionLimit("fixture", rows)).toThrow(
+      "EXPORT_SECTION_TOO_LARGE:fixture",
+    );
   });
 });
