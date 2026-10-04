@@ -1,6 +1,7 @@
 /**
- * AlertCard — Card visual próprio para alertas comunitários
- * Visual distinto de posts comuns: borda vermelha, badge de categoria, countdown
+ * AlertCard — Card visual próprio para alertas comunitários.
+ * Usa tokens semânticos territoriais para manter o estado visual separado da
+ * lógica de domínio e consistente com o SSOT global.
  */
 
 import { useState } from "react";
@@ -36,17 +37,22 @@ export function AlertCard({ alert, onSeeGuidelines }: AlertCardProps) {
   return (
     <article
       className={cn(
-        "rounded-xl border-2 bg-card p-4 space-y-3 shadow-sm",
-        "border-red-400 dark:border-red-600",
-        isExpiringSoon && "border-orange-400 dark:border-orange-500"
+        "space-y-3 rounded-2xl border-2 bg-territory-surface p-4 text-territory-ink shadow-sm",
+        "border-territory-error/45",
+        isExpiringSoon && "border-territory-warning/60",
       )}
       aria-label={`Alerta: ${categoryLabel}`}
     >
-      {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2 flex-wrap">
-          <AlertTriangle className="h-4 w-4 text-red-500 shrink-0" aria-hidden />
-          <Badge variant="destructive" className="text-xs font-semibold">
+        <div className="flex flex-wrap items-center gap-2">
+          <AlertTriangle
+            className="h-4 w-4 shrink-0 text-territory-error"
+            aria-hidden="true"
+          />
+          <Badge
+            variant="destructive"
+            className="bg-territory-error text-xs font-semibold text-territory-on-image hover:bg-territory-error/90"
+          >
             {categoryLabel}
           </Badge>
           <StatusBadge status={alert.status} />
@@ -54,84 +60,81 @@ export function AlertCard({ alert, onSeeGuidelines }: AlertCardProps) {
         <ExpiryCountdown minutesLeft={minutesLeft} />
       </div>
 
-      {/* Localização */}
-      <p className="text-xs text-muted-foreground font-medium">
+      <p className="text-xs font-medium text-territory-muted">
         {alert.neighborhood_display}, {alert.city}
       </p>
 
-      {/* Descrição */}
-      <p className="text-sm leading-relaxed">{alert.description}</p>
+      <p className="text-sm leading-relaxed text-territory-ink">
+        {alert.description}
+      </p>
 
-      {/* Badges informativos */}
       <div className="flex flex-wrap gap-2">
-        {!alert.seen_personally && (
-          <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+        {!alert.seen_personally ? (
+          <span className="rounded-full bg-territory-raised px-2 py-0.5 text-xs text-territory-muted">
             Relato indireto
           </span>
-        )}
-        {!alert.still_risky && (
-          <span className="text-xs bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full text-amber-700 dark:text-amber-300">
+        ) : null}
+        {!alert.still_risky ? (
+          <span className="rounded-full bg-territory-warning/12 px-2 py-0.5 text-xs text-territory-warning">
             Situação pode ter se encerrado
           </span>
-        )}
-        {alert.edit_count > 0 && (
-          <span className="text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+        ) : null}
+        {alert.edit_count > 0 ? (
+          <span className="rounded-full bg-territory-raised px-2 py-0.5 text-xs text-territory-muted">
             Atualizado {alert.edit_count}×
           </span>
-        )}
+        ) : null}
       </div>
 
-      {/* Timestamp */}
-      <p className="text-xs text-muted-foreground flex items-center gap-1">
-        <Clock className="h-3 w-3" aria-hidden />
+      <p className="flex items-center gap-1 text-xs text-territory-muted">
+        <Clock className="h-3 w-3" aria-hidden="true" />
         {timeAgo}
       </p>
 
-      {/* Ações */}
-      <div className="flex items-center gap-2 pt-1 flex-wrap">
+      <div className="flex flex-wrap items-center gap-2 pt-1">
         <Button
           variant="outline"
           size="sm"
-          className="text-xs gap-1"
-          onClick={() => setSeenCount((c) => c + 1)}
+          className="gap-1 border-territory-border bg-territory-surface text-xs text-territory-ink hover:bg-territory-raised"
+          onClick={() => setSeenCount((count) => count + 1)}
           aria-label="Vi isso também"
         >
-          <Eye className="h-3 w-3" />
+          <Eye className="h-3 w-3" aria-hidden="true" />
           Vi isso {seenCount > 0 && `(${seenCount})`}
         </Button>
 
         <Button
           variant="outline"
           size="sm"
-          className="text-xs gap-1"
-          onClick={() => setNotProceedCount((c) => c + 1)}
+          className="gap-1 border-territory-border bg-territory-surface text-xs text-territory-ink hover:bg-territory-raised"
+          onClick={() => setNotProceedCount((count) => count + 1)}
           aria-label="Não procede"
         >
-          <ThumbsDown className="h-3 w-3" />
+          <ThumbsDown className="h-3 w-3" aria-hidden="true" />
           Não procede {notProceedCount > 0 && `(${notProceedCount})`}
         </Button>
 
-        {onSeeGuidelines && (
+        {onSeeGuidelines ? (
           <Button
             variant="ghost"
             size="sm"
-            className="text-xs gap-1"
+            className="gap-1 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
             onClick={() => onSeeGuidelines(alert.id)}
             aria-label="Ver orientações"
           >
-            <Info className="h-3 w-3" />
+            <Info className="h-3 w-3" aria-hidden="true" />
             Orientações
           </Button>
-        )}
+        ) : null}
 
         <Button
           variant="ghost"
           size="sm"
-          className="text-xs gap-1 text-muted-foreground ml-auto"
+          className="ml-auto gap-1 text-xs text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
           onClick={() => setReportOpen(true)}
           aria-label="Reportar abuso"
         >
-          <Flag className="h-3 w-3" />
+          <Flag className="h-3 w-3" aria-hidden="true" />
           Reportar
         </Button>
       </div>
@@ -145,22 +148,30 @@ export function AlertCard({ alert, onSeeGuidelines }: AlertCardProps) {
   );
 }
 
-// ============================================================================
-// SUB-COMPONENTES
-// ============================================================================
-
 function StatusBadge({ status }: { status: CommunityAlertPublic["status"] }) {
   const config = {
-    ativo:     { label: "ATIVO",     className: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" },
-    encerrado: { label: "ENCERRADO", className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400" },
-    expirado:  { label: "EXPIRADO",  className: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500" },
-    removido:  { label: "REMOVIDO",  className: "bg-gray-100 text-gray-400" },
+    ativo: {
+      label: "ATIVO",
+      className: "bg-territory-error/12 text-territory-error",
+    },
+    encerrado: {
+      label: "ENCERRADO",
+      className: "bg-territory-success/12 text-territory-success",
+    },
+    expirado: {
+      label: "EXPIRADO",
+      className: "bg-territory-raised text-territory-muted",
+    },
+    removido: {
+      label: "REMOVIDO",
+      className: "bg-territory-raised text-territory-muted/80",
+    },
   };
 
   const { label, className } = getRecordValue(config, status) ?? config.ativo;
 
   return (
-    <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", className)}>
+    <span className={cn("rounded-full px-2 py-0.5 text-xs font-bold", className)}>
       {label}
     </span>
   );
@@ -176,10 +187,10 @@ function ExpiryCountdown({ minutesLeft }: { minutesLeft: number }) {
   return (
     <span
       className={cn(
-        "text-xs font-mono px-2 py-0.5 rounded-full shrink-0",
+        "shrink-0 rounded-full px-2 py-0.5 font-mono text-xs",
         minutesLeft <= 15
-          ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
-          : "bg-muted text-muted-foreground"
+          ? "bg-territory-warning/12 text-territory-warning"
+          : "bg-territory-raised text-territory-muted",
       )}
       title="Tempo restante até expiração"
     >
