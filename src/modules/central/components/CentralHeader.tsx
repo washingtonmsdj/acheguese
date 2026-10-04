@@ -1,13 +1,11 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
-import { Bell, Home, LogOut } from "lucide-react";
+import { Home, LogOut } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import type { ReactNode } from "react";
 import { MultiProfileSwitcher } from "@/core/profiles/components/MultiProfileSwitcher";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
 
 /**
  * CentralHeader
@@ -26,8 +24,6 @@ export function CentralHeader({
   showNavigation = true,
 }: CentralHeaderProps) {
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
-  const appUrls = useAppUrls();
-  const notificationsEnabled = isPlatformCapabilityEnabled("notifications");
 
   const handleLogout = async () => {
     await AuthService.signOut();
@@ -65,15 +61,6 @@ export function CentralHeader({
         >
           Sobre
         </Link>
-        {notificationsEnabled ? (
-          <Link
-            to={appUrls.notifications}
-            aria-label="Notificações"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
-          >
-            <Bell className="h-5 w-5" />
-          </Link>
-        ) : null}
         <Link
           to="/conta"
           className="hidden text-sm text-territory-ink transition-colors hover:text-territory-brand sm:inline"
