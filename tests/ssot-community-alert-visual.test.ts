@@ -3,15 +3,17 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const ALERT_CARD_PATH =
-  "src/core/community/alerts/components/AlertCard.tsx";
+const ALERT_SURFACES = [
+  "src/core/community/alerts/components/AlertCard.tsx",
+  "src/core/community/alerts/components/AlertFeedSection.tsx",
+] as const;
 
 const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
 describe("Community alert visual SSOT", () => {
   it("projects alert states through territorial semantic tokens", () => {
-    const source = read(ALERT_CARD_PATH);
+    const source = ALERT_SURFACES.map(read).join("\n");
 
     for (const token of [
       "territory-error",
@@ -29,13 +31,15 @@ describe("Community alert visual SSOT", () => {
   });
 
   it("does not regress to generic Tailwind status palettes", () => {
-    const source = read(ALERT_CARD_PATH);
+    for (const relativePath of ALERT_SURFACES) {
+      const source = read(relativePath);
 
-    expect(source).not.toMatch(
-      /(?:bg|border|text)-(?:red|orange|amber|yellow|green|gray|slate|zinc|neutral|stone)-\d{2,3}/,
-    );
-    expect(source).not.toContain("bg-card");
-    expect(source).not.toContain("text-muted-foreground");
-    expect(source).not.toContain("bg-muted");
+      expect(source, relativePath).not.toMatch(
+        /(?:bg|border|text)-(?:red|orange|amber|yellow|green|gray|slate|zinc|neutral|stone)-\d{2,3}/,
+      );
+      expect(source, relativePath).not.toContain("bg-card");
+      expect(source, relativePath).not.toContain("text-muted-foreground");
+      expect(source, relativePath).not.toContain("bg-muted");
+    }
   });
 });
