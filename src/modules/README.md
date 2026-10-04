@@ -2,10 +2,13 @@
 
 `src/modules` contains product/UI bounded-context packages. Physical presence in this tree does not imply an active product lifecycle.
 
+A module may remain versioned while its lifecycle is `paused`. Paused modules are preserved so they can be cleaned, hardened and reactivated incrementally without reintroducing legacy wrappers or rebuilding product UI from scratch. Runtime activation is owned by the lifecycle registries under `src/app/config`, not by the physical presence of a package in `src/modules`.
+
 ## Canonical top-level modules
 
 - `admin`
 - `ai`
+- `billing`
 - `business`
 - `central`
 - `classifieds`
@@ -16,6 +19,7 @@
 - `community-issues`
 - `community-lost-found`
 - `community-recommendations`
+- `gamification`
 - `guide`
 - `mobility`
 - `messaging`
@@ -29,6 +33,7 @@
 - `business` is **not** a vertical or a horizontal platform capability.
 - Official business verticals are declared only in `src/core/verticals/config.ts`.
 - Current official vertical state: `gastronomy` and `education`.
+- `billing` and `gamification` are canonical product/UI packages even while their launch lifecycle remains `paused`.
 - The preserved Community bounded context is centered on `Comunidade Local`; Community is `paused` in the MVP lifecycle.
 - Local Community identity belongs to `src/core/community-experience`, not to a
   top-level aggregate module.
@@ -36,7 +41,7 @@
 ## Domain nesting rules
 
 - Business-derived domains stay inside `business`.
-: `business/company`, `business/gastronomy`, `business/promotions`
+: `business/company`, `business/gastronomy`, `business/education`, `business/promotions`
 - Community product experiences use explicit top-level bounded contexts.
 : `community-feed`, `community-issues`,
   `community-groups`, `community-events`, `community-lost-found`,
