@@ -21,13 +21,13 @@ export function EducationAdminReadError({
   onRetry,
 }: EducationAdminReadErrorProps) {
   return (
-    <div className="container mx-auto max-w-3xl p-6">
-      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
-        <div className="mb-3 flex items-center gap-2 text-destructive">
-          <AlertCircle className="h-5 w-5" />
-          <h1 className="font-semibold">{title}</h1>
+    <div className="container mx-auto max-w-3xl p-6 text-territory-ink">
+      <div className="rounded-xl border border-territory-error/25 bg-territory-error/10 p-6">
+        <div className="mb-3 flex items-center gap-2 text-territory-error">
+          <AlertCircle className="h-5 w-5" aria-hidden="true" />
+          <h1 className="font-heading font-semibold">{title}</h1>
         </div>
-        <p className="mb-4 text-sm text-muted-foreground">
+        <p className="mb-4 text-sm text-territory-muted">
           {errorMessage(error)}
         </p>
         {onRetry ? (
@@ -35,9 +35,9 @@ export function EducationAdminReadError({
             type="button"
             variant="outline"
             onClick={() => void onRetry()}
-            className="gap-2"
+            className="gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised hover:text-territory-ink"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
             Tentar novamente
           </Button>
         ) : null}

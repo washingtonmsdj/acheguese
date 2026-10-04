@@ -48,7 +48,7 @@ describe('EducationLeadForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Quero matricular' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Nao foi possivel registrar seu interesse',
+      'Não foi possível registrar seu interesse',
     );
     expect(screen.queryByText('Interesse registrado!')).not.toBeInTheDocument();
     expect(screen.getByLabelText('Nome completo *')).toHaveValue(

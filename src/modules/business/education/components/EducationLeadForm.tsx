@@ -41,11 +41,17 @@ export interface LeadFormData {
 }
 
 const SHIFT_OPTIONS: { value: SchoolShift; label: string }[] = [
-  { value: 'morning', label: 'Manha' },
+  { value: 'morning', label: 'Manhã' },
   { value: 'afternoon', label: 'Tarde' },
   { value: 'evening', label: 'Noite' },
   { value: 'full_day', label: 'Integral' },
 ];
+
+const FIELD_CLASS_NAME =
+  'border-territory-border bg-territory-surface text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-brand focus-visible:ring-offset-territory-canvas';
+
+const SELECT_CLASS_NAME =
+  'h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 py-2 text-sm text-territory-ink ring-offset-territory-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2';
 
 export function EducationLeadForm({
   nicheKey,
@@ -100,7 +106,7 @@ export function EducationLeadForm({
       setIsSubmitted(true);
     } catch {
       setSubmissionError(
-        'Nao foi possivel registrar seu interesse. Revise os dados e tente novamente.',
+        'Não foi possível registrar seu interesse. Revise os dados e tente novamente.',
       );
     } finally {
       setIsLoading(false);
@@ -112,13 +118,18 @@ export function EducationLeadForm({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className={cn('rounded-xl border border-green-200 bg-green-50 p-6 text-center', className)}
+        className={cn(
+          'rounded-xl border border-territory-success/25 bg-territory-success/10 p-6 text-center text-territory-ink',
+          className,
+        )}
       >
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-          <Check className="h-6 w-6 text-green-600" />
+        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-territory-success/15">
+          <Check className="h-6 w-6 text-territory-success" aria-hidden="true" />
         </div>
-        <h3 className="mb-1 font-semibold text-green-800">Interesse registrado!</h3>
-        <p className="text-sm text-green-600">Entraremos em contato em breve.</p>
+        <h3 className="mb-1 font-heading font-semibold text-territory-ink">
+          Interesse registrado!
+        </h3>
+        <p className="text-sm text-territory-success">Entraremos em contato em breve.</p>
       </motion.div>
     );
   }
@@ -129,28 +140,31 @@ export function EducationLeadForm({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit}
-      className={cn('space-y-4', className)}
+      className={cn('space-y-4 text-territory-ink', className)}
     >
-      <h3 className="flex items-center gap-2 font-semibold text-gray-900">
-        <MessageSquare className="h-5 w-5 text-blue-500" />
-        {isSchoolContext ? labels.enrollmentLabel : 'Solicitar Informacoes'}
+      <h3 className="flex items-center gap-2 font-heading font-semibold text-territory-ink">
+        <MessageSquare className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+        {isSchoolContext ? labels.enrollmentLabel : 'Solicitar Informações'}
       </h3>
 
       <div className="space-y-3">
         {isSchoolContext && (
           <div>
             <Label htmlFor="guardianName" className="text-sm">
-              Nome do responsavel
+              Nome do responsável
             </Label>
             <div className="relative mt-1">
-              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <User
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted"
+                aria-hidden="true"
+              />
               <Input
                 id="guardianName"
                 name="guardianName"
                 value={formData.guardianName ?? ''}
                 onChange={handleChange}
                 placeholder="Quando diferente do nome acima"
-                className="pl-10"
+                className={cn(FIELD_CLASS_NAME, 'pl-10')}
               />
             </div>
           </div>
@@ -161,14 +175,17 @@ export function EducationLeadForm({
             Nome completo *
           </Label>
           <div className="relative mt-1">
-            <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <User
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted"
+              aria-hidden="true"
+            />
             <Input
               id="fullName"
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
               placeholder="Seu nome"
-              className="pl-10"
+              className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
           </div>
@@ -179,7 +196,10 @@ export function EducationLeadForm({
             E-mail *
           </Label>
           <div className="relative mt-1">
-            <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Mail
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted"
+              aria-hidden="true"
+            />
             <Input
               id="email"
               name="email"
@@ -187,7 +207,7 @@ export function EducationLeadForm({
               value={formData.email}
               onChange={handleChange}
               placeholder="seu@email.com"
-              className="pl-10"
+              className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
           </div>
@@ -198,7 +218,10 @@ export function EducationLeadForm({
             Telefone *
           </Label>
           <div className="relative mt-1">
-            <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Phone
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted"
+              aria-hidden="true"
+            />
             <Input
               id="phone"
               name="phone"
@@ -206,7 +229,7 @@ export function EducationLeadForm({
               value={formData.phone}
               onChange={handleChange}
               placeholder="(71) 99999-9999"
-              className="pl-10"
+              className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
           </div>
@@ -223,7 +246,7 @@ export function EducationLeadForm({
               value={isSchoolContext ? (formData.studentName ?? '') : (formData.childName ?? '')}
               onChange={handleChange}
               placeholder="Opcional"
-              className="mt-1"
+              className={cn(FIELD_CLASS_NAME, 'mt-1')}
             />
           </div>
           <div>
@@ -237,7 +260,7 @@ export function EducationLeadForm({
               value={isSchoolContext ? (formData.studentAge ?? '') : (formData.childAge ?? '')}
               onChange={handleChange}
               placeholder="Anos"
-              className="mt-1"
+              className={cn(FIELD_CLASS_NAME, 'mt-1')}
               min={0}
               max={120}
             />
@@ -248,7 +271,7 @@ export function EducationLeadForm({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="desiredStageOption" className="flex items-center gap-1 text-sm">
-                <GraduationCap className="h-3.5 w-3.5 text-gray-400" />
+                <GraduationCap className="h-3.5 w-3.5 text-territory-muted" aria-hidden="true" />
                 {labels.gradeLabel} desejada
               </Label>
               <select
@@ -261,7 +284,7 @@ export function EducationLeadForm({
                   const selected = stageOptions.find((opt) => opt.value === value);
                   setFormData((prev) => ({ ...prev, desiredGrade: selected?.label ?? '' }));
                 }}
-                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className={cn(SELECT_CLASS_NAME, 'mt-1')}
               >
                 <option value="">Selecione...</option>
                 {stageOptions.map((opt) => (
@@ -279,10 +302,17 @@ export function EducationLeadForm({
                     value={formData.desiredGrade ?? ''}
                     onChange={handleChange}
                     placeholder="Informe a etapa/série"
+                    className={FIELD_CLASS_NAME}
                   />
-                  <Button type="button" variant="outline" size="sm" asChild className="gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised hover:text-territory-ink"
+                  >
                     <a href="/contato">
-                      <LifeBuoy className="h-4 w-4" />
+                      <LifeBuoy className="h-4 w-4" aria-hidden="true" />
                       Contatar suporte
                     </a>
                   </Button>
@@ -291,7 +321,7 @@ export function EducationLeadForm({
             </div>
             <div>
               <Label htmlFor="desiredShift" className="flex items-center gap-1 text-sm">
-                <Clock className="h-3.5 w-3.5 text-gray-400" />
+                <Clock className="h-3.5 w-3.5 text-territory-muted" aria-hidden="true" />
                 {labels.shiftLabel} desejado
               </Label>
               <select
@@ -299,7 +329,7 @@ export function EducationLeadForm({
                 name="desiredShift"
                 value={formData.desiredShift ?? ''}
                 onChange={handleChange}
-                className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className={cn(SELECT_CLASS_NAME, 'mt-1')}
               >
                 <option value="">Selecione...</option>
                 {SHIFT_OPTIONS.map((opt) => (
@@ -314,7 +344,7 @@ export function EducationLeadForm({
 
         <div>
           <Label htmlFor="interestNote" className="text-sm">
-            Observacoes
+            Observações
           </Label>
           <Textarea
             id="interestNote"
@@ -322,7 +352,7 @@ export function EducationLeadForm({
             value={formData.interestNote}
             onChange={handleChange}
             placeholder="Conte-nos o que procura..."
-            className="mt-1 resize-none"
+            className={cn(FIELD_CLASS_NAME, 'mt-1 resize-none')}
             rows={3}
           />
         </div>
@@ -332,20 +362,24 @@ export function EducationLeadForm({
         <div
           role="alert"
           aria-live="polite"
-          className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+          className="flex items-start gap-2 rounded-lg border border-territory-error/25 bg-territory-error/10 p-3 text-sm text-territory-error"
         >
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{submissionError}</span>
         </div>
       )}
 
-      <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+      <Button
+        type="submit"
+        className="w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+        disabled={isLoading}
+      >
         {isLoading ? (
           <span className="animate-pulse">Enviando...</span>
         ) : (
           <>
-            <Send className="mr-2 h-4 w-4" />
-            {isSchoolContext ? labels.enrollmentCTA : 'Solicitar informacoes'}
+            <Send className="mr-2 h-4 w-4" aria-hidden="true" />
+            {isSchoolContext ? labels.enrollmentCTA : 'Solicitar informações'}
           </>
         )}
       </Button>

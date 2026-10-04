@@ -10,6 +10,8 @@ const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/pages/EducationDetailStateViews.tsx",
   "src/modules/business/education/components/analytics/EducationAnalyticsOverviewCard.tsx",
   "src/modules/business/education/components/analytics/EducationAnalyticsConversionCard.tsx",
+  "src/modules/business/education/components/EducationLeadForm.tsx",
+  "src/modules/business/education/components/EducationAdminReadError.tsx",
 ] as const;
 
 const LEGACY_VISUAL_TOKENS = [
@@ -19,6 +21,12 @@ const LEGACY_VISUAL_TOKENS = [
   "text-muted-foreground",
   "text-primary",
   "bg-primary",
+  "border-input",
+  "border-destructive",
+  "bg-destructive",
+  "text-destructive",
+  "ring-ring",
+  "ring-offset-background",
   "text-gray-",
   "bg-gray-",
   "border-gray-",
