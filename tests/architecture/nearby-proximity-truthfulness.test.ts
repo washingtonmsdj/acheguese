@@ -5,6 +5,7 @@ const read = (path: string) => readFileSync(path, "utf8");
 
 describe("nearby MVP boundary", () => {
   const page = read("src/core/nearby/pages/NearbyPage.tsx");
+  const pageCss = read("src/core/nearby/pages/NearbyPage.css");
   const routeWrapper = read("src/app/pages/NearbyPage.tsx");
   const providerScope = read("src/app/config/nearbyProviderScope.ts");
   const activeTerritorialWrapper = read(
@@ -128,5 +129,38 @@ describe("nearby MVP boundary", () => {
     expect(page).not.toContain('value: "mercados"');
     expect(page).not.toContain('value: "beleza"');
     expect(filters).not.toContain("QUICK_CATEGORIES");
+  });
+
+  it("keeps the active Nearby presentation on the territorial visual SSOT", () => {
+    expect(pageCss).toContain("font-family:var(--font-sans)");
+    expect(pageCss).toContain("hsl(var(--territory-surface))");
+    expect(pageCss).toContain("hsl(var(--territory-ink))");
+    expect(pageCss).toContain("hsl(var(--territory-muted))");
+    expect(pageCss).toContain("hsl(var(--territory-brand))");
+    expect(pageCss).toContain("hsl(var(--territory-border))");
+    expect(pageCss).toContain("hsl(var(--territory-sun))");
+    expect(pageCss).not.toMatch(/--nb-[a-z0-9-]+\s*:/i);
+    expect(pageCss).not.toMatch(/(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/);
+    expect(pageCss).not.toContain("font-family:Inter");
+
+    const weights = Array.from(
+      pageCss.matchAll(/font-weight\s*:\s*(\d{3})\b/g),
+      (match) => match[1],
+    );
+    expect(weights.length).toBeGreaterThan(0);
+    for (const weight of weights) {
+      expect(["400", "500", "600", "700", "800"]).toContain(weight);
+    }
+
+    expect(map).toContain("h-[13.75rem]");
+    expect(map).toContain("min-[521px]:h-[300px]");
+    expect(map).toContain("min-[1181px]:h-[310px]");
+    expect(map).toContain("border-territory-border/50");
+    expect(map).toContain("bg-territory-raised/30");
+    expect(map).toContain("text-territory-muted");
+    expect(map).not.toContain('style={{ height: "400px" }}');
+    expect(map).not.toContain("border-border/50");
+    expect(map).not.toContain("bg-muted/30");
+    expect(map).not.toContain("text-muted-foreground");
   });
 });
