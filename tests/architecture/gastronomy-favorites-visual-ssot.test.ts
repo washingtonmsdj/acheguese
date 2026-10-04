@@ -9,6 +9,7 @@ const GASTRONOMY_UI_OWNERS = [
   "src/modules/business/gastronomy/pages/MyFavoritesPage.tsx",
   "src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx",
   "src/modules/business/gastronomy/pages/GastronomyDetailMenuSection.tsx",
+  "src/modules/business/gastronomy/pages/GastronomyDetailNavigation.tsx",
 ] as const;
 
 const GASTRONOMY_PAGE_SHELLS = GASTRONOMY_UI_OWNERS.slice(0, 2);
