@@ -524,7 +524,7 @@ export default function PrivacySettingsPage() {
               </details>
             </Surface>
 
-            <Button type="button" className="mt-4 min-h-12 w-full bg-territory-brand text-primary-foreground hover:bg-territory-brand/90" onClick={handleCancelDeletion} disabled={cancellingDeletion}>
+            <Button type="button" className="mt-4 min-h-12 w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90" onClick={handleCancelDeletion} disabled={cancellingDeletion}>
               {cancellingDeletion ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />}
               {cancellingDeletion ? "Cancelando..." : "Cancelar solicitação"}
             </Button>

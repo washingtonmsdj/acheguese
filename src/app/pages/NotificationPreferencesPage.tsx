@@ -244,7 +244,7 @@ export default function NotificationPreferencesPage() {
                     className={cn(
                       "min-h-10 min-w-12 rounded-xl border px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
                       selected
-                        ? "border-territory-brand bg-territory-brand text-primary-foreground"
+                        ? "border-territory-brand bg-territory-brand text-territory-on-image"
                         : "border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/50",
                     )}
                   >
