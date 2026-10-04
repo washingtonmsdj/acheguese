@@ -10,6 +10,7 @@ const GASTRONOMY_UI_OWNERS = [
   "src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx",
   "src/modules/business/gastronomy/pages/GastronomyDetailMenuSection.tsx",
   "src/modules/business/gastronomy/pages/GastronomyDetailNavigation.tsx",
+  "src/modules/business/gastronomy/components/FavoriteBusinessCard.tsx",
 ] as const;
 const GASTRONOMY_HERO =
   "src/modules/business/gastronomy/pages/GastronomyDetailHeroSection.tsx";
