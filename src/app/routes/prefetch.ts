@@ -46,11 +46,6 @@ const PREFETCHERS: PrefetchEntry[] = [
     load: () => import("@/app/pages/BuscaPage"),
     enabled: () => isPlatformCapabilityEnabled("search"),
   },
-  {
-    test: (path) => path.startsWith("/notificacoes"),
-    load: () => import("@/app/pages/NotificationsPage"),
-    enabled: () => isPlatformCapabilityEnabled("notifications"),
-  },
 ];
 
 const prefetchedPaths = new Set<string>();
@@ -75,10 +70,6 @@ const IDLE_WARMUP_ROUTES: Array<{
   {
     href: buildAppModulePath(APP_MODULE_SLUGS.search),
     enabled: () => isPlatformCapabilityEnabled("search"),
-  },
-  {
-    href: "/notificacoes",
-    enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
 ];
 
