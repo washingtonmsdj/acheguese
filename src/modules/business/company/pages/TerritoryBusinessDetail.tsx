@@ -34,6 +34,12 @@ import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
 import { LazyMiniMap } from "@/core/maps/components/LazyMiniMap";
 import type { PublicSnapshotInstitutional } from "@/core/business/types/publicSnapshots";
+import {
+  buildFacebookUrl,
+  buildInstagramUrl,
+  buildWebsiteUrl,
+  buildWhatsAppUrl,
+} from "@/shared/utils/contactLinks";
 import type {
   BusinessExtended,
   NearbyBusiness,
@@ -95,24 +101,18 @@ function formatPrice(price: number) {
 }
 
 function normalizeUrl(value?: string) {
-  if (!value) return undefined;
-  return /^https?:\/\//i.test(value) ? value : `https://${value.replace(/^@/, "")}`;
+  return buildWebsiteUrl(value) ?? undefined;
 }
 
 function socialUrl(network: "instagram" | "facebook", value?: string) {
-  if (!value) return undefined;
-  if (/^https?:\/\//i.test(value)) return value;
-  const cleaned = value.replace(/^@/, "").replace(/^\/+|\/+$/g, "");
-  if (cleaned.includes(`${network}.com`)) return `https://${cleaned}`;
-  const handle = cleaned;
-  return `https://${network}.com/${handle}`;
+  const url = network === "instagram"
+    ? buildInstagramUrl(value)
+    : buildFacebookUrl(value);
+  return url ?? undefined;
 }
 
 function whatsappUrl(value?: string) {
-  if (!value) return undefined;
-  const digits = value.replace(/\D/g, "");
-  if (!digits) return undefined;
-  return `https://wa.me/${digits.startsWith("55") ? digits : `55${digits}`}`;
+  return buildWhatsAppUrl(value) ?? undefined;
 }
 
 function humanizeLabel(value: string) {
