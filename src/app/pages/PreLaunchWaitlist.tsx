@@ -352,7 +352,7 @@ export default function PreLaunchWaitlist() {
       </div>
 
       {turnstileEnabled ? (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2">
+        <div className="rounded-2xl border border-territory-border bg-territory-raised/55 p-2">
           <TurnstileWidget
             key={turnstileGeneration}
             siteKey={TURNSTILE_SITE_KEY}
@@ -371,7 +371,7 @@ export default function PreLaunchWaitlist() {
           />
         </div>
       ) : TURNSTILE_REQUIRED ? (
-        <p className="flex items-start gap-2 rounded-2xl bg-red-50 px-3 py-2 text-sm leading-5 text-red-700">
+        <p className="flex items-start gap-2 rounded-2xl border border-territory-error/20 bg-territory-error/10 px-3 py-2 text-sm leading-5 text-territory-error">
           <AlertTriangle
             className="mt-0.5 h-4 w-4 shrink-0"
             aria-hidden="true"
@@ -384,7 +384,7 @@ export default function PreLaunchWaitlist() {
       {turnstileError ? (
         <p
           role="alert"
-          className="flex items-start gap-2 rounded-2xl bg-orange-50 px-3 py-2 text-sm leading-5 text-orange-800"
+          className="flex items-start gap-2 rounded-2xl border border-territory-warning/20 bg-territory-warning/10 px-3 py-2 text-sm leading-5 text-territory-warning"
         >
           <AlertTriangle
             className="mt-0.5 h-4 w-4 shrink-0"
@@ -401,8 +401,8 @@ export default function PreLaunchWaitlist() {
           className={cn(
             "flex items-start gap-2 rounded-2xl px-3 py-2 text-sm leading-5",
             submitState.status === "success"
-              ? "bg-[#18B37E]/10 text-[#0f6f50]"
-              : "bg-red-50 text-red-700",
+              ? "border border-territory-success/20 bg-territory-success/10 text-territory-success"
+              : "border border-territory-error/20 bg-territory-error/10 text-territory-error",
           )}
         >
           {submitState.status === "success" ? (
