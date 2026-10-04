@@ -52,7 +52,7 @@ const advisorResidualRegister = JSON.parse(
   }>;
 };
 
-describe("Business Messaging MVP", () => {
+describe("Business Messaging boundary", () => {
   it("keeps Business messaging as a dedicated aggregate with server-owned writes", () => {
     for (const table of [
       "business_direct_threads",
@@ -161,14 +161,10 @@ describe("Business Messaging MVP", () => {
     expect(realtimeRegistry).toContain('table: "business_direct_messages"');
   });
 
-  it("composes Business into the horizontal Inbox without enabling paused domains", () => {
+  it("keeps Business Messaging versioned but outside the certified MVP graph", () => {
     expect(platformRegistry).toContain('messaging: {');
-    expect(platformRegistry).toContain('status: "active"');
-    expect(platformRegistry).toContain('messaging: {');
+    expect(platformRegistry).toContain('status: "paused"');
     expect(platformRegistry).toContain('dependsOnCapabilities: ["auth", "profiles"]');
-    expect(platformRegistry).not.toContain(
-      'messaging: {\n    status: "active",\n    dependsOnCapabilities: ["auth", "profiles"],\n    dependsOnProductModules: ["business"]',
-    );
 
     expect(providerRegistry).toContain("businessMessagingProvider");
     expect(providerRegistry).not.toContain("@/app/");
@@ -184,13 +180,17 @@ describe("Business Messaging MVP", () => {
     );
     expect(inbox).toContain("messagingRoutes.thread(");
     expect(inbox).toContain("messagingRoutes.inbox()");
+    expect(appRoutes).toContain('const messagingEnabled = isPlatformCapabilityEnabled("messaging")');
+    expect(appRoutes).toContain("{messagingEnabled ? (");
     expect(appRoutes).toContain("messagingRoutes.inbox()");
     expect(appRoutes).toContain("messagingRoutes.threadPattern()");
     expect(inbox).not.toContain("/mensagens/${thread.providerId}/${thread.threadId}");
   });
 
-  it("exposes a real internal message CTA from Business using business_data identity", () => {
+  it("keeps the Business message CTA implementation lifecycle-scoped for later activation", () => {
     expect(cta).toContain('label="Mensagem"');
+    expect(companyPage).toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(companyPage).toContain("messagingEnabled && activeProfile?.id !== business.profile_id");
     expect(companyPage).toContain("openBusinessDirectConversation");
     expect(companyPage).toContain("institutionalBusinessDataId");
     expect(companyPage).toContain("buildLoginPath(returnTo)");
