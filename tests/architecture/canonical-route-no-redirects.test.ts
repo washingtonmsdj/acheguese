@@ -13,7 +13,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
 
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain('path="/conta/editar/:profileId"');
-    expect(routes).toContain('path="/conta/notificacoes"');
+    expect(routes).not.toContain('path="/conta/notificacoes"');
 
     expect(routes).not.toContain('path="/perfil"');
     expect(routes).not.toContain('path="/perfil/');
@@ -43,7 +43,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     ).toBe(false);
   });
 
-  it("keeps notification inbox and preferences on one canonical route each", () => {
+  it("keeps notification owners versioned while their paused routes stay outside the MVP graph", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
     const notifications = read("src/app/pages/NotificationsPage.tsx");
     const preferences = read("src/app/pages/NotificationPreferencesPage.tsx");
@@ -56,7 +56,8 @@ describe("MVP canonical routing without compatibility redirects", () => {
       "src/app/config/notificationActionScope.ts",
     );
 
-    expect(routes).toContain('path="/notificacoes"');
+    expect(routes).not.toContain('path="/notificacoes"');
+    expect(routes).not.toContain('path="/conta/notificacoes"');
     expect(routes).not.toContain('path="/notifications"');
     expect(routes).not.toContain('path="/settings/notifications"');
 
@@ -64,7 +65,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(notifications).not.toContain("/settings/notifications");
     expect(preferences).not.toContain("/settings/notifications");
 
-    expect(prefetch).toContain('path.startsWith("/notificacoes")');
+    expect(prefetch).not.toContain('path.startsWith("/notificacoes")');
     expect(prefetch).not.toContain('path.startsWith("/notifications")');
     expect(serviceWorker).toContain("fallback = '/notificacoes'");
     expect(serviceWorker).not.toContain("return '/notifications'");
