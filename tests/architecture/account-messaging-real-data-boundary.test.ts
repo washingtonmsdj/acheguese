@@ -6,6 +6,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
 const account = read("src/modules/profile/pages/ContaHubPage.tsx");
 const appUrls = read("src/core/routing/hooks/useAppUrls.ts");
@@ -23,14 +24,15 @@ const communityMessaging = read(
 );
 
 describe("account and horizontal messaging real-data boundary", () => {
-  it("keeps account and Messaging authenticated without concept bypasses", () => {
+  it("keeps Account active while Messaging stays versioned but outside the MVP route graph", () => {
     expect(routes).not.toContain("conceptMessagesPreview");
     expect(routes).not.toContain("conceptAccountPreview");
     expect(routes).not.toContain('get("concept-mock")');
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain("protectedElement(<P.ContaPage />)");
-    expect(routes).toContain("messagingRoutes.inbox()");
-    expect(routes).toContain("messagingRoutes.threadPattern()");
+    expect(routes).not.toContain("messagingRoutes.inbox()");
+    expect(routes).not.toContain("messagingRoutes.threadPattern()");
+    expect(routes).not.toContain("<P.MensagensPage />");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
     expect(messagingRoutes).toContain(
       'threadPattern: () => "/mensagens/:providerId/:threadId"',
@@ -39,10 +41,13 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(appUrls).not.toContain("chat: (conversationId");
     expect(appUrls).not.toContain("/chat/");
     expect(appUrls).toContain("messages: messagingRoutes.inbox()");
-    expect(routes).toContain('"messaging"');
+
+    const messagingBlock =
+      platformRegistry.match(/\n  messaging: \{[\s\S]*?\n  \},/)?.[0] ?? "";
+    expect(messagingBlock).toContain('status: "paused"');
   });
 
-  it("keeps the account overview on the live profile workspace", () => {
+  it("keeps the active Account overview on live profile data without paused capability CTAs", () => {
     expect(account).not.toContain("concept-mock");
     expect(account).not.toContain("AccountConceptPreviewPage");
     expect(account).not.toContain("conceptManagedProfiles");
@@ -55,12 +60,14 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(account).toContain("profile={resolvedProfile}");
     expect(account).not.toContain("if (data.loading) {");
     expect(account).toContain("data.allProfiles");
-    expect(account).toContain('title="Mensagens"');
-    expect(account).toContain("navigate(data.appUrls.messages)");
+    expect(account).not.toContain('title="Mensagens"');
+    expect(account).not.toContain("navigate(data.appUrls.messages)");
+    expect(account).not.toContain('title="Notificações"');
+    expect(account).not.toContain("navigate(data.appUrls.profile.notifications)");
     expect(account).not.toContain("data.appUrls.auth.login");
   });
 
-  it("keeps global Messaging navigation owned by the horizontal capability", () => {
+  it("keeps the global Messaging action lifecycle-owned for later reactivation", () => {
     expect(appTopbar).toContain(
       'const showMessages = isPlatformCapabilityEnabled("messaging")',
     );
@@ -69,7 +76,7 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(appTopbar).toContain("to={appUrls.messages}");
   });
 
-  it("keeps the global Inbox provider-based instead of Community-owned", () => {
+  it("keeps the preserved global Inbox provider-based instead of Community-owned", () => {
     expect(inbox).toContain("providerIds");
     expect(inbox).toContain("providerIds.map");
     expect(inbox).toContain("getMessagingProvider");
@@ -90,7 +97,7 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(businessProvider).not.toContain("classified");
   });
 
-  it("preserves Community Direct Messaging as a separate domain-specific UI", () => {
+  it("preserves Community Direct Messaging as a separate post-MVP domain UI", () => {
     expect(communityMessaging).toContain("useCommunityDirectMessages()");
     expect(communityMessaging).toContain("useSessionContext()");
     expect(inbox).not.toContain("CommunityDirectMessagesPage");
