@@ -17,26 +17,27 @@ export function CadastrarServicoHeader({ step, onBack }: HeaderProps) {
   const currentStep = STEPS[currentStepIdx];
 
   return (
-    <div className="sticky top-0 z-20 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <div className="sticky top-0 z-20 border-b border-territory-border bg-territory-surface/95 backdrop-blur supports-[backdrop-filter]:bg-territory-surface/85">
       <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3 sm:px-6">
         <button
+          type="button"
           onClick={onBack}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card text-foreground transition-colors hover:bg-secondary"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-territory-border bg-territory-surface text-territory-ink transition-colors hover:bg-territory-raised"
           aria-label="Voltar"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </button>
 
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">
-            Cadastrar servico
+          <h1 className="truncate text-base font-semibold text-territory-ink sm:text-lg">
+            Cadastrar serviço
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-territory-muted">
             Etapa {currentStepIdx + 1} de {STEPS.length}
           </p>
         </div>
 
-        <div className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[0.68rem] font-medium uppercase tracking-[0.14em] text-primary">
+        <div className="rounded-full border border-territory-brand/25 bg-territory-brand/10 px-2.5 py-1 text-[0.68rem] font-medium uppercase tracking-[0.14em] text-territory-brand">
           {currentStep?.label ?? "Fluxo"}
         </div>
       </div>
@@ -62,7 +63,7 @@ export function CadastrarServicoStepIndicator({
       {effectiveProfile ? (
         <ActiveProfileBadge
           profile={effectiveProfile}
-          action="cadastrando servico como"
+          action="cadastrando serviço como"
           className="w-full"
         />
       ) : null}
@@ -72,25 +73,26 @@ export function CadastrarServicoStepIndicator({
           {STEPS.map((item, index) => (
             <Fragment key={item.key}>
               <button
+                type="button"
                 onClick={() => onStepChange(item.key)}
                 className={`flex min-w-[7.25rem] items-center gap-2 rounded-full border px-3 py-2 text-left text-xs font-medium transition-all ${
                   step === item.key
-                    ? "border-primary/30 bg-primary text-primary-foreground shadow-[0_12px_30px_-18px_rgba(0,214,201,0.95)]"
+                    ? "border-territory-brand/30 bg-territory-brand text-territory-on-image shadow-sm"
                     : index < currentStepIdx
-                      ? "border-primary/20 bg-primary/10 text-primary"
-                      : "border-border/70 bg-card text-muted-foreground"
+                      ? "border-territory-brand/20 bg-territory-brand/10 text-territory-brand"
+                      : "border-territory-border bg-territory-surface text-territory-muted"
                 }`}
               >
                 <span
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
                     step === item.key
-                      ? "bg-primary-foreground/16 text-primary-foreground"
+                      ? "bg-territory-on-image/15 text-territory-on-image"
                       : index < currentStepIdx
-                        ? "bg-primary/15 text-primary"
-                        : "bg-secondary text-muted-foreground"
+                        ? "bg-territory-brand/15 text-territory-brand"
+                        : "bg-territory-raised text-territory-muted"
                   }`}
                 >
-                  <item.icon className="h-3.5 w-3.5" />
+                  <item.icon className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
                 <span className="truncate">{item.label}</span>
               </button>
@@ -98,8 +100,11 @@ export function CadastrarServicoStepIndicator({
               {index < STEPS.length - 1 ? (
                 <div
                   className={`h-px w-4 rounded sm:w-6 ${
-                    index < currentStepIdx ? "bg-primary/40" : "bg-border"
+                    index < currentStepIdx
+                      ? "bg-territory-brand/40"
+                      : "bg-territory-border"
                   }`}
+                  aria-hidden="true"
                 />
               ) : null}
             </Fragment>
@@ -126,22 +131,35 @@ export function CadastrarServicoNavigation({
   onSubmit,
 }: NavigationProps) {
   return (
-    <div className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-border/70 bg-background/95 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:mx-0 sm:rounded-2xl sm:border sm:bg-card/90 sm:px-4">
+    <div className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-territory-border bg-territory-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-territory-surface/85 sm:mx-0 sm:rounded-2xl sm:border sm:px-4">
       <div className="flex flex-col gap-3 sm:flex-row">
         {step !== "info" ? (
-          <Button variant="outline" className="h-11 w-full sm:flex-1" onClick={onBack}>
+          <Button
+            variant="outline"
+            className="h-11 w-full border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised sm:flex-1"
+            onClick={onBack}
+          >
             Voltar
           </Button>
         ) : null}
 
         {step !== "review" ? (
-          <Button className="h-11 w-full sm:flex-1" onClick={onNext}>
-            Proximo
+          <Button
+            className="h-11 w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90 sm:flex-1"
+            onClick={onNext}
+          >
+            Próximo
           </Button>
         ) : (
-          <Button className="h-11 w-full sm:flex-1" onClick={onSubmit} disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Publicar servico
+          <Button
+            className="h-11 w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90 sm:flex-1"
+            onClick={onSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : null}
+            Publicar serviço
           </Button>
         )}
       </div>
