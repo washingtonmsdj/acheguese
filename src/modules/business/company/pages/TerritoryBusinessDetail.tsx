@@ -58,7 +58,7 @@ interface TerritoryBusinessDetailProps {
   onToggleFavorite: () => void;
   onToggleRecommendation: () => void;
   onShare: () => void;
-  onRoute: () => void;
+  onRoute?: () => void;
   onMessage?: () => void;
 }
 
@@ -426,7 +426,9 @@ export function TerritoryBusinessDetail({
                 )}
               </Link>
               <div className="bd-address"><MapPin /><span><strong>{address}</strong><small>{location}</small></span></div>
-              <button className="bd-route-button" type="button" onClick={onRoute}><Navigation /> Como chegar</button>
+              {onRoute ? (
+                <button className="bd-route-button" type="button" onClick={onRoute}><Navigation /> Como chegar</button>
+              ) : null}
             </section>
 
             {phone || whatsappHref || onMessage ? (
