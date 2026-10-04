@@ -2,10 +2,10 @@
  * EducationExplorerPage
  *
  * Vitrine premium de descoberta educacional.
- * Design editorial/boutique com busca, filtros multifaceta,
- * comparador flutuante e cards de alta densidade informacional.
+ * Design editorial/boutique com busca, filtros multifaceta
+ * e cards de alta densidade informacional.
  *
- * Foco: descoberta, comparação e conversão.
+ * Foco: descoberta e conversão.
  *
  * Rota: /educacao/:state/:city
  *       /educacao/:state/:city/:district
@@ -76,7 +76,6 @@ import {
 import { NicheChip } from './explorerNicheChip';
 import {
   ActiveEducationFilterChips,
-  EducationCompareBar,
   EducationDataDisclaimer,
   EducationInstitutionCta,
   EducationNicheShowcase,
@@ -94,7 +93,6 @@ export function EducationExplorerPage() {
 
   const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
   const [view, setView] = useState<ViewMode>('grid');
-  const [comparing, setComparing] = useState<string[]>([]);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
 
   const groupLocationIds = useMemo(() => {
@@ -188,16 +186,6 @@ export function EducationExplorerPage() {
     [sourceProfiles],
   );
 
-  const toggleCompare = (id: string) => {
-    setComparing((previous) =>
-      previous.includes(id)
-        ? previous.filter((profileId) => profileId !== id)
-        : previous.length < 4
-          ? [...previous, id]
-          : previous,
-    );
-  };
-
   const clearFilters = () => setFilters(INITIAL_FILTERS);
 
   const featured = useMemo(
@@ -236,7 +224,7 @@ export function EducationExplorerPage() {
         <title>Educação em {territoryLabel} - Vitrine V3 | Acheguese</title>
         <meta
           name="description"
-          content={`Explore escolas, cursos, professores e instituições educacionais em ${territoryLabel} com filtros avançados, comparador e contato direto.`}
+          content={`Explore escolas, cursos, professores e instituições educacionais em ${territoryLabel} com filtros avançados e contato direto.`}
         />
         <link rel="canonical" href={buildPublicAbsoluteUrl(canonicalPath)} />
       </Helmet>
@@ -268,8 +256,8 @@ export function EducationExplorerPage() {
                 </span>
               </h1>
               <p className="mt-4 max-w-xl text-balance text-base text-territory-muted md:text-lg">
-                Compare instituições e filtre por rede, tipo, bairro, infraestrutura
-                e disponibilidade usando os dados publicados na vitrine.
+                Compare informações publicadas e filtre por rede, tipo, bairro,
+                infraestrutura e disponibilidade.
               </p>
 
               <div className="relative mt-8 flex max-w-2xl items-center gap-2 rounded-2xl border border-territory-border bg-territory-surface p-2 shadow-sm">
@@ -489,8 +477,6 @@ export function EducationExplorerPage() {
                   key={profile.id}
                   profile={profile}
                   index={index}
-                  onCompareToggle={toggleCompare}
-                  comparing={comparing.includes(profile.id)}
                   view={view}
                   nicheIcons={NICHE_ICONS}
                   nicheAccent={NICHE_ACCENT}
@@ -544,13 +530,6 @@ export function EducationExplorerPage() {
       <EducationDataDisclaimer />
 
       <EducationInstitutionCta businessExplorerHref={businessExplorerHref} />
-
-      <EducationCompareBar
-        comparing={comparing}
-        sourceProfiles={sourceProfiles}
-        toggleCompare={toggleCompare}
-        clearCompare={() => setComparing([])}
-      />
     </div>
   );
 }
