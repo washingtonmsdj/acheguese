@@ -25,8 +25,12 @@ export function EmpresasListaSection({
     () => businesses.slice(0, visibleCount),
     [businesses, visibleCount],
   );
+  const displayedCount = visibleBusinesses.length;
   const remainingCount = Math.max(0, businesses.length - visibleCount);
   const nextBatchCount = Math.min(PAGE_SIZE, remainingCount);
+  const displayProgress = businesses.length > 0
+    ? Math.min(100, Math.round((displayedCount / businesses.length) * 100))
+    : 0;
 
   return (
     <section
@@ -48,12 +52,40 @@ export function EmpresasListaSection({
         </div>
         <Link
           to={mapHref}
-          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-territory-action-on-image/20 bg-territory-action-on-image/10 px-4 text-sm font-medium text-territory-action-on-image transition-colors hover:bg-territory-action-on-image/15 sm:w-auto"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-territory-action-on-image/20 bg-territory-action-on-image/10 px-4 text-sm font-medium text-territory-action-on-image transition-colors hover:bg-territory-action-on-image/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-action-on-image/50 focus-visible:ring-offset-2 focus-visible:ring-offset-territory-image-overlay sm:w-auto"
         >
           <MapPin className="h-4 w-4" aria-hidden="true" />
           Ver no mapa
         </Link>
       </div>
+
+      {!isLoading && !isError && businesses.length > 0 ? (
+        <div className="mb-4 rounded-[20px] border border-territory-on-image/10 bg-territory-on-image/[0.025] px-4 py-3 sm:px-5">
+          <div className="flex items-center justify-between gap-4 text-xs sm:text-sm">
+            <span className="font-medium text-territory-on-image/70">
+              Mostrando {displayedCount} de {businesses.length}
+            </span>
+            <span className="text-territory-on-image/45">
+              {remainingCount > 0
+                ? `${remainingCount} ${remainingCount === 1 ? "resultado restante" : "resultados restantes"}`
+                : "Todos os resultados exibidos"}
+            </span>
+          </div>
+          <div
+            className="mt-2 h-1.5 overflow-hidden rounded-full bg-territory-on-image/[0.06]"
+            role="progressbar"
+            aria-label="Progresso da lista de empresas exibidas"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={displayProgress}
+          >
+            <div
+              className="h-full rounded-full bg-territory-action-on-image transition-[width] duration-300"
+              style={{ width: `${displayProgress}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div
@@ -100,7 +132,7 @@ export function EmpresasListaSection({
             <button
               type="button"
               onClick={() => setVisibleCount((current) => current + PAGE_SIZE)}
-              className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 text-sm font-medium text-territory-on-image/75 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-action-on-image/50 focus-visible:ring-offset-2 focus-visible:ring-offset-territory-image-overlay"
+              className="mt-4 inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-territory-action-on-image/20 bg-territory-action-on-image/[0.06] px-4 text-sm font-medium text-territory-action-on-image transition-colors hover:border-territory-action-on-image/30 hover:bg-territory-action-on-image/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-action-on-image/50 focus-visible:ring-offset-2 focus-visible:ring-offset-territory-image-overlay"
               aria-label={`Carregar mais ${nextBatchCount} ${nextBatchCount === 1 ? "empresa" : "empresas"}. ${remainingCount} restantes.`}
             >
               Carregar mais {nextBatchCount} {nextBatchCount === 1 ? "empresa" : "empresas"}
@@ -118,7 +150,7 @@ export function EmpresasListaSection({
           </p>
           <Link
             to={mapHref}
-            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-territory-action-on-image/20 bg-territory-action-on-image/10 px-4 text-sm font-medium text-territory-action-on-image transition-colors hover:bg-territory-action-on-image/15"
+            className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-territory-action-on-image/20 bg-territory-action-on-image/10 px-4 text-sm font-medium text-territory-action-on-image transition-colors hover:bg-territory-action-on-image/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-action-on-image/50 focus-visible:ring-offset-2 focus-visible:ring-offset-territory-image-overlay"
           >
             <MapPin className="h-4 w-4" aria-hidden="true" />
             Explorar mapa do território

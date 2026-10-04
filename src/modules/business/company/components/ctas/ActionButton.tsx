@@ -1,3 +1,4 @@
+import { SafeLink } from '@/shared/components/security/SafeLink';
 import { cn } from '@/shared/utils/cn';
 import type { ActionButtonProps, ActionButtonTone } from '../../sections/types';
 
@@ -97,9 +98,9 @@ export function ActionButton({
 
   if (href) {
     return (
-      <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      <SafeLink href={href} target="_blank" className={className}>
         {content}
-      </a>
+      </SafeLink>
     );
   }
 
