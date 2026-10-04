@@ -83,9 +83,9 @@ export function NearbyMiniMap({
   if (!userLocation) {
     return (
       <div
-        className={`flex h-64 items-center justify-center rounded-2xl border border-border/50 bg-muted/30 ${className}`}
+        className={`flex h-64 items-center justify-center rounded-2xl border border-territory-border/50 bg-territory-raised/30 ${className}`}
       >
-        <div className="text-center text-muted-foreground">
+        <div className="text-center text-territory-muted">
           <MapPin className="mx-auto mb-2 h-8 w-8 opacity-50" />
           <p className="text-sm">Ative a localização para ver o mapa</p>
         </div>
@@ -95,8 +95,7 @@ export function NearbyMiniMap({
 
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-border/50 ${className}`}
-      style={{ height: "400px" }}
+      className={`h-[13.75rem] min-[521px]:h-[300px] min-[1181px]:h-[310px] overflow-hidden rounded-2xl border border-territory-border/50 ${className}`}
     >
       <MapLibreAdapter
         ref={adapterRef}
