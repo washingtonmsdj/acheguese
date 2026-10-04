@@ -15,6 +15,7 @@ const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/components/analytics/EducationAnalyticsConversionCard.tsx",
   "src/modules/business/education/components/EducationLeadForm.tsx",
   "src/modules/business/education/components/EducationAdminReadError.tsx",
+  "src/modules/business/education/niches/components/EducationUpgradeBanner.tsx",
 ] as const;
 
 const LEGACY_VISUAL_TOKENS = [
@@ -35,6 +36,7 @@ const LEGACY_VISUAL_TOKENS = [
   "border-gray-",
   "text-blue-",
   "bg-blue-",
+  "border-blue-",
   "text-green-",
   "bg-green-",
   "text-orange-",
@@ -45,10 +47,14 @@ const LEGACY_VISUAL_TOKENS = [
   "bg-cyan-",
   "text-red-",
   "bg-red-",
+  "border-red-",
   "text-amber-",
   "bg-amber-",
+  "border-amber-",
   "from-blue-",
   "to-indigo-",
+  "from-amber-",
+  "to-orange-",
 ] as const;
 
 describe("education visual SSOT", () => {
