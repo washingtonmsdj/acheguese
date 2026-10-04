@@ -1,11 +1,22 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Building2, Calendar, Check, ChevronLeft, FileText, Flag, MessageCircle, PencilLine, Shield } from 'lucide-react';
+import {
+  Building2,
+  Calendar,
+  Check,
+  ChevronLeft,
+  FileText,
+  Flag,
+  MessageCircle,
+  PencilLine,
+  Shield,
+} from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { EducationLeadForm, type LeadFormData } from '../components/EducationLeadForm';
 import type { EducationPublicProfile } from '@/core/education';
 import { useAuth } from '@/core/auth/hooks/useAuth';
+import { AUTH_PATHS } from '@/core/auth/constants/authFlow';
 import { useToast } from '@/shared/hooks/use-toast';
 import { BusinessClaimService } from '@/core/business/services/BusinessClaimService';
 import { BusinessProfileCorrectionDialog } from '@/core/business/components/BusinessProfileCorrectionDialog';
@@ -23,6 +34,11 @@ type EducationDetailSidebarProps = {
   trackWhatsAppClick: () => void;
   whatsappHref: string | null;
 };
+
+const sidebarCardClassName =
+  'rounded-3xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm';
+const outlineButtonClassName =
+  'w-full rounded-full border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/40 hover:bg-territory-raised';
 
 export function EducationDetailSidebar({
   handleLeadSubmit,
@@ -44,7 +60,8 @@ export function EducationDetailSidebar({
 
   const isPublicInstitution = profile.school_type === 'public';
   const isUnclaimedDirectoryProfile = profile.is_claimable;
-  const canCaptureInstitutionLeads = !isUnclaimedDirectoryProfile && !isPublicInstitution;
+  const canCaptureInstitutionLeads =
+    !isUnclaimedDirectoryProfile && !isPublicInstitution;
   const canRequestSelfServiceClaim =
     isUnclaimedDirectoryProfile &&
     !isPublicInstitution &&
@@ -54,11 +71,15 @@ export function EducationDetailSidebar({
     isPublicInstitution &&
     Boolean(profile.business_data_id);
 
+  const redirectToLogin = () => {
+    navigate(AUTH_PATHS.login, { state: { redirectTo: location.pathname } });
+  };
+
   const requestClaim = async (officialEvidenceUrl?: string) => {
     if (!profile.business_data_id) return;
 
     if (!user) {
-      navigate('/login', { state: { redirectTo: location.pathname } });
+      redirectToLogin();
       return;
     }
 
@@ -67,21 +88,25 @@ export function EducationDetailSidebar({
       const result = await BusinessClaimService.requestClaim({
         businessId: profile.business_data_id,
         message: isPublicInstitution
-          ? 'Solicitacao de administracao institucional iniciada a partir do perfil publico de Educacao.'
-          : 'Solicitacao iniciada a partir do perfil publico de Educacao.',
+          ? 'Solicitação de administração institucional iniciada a partir do perfil público de Educação.'
+          : 'Solicitação iniciada a partir do perfil público de Educação.',
         officialEvidenceUrls: officialEvidenceUrl
           ? [officialEvidenceUrl]
           : undefined,
       });
       setClaimSubmitted(true);
       toast({
-        title: result.created ? 'Reivindicacao enviada' : 'Reivindicacao ja pendente',
-        description: 'A equipe revisara a titularidade antes de liberar o controle do perfil.',
+        title: result.created
+          ? 'Reivindicação enviada'
+          : 'Reivindicação já pendente',
+        description:
+          'A equipe revisará a titularidade antes de liberar o controle do perfil.',
       });
     } catch (error) {
       toast({
-        title: 'Nao foi possivel reivindicar',
-        description: error instanceof Error ? error.message : 'Tente novamente mais tarde.',
+        title: 'Não foi possível reivindicar',
+        description:
+          error instanceof Error ? error.message : 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {
@@ -91,7 +116,7 @@ export function EducationDetailSidebar({
 
   const openReport = () => {
     if (!user) {
-      navigate('/login', { state: { redirectTo: location.pathname } });
+      redirectToLogin();
       return;
     }
     setReportOpen(true);
@@ -99,7 +124,7 @@ export function EducationDetailSidebar({
 
   const openCorrection = () => {
     if (!user) {
-      navigate('/login', { state: { redirectTo: location.pathname } });
+      redirectToLogin();
       return;
     }
     setCorrectionOpen(true);
@@ -110,7 +135,7 @@ export function EducationDetailSidebar({
     description?: string,
   ) => {
     if (!profile.business_data_id) {
-      throw new Error('Perfil empresarial nao localizado.');
+      throw new Error('Perfil empresarial não localizado.');
     }
 
     try {
@@ -120,12 +145,12 @@ export function EducationDetailSidebar({
         description,
       });
       toast({
-        title: 'Denuncia enviada',
-        description: 'A equipe de moderacao recebera o caso para triagem.',
+        title: 'Denúncia enviada',
+        description: 'A equipe de moderação receberá o caso para triagem.',
       });
     } catch (error) {
       toast({
-        title: 'Nao foi possivel enviar a denuncia',
+        title: 'Não foi possível enviar a denúncia',
         description:
           error instanceof Error ? error.message : 'Tente novamente mais tarde.',
         variant: 'destructive',
@@ -148,60 +173,64 @@ export function EducationDetailSidebar({
     <aside className="lg:sticky lg:top-24 lg:h-fit">
       <div className="space-y-4">
         {!canCaptureInstitutionLeads ? (
-          <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          <div className={sidebarCardClassName}>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-territory-muted">
               Contato e matrícula
             </h3>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Este é um perfil de diretório. Para matrícula, visita ou informações operacionais,
-              confirme pelos canais oficiais da instituição ou da rede responsável.
+            <p className="mt-3 text-sm text-territory-muted">
+              Este é um perfil de diretório. Para matrícula, visita ou informações
+              operacionais, confirme pelos canais oficiais da instituição ou da
+              rede responsável.
             </p>
-            <p className="mt-3 text-xs text-muted-foreground">
-              O Achegue-se não coleta dados de responsável ou aluno em nome de uma instituição
-              enquanto o perfil não possui uma autoridade de atendimento habilitada.
+            <p className="mt-3 text-xs text-territory-muted">
+              O Achegue-se não coleta dados de responsável ou aluno em nome de
+              uma instituição enquanto o perfil não possui uma autoridade de
+              atendimento habilitada.
             </p>
           </div>
         ) : (
           <>
-            <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+            <div className={sidebarCardClassName}>
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-territory-muted">
                 Falar com a instituição
               </h3>
               <div className="mt-3 space-y-2">
                 {whatsappHref && (
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="block"
-                    onClick={() => trackWhatsAppClick()}
+                  <Button
+                    asChild
+                    className="w-full rounded-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
                   >
-                    <Button className="w-full rounded-full bg-emerald-500 text-white hover:bg-emerald-600">
-                      <MessageCircle className="mr-2 h-4 w-4" />
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={trackWhatsAppClick}
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
                       WhatsApp
-                    </Button>
-                  </a>
+                    </a>
+                  </Button>
                 )}
                 <Button
                   variant="outline"
-                  className="w-full rounded-full"
+                  className={outlineButtonClassName}
                   onClick={() => focusLeadForm('Solicitar visita')}
                 >
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <Calendar className="mr-2 h-4 w-4" aria-hidden="true" />
                   Solicitar visita
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full rounded-full"
+                  className={outlineButtonClassName}
                   onClick={() => focusLeadForm('Solicitar informacoes')}
                 >
-                  <FileText className="mr-2 h-4 w-4" />
-                  Solicitar informacoes
+                  <FileText className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Solicitar informações
                 </Button>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-border bg-card p-5 shadow-sm">
+            <div className={sidebarCardClassName}>
               <EducationLeadForm
                 nicheKey={profile.niche_key}
                 onSubmit={handleLeadSubmit}
@@ -211,23 +240,24 @@ export function EducationDetailSidebar({
         )}
 
         {canRequestSelfServiceClaim && (
-          <div className="rounded-3xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
+          <div className="rounded-3xl border border-territory-brand/25 bg-territory-brand/5 p-5 text-territory-ink shadow-sm">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Building2 className="h-4 w-4 text-primary" />
-              Esta instituicao e sua?
+              <Building2 className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+              Esta instituição é sua?
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Solicite a titularidade. O controle so e liberado depois da revisao da reivindicacao.
+            <p className="mt-2 text-xs text-territory-muted">
+              Solicite a titularidade. O controle só é liberado depois da revisão
+              da reivindicação.
             </p>
             <Button
               type="button"
               variant="outline"
-              className="mt-3 w-full rounded-full"
+              className={`mt-3 ${outlineButtonClassName}`}
               disabled={isClaiming || claimSubmitted}
               onClick={() => void requestClaim()}
             >
               {claimSubmitted
-                ? 'Reivindicacao pendente'
+                ? 'Reivindicação pendente'
                 : isClaiming
                   ? 'Enviando...'
                   : 'Reivindicar este perfil'}
@@ -236,15 +266,15 @@ export function EducationDetailSidebar({
         )}
 
         {canRequestInstitutionalClaim && (
-          <div className="rounded-3xl border border-border bg-muted/30 p-5">
+          <div className="rounded-3xl border border-territory-border bg-territory-raised/70 p-5 text-territory-ink">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Shield className="h-4 w-4 text-primary" />
-              Administracao institucional
+              <Shield className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+              Administração institucional
             </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Este cadastro publico ainda nao possui uma conta institucional responsavel.
-              A solicitacao nao libera acesso automaticamente: a equipe valida a
-              comprovacao antes de transferir a autoridade do perfil.
+            <p className="mt-2 text-xs text-territory-muted">
+              Este cadastro público ainda não possui uma conta institucional
+              responsável. A solicitação não libera acesso automaticamente: a
+              equipe valida a comprovação antes de transferir a autoridade do perfil.
             </p>
             <div className="mt-3 space-y-2">
               <Input
@@ -257,15 +287,15 @@ export function EducationDetailSidebar({
                 placeholder="https://fonte-oficial.gov.br/..."
                 aria-label="Fonte oficial para comprovar autoridade institucional"
               />
-              <p className="text-[11px] text-muted-foreground">
-                Informe uma fonte publica verificavel, como site oficial da escola,
-                Secretaria de Educacao, rede responsavel ou Diario Oficial. Nao envie
+              <p className="text-[11px] text-territory-muted">
+                Informe uma fonte pública verificável, como site oficial da escola,
+                Secretaria de Educação, rede responsável ou Diário Oficial. Não envie
                 documentos pessoais ou dados de alunos por este campo.
               </p>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full rounded-full"
+                className={outlineButtonClassName}
                 disabled={
                   isClaiming ||
                   claimSubmitted ||
@@ -276,22 +306,23 @@ export function EducationDetailSidebar({
                 }
               >
                 {claimSubmitted
-                  ? 'Solicitacao institucional pendente'
+                  ? 'Solicitação institucional pendente'
                   : isClaiming
                     ? 'Enviando...'
-                    : 'Solicitar administracao institucional'}
+                    : 'Solicitar administração institucional'}
               </Button>
             </div>
           </div>
         )}
 
-        <div className="rounded-3xl border border-border bg-gradient-to-br from-muted/40 to-card p-5">
+        <div className="rounded-3xl border border-territory-border bg-territory-raised/70 p-5 text-territory-ink">
           <div className="flex items-center gap-2 text-sm font-semibold">
-            <Shield className="h-4 w-4 text-emerald-500" /> Sobre este perfil
+            <Shield className="h-4 w-4 text-territory-success" aria-hidden="true" />
+            Sobre este perfil
           </div>
-          <ul className="mt-3 space-y-2 text-xs text-muted-foreground">
+          <ul className="mt-3 space-y-2 text-xs text-territory-muted">
             <li className="flex items-start gap-2">
-              <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
+              <Check className="mt-0.5 h-3.5 w-3.5 text-territory-success" aria-hidden="true" />
               {isUnclaimedDirectoryProfile
                 ? 'Cadastro de diretório ainda não reivindicado'
                 : isPublicInstitution
@@ -299,13 +330,13 @@ export function EducationDetailSidebar({
                   : 'Perfil institucional administrado'}
             </li>
             <li className="flex items-start gap-2">
-              <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
+              <Check className="mt-0.5 h-3.5 w-3.5 text-territory-success" aria-hidden="true" />
               {isUnclaimedDirectoryProfile || isPublicInstitution
                 ? 'Dados exibidos somente quando cadastrados ou sustentados por fonte'
                 : 'Comunicação disponível conforme canais cadastrados'}
             </li>
             <li className="flex items-start gap-2">
-              <Check className="mt-0.5 h-3.5 w-3.5 text-emerald-500" />
+              <Check className="mt-0.5 h-3.5 w-3.5 text-territory-success" aria-hidden="true" />
               {isUnclaimedDirectoryProfile
                 ? 'Controle liberado somente após revisão de titularidade'
                 : isPublicInstitution
@@ -320,19 +351,19 @@ export function EducationDetailSidebar({
             <Button
               type="button"
               variant="ghost"
-              className="w-full justify-center gap-2 text-muted-foreground"
+              className="w-full justify-center gap-2 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
               onClick={openCorrection}
             >
-              <PencilLine className="h-4 w-4" />
-              Sugerir correcao
+              <PencilLine className="h-4 w-4" aria-hidden="true" />
+              Sugerir correção
             </Button>
             <Button
               type="button"
               variant="ghost"
-              className="w-full justify-center gap-2 text-muted-foreground"
+              className="w-full justify-center gap-2 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
               onClick={openReport}
             >
-              <Flag className="h-4 w-4" />
+              <Flag className="h-4 w-4" aria-hidden="true" />
               Denunciar este perfil
             </Button>
           </div>
@@ -340,9 +371,10 @@ export function EducationDetailSidebar({
 
         <Link
           to={showcaseHref}
-          className="block rounded-3xl border border-dashed border-border bg-card/40 p-4 text-center text-sm text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
+          className="block rounded-3xl border border-dashed border-territory-border bg-territory-surface/70 p-4 text-center text-sm text-territory-muted transition hover:border-territory-brand/40 hover:bg-territory-raised hover:text-territory-ink"
         >
-          <ChevronLeft className="mr-1 inline h-4 w-4" /> Voltar para vitrine
+          <ChevronLeft className="mr-1 inline h-4 w-4" aria-hidden="true" />
+          Voltar para vitrine
         </Link>
       </div>
 
@@ -359,14 +391,20 @@ export function EducationDetailSidebar({
         onOpenChange={setReportOpen}
         contentLabel="este perfil"
         reasonOptions={[
-          { id: 'fraud', label: 'Fraude ou instituicao inexistente' },
-          { id: 'impersonation', label: 'Finge ser outra instituicao' },
-          { id: 'misleading', label: 'Informacao enganosa ou potencialmente fraudulenta' },
-          { id: 'harmful', label: 'Conteudo ofensivo ou prejudicial' },
-          { id: 'privacy_or_safety', label: 'Privacidade ou seguranca de aluno/menor' },
+          { id: 'fraud', label: 'Fraude ou instituição inexistente' },
+          { id: 'impersonation', label: 'Finge ser outra instituição' },
+          {
+            id: 'misleading',
+            label: 'Informação enganosa ou potencialmente fraudulenta',
+          },
+          { id: 'harmful', label: 'Conteúdo ofensivo ou prejudicial' },
+          {
+            id: 'privacy_or_safety',
+            label: 'Privacidade ou segurança de aluno/menor',
+          },
           { id: 'duplicate', label: 'Perfil duplicado' },
-          { id: 'closed_or_not_here', label: 'Fechou ou nao funciona neste local' },
-          { id: 'policy_violation', label: 'Outra violacao de politica' },
+          { id: 'closed_or_not_here', label: 'Fechou ou não funciona neste local' },
+          { id: 'policy_violation', label: 'Outra violação de política' },
           { id: 'other', label: 'Outro motivo' },
         ]}
         onSubmit={submitReport}
