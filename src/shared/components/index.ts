@@ -9,6 +9,3 @@ export * from "./ui";
 
 // Badges
 export * from "./badges";
-
-// Form Components
-export { PublishWarningDialog } from "./PublishWarningDialog";
