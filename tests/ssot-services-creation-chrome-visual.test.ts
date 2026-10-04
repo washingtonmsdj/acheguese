@@ -6,6 +6,7 @@ const ROOT = process.cwd();
 const SERVICES_CREATION_SURFACES = [
   "src/modules/professionals/services/pages/CadastrarServicoPage.tsx",
   "src/modules/professionals/services/pages/CadastrarServicoChrome.tsx",
+  "src/modules/professionals/services/pages/CadastrarServicoSteps.tsx",
   "src/modules/professionals/services/pages/CadastrarServicoReview.tsx",
 ] as const;
 
@@ -13,7 +14,7 @@ const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
 describe("Services creation visual SSOT", () => {
-  it("uses territorial tokens for shell, chrome, review and navigation", () => {
+  it("uses territorial tokens across the complete creation flow", () => {
     const source = SERVICES_CREATION_SURFACES.map(read).join("\n");
 
     for (const token of [
@@ -24,6 +25,7 @@ describe("Services creation visual SSOT", () => {
       "territory-raised",
       "territory-ink",
       "territory-muted",
+      "territory-error",
       "territory-on-image",
     ]) {
       expect(source, `missing ${token}`).toContain(token);
@@ -40,6 +42,7 @@ describe("Services creation visual SSOT", () => {
         "bg-card",
         "text-foreground",
         "text-muted-foreground",
+        "text-destructive",
         "border-primary",
         "bg-primary",
         "text-primary",
@@ -60,7 +63,21 @@ describe("Services creation visual SSOT", () => {
       "cadastrando serviço como",
       "Próximo",
       "Publicar serviço",
+      "Informações básicas",
+      "Categoria do serviço",
       "Título do serviço",
+      "Descrição do serviço",
+      "Uma foto clara aumenta confiança",
+      "Selecione seu território",
+      "Carregando áreas de atendimento",
+      "Nenhuma área disponível para o território atual",
+      "Experiência e posicionamento",
+      "Faixa de preço",
+      "Horário de atendimento",
+      "Formação ou qualificação",
+      "Certificações",
+      "Informações de contato",
+      "Presença digital",
       "Descrição",
       "Experiência",
       "Preço",
