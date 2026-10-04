@@ -8,6 +8,7 @@ import {
   type BusinessProfileCorrectionQueueItem,
   type BusinessProfileCorrectionStatus,
 } from "@/core/business/services/BusinessProfileCorrectionService";
+import { SafeLink } from "@/shared/components/security/SafeLink";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -215,15 +216,14 @@ export default function AdminDataQuality() {
                       <span>Business {item.business_id.slice(0, 8)}</span>
                       <span>Profile {item.profile_id.slice(0, 8)}</span>
                       {item.source_url ? (
-                        <a
+                        <SafeLink
                           href={item.source_url}
                           target="_blank"
-                          rel="noreferrer"
                           className="inline-flex items-center gap-1 text-primary hover:underline"
                         >
                           Abrir fonte
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
+                          <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                        </SafeLink>
                       ) : null}
                     </div>
                   </div>
