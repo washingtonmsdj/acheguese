@@ -82,11 +82,11 @@ describe("Business Central shared presentation", () => {
     expect(screen.queryByText("Preferências pessoais")).not.toBeInTheDocument();
   });
 
-  it("uses the authenticated header with profile switching and horizontal account surfaces", () => {
+  it("uses the authenticated header with profile switching and only active account surfaces", () => {
     render(<MemoryRouter><CentralHeader billingEnabled={false} showNavigation={false} brand={<span>achegue-se</span>} /></MemoryRouter>);
     expect(screen.getByRole("button", { name: "Trocar perfil" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sair da conta" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Notificações" })).toHaveAttribute("href", "/notificacoes");
+    expect(screen.queryByRole("link", { name: "Notificações" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Minha conta" })).toHaveAttribute("href", "/conta");
     expect(screen.queryByText("Entrar")).not.toBeInTheDocument();
     expect(screen.queryByText("Planos")).not.toBeInTheDocument();
