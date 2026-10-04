@@ -26,23 +26,23 @@ export function EmpresaFotosSection({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <div className="flex items-center gap-2 mb-4">
-          <ImageIcon className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-bold text-foreground">Fotos</h2>
-          <span className="text-xs text-muted-foreground">({fotos.length})</span>
+        <div className="mb-4 flex items-center gap-2">
+          <ImageIcon className="h-5 w-5 text-territory-action-on-image" />
+          <h2 className="text-lg font-bold text-territory-on-image">Fotos</h2>
+          <span className="text-xs text-territory-on-image/48">({fotos.length})</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {fotos.map((url, idx) => (
             <div
               key={idx}
-              className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer"
+              className="group relative aspect-square cursor-pointer overflow-hidden rounded-xl"
             >
               <SafeImage
                 src={url}
                 alt={`${businessName} - Foto ${idx + 1}`}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+              <div className="absolute inset-0 bg-territory-image-overlay/0 transition-colors group-hover:bg-territory-image-overlay/20" />
             </div>
           ))}
         </div>

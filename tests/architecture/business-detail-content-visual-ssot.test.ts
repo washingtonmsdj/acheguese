@@ -13,13 +13,22 @@ const nearbyBusinessCard = readFileSync(
   "src/modules/business/company/components/cards/NearbyBusinessCard.tsx",
   "utf8",
 );
+const photosSection = readFileSync(
+  "src/modules/business/company/sections/EmpresaFotosSection.tsx",
+  "utf8",
+);
 
-const visualOwners = [productsSection, productCard, nearbyBusinessCard] as const;
+const visualOwners = [
+  productsSection,
+  productCard,
+  nearbyBusinessCard,
+  photosSection,
+] as const;
 const directPalette =
   /\b(?:text|bg|border|ring|ring-offset|fill)-(?:teal|cyan|emerald|slate|white|black|amber|rose|sky|gray)(?:[-/\[]|\b)/;
 
 describe("Business detail content visual SSOT", () => {
-  it("keeps products and related-business cards on semantic territorial tokens", () => {
+  it("keeps product, related-business and photo surfaces on semantic territorial tokens", () => {
     expect(productsSection).toContain("territory-action-on-image");
     expect(productsSection).toContain("territory-image-overlay");
     expect(productsSection).toContain("territory-on-image");
@@ -35,6 +44,11 @@ describe("Business detail content visual SSOT", () => {
     expect(nearbyBusinessCard).toContain("territory-image-overlay");
     expect(nearbyBusinessCard).toContain("territory-sun");
     expect(nearbyBusinessCard).toContain("shadow-territory-highlight");
+
+    expect(photosSection).toContain("territory-action-on-image");
+    expect(photosSection).toContain("territory-on-image");
+    expect(photosSection).toContain("territory-image-overlay");
+    expect(photosSection).not.toMatch(/\btext-(?:primary|foreground|muted-foreground)\b/);
 
     for (const owner of visualOwners) {
       expect(owner).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
