@@ -2,11 +2,13 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+import { PRODUCT_MODULE_REGISTRY } from "../../src/app/config/productModuleRegistry";
+
 const ROOT = process.cwd();
-const FAVORITES_PAGE = path.join(
-  ROOT,
+const GASTRONOMY_UI_OWNERS = [
   "src/modules/business/gastronomy/pages/MyFavoritesPage.tsx",
-);
+  "src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx",
+] as const;
 
 const LEGACY_VISUAL_TOKENS = [
   "bg-background",
@@ -17,28 +19,34 @@ const LEGACY_VISUAL_TOKENS = [
   "bg-primary",
 ] as const;
 
-describe("gastronomy favorites visual SSOT", () => {
-  it("keeps the paused Gastronomy favorites owner versioned and territorial", () => {
-    expect(fs.existsSync(FAVORITES_PAGE)).toBe(true);
+describe("gastronomy visual SSOT", () => {
+  it("keeps migrated paused Gastronomy UI owners versioned and territorial", () => {
+    for (const relativePath of GASTRONOMY_UI_OWNERS) {
+      const absolutePath = path.join(ROOT, relativePath);
+      expect(fs.existsSync(absolutePath), relativePath).toBe(true);
 
-    const source = fs.readFileSync(FAVORITES_PAGE, "utf8");
-    expect(source).toContain("bg-territory-canvas");
-    expect(source).toContain("bg-territory-surface");
-    expect(source).toContain("text-territory-ink");
-    expect(source).toContain("text-territory-muted");
-    expect(source).toContain("bg-territory-brand");
-    expect(source).toContain("bg-territory-sun");
+      const source = fs.readFileSync(absolutePath, "utf8");
+      expect(source, relativePath).toContain("bg-territory-canvas");
+      expect(source, relativePath).toContain("bg-territory-surface");
+      expect(source, relativePath).toContain("text-territory-ink");
+      expect(source, relativePath).toContain("text-territory-muted");
 
-    for (const token of LEGACY_VISUAL_TOKENS) {
-      expect(source, `legacy visual token returned: ${token}`).not.toContain(token);
+      for (const token of LEGACY_VISUAL_TOKENS) {
+        expect(source, `${relativePath}: legacy visual token returned: ${token}`).not.toContain(token);
+      }
     }
-  });
 
-  it("keeps the favorites owner disconnected while Gastronomy is paused", () => {
-    const registry = fs.readFileSync(
-      path.join(ROOT, "src/app/config/productModuleRegistry.ts"),
+    const favorites = fs.readFileSync(
+      path.join(ROOT, GASTRONOMY_UI_OWNERS[0]),
       "utf8",
     );
+    expect(favorites).toContain("bg-territory-brand");
+    expect(favorites).toContain("bg-territory-sun");
+  });
+
+  it("keeps migrated Gastronomy owners disconnected while the product is paused", () => {
+    expect(PRODUCT_MODULE_REGISTRY.gastronomy.status).toBe("paused");
+
     const routes = fs.readFileSync(
       path.join(ROOT, "src/app/routes/sections/AppLayoutRoutes.tsx"),
       "utf8",
@@ -48,9 +56,9 @@ describe("gastronomy favorites visual SSOT", () => {
       "utf8",
     );
 
-    expect(registry).toContain('gastronomy: {');
-    expect(registry).toContain('status: "paused"');
-    expect(routes).not.toContain("MyFavoritesPage");
-    expect(lazyImports).not.toContain("MyFavoritesPage");
+    for (const ownerName of ["MyFavoritesPage", "GastronomyDetailPage"]) {
+      expect(routes).not.toContain(ownerName);
+      expect(lazyImports).not.toContain(ownerName);
+    }
   });
 });
