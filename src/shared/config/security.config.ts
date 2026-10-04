@@ -232,34 +232,33 @@ export const TURNSTILE_CLIENT_CONFIG = {
   scriptUrl: `${SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url}/turnstile/v0/api.js`,
 } as const;
 
+/**
+ * Browser policy for the currently active MVP runtime.
+ *
+ * Dormant-module domains stay documented in SECURITY_DOMAINS, but are not
+ * authorized here until their owning module is deliberately reactivated and
+ * its browser dependency is reviewed again. This keeps production fail-closed
+ * instead of pre-authorizing future or paused integrations.
+ */
 export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
     ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
-    SECURITY_DOMAINS.CDN_JSDELIVR.url,
-    SECURITY_DOMAINS.SUPABASE_HTTPS.url,
     SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
     SECURITY_DOMAINS.VERCEL_LIVE.url,
     SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_SCRIPT.url,
     SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
-    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
-    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
-    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
+  'script-src-attr': ["'none'"],
   'style-src': [
     "'self'",
     "'unsafe-inline'",
-    SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.GOOGLE_FONTS_CSS.url,
   ],
   'font-src': [
     "'self'",
     'data:',
-    SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.GOOGLE_FONTS_FILES.url,
   ],
   'img-src': ["'self'", 'data:', 'https:', 'blob:'],
@@ -280,21 +279,11 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.SENTRY_INGEST.url,
     SECURITY_DOMAINS.VERCEL_VITALS.url,
     SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_COLLECT.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
-    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
-    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
-    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
   'worker-src': ["'self'", 'blob:'],
   'frame-src': [
     "'self'",
     SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
-    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
-    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
-    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
   'frame-ancestors': ["'none'"],
   'base-uri': ["'self'"],
@@ -439,16 +428,18 @@ export const INPUT_VALIDATION = {
 } as const;
 
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-09-21',
+  lastReview: '2026-10-04',
   reviewer: 'OpenAI',
-  version: '2.24.0',
+  version: '2.25.0',
   changes: [
+    'Production CSP follows active MVP runtime dependencies and keeps paused advertising origins unauthorized',
+    'Inline HTML event-handler attributes are blocked by script-src-attr none',
     'CSP/security domain registry remain the canonical browser security authority',
     'HIBP k-Anonymity endpoint explicitly allowed in connect-src',
     'Historical change log moved out of executable configuration to keep the SSOT operational',
     'Production release identity is explicitly no-store so smoke gates observe deployment convergence',
   ],
-  nextReview: '2026-10-21',
+  nextReview: '2026-11-04',
 } as const;
 
 export const CACHE_HEADERS = {
@@ -505,9 +496,9 @@ export const CACHE_HEADERS = {
 } as const;
 
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.24.0',
+  version: '2.25.0',
   created: '2026-04-18',
-  lastModified: '2026-09-21',
+  lastModified: '2026-10-04',
   author: 'Achegue-se engineering',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
