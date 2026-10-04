@@ -1,5 +1,0 @@
-export const PULL_TO_REFRESH_CONFIG = {
-  TRIGGER_THRESHOLD_PX: 80,
-  MAX_PULL_DISTANCE_PX: 120,
-} as const;
-
