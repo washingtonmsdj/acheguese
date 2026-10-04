@@ -32,15 +32,12 @@ const ALLOWED_METHODS = "POST, OPTIONS";
 const VIEW_COUNTER_RPCS = {
   business: {
     functionName: "increment_business_views",
-    argName: "business_id",
   },
   professional: {
     functionName: "increment_professional_views",
-    argName: "professional_id",
   },
   vaga: {
     functionName: "increment_vaga_view_count",
-    argName: "vaga_id",
   },
 } as const;
 
@@ -78,15 +75,19 @@ serve(async (req: Request) => {
 
     const { entityType, entityId } = validation.data!;
     const counterRpc = VIEW_COUNTER_RPCS[entityType];
+    const rpcArgs =
+      entityType === "business"
+        ? { business_id: entityId }
+        : entityType === "professional"
+          ? { professional_id: entityId }
+          : { vaga_id: entityId };
     const supabaseAdmin = createClient(
       getRequiredEnv("SUPABASE_URL"),
       getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
-    const { error } = await supabaseAdmin.rpc(counterRpc.functionName, {
-      [counterRpc.argName]: entityId,
-    });
+    const { error } = await supabaseAdmin.rpc(counterRpc.functionName, rpcArgs);
 
     if (error) {
       auditLog({
