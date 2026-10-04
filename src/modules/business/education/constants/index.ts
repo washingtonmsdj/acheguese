@@ -1,25 +1,73 @@
 /**
  * Education Module - Constants
- * 
- * Constantes e enums do modulo Education.
+ *
+ * Constantes e enums do módulo Education.
  */
 
-import type { EducationLeadStatus, EducationProfileStatus } from '@/core/education';
+import type {
+  EducationLeadStatus,
+  EducationProfileStatus,
+  SchoolEventType,
+} from '@/core/education';
 
-export const EDUCATION_PROFILE_STATUS: Record<EducationProfileStatus, { label: string; color: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+export const EDUCATION_PROFILE_STATUS: Record<
+  EducationProfileStatus,
+  {
+    label: string;
+    color: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
+> = {
   draft: { label: 'Rascunho', color: 'gray', variant: 'secondary' },
   published: { label: 'Publicado', color: 'green', variant: 'default' },
   paused: { label: 'Pausado', color: 'yellow', variant: 'destructive' },
 };
 
-export const EDUCATION_LEAD_STATUS: Record<EducationLeadStatus, { label: string; color: string; order: number; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+export const EDUCATION_LEAD_STATUS: Record<
+  EducationLeadStatus,
+  {
+    label: string;
+    color: string;
+    order: number;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
+> = {
   new: { label: 'Novo', color: 'blue', order: 1, variant: 'default' },
   contacted: { label: 'Contactado', color: 'purple', order: 2, variant: 'secondary' },
-  visit_scheduled: { label: 'Visita Agendada', color: 'orange', order: 3, variant: 'outline' },
-  proposal_sent: { label: 'Proposta Enviada', color: 'cyan', order: 4, variant: 'outline' },
+  visit_scheduled: {
+    label: 'Visita Agendada',
+    color: 'orange',
+    order: 3,
+    variant: 'outline',
+  },
+  proposal_sent: {
+    label: 'Proposta Enviada',
+    color: 'cyan',
+    order: 4,
+    variant: 'outline',
+  },
   enrolled: { label: 'Matriculado', color: 'green', order: 5, variant: 'default' },
   lost: { label: 'Perdido', color: 'red', order: 6, variant: 'destructive' },
 };
+
+export const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
+  open_house: 'Portas Abertas',
+  enrollment_fair: 'Feira de Matrícula',
+  parent_meeting: 'Reunião de Pais',
+  trial_class: 'Aula Experimental',
+  school_tour: 'Visita Escolar',
+  cultural_event: 'Evento Cultural',
+  sports_event: 'Evento Esportivo',
+  other: 'Outro',
+};
+
+export const SCHOOL_EVENT_TYPE_OPTIONS: readonly {
+  value: SchoolEventType;
+  label: string;
+}[] = Object.entries(SCHOOL_EVENT_TYPE_LABELS).map(([value, label]) => ({
+  value: value as SchoolEventType,
+  label,
+}));
 
 export const EDUCATION_SUPPORT_LEVELS = {
   FULL_ENABLED: 'full_enabled',
