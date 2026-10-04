@@ -1,43 +1,33 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link, useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  GraduationCap,
-  MapPin,
-  Phone,
-  Users,
-  Star,
-  ChevronLeft,
-  Share2,
-  Heart,
+  BookOpen,
+  Building2,
   Calendar,
+  Camera,
   Check,
   ChevronRight,
-  ArrowRight,
-  Globe,
-  Mail,
-  Award,
-  Lightbulb,
-  Target,
-  Shield,
-  BookOpen,
-  ExternalLink,
-  Map as MapIcon,
-  Building2,
-  Sparkles,
-  ChevronDown,
   Compass,
-  Quote,
-  PlayCircle,
+  ExternalLink,
+  Globe,
+  GraduationCap,
+  Heart,
   HelpCircle,
   Info,
-  Camera,
+  Map as MapIcon,
+  MapPin,
+  PlayCircle,
+  Quote,
+  Share2,
+  Shield,
+  Sparkles,
+  Star,
+  Users,
 } from 'lucide-react';
 
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
-import { Separator } from '@/shared/components/ui/separator';
 import {
   Accordion,
   AccordionContent,
@@ -47,7 +37,10 @@ import {
 import { cn } from '@/shared/utils/cn';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
+import { buildGoogleMapsSearchUrl } from '@/shared/utils/contactLinks';
+import { useToast } from '@/shared/hooks/use-toast';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
+import { useCanonicalBusinessFavorite } from '@/modules/business/hooks/useCanonicalBusinessFavorite';
 
 import { useEducationDetail } from '../hooks/useEducationDetail';
 import { useEducationEvents } from '../hooks/useEducationEvents';
@@ -57,6 +50,7 @@ import { useLabels } from '../hooks/useEducationLabels';
 import { useEducationTracking } from '../hooks/useEducationTracking';
 import { useEducationLeads } from '../hooks/useEducationLeads';
 import { EducationUrlService } from '../services/EducationUrlService';
+import { SCHOOL_EVENT_TYPE_LABELS } from '../constants';
 import type { LeadFormData } from '../components/EducationLeadForm';
 import {
   ACCESSIBILITY_LABELS,
@@ -83,9 +77,17 @@ import {
   EducationDetailNotFoundState,
 } from './EducationDetailStateViews';
 
+const surfaceCardClassName =
+  'rounded-3xl border border-territory-border bg-territory-surface text-territory-ink shadow-sm';
+const emptyStateClassName =
+  'rounded-2xl border border-dashed border-territory-border bg-territory-raised/55 p-5 text-sm text-territory-muted';
+const sectionTitleClassName = 'text-2xl font-bold text-territory-ink';
+const sectionIconClassName = 'h-5 w-5 text-territory-brand';
+
 export function EducationDetailPage() {
   const { state, city, district, slug } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { active } = usePublicBrowsingCity();
   const effectiveState = state ?? active.state;
   const effectiveCity = city ?? active.city;
@@ -98,8 +100,16 @@ export function EducationDetailPage() {
   });
 
   const { programs } = useEducationPrograms(profile?.id);
-  const { events } = useEducationEvents(profile?.id, { isPublic: true, upcoming: true });
-  const highlights: string[] = [];
+  const { events } = useEducationEvents(profile?.id, {
+    isPublic: true,
+    upcoming: true,
+  });
+  const {
+    isFavorite,
+    toggleFavorite,
+    loading: favoriteLoading,
+  } = useCanonicalBusinessFavorite(profile?.business_data_id ?? undefined);
+
   const schoolNetworkLabel =
     profile?.school_network === 'municipal'
       ? 'Municipal'
@@ -122,30 +132,47 @@ export function EducationDetailPage() {
             : null;
   const stats = [
     schoolNetworkLabel ? { label: 'Rede', value: schoolNetworkLabel } : null,
-    schoolManagementLabel ? { label: 'Gestão', value: schoolManagementLabel } : null,
-    profile?.school_inep_code ? { label: 'INEP', value: profile.school_inep_code } : null,
-    profile?.enrollment_open === true ? { label: 'Matrículas', value: 'Abertas' } : null,
+    schoolManagementLabel
+      ? { label: 'Gestão', value: schoolManagementLabel }
+      : null,
+    profile?.school_inep_code
+      ? { label: 'INEP', value: profile.school_inep_code }
+      : null,
+    profile?.enrollment_open === true
+      ? { label: 'Matrículas', value: 'Abertas' }
+      : null,
     (profile?.education_levels ?? []).length > 0
-      ? { label: 'Etapas', value: String(profile?.education_levels?.length ?? 0) }
+      ? {
+          label: 'Etapas',
+          value: String(profile?.education_levels?.length ?? 0),
+        }
       : null,
   ].filter((stat): stat is { label: string; value: string } => Boolean(stat));
 
   const nicheConfig = profile ? getNicheByKey(profile.niche_key) : null;
   const labels = useLabels(profile?.niche_key);
-  const Icon = profile ? NICHE_ICONS[profile.niche_key] ?? GraduationCap : GraduationCap;
+  const Icon = profile
+    ? NICHE_ICONS[profile.niche_key] ?? GraduationCap
+    : GraduationCap;
   const gradient = profile
-    ? NICHE_GRADIENTS[profile.niche_key] ?? 'from-primary via-primary to-primary/70'
-    : 'from-primary via-primary to-primary/70';
+    ? NICHE_GRADIENTS[profile.niche_key] ??
+      'from-territory-brand via-territory-brand/90 to-territory-info'
+    : 'from-territory-brand via-territory-brand/90 to-territory-info';
 
-  const SECTIONS = getSections(labels);
+  const sections = getSections(labels);
   const [activeSection, setActiveSection] = useState<string>('overview');
-  const [favorited, setFavorited] = useState(false);
-  const { trackProfileView, trackProgramView, trackEventView, trackWhatsAppClick, trackEnrollmentCTAClick, trackLeadSubmitted } =
-    useEducationTracking({
-      educationProfileId: profile?.id ?? '',
-      nicheKey: profile?.niche_key ?? 'regular_school',
-      businessDataId: profile?.business_data_id ?? undefined,
-    });
+  const {
+    trackProfileView,
+    trackProgramView,
+    trackEventView,
+    trackWhatsAppClick,
+    trackEnrollmentCTAClick,
+    trackLeadSubmitted,
+  } = useEducationTracking({
+    educationProfileId: profile?.id ?? '',
+    nicheKey: profile?.niche_key ?? 'regular_school',
+    businessDataId: profile?.business_data_id ?? undefined,
+  });
   const { createPublic: createLead } = useEducationLeads(profile?.id ?? undefined);
 
   const handleLeadSubmit = async (formData: LeadFormData) => {
@@ -174,15 +201,15 @@ export function EducationDetailPage() {
       });
     }
   };
+
   useEffect(() => {
     if (profile?.id) {
       trackProfileView();
     }
   }, [profile?.id, trackProfileView]);
 
-  const cityLabel = (city ?? '').replace(/-/g, ' ');
+  const cityLabel = effectiveCity.replace(/-/g, ' ');
   const districtLabel = (district ?? '').replace(/-/g, ' ');
-
   const institutionName =
     profile?.business_name ?? profile?.institution_type ?? 'Instituição';
   const showcasePath = EducationUrlService.buildListingUrl({
@@ -193,33 +220,64 @@ export function EducationDetailPage() {
     state && city && district && slug
       ? EducationUrlService.buildDetailUrl({ state, city, district, slug })
       : showcasePath;
-
+  const canonicalUrl = buildPublicAbsoluteUrl(canonicalPath);
   const whatsappHref = buildWhatsAppHref(profile?.whatsapp_number);
 
   const modalitiesPresent = useMemo(() => {
     const set = new Set<string>();
-    programs.forEach((p) => {
-      if (p.modality) {
-        set.add(p.modality.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+    programs.forEach((program) => {
+      if (program.modality) {
+        set.add(
+          program.modality
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, ''),
+        );
       }
     });
     return set;
   }, [programs]);
 
-  const basicResources = (profile.school_basic_resources ?? [])
+  const basicResources = (profile?.school_basic_resources ?? [])
     .map((key) => getRecordValue(BASIC_RESOURCE_LABELS, key))
     .filter((label): label is string => Boolean(label));
-  const accessibilityFeatures = (profile.school_accessibility_features ?? [])
+  const accessibilityFeatures = (profile?.school_accessibility_features ?? [])
     .map((key) => getRecordValue(ACCESSIBILITY_LABELS, key))
     .filter((label): label is string => Boolean(label));
-  const equipmentFeatures = (profile.school_equipment_features ?? [])
+  const equipmentFeatures = (profile?.school_equipment_features ?? [])
     .map((key) => getRecordValue(EQUIPMENT_LABELS, key))
     .filter((label): label is string => Boolean(label));
-  const facilityFeatures = (profile.school_facility_features ?? [])
+  const facilityFeatures = (profile?.school_facility_features ?? [])
     .map((key) => getRecordValue(FACILITY_LABELS, key))
     .filter((label): label is string => Boolean(label));
 
   const goToShowcase = () => navigate(showcasePath);
+
+  const handleShare = async () => {
+    if (typeof navigator === 'undefined') return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: institutionName, url: canonicalUrl });
+        return;
+      }
+
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(canonicalUrl);
+        toast({
+          title: 'Link copiado',
+          description: 'O link desta instituição foi copiado para a área de transferência.',
+        });
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      toast({
+        title: 'Não foi possível compartilhar',
+        description: 'Copie o endereço da página e tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (isLoading) {
     return <EducationDetailLoadingState />;
@@ -233,7 +291,10 @@ export function EducationDetailPage() {
           <meta name="robots" content="noindex,follow" />
           <link rel="canonical" href={buildPublicAbsoluteUrl(showcasePath)} />
         </Helmet>
-        <EducationDetailErrorState onBack={() => navigate(-1)} onGoToShowcase={goToShowcase} />
+        <EducationDetailErrorState
+          onBack={() => navigate(-1)}
+          onGoToShowcase={goToShowcase}
+        />
       </>
     );
   }
@@ -246,13 +307,20 @@ export function EducationDetailPage() {
           <meta name="robots" content="noindex,follow" />
           <link rel="canonical" href={buildPublicAbsoluteUrl(showcasePath)} />
         </Helmet>
-        <EducationDetailNotFoundState cityLabel={cityLabel} onGoToShowcase={goToShowcase} />
+        <EducationDetailNotFoundState
+          cityLabel={cityLabel}
+          onGoToShowcase={goToShowcase}
+        />
       </>
     );
   }
 
+  const mapsHref = buildGoogleMapsSearchUrl(
+    `${institutionName} ${districtLabel} ${cityLabel}`,
+  );
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-territory-surface text-territory-ink">
       <Helmet>
         <title>
           {institutionName} - Educação em {cityLabel} | Acheguese
@@ -264,61 +332,68 @@ export function EducationDetailPage() {
             `Conheça ${institutionName}, instituição educacional em ${districtLabel}, ${cityLabel}. Cursos, modalidades, equipe e contato direto.`
           }
         />
-        <link rel="canonical" href={buildPublicAbsoluteUrl(canonicalPath)} />
+        <link rel="canonical" href={canonicalUrl} />
       </Helmet>
 
-      {/* HERO */}
       <section className="relative">
         <div
           className={cn(
-            'relative overflow-hidden bg-gradient-to-br pb-16 pt-8 text-white md:pb-24',
-            gradient
+            'relative overflow-hidden bg-gradient-to-br pb-16 pt-8 text-territory-on-image md:pb-24',
+            gradient,
           )}
         >
           <div
-            className="pointer-events-none absolute inset-0 opacity-20"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 20% 30%, white 0%, transparent 30%), radial-gradient(circle at 80% 70%, white 0%, transparent 30%)',
-            }}
+            className="pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-territory-on-image/10 blur-3xl"
+            aria-hidden="true"
+          />
+          <div
+            className="pointer-events-none absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-territory-on-image/10 blur-3xl"
+            aria-hidden="true"
           />
           <div className="container relative mx-auto px-4">
-            {/* Breadcrumb */}
-            <nav className="flex flex-wrap items-center gap-1 text-xs text-white/80">
-              <Link to="/" className="hover:text-white">
-                Inicio
+            <nav className="flex flex-wrap items-center gap-1 text-xs text-territory-on-image/80">
+              <Link to="/" className="hover:text-territory-on-image">
+                Início
               </Link>
-              <ChevronRight className="h-3 w-3" />
-              <Link to={showcasePath} className="hover:text-white">
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+              <Link
+                to={showcasePath}
+                className="hover:text-territory-on-image"
+              >
                 Educação
               </Link>
-              <ChevronRight className="h-3 w-3" />
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
               <span className="capitalize">{districtLabel}</span>
-              <ChevronRight className="h-3 w-3" />
-              <span className="font-medium text-white">{institutionName}</span>
+              <ChevronRight className="h-3 w-3" aria-hidden="true" />
+              <span className="font-medium text-territory-on-image">
+                {institutionName}
+              </span>
             </nav>
 
             <div className="mt-6 grid items-end gap-8 md:grid-cols-[1fr_auto]">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className="border-white/30 bg-white/15 text-white backdrop-blur-sm">
-                    <Icon className="mr-1 h-3 w-3" />
+                  <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
+                    <Icon className="mr-1 h-3 w-3" aria-hidden="true" />
                     {nicheConfig?.displayName ?? profile.niche_key}
                   </Badge>
-                  <Badge className="border-white/30 bg-white/15 text-white backdrop-blur-sm">
-                    <MapPin className="mr-1 h-3 w-3" />
-                    <span className="capitalize">{districtLabel}, {cityLabel}</span>
+                  <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
+                    <MapPin className="mr-1 h-3 w-3" aria-hidden="true" />
+                    <span className="capitalize">
+                      {districtLabel}, {cityLabel}
+                    </span>
                   </Badge>
-                  {profile.school_type === 'public' && profile.school_inep_code && (
-                    <Badge className="border-white/30 bg-white/15 text-white backdrop-blur-sm">
-                      <Shield className="mr-1 h-3 w-3" />
-                      Cadastro público · INEP {profile.school_inep_code}
-                    </Badge>
-                  )}
+                  {profile.school_type === 'public' &&
+                    profile.school_inep_code && (
+                      <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
+                        <Shield className="mr-1 h-3 w-3" aria-hidden="true" />
+                        Cadastro público · INEP {profile.school_inep_code}
+                      </Badge>
+                    )}
                   {profile.enrollment_open === true && (
-                    <Badge className="border-amber-300/40 bg-amber-500/30 text-white backdrop-blur-sm">
-                      <Star className="mr-1 h-3 w-3" />
-                      Matrículas Abertas
+                    <Badge className="border-territory-sun/50 bg-territory-sun/25 text-territory-on-image backdrop-blur-sm">
+                      <Star className="mr-1 h-3 w-3" aria-hidden="true" />
+                      Matrículas abertas
                     </Badge>
                   )}
                 </div>
@@ -328,61 +403,69 @@ export function EducationDetailPage() {
                 </h1>
 
                 {sanitizePublicEducationText(profile.summary) && (
-                  <p className="mt-3 max-w-2xl text-balance text-base text-white/90 md:text-lg">
+                  <p className="mt-3 max-w-2xl text-balance text-base text-territory-on-image/90 md:text-lg">
                     {sanitizePublicEducationText(profile.summary)}
                   </p>
                 )}
 
-                <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-white/90">
-                  {profile.school_source_updated_at && (
+                {profile.school_source_updated_at && (
+                  <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-territory-on-image/90">
                     <span className="inline-flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      Fonte revisada em {formatDate(profile.school_source_updated_at)}
+                      <Calendar className="h-4 w-4" aria-hidden="true" />
+                      Fonte revisada em{' '}
+                      {formatDate(profile.school_source_updated_at)}
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setFavorited((v) => !v)}
-                  className={cn(
-                    'inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 backdrop-blur-sm transition',
-                    favorited ? 'bg-white text-primary' : 'bg-white/15 hover:bg-white/25'
-                  )}
-                  aria-label="Favoritar"
-                >
-                  <Heart
-                    className={cn('h-4 w-4', favorited && 'fill-current')}
-                  />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (typeof navigator !== 'undefined' && navigator.share) {
-                      navigator.share({ title: institutionName, url: window.location.href });
+                {profile.business_data_id && (
+                  <button
+                    type="button"
+                    onClick={() => void toggleFavorite()}
+                    disabled={favoriteLoading}
+                    className={cn(
+                      'inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 backdrop-blur-sm transition disabled:cursor-not-allowed disabled:opacity-60',
+                      isFavorite
+                        ? 'bg-territory-on-image text-territory-brand'
+                        : 'bg-territory-on-image/15 hover:bg-territory-on-image/25',
+                    )}
+                    aria-label={
+                      isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'
                     }
-                  }}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/15 backdrop-blur-sm transition hover:bg-white/25"
+                    aria-pressed={isFavorite}
+                  >
+                    <Heart
+                      className={cn(
+                        'h-4 w-4',
+                        isFavorite && 'fill-current',
+                      )}
+                      aria-hidden="true"
+                    />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => void handleShare()}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 bg-territory-on-image/15 backdrop-blur-sm transition hover:bg-territory-on-image/25"
                   aria-label="Compartilhar"
                 >
-                  <Share2 className="h-4 w-4" />
+                  <Share2 className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </div>
 
-            {/* Stats strip */}
             {stats.length > 0 && (
               <div className="mt-8 grid grid-cols-2 gap-2 md:grid-cols-4">
-                {stats.slice(0, 4).map((s) => (
+                {stats.slice(0, 4).map((stat) => (
                   <div
-                    key={s.label}
-                    className="rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md"
+                    key={stat.label}
+                    className="rounded-2xl border border-territory-on-image/20 bg-territory-on-image/10 p-4 backdrop-blur-md"
                   >
-                    <div className="text-2xl font-bold">{s.value}</div>
-                    <div className="text-xs uppercase tracking-wide text-white/80">
-                      {s.label}
+                    <div className="text-2xl font-bold">{stat.value}</div>
+                    <div className="text-xs uppercase tracking-wide text-territory-on-image/80">
+                      {stat.label}
                     </div>
                   </div>
                 ))}
@@ -392,166 +475,118 @@ export function EducationDetailPage() {
         </div>
       </section>
 
-      {/* STICKY TAB NAV */}
-      <StickyTabs active={activeSection} onChange={setActiveSection} sections={SECTIONS} />
+      <StickyTabs
+        active={activeSection}
+        onChange={setActiveSection}
+        sections={sections}
+      />
 
-      {/* MAIN GRID */}
       <section className="container mx-auto px-4 py-10">
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          {/* Main column */}
           <div className="space-y-12">
-            {/* OVERVIEW */}
             <section id="overview" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <Compass className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Visão geral</h2>
+                <Compass className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Visão geral</h2>
               </header>
-              <div className="rounded-3xl border border-border bg-card p-6">
-                <p className="text-base leading-relaxed text-muted-foreground">
+              <div className={`${surfaceCardClassName} p-6`}>
+                <p className="text-base leading-relaxed text-territory-muted">
                   {sanitizePublicEducationText(profile.summary) ||
                     `Perfil de ${institutionName} em ${districtLabel}, ${cityLabel}. O Achegue-se exibe somente informações cadastradas ou sustentadas por fontes identificadas.`}
                 </p>
-                {highlights.length > 0 && (
-                  <>
-                    <Separator className="my-5" />
-                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-foreground">
-                      <Lightbulb className="h-4 w-4 text-amber-500" />
-                      Diferenciais
-                    </h3>
-                    <ul className="grid gap-2 md:grid-cols-2">
-                      {highlights.map((h, i) => (
-                        <li
-                          key={i}
-                          className="flex items-start gap-2 rounded-xl bg-muted/50 px-3 py-2 text-sm"
-                        >
-                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-                          <span>{h}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
               </div>
             </section>
 
             <section id="infrastructure" className="scroll-mt-24">
-                <header className="mb-4 flex items-center gap-2">
-                  <Building2 className="h-5 w-5 text-primary" />
-                  <h2 className="text-2xl font-bold">Infraestrutura</h2>
-                </header>
-                <div className="space-y-4 rounded-3xl border border-border bg-card p-6">
-                  {basicResources.length > 0 && (
-                    <div>
-                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        Recursos básicos
+              <header className="mb-4 flex items-center gap-2">
+                <Building2 className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Infraestrutura</h2>
+              </header>
+              <div className={`${surfaceCardClassName} space-y-5 p-6`}>
+                {[
+                  { title: 'Recursos básicos', items: basicResources },
+                  { title: 'Acessibilidade', items: accessibilityFeatures },
+                  { title: 'Equipamentos', items: equipmentFeatures },
+                  { title: 'Instalações', items: facilityFeatures },
+                ].map(({ title, items }) =>
+                  items.length > 0 ? (
+                    <div key={title}>
+                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-territory-muted">
+                        {title}
                       </h3>
                       <ul className="grid gap-2 md:grid-cols-2">
-                        {basicResources.map((item) => (
-                          <li key={item} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-emerald-500" />
+                        {items.map((item) => (
+                          <li
+                            key={item}
+                            className="flex items-center gap-2 text-sm text-territory-ink"
+                          >
+                            <Check
+                              className="h-4 w-4 text-territory-success"
+                              aria-hidden="true"
+                            />
                             <span>{item}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
-                  )}
-                  {accessibilityFeatures.length > 0 && (
-                    <div>
-                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        Acessibilidade
-                      </h3>
-                      <ul className="grid gap-2 md:grid-cols-2">
-                        {accessibilityFeatures.map((item) => (
-                          <li key={item} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-emerald-500" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
+                  ) : null,
+                )}
+                {basicResources.length === 0 &&
+                  accessibilityFeatures.length === 0 &&
+                  equipmentFeatures.length === 0 &&
+                  facilityFeatures.length === 0 && (
+                    <div className={emptyStateClassName}>
+                      Infraestrutura ainda não confirmada por fonte confiável. A
+                      ausência de um item nesta página não significa que a unidade
+                      não o possua.
                     </div>
                   )}
-                  {equipmentFeatures.length > 0 && (
-                    <div>
-                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        Equipamentos
-                      </h3>
-                      <ul className="grid gap-2 md:grid-cols-2">
-                        {equipmentFeatures.map((item) => (
-                          <li key={item} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-emerald-500" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {facilityFeatures.length > 0 && (
-                    <div>
-                      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                        Instalações
-                      </h3>
-                      <ul className="grid gap-2 md:grid-cols-2">
-                        {facilityFeatures.map((item) => (
-                          <li key={item} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-emerald-500" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {basicResources.length === 0 &&
-                    accessibilityFeatures.length === 0 &&
-                    equipmentFeatures.length === 0 &&
-                    facilityFeatures.length === 0 && (
-                      <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-                        Infraestrutura ainda não confirmada por fonte confiável. A ausência de um
-                        item nesta página não significa que a unidade não o possua.
-                      </div>
-                    )}
-                </div>
-              </section>
+              </div>
+            </section>
 
-            {/* PROGRAMS */}
             <section id="programs" className="scroll-mt-24">
-              <header className="mb-4 flex items-center justify-between">
+              <header className="mb-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                  <h2 className="text-2xl font-bold">{labels.programPlural}</h2>
+                  <BookOpen className={sectionIconClassName} aria-hidden="true" />
+                  <h2 className={sectionTitleClassName}>{labels.programPlural}</h2>
                 </div>
                 {programs.length > 0 && (
-                  <Badge variant="secondary">{programs.length} disponíveis</Badge>
+                  <Badge className="border-territory-border bg-territory-raised text-territory-ink">
+                    {programs.length} disponíveis
+                  </Badge>
                 )}
               </header>
               {programs.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border bg-card/40 p-8 text-center">
-                  <BookOpen className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-3 text-sm text-muted-foreground">
+                <div className={`${emptyStateClassName} p-8 text-center`}>
+                  <BookOpen
+                    className="mx-auto h-8 w-8 text-territory-muted"
+                    aria-hidden="true"
+                  />
+                  <p className="mt-3">
                     {labels.programEmptyState}. Entre em contato para mais informações.
                   </p>
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2">
-                  {programs.map((p) => (
+                  {programs.map((program) => (
                     <ProgramCard
-                      key={p.id}
-                      program={p}
+                      key={program.id}
+                      program={program}
                       showPrice={profile.school_type !== 'public'}
-                      onClick={() => trackProgramView(p.id)}
+                      onClick={() => trackProgramView(program.id)}
                     />
                   ))}
                 </div>
               )}
             </section>
 
-            {/* MODALITIES */}
             <section id="modalities" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <Globe className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Modalidades</h2>
+                <Globe className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Modalidades</h2>
               </header>
               {modalitiesPresent.size === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border bg-card/40 p-5 text-sm text-muted-foreground">
+                <div className={emptyStateClassName}>
                   Modalidades ainda não informadas por fonte confiável.
                 </div>
               ) : (
@@ -584,83 +619,81 @@ export function EducationDetailPage() {
               )}
             </section>
 
-            {/* TEAM */}
             <section id="team" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Equipe</h2>
+                <Users className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Equipe</h2>
               </header>
-              <div className="rounded-2xl border border-dashed border-border bg-card/40 p-5 text-sm text-muted-foreground">
+              <div className={emptyStateClassName}>
                 Dados da equipe ainda não informados pela instituição.
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                <Info className="mr-1 inline h-3 w-3" />
-                Este módulo exibe somente informações declaradas pela instituição.
+              <p className="mt-3 text-xs text-territory-muted">
+                <Info className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                Esta página exibe somente informações declaradas pela instituição.
               </p>
             </section>
 
-            {/* GALLERY */}
             <section id="gallery" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <Camera className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Galeria</h2>
+                <Camera className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Galeria</h2>
               </header>
-              <div className="rounded-2xl border border-dashed border-border bg-card/40 p-6 text-sm text-muted-foreground">
+              <div className={emptyStateClassName}>
                 Nenhuma imagem oficial publicada por esta instituição até o momento.
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                <Info className="mr-1 inline h-3 w-3" />
-                As imagens serão exibidas automaticamente quando a instituição enviar a galeria.
+              <p className="mt-3 text-xs text-territory-muted">
+                <Info className="mr-1 inline h-3 w-3" aria-hidden="true" />
+                Imagens serão exibidas quando houver uma galeria institucional publicada.
               </p>
             </section>
 
-            {/* EVENTS */}
             <section id="events" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">{labels.eventPlural}</h2>
+                <Calendar className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>{labels.eventPlural}</h2>
               </header>
               {events.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-border bg-card/40 p-8 text-center">
-                  <Calendar className="mx-auto h-8 w-8 text-muted-foreground" />
-                  <p className="mt-3 text-sm text-muted-foreground">
-                    {labels.eventEmptyState}.
-                  </p>
+                <div className={`${emptyStateClassName} p-8 text-center`}>
+                  <Calendar
+                    className="mx-auto h-8 w-8 text-territory-muted"
+                    aria-hidden="true"
+                  />
+                  <p className="mt-3">{labels.eventEmptyState}.</p>
                 </div>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                  {events.map((ev) => (
+                  {events.map((event) => (
                     <article
-                      key={ev.id}
-                      className="rounded-2xl border border-border bg-card p-5 transition hover:border-primary/30 cursor-pointer"
-                      onClick={() => trackEventView(ev.id)}
+                      key={event.id}
+                      className="cursor-pointer rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm transition hover:border-territory-brand/30 hover:shadow-md"
+                      onClick={() => trackEventView(event.id)}
                     >
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="text-[11px]">
-                          {formatDate(ev.starts_at)}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="border-territory-border bg-territory-raised text-[11px] text-territory-ink">
+                          {formatDate(event.starts_at)}
                         </Badge>
-                        {ev.school_event_type && profile?.niche_key === 'regular_school' && (
-                          <Badge variant="outline" className="text-[11px] border-indigo-200 text-indigo-700 bg-indigo-50">
-                            {ev.school_event_type === 'open_house' ? 'Portas Abertas' :
-                             ev.school_event_type === 'enrollment_fair' ? 'Feira de Matrícula' :
-                             ev.school_event_type === 'parent_meeting' ? 'Reunião de Pais' :
-                             ev.school_event_type === 'trial_class' ? 'Aula Experimental' :
-                             ev.school_event_type === 'school_tour' ? 'Visita Escolar' :
-                             ev.school_event_type === 'cultural_event' ? 'Evento Cultural' :
-                             ev.school_event_type === 'sports_event' ? 'Evento Esportivo' :
-                             'Outro'}
-                          </Badge>
-                        )}
+                        {event.school_event_type &&
+                          profile.niche_key === 'regular_school' && (
+                            <Badge
+                              variant="outline"
+                              className="border-territory-brand/25 bg-territory-brand/10 text-[11px] text-territory-brand"
+                            >
+                              {SCHOOL_EVENT_TYPE_LABELS[event.school_event_type]}
+                            </Badge>
+                          )}
                       </div>
-                      <h4 className="mt-2 text-base font-bold">{ev.title}</h4>
-                      {ev.description && (
-                        <p className="mt-1 text-sm text-muted-foreground line-clamp-3">
-                          {ev.description}
+                      <h4 className="mt-2 text-base font-bold text-territory-ink">
+                        {event.title}
+                      </h4>
+                      {event.description && (
+                        <p className="mt-1 line-clamp-3 text-sm text-territory-muted">
+                          {event.description}
                         </p>
                       )}
-                      {ev.location && (
-                        <div className="mt-3 inline-flex items-center gap-1 text-xs text-muted-foreground">
-                          <MapPin className="h-3 w-3" /> {ev.location}
+                      {event.location && (
+                        <div className="mt-3 inline-flex items-center gap-1 text-xs text-territory-muted">
+                          <MapPin className="h-3 w-3" aria-hidden="true" />
+                          {event.location}
                         </div>
                       )}
                     </article>
@@ -669,34 +702,36 @@ export function EducationDetailPage() {
               )}
             </section>
 
-            {/* TESTIMONIALS */}
             <section id="testimonials" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <Quote className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Depoimentos</h2>
+                <Quote className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Depoimentos</h2>
               </header>
-              <div className="rounded-2xl border border-dashed border-border bg-card/40 p-5 text-sm text-muted-foreground">
+              <div className={emptyStateClassName}>
                 Sem depoimentos oficiais publicados.
               </div>
             </section>
 
-            {/* FAQ */}
             <section id="faq" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <HelpCircle className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Perguntas frequentes</h2>
+                <HelpCircle className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Perguntas frequentes</h2>
               </header>
               <Accordion
                 type="single"
                 collapsible
-                className="rounded-2xl border border-border bg-card px-4"
+                className="rounded-2xl border border-territory-border bg-territory-surface px-4 text-territory-ink shadow-sm"
               >
-                {FALLBACK_FAQ.map((item, i) => (
-                  <AccordionItem key={i} value={`faq-${i}`} className="border-b last:border-0">
+                {FALLBACK_FAQ.map((item, index) => (
+                  <AccordionItem
+                    key={item.q}
+                    value={`faq-${index}`}
+                    className="border-territory-border last:border-0"
+                  >
                     <AccordionTrigger className="text-left text-sm font-semibold">
                       {item.q}
                     </AccordionTrigger>
-                    <AccordionContent className="text-sm text-muted-foreground">
+                    <AccordionContent className="text-sm text-territory-muted">
                       {item.a}
                     </AccordionContent>
                   </AccordionItem>
@@ -704,45 +739,49 @@ export function EducationDetailPage() {
               </Accordion>
             </section>
 
-            {/* LOCATION */}
             <section id="location" className="scroll-mt-24">
               <header className="mb-4 flex items-center gap-2">
-                <MapIcon className="h-5 w-5 text-primary" />
-                <h2 className="text-2xl font-bold">Localização</h2>
+                <MapIcon className={sectionIconClassName} aria-hidden="true" />
+                <h2 className={sectionTitleClassName}>Localização</h2>
               </header>
-              <div className="overflow-hidden rounded-3xl border border-border bg-card">
+              <div className={`${surfaceCardClassName} overflow-hidden`}>
                 <div
                   className={cn(
                     'relative h-52 bg-gradient-to-br md:h-64',
                     gradient,
-                    'opacity-90'
                   )}
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <MapPin className="h-12 w-12 text-white/90" />
+                    <MapPin
+                      className="h-12 w-12 text-territory-on-image/90"
+                      aria-hidden="true"
+                    />
                   </div>
                 </div>
                 <div className="p-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold capitalize">
+                      <h3 className="font-semibold capitalize text-territory-ink">
                         {districtLabel}, {cityLabel}
                       </h3>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-territory-muted">
                         Endereço completo disponível mediante contato.
                       </p>
                     </div>
-                    <a
-                      href={`https://www.google.com/maps/search/${encodeURIComponent(
-                        `${institutionName} ${districtLabel} ${cityLabel}`
-                      )}`}
-                      target="_blank"
-                      rel="noreferrer"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="rounded-full border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
                     >
-                      <Button variant="outline" size="sm" className="rounded-full">
-                        Abrir no Maps <ExternalLink className="ml-1 h-3.5 w-3.5" />
-                      </Button>
-                    </a>
+                      <a href={mapsHref} target="_blank" rel="noreferrer">
+                        Abrir no Maps
+                        <ExternalLink
+                          className="ml-1 h-3.5 w-3.5"
+                          aria-hidden="true"
+                        />
+                      </a>
+                    </Button>
                   </div>
                 </div>
               </div>
