@@ -70,6 +70,18 @@ describe("MVP Business public flow", () => {
     );
   });
 
+  it("keeps the active Business hero on the territorial visual SSOT", () => {
+    expect(heroSection).toContain("bg-territory-image-overlay");
+    expect(heroSection).toContain("text-territory-on-image");
+    expect(heroSection).toContain("text-territory-action-on-image");
+    expect(heroSection).toContain("border-territory-on-image/10");
+    expect(heroSection).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+    expect(heroSection).not.toMatch(/\brgba?\s*\(/);
+    expect(heroSection).not.toMatch(
+      /\b(?:text|bg|border)-(?:teal|cyan|emerald|slate|white|black)-/,
+    );
+  });
+
   it("keeps standalone Business SEO inside active discovery capabilities", () => {
     expect(page).not.toContain("recomendacoes da comunidade");
     expect(page).toContain("comercios por territorio");
