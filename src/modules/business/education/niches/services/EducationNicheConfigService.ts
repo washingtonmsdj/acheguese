@@ -1,69 +1,66 @@
 /**
  * EducationNicheConfigService
- * 
- * Service para leitura e validacao de configuracao de nichos.
- * Sem acesso direto a UI, sem dependencia de componente.
+ *
+ * Serviço para leitura e validação de configuração de nichos.
+ * Sem acesso direto à UI, sem dependência de componente.
  */
 
-import type { 
-  EducationNicheConfig, 
+import type {
+  EducationNicheConfig,
   EducationNicheCapability,
   EducationAdminSection,
-  EducationNicheValidationResult 
+  EducationNicheValidationResult,
 } from '../types';
-import { 
-  getNicheByKey, 
-  getNicheOrDefault, 
-  hasCapability, 
+import {
+  getNicheByKey,
+  getNicheOrDefault,
+  hasCapability,
   shouldShowAdminSection,
-  listNiches 
+  listNiches,
 } from '../registry';
 
 export const EducationNicheConfigService = {
-  /**
-   * Le configuracao de nicho por key
-   */
+  /** Lê configuração de nicho por chave. */
   getConfig(nicheKey: string): EducationNicheConfig {
     return getNicheOrDefault(nicheKey);
   },
 
-  /**
-   * Lista nichos com filtros opcionais
-   */
+  /** Lista nichos com filtros opcionais. */
   listNiches(filters?: Parameters<typeof listNiches>[0]) {
     return listNiches(filters);
   },
 
-  /**
-   * Verifica se nicho possui capability
-   */
-  hasCapability(nicheKey: string, capability: EducationNicheCapability): boolean {
+  /** Verifica se o nicho possui o recurso. */
+  hasCapability(
+    nicheKey: string,
+    capability: EducationNicheCapability,
+  ): boolean {
     return hasCapability(nicheKey, capability);
   },
 
-  /**
-   * Verifica se secao admin deve ser exibida
-   */
-  shouldShowSection(nicheKey: string, section: EducationAdminSection): boolean {
+  /** Verifica se a seção administrativa deve ser exibida. */
+  shouldShowSection(
+    nicheKey: string,
+    section: EducationAdminSection,
+  ): boolean {
     return shouldShowAdminSection(nicheKey, section);
   },
 
-  /**
-   * Valida payload para nicho especifico
-   */
+  /** Valida payload para um nicho específico. */
   validateForNiche(
-    nicheKey: string, 
-    payload: Record<string, unknown>
+    nicheKey: string,
+    payload: Record<string, unknown>,
   ): EducationNicheValidationResult {
     const niche = getNicheByKey(nicheKey);
     const errors: string[] = [];
 
     if (!niche) {
-      errors.push(`Nicho '${nicheKey}' nao existe`);
+      errors.push(`Nicho '${nicheKey}' não existe`);
     }
 
-    // Validacoes especificas por nicho podem ser adicionadas aqui
-    
+    // Validações específicas por nicho podem ser adicionadas aqui.
+    void payload;
+
     return {
       isValid: errors.length === 0,
       errors,
@@ -71,8 +68,8 @@ export const EducationNicheConfigService = {
   },
 
   /**
-   * Resolve capabilities efetivas considerando nicho + entitlements
-   * (entitlements serao verificados via billing no hook/component)
+   * Resolve recursos efetivos considerando nicho + entitlements.
+   * Os entitlements são verificados via Billing no hook/componente.
    */
   getEffectiveCapabilities(nicheKey: string): EducationNicheCapability[] {
     const niche = getNicheByKey(nicheKey);
@@ -80,9 +77,7 @@ export const EducationNicheConfigService = {
     return niche.enabledCapabilities;
   },
 
-  /**
-   * Verifica se nicho esta habilitado para uso
-   */
+  /** Verifica se o nicho está habilitado para uso. */
   isEnabled(nicheKey: string): boolean {
     const niche = getNicheByKey(nicheKey);
     if (!niche) return false;
