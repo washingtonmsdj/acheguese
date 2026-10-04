@@ -1,6 +1,6 @@
 /**
  * useEducationNicheBilling - Testes
- * 
+ *
  * Testes unitários para o hook de integração nicho + billing.
  */
 
@@ -8,7 +8,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { PlanTier } from '@/core/billing/types';
 import { useEducationNicheBilling } from '../hooks/useEducationNicheBilling';
+import { EducationNicheBillingIntegration } from '../services/EducationNicheBillingIntegration';
 
 type EducationUsageCounters = {
   programCount: number;
@@ -16,11 +18,11 @@ type EducationUsageCounters = {
   eventCount: number;
 };
 
-// Mocks
 vi.mock('../../hooks/useEducationSubscription', () => ({
   useEducationSubscription: vi.fn(() => ({
     status: {
-      planType: 'pro',
+      planTier: PlanTier.DELIVERY,
+      planType: 'premium',
       isActive: true,
       entitlements: {
         maxPrograms: 20,
@@ -28,6 +30,8 @@ vi.mock('../../hooks/useEducationSubscription', () => ({
         maxEvents: 10,
       },
     },
+    planTier: PlanTier.DELIVERY,
+    planType: 'premium',
     isLoading: false,
     isError: false,
     error: null,
@@ -68,7 +72,7 @@ const createWrapper = () => {
       },
     },
   });
-  
+
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <QueryClientProvider client={queryClient}>
@@ -110,6 +114,28 @@ describe('useEducationNicheBilling', () => {
     expect(result.current.isReady).toBe(false);
   });
 
+  it('preserva o PlanTier canônico sem converter DELIVERY em PRO', () => {
+    const resolveSpy = vi.spyOn(
+      EducationNicheBillingIntegration,
+      'resolveEffectiveCapability',
+    );
+    const wrapper = createWrapper();
+    const { result } = renderHook(
+      () => useEducationNicheBilling({
+        nicheKey: 'regular_school',
+        businessId: 'test-business',
+      }),
+      { wrapper }
+    );
+
+    result.current.can('analytics_basic');
+
+    expect(resolveSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ planTier: PlanTier.DELIVERY }),
+      'analytics_basic',
+    );
+  });
+
   it('deve calcular limits corretamente', () => {
     const wrapper = createWrapper();
     const { result } = renderHook(
@@ -131,10 +157,8 @@ describe('useEducationNicheBilling', () => {
       expect(limits.programs.current).toBe(5);
       expect(limits.programs.max).toBe(20);
       expect(limits.programs.canCreate).toBe(true);
-      
       expect(limits.leads.current).toBe(100);
       expect(limits.leads.max).toBe(500);
-      
       expect(limits.events.current).toBe(2);
       expect(limits.events.max).toBe(10);
     }
@@ -151,7 +175,7 @@ describe('useEducationNicheBilling', () => {
     );
 
     const limits = result.current.calculateLimits({
-      programCount: 20, // Limite atingido
+      programCount: 20,
       eventCount: 0,
       leadsThisMonth: 0,
     });
@@ -173,10 +197,7 @@ describe('useEducationNicheBilling', () => {
       { wrapper }
     );
 
-    // regular_school tem basic_programs_catalog, então deve ser permitido
     const check = result.current.can('basic_programs_catalog');
-    // O resultado depende do nicho real do registry + plano mockado
-    // Se o mock do plano retornar 'pro', e regular_school tem a capability, deve ser true
     expect(check.allowed).toBeDefined();
     expect(check.reason).toBeDefined();
     expect(check.upgradeMessage).toBeDefined();
@@ -192,7 +213,6 @@ describe('useEducationNicheBilling', () => {
       { wrapper }
     );
 
-    // Verificando uma capability que o nicho não tem
     const check = result.current.can('attendance_tracking');
     expect(check.allowed).toBe(false);
     expect(check.upgradeMessage).toBeTruthy();
