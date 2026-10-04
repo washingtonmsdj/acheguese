@@ -17,7 +17,7 @@ function read(relativePath: string): string {
   return fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 }
 
-describe("retired orphan app pages", () => {
+describe("retired app-level wrappers", () => {
   it("keeps callerless legacy shells out of the active app layer", () => {
     for (const relativePath of RETIRED_APP_PAGES) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);
@@ -52,7 +52,7 @@ describe("retired orphan app pages", () => {
     }
   });
 
-  it("preserves bounded contexts while paused UI shells stay retired", () => {
+  it("preserves bounded contexts while paused module UI stays outside the active app layer", () => {
     expect(fs.existsSync(path.join(ROOT, "src/core/billing"))).toBe(true);
     expect(fs.existsSync(path.join(ROOT, "src/modules/ai/virtual-tryon"))).toBe(true);
     expect(
