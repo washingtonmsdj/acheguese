@@ -179,7 +179,7 @@ const RouteMap = memo(function RouteMap({
       mapRef.current?.remove();
       mapRef.current = null;
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [originLat, originLng, destinationLat, destinationLng]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 });

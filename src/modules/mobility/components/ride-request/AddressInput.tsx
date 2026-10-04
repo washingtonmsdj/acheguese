@@ -88,20 +88,27 @@ export const AddressInput = memo(
       onError,
       autoGeocodeOnBlur: true,
     });
+    const {
+      captureGPS,
+      setText: setAddressText,
+      text: addressText,
+    } = addressInput;
     
-    // Auto-capturar GPS ao montar
+    const autoCaptureAttemptedRef = React.useRef(false);
+
+    // Auto-capturar GPS uma única vez quando o campo nasce sem valor inicial.
     React.useEffect(() => {
-      if (autoCaptureGPS && !addressInput.text && !addressInput.isLoading) {
-        addressInput.captureGPS();
-      }
-    }, [autoCaptureGPS]); // eslint-disable-line react-hooks/exhaustive-deps
+      if (!autoCaptureGPS || initialValue || autoCaptureAttemptedRef.current) return;
+      autoCaptureAttemptedRef.current = true;
+      void captureGPS();
+    }, [autoCaptureGPS, initialValue, captureGPS]);
     
-    // Setar valor inicial
+    // Projetar o valor inicial sem competir com a captura automática de GPS.
     React.useEffect(() => {
-      if (initialValue && !addressInput.text) {
-        addressInput.setText(initialValue);
+      if (initialValue && !addressText) {
+        setAddressText(initialValue);
       }
-    }, [initialValue]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [initialValue, addressText, setAddressText]);
     
     const handleBlur = useCallback(() => {
       if (addressInput.text.trim() && !addressInput.isValid && !addressInput.isLoading) {

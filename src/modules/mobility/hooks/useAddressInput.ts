@@ -65,13 +65,15 @@ export function useAddressInput(options: UseAddressInputOptions = {}): UseAddres
   }, []);
 
   const handleSetText = useCallback((newText: string) => {
-    setText(newText);
-    if (newText !== text && isValid) {
-      setCoords(null);
-      setLocationId('');
-      setIsValid(false);
-    }
-  }, [text, isValid]);
+    setText((currentText) => {
+      if (newText !== currentText) {
+        setCoords(null);
+        setLocationId('');
+        setIsValid(false);
+      }
+      return newText;
+    });
+  }, []);
 
   const geocode = useCallback(async (): Promise<AddressInputResult | null> => {
     const trimmedText = text.trim();
