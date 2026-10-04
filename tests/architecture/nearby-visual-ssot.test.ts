@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
 const cssPath = "src/core/nearby/pages/NearbyPage.css";
+const miniMapPath = "src/core/nearby/components/NearbyMiniMap.tsx";
 const css = readFileSync(resolve(root, cssPath), "utf8");
+const miniMap = readFileSync(resolve(root, miniMapPath), "utf8");
 
 const rawRuntimeColor = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const cssFontWeight = /font-weight\s*:\s*(\d{3})\b/g;
@@ -33,5 +35,18 @@ describe("Nearby visual SSOT", () => {
     for (const weight of weights) {
       expect(approvedFontWeights.has(weight)).toBe(true);
     }
+  });
+
+  it("keeps the mini map layout explicit and free of generic visual primitives", () => {
+    expect(miniMap).toContain("h-[13.75rem]");
+    expect(miniMap).toContain("min-[521px]:h-[300px]");
+    expect(miniMap).toContain("min-[1181px]:h-[310px]");
+    expect(miniMap).toContain("border-territory-border/50");
+    expect(miniMap).toContain("bg-territory-raised/30");
+    expect(miniMap).toContain("text-territory-muted");
+    expect(miniMap).not.toContain('style={{ height: "400px" }}');
+    expect(miniMap).not.toContain("border-border/50");
+    expect(miniMap).not.toContain("bg-muted/30");
+    expect(miniMap).not.toContain("text-muted-foreground");
   });
 });
