@@ -37,27 +37,27 @@ type UpdateField = (
 ) => void;
 
 const EDIT_TABS: { key: ProfessionalEditTab; label: string; icon: React.ElementType }[] = [
-  { key: "info", label: "Informacoes", icon: Briefcase },
+  { key: "info", label: "Informações", icon: Briefcase },
   { key: "details", label: "Detalhes", icon: Award },
   { key: "contact", label: "Contato", icon: Phone },
-  { key: "portfolio", label: "Portfolio", icon: Camera },
-  { key: "availability", label: "Horarios", icon: Clock },
+  { key: "portfolio", label: "Portfólio", icon: Camera },
+  { key: "availability", label: "Horários", icon: Clock },
 ];
 
 export function EditarServicoLoadingState() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <div className="sticky top-0 z-10 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <div className="flex min-h-screen flex-col bg-territory-canvas text-territory-ink">
+      <div className="sticky top-0 z-10 border-b border-territory-border bg-territory-surface/95 backdrop-blur supports-[backdrop-filter]:bg-territory-surface/85">
         <div className="mx-auto flex w-full max-w-3xl items-center gap-3 px-4 py-3 sm:px-6">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-10 w-10 rounded-full bg-territory-raised" />
+          <Skeleton className="h-6 w-48 bg-territory-raised" />
         </div>
       </div>
       <div className="mx-auto w-full max-w-3xl space-y-4 px-4 py-4 sm:px-6 sm:py-6">
-        <Skeleton className="mx-auto h-24 w-24 rounded-2xl" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-20 w-full" />
+        <Skeleton className="mx-auto h-24 w-24 rounded-2xl bg-territory-raised" />
+        <Skeleton className="h-10 w-full bg-territory-raised" />
+        <Skeleton className="h-10 w-full bg-territory-raised" />
+        <Skeleton className="h-20 w-full bg-territory-raised" />
       </div>
     </div>
   );
@@ -71,10 +71,14 @@ export function EditarServicoErrorState({
   onBackToServices: () => void;
 }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-      <p className="mb-4 text-muted-foreground">{message}</p>
-      <Button variant="outline" onClick={onBackToServices}>
-        Voltar para Servicos
+    <div className="flex min-h-screen flex-col items-center justify-center bg-territory-canvas p-4 text-territory-ink">
+      <p className="mb-4 text-territory-muted">{message}</p>
+      <Button
+        variant="outline"
+        className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+        onClick={onBackToServices}
+      >
+        Voltar para Serviços
       </Button>
     </div>
   );
@@ -88,28 +92,31 @@ export function EditarServicoHeader({
   onBack: () => void;
 }) {
   return (
-    <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-border/70 bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <div className="sticky top-0 z-20 flex items-center gap-3 border-b border-territory-border bg-territory-surface/95 px-4 py-3 text-territory-ink backdrop-blur supports-[backdrop-filter]:bg-territory-surface/85">
       <button
         type="button"
         onClick={onBack}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-card text-foreground transition-colors hover:bg-secondary"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-territory-border bg-territory-surface text-territory-ink transition-colors hover:bg-territory-raised"
+        aria-label="Voltar"
       >
-        <ArrowLeft className="h-5 w-5" />
+        <ArrowLeft className="h-5 w-5" aria-hidden="true" />
       </button>
       <div className="min-w-0 flex-1">
-        <h1 className="truncate text-base font-semibold text-foreground sm:text-lg">
+        <h1 className="truncate text-base font-semibold text-territory-ink sm:text-lg">
           Editar perfil profissional
         </h1>
-        <p className="text-xs text-muted-foreground">Ajuste dados publicos, contato e cobertura.</p>
+        <p className="text-xs text-territory-muted">
+          Ajuste dados públicos, contato e cobertura.
+        </p>
       </div>
-      {hasChanges && (
+      {hasChanges ? (
         <Badge
-          variant="secondary"
-          className="ml-auto shrink-0 text-[0.68rem] uppercase tracking-[0.12em]"
+          variant="outline"
+          className="ml-auto shrink-0 border-territory-warning/30 bg-territory-warning/10 text-[0.68rem] uppercase tracking-[0.12em] text-territory-warning"
         >
-          Alteracoes pendentes
+          Alterações pendentes
         </Badge>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -122,7 +129,7 @@ export function EditarServicoTabNavigation({
   onTabChange: (tab: ProfessionalEditTab) => void;
 }) {
   return (
-    <div className="sticky top-[4.0625rem] z-10 border-b border-border/70 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <div className="sticky top-[4.0625rem] z-10 border-b border-territory-border bg-territory-surface/95 backdrop-blur supports-[backdrop-filter]:bg-territory-surface/85">
       <div className="mx-auto w-full max-w-3xl overflow-x-auto px-4 py-3 sm:px-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-max gap-2">
           {EDIT_TABS.map((tab) => {
@@ -136,11 +143,11 @@ export function EditarServicoTabNavigation({
                 onClick={() => onTabChange(tab.key)}
                 className={`flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-all ${
                   isActive
-                    ? "border-primary/30 bg-primary text-primary-foreground shadow-[0_12px_30px_-18px_rgba(0,214,201,0.95)]"
-                    : "border-border/70 bg-card text-muted-foreground hover:text-foreground"
+                    ? "border-territory-brand/30 bg-territory-brand text-territory-on-image shadow-sm"
+                    : "border-territory-border bg-territory-surface text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" aria-hidden="true" />
                 {tab.label}
               </button>
             );
@@ -175,38 +182,42 @@ export function EditarServicoInfoTab({
   onSlugChange: (value: string) => void;
 }) {
   return (
-    <div className="space-y-6">
-      <Card className="border-border">
+    <div className="space-y-6 text-territory-ink">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardContent className="pt-6">
           <div className="flex flex-col items-center gap-4">
             <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-secondary">
+              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border-2 border-territory-border bg-territory-raised">
                 {photoPreview ? (
-                  <img src={photoPreview} alt="Foto" className="h-full w-full object-cover" />
+                  <img
+                    src={photoPreview}
+                    alt="Foto do profissional"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <Camera className="h-8 w-8 text-muted-foreground" />
+                  <Camera className="h-8 w-8 text-territory-muted" aria-hidden="true" />
                 )}
               </div>
-              <label className="absolute -bottom-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-primary shadow-lg">
-                <Upload className="h-4 w-4 text-primary-foreground" />
+              <label className="absolute -bottom-2 -right-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-territory-brand shadow-sm">
+                <Upload className="h-4 w-4 text-territory-on-image" aria-hidden="true" />
                 <input type="file" accept="image/*" onChange={onPhotoChange} className="hidden" />
               </label>
             </div>
-            <p className="text-xs text-muted-foreground">Clique para alterar a foto</p>
+            <p className="text-xs text-territory-muted">Clique para alterar a foto</p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-border">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Briefcase className="h-4 w-4 text-primary" />
-            Informacoes Basicas
+          <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+            <Briefcase className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+            Informações básicas
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="name">Nome Profissional *</Label>
+            <Label htmlFor="name">Nome profissional *</Label>
             <Input
               id="name"
               value={form.name}
@@ -225,7 +236,7 @@ export function EditarServicoInfoTab({
                 {SERVICE_FORM_CATEGORY_OPTIONS.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     <span className="flex items-center gap-2">
-                      <category.icon className="h-4 w-4 text-muted-foreground" />
+                      <category.icon className="h-4 w-4 text-territory-muted" aria-hidden="true" />
                       <span>{category.name}</span>
                     </span>
                   </SelectItem>
@@ -235,25 +246,27 @@ export function EditarServicoInfoTab({
           </div>
 
           <div>
-            <Label htmlFor="subcategory">Titulo do Servico</Label>
+            <Label htmlFor="subcategory">Título do serviço</Label>
             <Input
               id="subcategory"
               value={form.subcategory}
               onChange={(event) => onFieldChange("subcategory", event.target.value)}
-              placeholder="Ex: Eletricista Residencial"
+              placeholder="Ex: Eletricista residencial"
             />
           </div>
 
           <div>
-            <Label htmlFor="description">Descricao</Label>
+            <Label htmlFor="description">Descrição</Label>
             <Textarea
               id="description"
               value={form.description}
               onChange={(event) => onFieldChange("description", event.target.value)}
-              placeholder="Descreva seus servicos, experiencia e diferenciais..."
+              placeholder="Descreva seus serviços, experiência e diferenciais..."
               rows={4}
             />
-            <p className="mt-1 text-xs text-muted-foreground">{form.description.length}/2000</p>
+            <p className="mt-1 text-xs text-territory-muted">
+              {form.description.length}/2000
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -298,17 +311,17 @@ export function EditarServicoDetailsTab({
   ];
 
   return (
-    <div className="space-y-6">
-      <Card className="border-border">
+    <div className="space-y-6 text-territory-ink">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <GraduationCap className="h-4 w-4 text-primary" />
-            Experiencia e Formacao
+          <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+            <GraduationCap className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+            Experiência e formação
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="experienceYears">Anos de Experiencia</Label>
+            <Label htmlFor="experienceYears">Anos de experiência</Label>
             <Input
               id="experienceYears"
               type="number"
@@ -321,81 +334,86 @@ export function EditarServicoDetailsTab({
           </div>
 
           <div>
-            <Label htmlFor="education">Formacao</Label>
+            <Label htmlFor="education">Formação</Label>
             <Input
               id="education"
               value={form.education}
               onChange={(event) => onFieldChange("education", event.target.value)}
-              placeholder="Ex: Tecnico em Eletrotecnica"
+              placeholder="Ex: Técnico em eletrotécnica"
             />
           </div>
 
           <div>
-            <Label htmlFor="certifications">Certificacoes</Label>
+            <Label htmlFor="certifications">Certificações</Label>
             <Input
               id="certifications"
               value={form.certifications}
               onChange={(event) => onFieldChange("certifications", event.target.value)}
-              placeholder="Separe por virgula"
+              placeholder="Separe por vírgula"
             />
-            <p className="mt-1 text-xs text-muted-foreground">Ex: NR-10, NR-35, CREA</p>
+            <p className="mt-1 text-xs text-territory-muted">Ex: NR-10, NR-35, CREA</p>
           </div>
 
           <div>
-            <Label htmlFor="priceRange">Faixa de Preco</Label>
+            <Label htmlFor="priceRange">Faixa de preço</Label>
             <Select value={form.priceRange} onValueChange={(value) => onFieldChange("priceRange", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Selecione a faixa" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="$">$ - Economico</SelectItem>
+                <SelectItem value="$">$ - Econômico</SelectItem>
                 <SelectItem value="$$">$$ - Moderado</SelectItem>
                 <SelectItem value="$$$">$$$ - Premium</SelectItem>
                 <SelectItem value="$$$$">$$$$ - Luxo</SelectItem>
-                <SelectItem value="negociavel">Negociavel</SelectItem>
+                <SelectItem value="negociavel">Negociável</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-border">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <MapPin className="h-4 w-4 text-primary" />
-            Areas de Atendimento
+          <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+            <MapPin className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+            Áreas de atendimento
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {loadingServiceAreaOptions && (
-              <p className="text-sm text-muted-foreground">Carregando areas de atendimento...</p>
-            )}
+            {loadingServiceAreaOptions ? (
+              <p className="text-sm text-territory-muted">Carregando áreas de atendimento...</p>
+            ) : null}
 
-            {!loadingServiceAreaOptions && displayOptions.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Nenhuma area disponivel para o territorio deste profissional. Cadastre bairros no admin territorial antes de atualizar a cobertura.
+            {!loadingServiceAreaOptions && displayOptions.length === 0 ? (
+              <p className="text-sm text-territory-muted">
+                Nenhuma área disponível para o território deste profissional. Cadastre bairros no
+                admin territorial antes de atualizar a cobertura.
               </p>
-            )}
+            ) : null}
 
-            {!loadingServiceAreaOptions && displayOptions.map((area) => {
-              const selected = form.serviceAreaLocationIds.includes(area.id);
+            {!loadingServiceAreaOptions
+              ? displayOptions.map((area) => {
+                  const selected = form.serviceAreaLocationIds.includes(area.id);
 
-              return (
-                <Badge
-                  key={area.id}
-                  variant={selected ? "default" : "outline"}
-                  className={`cursor-pointer transition-all ${
-                    selected ? "bg-primary text-primary-foreground" : "hover:bg-secondary"
-                  }`}
-                  onClick={() => onToggleServiceArea(area.id)}
-                >
-                  {area.name}
-                </Badge>
-              );
-            })}
+                  return (
+                    <Badge
+                      key={area.id}
+                      variant="outline"
+                      className={`cursor-pointer transition-all ${
+                        selected
+                          ? "border-territory-brand bg-territory-brand text-territory-on-image"
+                          : "border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+                      }`}
+                      onClick={() => onToggleServiceArea(area.id)}
+                    >
+                      {area.name}
+                    </Badge>
+                  );
+                })
+              : null}
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-territory-muted">
             {form.serviceAreaLocationIds.length} bairro(s) selecionado(s)
           </p>
         </CardContent>
@@ -412,12 +430,12 @@ export function EditarServicoContactTab({
   onFieldChange: UpdateField;
 }) {
   return (
-    <div className="space-y-6">
-      <Card className="border-border">
+    <div className="space-y-6 text-territory-ink">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Phone className="h-4 w-4 text-primary" />
-            Dados de Contato
+          <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+            <Phone className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+            Dados de contato
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -454,11 +472,11 @@ export function EditarServicoContactTab({
         </CardContent>
       </Card>
 
-      <Card className="border-border">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Globe className="h-4 w-4 text-primary" />
-            Redes Sociais
+          <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+            <Globe className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+            Redes sociais
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -497,17 +515,17 @@ export function EditarServicoPortfolioTab({
   onRemovePortfolioImage: (index: number) => void;
 }) {
   return (
-    <div className="space-y-6">
-      <Card className="border-border">
+    <div className="space-y-6 text-territory-ink">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Camera className="h-4 w-4 text-primary" />
-            Portfolio de Trabalhos
+          <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+            <Camera className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+            Portfólio de trabalhos
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Adicione fotos dos seus trabalhos para mostrar a qualidade do seu servico. Maximo de
+          <p className="text-sm text-territory-muted">
+            Adicione fotos dos seus trabalhos para mostrar a qualidade do seu serviço. Máximo de
             10 imagens.
           </p>
 
@@ -516,23 +534,24 @@ export function EditarServicoPortfolioTab({
               <div key={`${preview}-${index}`} className="group relative aspect-square">
                 <img
                   src={preview}
-                  alt={`Portfolio ${index + 1}`}
-                  className="h-full w-full rounded-lg border object-cover"
+                  alt={`Portfólio ${index + 1}`}
+                  className="h-full w-full rounded-lg border border-territory-border object-cover"
                 />
                 <button
                   type="button"
                   onClick={() => onRemovePortfolioImage(index)}
-                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-territory-error text-territory-on-image opacity-0 transition-opacity group-hover:opacity-100"
+                  aria-label={`Remover imagem ${index + 1} do portfólio`}
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-3 w-3" aria-hidden="true" />
                 </button>
               </div>
             ))}
 
-            {portfolioPreviews.length < 10 && (
-              <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 transition-colors hover:border-primary/50">
-                <Upload className="h-6 w-6 text-muted-foreground" />
-                <span className="mt-1 text-[10px] text-muted-foreground">Adicionar</span>
+            {portfolioPreviews.length < 10 ? (
+              <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-territory-muted/30 bg-territory-surface transition-colors hover:border-territory-brand/50 hover:bg-territory-raised">
+                <Upload className="h-6 w-6 text-territory-muted" aria-hidden="true" />
+                <span className="mt-1 text-[10px] text-territory-muted">Adicionar</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -541,11 +560,11 @@ export function EditarServicoPortfolioTab({
                   className="hidden"
                 />
               </label>
-            )}
+            ) : null}
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            {portfolioPreviews.length}/10 imagens - Maximo 5MB por imagem
+          <p className="text-xs text-territory-muted">
+            {portfolioPreviews.length}/10 imagens - Máximo 5MB por imagem
           </p>
         </CardContent>
       </Card>
@@ -563,22 +582,22 @@ export function EditarServicoAvailabilityTab({
   onDeactivateProfile: () => void;
 }) {
   return (
-    <div className="space-y-6">
-      <Card className="border-border">
+    <div className="space-y-6 text-territory-ink">
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Clock className="h-4 w-4 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-base text-territory-ink">
+            <Clock className="h-4 w-4 text-territory-brand" aria-hidden="true" />
             Disponibilidade
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg bg-secondary/50 p-3">
+          <div className="flex items-center justify-between rounded-lg bg-territory-raised p-3">
             <div>
-              <p className="text-sm font-medium">Aceitando novos clientes</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-sm font-medium text-territory-ink">Aceitando novos clientes</p>
+              <p className="text-xs text-territory-muted">
                 {form.isAcceptingClients
-                  ? "Seu perfil esta visivel para novos clientes"
-                  : "Seu perfil esta oculto para novos clientes"}
+                  ? "Seu perfil está visível para novos clientes"
+                  : "Seu perfil está oculto para novos clientes"}
               </p>
             </div>
             <Switch
@@ -587,34 +606,38 @@ export function EditarServicoAvailabilityTab({
             />
           </div>
 
-          <Separator />
+          <Separator className="bg-territory-border" />
 
           <div>
-            <Label htmlFor="availableHours">Horario de Atendimento</Label>
+            <Label htmlFor="availableHours">Horário de atendimento</Label>
             <Textarea
               id="availableHours"
               value={form.availableHours}
               onChange={(event) => onFieldChange("availableHours", event.target.value)}
-              placeholder="Ex: Seg-Sex: 8h as 18h&#10;Sab: 8h as 12h"
+              placeholder="Ex: Seg-Sex: 8h às 18h&#10;Sáb: 8h às 12h"
               rows={3}
             />
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border border-destructive/30">
+      <Card className="border border-territory-error/30 bg-territory-error/5 text-territory-ink shadow-none">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base text-destructive">
-            <Trash2 className="h-4 w-4" />
-            Zona de Perigo
+          <CardTitle className="flex items-center gap-2 text-base text-territory-error">
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Zona de perigo
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="mb-3 text-sm text-muted-foreground">
-            Desativar seu perfil profissional ira oculta-lo de todos os resultados de busca.
+          <p className="mb-3 text-sm text-territory-muted">
+            Desativar seu perfil profissional irá ocultá-lo de todos os resultados de busca.
           </p>
-          <Button variant="destructive" size="sm" onClick={onDeactivateProfile}>
-            Desativar Perfil
+          <Button
+            size="sm"
+            className="bg-territory-error text-territory-on-image hover:bg-territory-error/90"
+            onClick={onDeactivateProfile}
+          >
+            Desativar perfil
           </Button>
         </CardContent>
       </Card>
@@ -634,21 +657,30 @@ export function EditarServicoSaveBar({
   onSave: () => void;
 }) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/70 bg-background/95 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-territory-border bg-territory-surface/95 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] pt-3 backdrop-blur supports-[backdrop-filter]:bg-territory-surface/85">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 sm:flex-row">
-        <Button variant="outline" className="h-11 flex-1" onClick={onCancel} disabled={saving}>
+        <Button
+          variant="outline"
+          className="h-11 flex-1 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+          onClick={onCancel}
+          disabled={saving}
+        >
           Cancelar
         </Button>
-        <Button className="h-11 flex-1" onClick={onSave} disabled={saving || !hasChanges}>
+        <Button
+          className="h-11 flex-1 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+          onClick={onSave}
+          disabled={saving || !hasChanges}
+        >
           {saving ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
               Salvando...
             </>
           ) : (
             <>
-              <Save className="mr-2 h-4 w-4" />
-              Salvar Alteracoes
+              <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+              Salvar alterações
             </>
           )}
         </Button>
