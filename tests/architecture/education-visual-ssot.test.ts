@@ -10,6 +10,7 @@ const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/pages/explorerPresentation.constants.ts",
   "src/modules/business/education/pages/explorerCards.tsx",
   "src/modules/business/education/pages/explorerFilterControls.tsx",
+  "src/modules/business/education/pages/explorerMarketingSections.tsx",
   "src/modules/business/education/pages/EducationExplorerPage.tsx",
   "src/modules/business/education/pages/EducationDetailStateViews.tsx",
   "src/modules/business/education/pages/EducationDetailPresentation.tsx",
@@ -68,18 +69,39 @@ const LEGACY_VISUAL_TOKENS = [
   "to-orange-",
 ] as const;
 
+function readSource(relativePath: string): string {
+  const absolutePath = path.join(ROOT, relativePath);
+  expect(fs.existsSync(absolutePath), relativePath).toBe(true);
+  return fs.readFileSync(absolutePath, "utf8");
+}
+
 describe("education visual SSOT", () => {
   it("keeps migrated Education UI owners versioned and territorial", () => {
     for (const relativePath of EDUCATION_VISUAL_OWNERS) {
-      const absolutePath = path.join(ROOT, relativePath);
-      expect(fs.existsSync(absolutePath), relativePath).toBe(true);
-      const source = fs.readFileSync(absolutePath, "utf8");
+      const source = readSource(relativePath);
 
       expect(source, relativePath).toContain("territory-");
       for (const token of LEGACY_VISUAL_TOKENS) {
         expect(source, `${relativePath}: legacy visual token returned: ${token}`).not.toContain(token);
       }
     }
+  });
+
+  it("does not advertise an Education comparison action without a real comparison owner", () => {
+    const explorer = readSource(
+      "src/modules/business/education/pages/EducationExplorerPage.tsx",
+    );
+    const cards = readSource(
+      "src/modules/business/education/pages/explorerCards.tsx",
+    );
+    const marketing = readSource(
+      "src/modules/business/education/pages/explorerMarketingSections.tsx",
+    );
+
+    expect(explorer).not.toContain("EducationCompareBar");
+    expect(explorer).not.toContain("setComparing");
+    expect(cards).not.toContain("onCompareToggle");
+    expect(marketing).not.toContain("EducationCompareBar");
   });
 
   it("keeps Education paused while its owners are hardened for later activation", () => {
