@@ -60,9 +60,9 @@ export function GastronomyDetailHeroSection({
   const averageRating = business.rating.toFixed(1);
 
   return (
-    <div className="relative h-[32vh] min-h-[240px] max-h-[360px] w-full overflow-hidden">
+    <div className="relative h-[32vh] min-h-[240px] max-h-[360px] w-full overflow-hidden bg-territory-raised">
       {isLoading ? (
-        <Skeleton className="h-full w-full" />
+        <Skeleton className="h-full w-full bg-territory-raised" />
       ) : business.banner_url ? (
         <img
           src={business.banner_url}
@@ -70,7 +70,7 @@ export function GastronomyDetailHeroSection({
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="h-full w-full bg-gradient-to-br from-muted to-card" />
+        <div className="h-full w-full bg-gradient-to-br from-territory-raised to-territory-surface" />
       )}
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/20" />
@@ -85,7 +85,7 @@ export function GastronomyDetailHeroSection({
           onClick={onBack}
           aria-label="Voltar"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Button>
 
         <div className="flex items-center gap-2">
@@ -96,13 +96,13 @@ export function GastronomyDetailHeroSection({
             className={cn(
               'h-10 w-10 rounded-full backdrop-blur-sm transition-all',
               isFavorited
-                ? 'bg-destructive/80 text-destructive-foreground hover:bg-destructive'
+                ? 'bg-territory-error/85 text-territory-on-image hover:bg-territory-error'
                 : 'bg-black/40 text-white hover:bg-black/60'
             )}
             onClick={onToggleFavorite}
             aria-label={isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
           >
-            <Heart className={cn('h-5 w-5', isFavorited && 'fill-current')} />
+            <Heart className={cn('h-5 w-5', isFavorited && 'fill-current')} aria-hidden="true" />
           </Button>
           <Button
             type="button"
@@ -112,7 +112,7 @@ export function GastronomyDetailHeroSection({
             onClick={onShare}
             aria-label="Compartilhar estabelecimento"
           >
-            <Share2 className="h-5 w-5" />
+            <Share2 className="h-5 w-5" aria-hidden="true" />
           </Button>
         </div>
       </div>
@@ -120,75 +120,75 @@ export function GastronomyDetailHeroSection({
       <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-6 lg:p-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            {business.is_verified && (
-              <Badge className="border-0 bg-accent/90 text-accent-foreground backdrop-blur-sm">
-                <BadgeCheck className="mr-1 h-3 w-3" />
+            {business.is_verified ? (
+              <Badge className="border-0 bg-territory-brand/90 text-territory-on-image backdrop-blur-sm">
+                <BadgeCheck className="mr-1 h-3 w-3" aria-hidden="true" />
                 Verificado
               </Badge>
-            )}
-            {profile.delivery_enabled && (
-              <Badge className="border-0 bg-success/90 text-success-foreground backdrop-blur-sm">
-                <Truck className="mr-1 h-3 w-3" />
+            ) : null}
+            {profile.delivery_enabled ? (
+              <Badge className="border-0 bg-territory-success/90 text-territory-on-image backdrop-blur-sm">
+                <Truck className="mr-1 h-3 w-3" aria-hidden="true" />
                 Delivery
               </Badge>
-            )}
-            {openingStatus && (
+            ) : null}
+            {openingStatus ? (
               <Badge
                 className={cn(
-                  'border-0 gap-1.5 backdrop-blur-sm',
+                  'gap-1.5 border-0 text-territory-on-image backdrop-blur-sm',
                   openingStatus.isOpen
-                    ? 'bg-success/90 text-success-foreground'
-                    : 'bg-warning/90 text-warning-foreground'
+                    ? 'bg-territory-success/90'
+                    : 'bg-territory-warning/90'
                 )}
               >
-                <span className="h-2 w-2 rounded-full animate-pulse bg-current opacity-80" />
+                <span className="h-2 w-2 animate-pulse rounded-full bg-current opacity-80" />
                 {openingStatus.statusText}
-                {openingStatus.isOpen && openingStatus.closingTime && (
-                  <span className="hidden sm:inline opacity-80">
-                    Fecha as {openingStatus.closingTime}
+                {openingStatus.isOpen && openingStatus.closingTime ? (
+                  <span className="hidden opacity-80 sm:inline">
+                    Fecha às {openingStatus.closingTime}
                   </span>
-                )}
+                ) : null}
               </Badge>
-            )}
+            ) : null}
           </div>
 
-          <h1 className="text-xl font-bold text-white sm:text-2xl lg:text-3xl">
+          <h1 className="font-heading text-xl font-bold text-white sm:text-2xl lg:text-3xl">
             {business.name}
           </h1>
 
-          {business.description && (
+          {business.description ? (
             <p className="mt-1 line-clamp-1 max-w-2xl text-xs text-white/80 sm:text-sm">
               {business.description}
             </p>
-          )}
+          ) : null}
 
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/90 sm:text-sm">
             <div className="flex items-center gap-1.5">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <Star className="h-4 w-4 fill-territory-sun text-territory-sun" aria-hidden="true" />
               <span className="font-semibold">{averageRating}</span>
               <span className="text-white/60">({business.total_reviews})</span>
             </div>
             <Separator orientation="vertical" className="hidden h-4 bg-white/30 sm:block" />
             <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-white/70" />
+              <MapPin className="h-4 w-4 text-white/70" aria-hidden="true" />
               <span>{neighborhoodName}</span>
             </div>
             <Separator orientation="vertical" className="hidden h-4 bg-white/30 sm:block" />
             <div className="flex items-center gap-1.5">
-              <UtensilsCrossed className="h-4 w-4 text-white/70" />
+              <UtensilsCrossed className="h-4 w-4 text-white/70" aria-hidden="true" />
               <span>{cuisineLabel}</span>
             </div>
-            {profile.delivery_enabled && (
+            {profile.delivery_enabled ? (
               <>
                 <Separator orientation="vertical" className="hidden h-4 bg-white/30 sm:block" />
                 <div className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 text-white/70" />
+                  <Clock className="h-4 w-4 text-white/70" aria-hidden="true" />
                   <span>
                     {profile.delivery_time_min ?? 20}-{profile.delivery_time_max ?? 40} min
                   </span>
                 </div>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
