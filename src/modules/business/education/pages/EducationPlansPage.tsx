@@ -72,7 +72,7 @@ export function EducationPlansPage() {
   const { toast } = useToast();
   const { permissions, loading: loadingAccess } = useDashboardAccess(businessId);
   const canManageBilling = permissions.role === 'owner';
-  const { status, entitlements, planType, isLoading } =
+  const { status, entitlements, planTier, isLoading } =
     useEducationSubscription({
       businessId: businessId!,
       enabled: Boolean(businessId),
@@ -80,12 +80,7 @@ export function EducationPlansPage() {
   const { data: billingPlans = [], isLoading: billingPlansLoading } =
     useBillingPlans();
 
-  const currentPlanCode =
-    planType === 'free'
-      ? 'free'
-      : planType === 'premium'
-        ? 'delivery'
-        : 'pro';
+  const currentPlanCode = planTier;
 
   const currentPlan =
     billingPlans.find((plan) => plan.code === currentPlanCode) ??
