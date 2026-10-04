@@ -1,6 +1,6 @@
 /**
  * EducationNicheBillingIntegration - Testes
- * 
+ *
  * Testes unitários para o serviço de integração nicho + billing.
  * Cobre: capability resolution, limites operacionais, validações.
  */
@@ -19,9 +19,6 @@ describe('EducationNicheBillingIntegration', () => {
     businessId: TEST_BUSINESS_ID,
   };
 
-  // ============================================================================
-  // RESOLVE EFFECTIVE CAPABILITY
-  // ============================================================================
   describe('resolveEffectiveCapability', () => {
     it('deve permitir capability quando nicho E plano permitem', () => {
       const result = EducationNicheBillingIntegration.resolveEffectiveCapability(
@@ -38,7 +35,7 @@ describe('EducationNicheBillingIntegration', () => {
     it('deve negar capability quando nicho não permite', () => {
       const result = EducationNicheBillingIntegration.resolveEffectiveCapability(
         mockContext,
-        'attendance_tracking' // não está em regular_school
+        'attendance_tracking'
       );
 
       expect(result.allowed).toBe(false);
@@ -47,15 +44,14 @@ describe('EducationNicheBillingIntegration', () => {
     });
 
     it('deve negar capability premium quando plano é FREE', () => {
-      // Usar daycare que tem trial_class_booking
-      const freeContext = { 
-        ...mockContext, 
+      const freeContext = {
+        ...mockContext,
         planTier: PlanTier.FREE,
-        nicheKey: 'daycare' // daycare tem trial_class_booking
+        nicheKey: 'daycare'
       };
       const result = EducationNicheBillingIntegration.resolveEffectiveCapability(
         freeContext,
-        'trial_class_booking' // não é básica, daycare tem mas FREE não permite
+        'trial_class_booking'
       );
 
       expect(result.allowed).toBe(false);
@@ -67,17 +63,27 @@ describe('EducationNicheBillingIntegration', () => {
       const freeContext = { ...mockContext, planTier: PlanTier.FREE };
       const result = EducationNicheBillingIntegration.resolveEffectiveCapability(
         freeContext,
-        'lead_capture' // é básica
+        'lead_capture'
       );
 
       expect(result.allowed).toBe(true);
       expect(result.reason).toBe('allowed');
     });
+
+    it('deve resolver analytics básico pela autoridade de analytics', () => {
+      const freeContext = { ...mockContext, planTier: PlanTier.FREE };
+      const result = EducationNicheBillingIntegration.resolveEffectiveCapability(
+        freeContext,
+        'analytics_basic'
+      );
+
+      expect(result.allowed).toBe(true);
+      expect(result.reason).toBe('allowed');
+      expect(result.nicheHas).toBe(true);
+      expect(result.planAllows).toBe(true);
+    });
   });
 
-  // ============================================================================
-  // RESOLVE MULTIPLE CAPABILITIES
-  // ============================================================================
   describe('resolveMultipleCapabilities', () => {
     it('deve resolver múltiplas capabilities de uma vez', () => {
       const capabilities: EducationNicheCapability[] = [
@@ -97,9 +103,6 @@ describe('EducationNicheBillingIntegration', () => {
     });
   });
 
-  // ============================================================================
-  // PLAN ALLOWS EDUCATION CAPABILITY
-  // ============================================================================
   describe('planAllowsEducationCapability', () => {
     it('deve permitir capabilities básicas em todos os planos', () => {
       const basicCapabilities: EducationNicheCapability[] = [
@@ -107,6 +110,7 @@ describe('EducationNicheBillingIntegration', () => {
         'lead_capture',
         'lead_pipeline',
         'whatsapp_cta',
+        'analytics_basic',
       ];
 
       for (const capability of basicCapabilities) {
@@ -155,9 +159,6 @@ describe('EducationNicheBillingIntegration', () => {
     });
   });
 
-  // ============================================================================
-  // IS PREMIUM CAPABILITY
-  // ============================================================================
   describe('isPremiumCapability', () => {
     it('deve identificar capabilities premium corretamente', () => {
       expect(
@@ -175,12 +176,12 @@ describe('EducationNicheBillingIntegration', () => {
       expect(
         EducationNicheBillingIntegration.isPremiumCapability('basic_programs_catalog')
       ).toBe(false);
+      expect(
+        EducationNicheBillingIntegration.isPremiumCapability('analytics_basic')
+      ).toBe(false);
     });
   });
 
-  // ============================================================================
-  // CAN CREATE PROGRAM
-  // ============================================================================
   describe('canCreateProgram', () => {
     it('deve permitir criar programa quando abaixo do limite', () => {
       const result = EducationNicheBillingIntegration.canCreateProgram(mockContext, 5);
@@ -189,16 +190,12 @@ describe('EducationNicheBillingIntegration', () => {
     });
 
     it('deve negar quando limite do nicho atingido', () => {
-      // regular_school tem maxPrograms = 20
       const result = EducationNicheBillingIntegration.canCreateProgram(mockContext, 20);
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain('Limite');
     });
   });
 
-  // ============================================================================
-  // CAN CREATE EVENT
-  // ============================================================================
   describe('canCreateEvent', () => {
     it('deve permitir criar evento quando abaixo do limite', () => {
       const result = EducationNicheBillingIntegration.canCreateEvent(mockContext, 5);
@@ -206,16 +203,12 @@ describe('EducationNicheBillingIntegration', () => {
     });
 
     it('deve negar quando limite de eventos atingido', () => {
-      // regular_school tem maxEvents = 10
       const result = EducationNicheBillingIntegration.canCreateEvent(mockContext, 10);
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain('Limite');
     });
   });
 
-  // ============================================================================
-  // CAN RECEIVE LEAD
-  // ============================================================================
   describe('canReceiveLead', () => {
     it('deve permitir receber lead quando abaixo do limite mensal', () => {
       const result = EducationNicheBillingIntegration.canReceiveLead(mockContext, 100);
@@ -223,16 +216,12 @@ describe('EducationNicheBillingIntegration', () => {
     });
 
     it('deve negar quando limite mensal atingido', () => {
-      // regular_school tem maxLeadsPerMonth = 500
       const result = EducationNicheBillingIntegration.canReceiveLead(mockContext, 500);
       expect(result.allowed).toBe(false);
       expect(result.reason).toContain('Limite mensal');
     });
   });
 
-  // ============================================================================
-  // GET OPERATIONAL LIMITS
-  // ============================================================================
   describe('getOperationalLimits', () => {
     it('deve retornar limites operacionais completos', () => {
       const usage = {
@@ -243,7 +232,7 @@ describe('EducationNicheBillingIntegration', () => {
 
       const limits = EducationNicheBillingIntegration.getOperationalLimits(mockContext, usage);
 
-      expect(limits.programs.max).toBe(20); // regular_school
+      expect(limits.programs.max).toBe(20);
       expect(limits.programs.current).toBe(5);
       expect(limits.programs.canCreate).toBe(true);
 
@@ -267,9 +256,6 @@ describe('EducationNicheBillingIntegration', () => {
     });
   });
 
-  // ============================================================================
-  // VALIDATE ACTION
-  // ============================================================================
   describe('validateAction', () => {
     it('deve validar view_analytics com sucesso quando permitido', () => {
       const result = EducationNicheBillingIntegration.validateAction(
@@ -282,7 +268,6 @@ describe('EducationNicheBillingIntegration', () => {
     });
 
     it('deve falhar view_analytics quando nicho não permite', () => {
-      // Usar um nicho que não existe para garantir que vai falhar
       const invalidNicheContext = { ...mockContext, nicheKey: 'nonexistent_niche' };
       const result = EducationNicheBillingIntegration.validateAction(
         invalidNicheContext,
@@ -300,14 +285,10 @@ describe('EducationNicheBillingIntegration', () => {
         'export_data'
       );
 
-      // FREE não permite exportação
       expect(result.isValid).toBe(false);
     });
   });
 
-  // ============================================================================
-  // GET UPGRADE MESSAGE
-  // ============================================================================
   describe('getUpgradeMessage', () => {
     it('deve retornar mensagem apropriada para niche_denied', () => {
       const message = EducationNicheBillingIntegration.getUpgradeMessage(
@@ -348,9 +329,6 @@ describe('EducationNicheBillingIntegration', () => {
     });
   });
 
-  // ============================================================================
-  // TESTES COM DIFERENTES NICHOS
-  // ============================================================================
   describe('diferentes nichos', () => {
     it('deve retornar limites diferentes para daycare vs regular_school', () => {
       const daycareContext = { ...mockContext, nicheKey: 'daycare' };
@@ -368,11 +346,8 @@ describe('EducationNicheBillingIntegration', () => {
         leadsThisMonth: 0,
       });
 
-      // daycare: maxPrograms = 15, regular_school: maxPrograms = 20
       expect(daycareLimits.programs.max).toBe(15);
       expect(schoolLimits.programs.max).toBe(20);
-
-      // daycare: maxLeadsPerMonth = 300, regular_school: maxLeadsPerMonth = 500
       expect(daycareLimits.leads.max).toBe(300);
       expect(schoolLimits.leads.max).toBe(500);
     });
