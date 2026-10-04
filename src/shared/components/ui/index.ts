@@ -57,5 +57,4 @@ export * from "./tooltip";
 export * from "./visually-hidden";
 
 // Custom UI components
-export { OptimizedImage } from "./optimized-image";
 export { InfiniteScrollTrigger } from "./InfiniteScrollTrigger";
