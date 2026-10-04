@@ -34,6 +34,7 @@ const cta = read(
 );
 const companyPage = read("src/app/pages/EmpresaDetailLandingPage.tsx");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
 const platformRegistry = read(
   "src/app/config/platformCapabilityRegistry.ts",
 );
@@ -180,10 +181,11 @@ describe("Business Messaging boundary", () => {
     );
     expect(inbox).toContain("messagingRoutes.thread(");
     expect(inbox).toContain("messagingRoutes.inbox()");
-    expect(appRoutes).toContain('const messagingEnabled = isPlatformCapabilityEnabled("messaging")');
-    expect(appRoutes).toContain("{messagingEnabled ? (");
-    expect(appRoutes).toContain("messagingRoutes.inbox()");
-    expect(appRoutes).toContain("messagingRoutes.threadPattern()");
+
+    expect(appRoutes).not.toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(appRoutes).not.toContain("messagingRoutes.inbox()");
+    expect(appRoutes).not.toContain("messagingRoutes.threadPattern()");
+    expect(activeLazyImports).not.toContain("MessagingInboxPage");
     expect(inbox).not.toContain("/mensagens/${thread.providerId}/${thread.threadId}");
   });
 
