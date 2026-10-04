@@ -57,29 +57,29 @@ const ITEMS: CTAItem[] = [
 ];
 
 const TONE_STYLES: Record<CTAItem["tone"], string> = {
-  primary: "border-primary/25 bg-primary/[0.04] text-primary",
-  business: "border-category-business/30 bg-category-business/[0.06] text-category-business",
-  partner: "border-category-event/30 bg-category-event/[0.06] text-category-event",
-  support: "border-category-alert/30 bg-category-alert/[0.06] text-category-alert",
+  primary: "border-territory-brand/30 bg-territory-brand/10 text-territory-brand",
+  business: "border-territory-info/30 bg-territory-info/10 text-territory-info",
+  partner: "border-territory-sun/40 bg-territory-sun/12 text-territory-ink",
+  support: "border-territory-success/30 bg-territory-success/10 text-territory-success",
 };
 
 export function InterestedCTAs() {
   return (
     <section
       aria-labelledby="interested-ctas-title"
-      className="mt-6 rounded-[24px] border border-border/60 bg-card/70 p-5 sm:p-6"
+      className="mt-6 rounded-[24px] border border-territory-border bg-territory-surface/80 p-5 text-territory-ink sm:p-6"
     >
       <div className="mb-4 text-center">
-        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
+        <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-territory-brand">
           Chegou pela apresentação?
         </p>
         <h2
           id="interested-ctas-title"
-          className="mt-1 font-heading text-lg font-semibold text-foreground sm:text-xl"
+          className="mt-1 font-heading text-lg font-semibold text-territory-ink sm:text-xl"
         >
           Escolha por onde quer entrar
         </h2>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-territory-muted">
           Se seu bairro ainda não está aberto, a gente te avisa.
         </p>
       </div>
@@ -97,31 +97,31 @@ export function InterestedCTAs() {
                 <Icon className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[13.5px] font-semibold leading-tight text-foreground">
+                <p className="text-[13.5px] font-semibold leading-tight text-territory-ink">
                   {item.title}
                 </p>
-                <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+                <p className="mt-1 text-[12px] leading-snug text-territory-muted">
                   {item.description}
                 </p>
               </div>
-              <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <ArrowRight
+                className="mt-1 h-4 w-4 shrink-0 text-territory-muted"
+                aria-hidden
+              />
             </div>
           );
+
+          const className =
+            "block h-full rounded-2xl border border-territory-border bg-territory-canvas/60 p-3.5 transition-colors hover:border-territory-brand/40 hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/40";
 
           return (
             <li key={item.id}>
               {item.external ? (
-                <a
-                  href={item.href}
-                  className="block h-full rounded-2xl border border-border/70 bg-background/60 p-3.5 transition-colors hover:border-primary/40 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                >
+                <a href={item.href} className={className}>
                   {content}
                 </a>
               ) : (
-                <Link
-                  to={item.href}
-                  className="block h-full rounded-2xl border border-border/70 bg-background/60 p-3.5 transition-colors hover:border-primary/40 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                >
+                <Link to={item.href} className={className}>
                   {content}
                 </Link>
               )}
