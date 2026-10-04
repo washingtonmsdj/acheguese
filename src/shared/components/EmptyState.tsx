@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Inbox } from "lucide-react";
+import { SafeLink } from "@/shared/components/security/SafeLink";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 
@@ -50,7 +51,9 @@ export function EmptyState({
       {action ? (
         action.href ? (
           <Button asChild size="sm" className="mt-2">
-            <a href={action.href}>{action.label}</a>
+            <SafeLink href={action.href} allowInternal>
+              {action.label}
+            </SafeLink>
           </Button>
         ) : (
           <Button size="sm" onClick={action.onClick} className="mt-2">
