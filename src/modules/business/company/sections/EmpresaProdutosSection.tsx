@@ -27,23 +27,23 @@ export function EmpresaProdutosSection({
   const canExpandProducts = filteredProducts.length > 4;
 
   const content = (
-      <div className="rounded-[28px] border border-white/10 bg-[#0c151c]/96 p-5 sm:p-6 xl:p-4 [@media(max-height:1100px)]:rounded-[26px] [@media(max-height:1100px)]:p-3 [@media(max-height:980px)]:p-[0.6875rem] [@media(max-height:860px)]:rounded-[24px] [@media(max-height:860px)]:p-[0.6875rem]">
+      <div className="rounded-[28px] border border-territory-on-image/10 bg-territory-image-overlay/96 p-5 sm:p-6 xl:p-4 [@media(max-height:1100px)]:rounded-[26px] [@media(max-height:1100px)]:p-3 [@media(max-height:980px)]:p-[0.6875rem] [@media(max-height:860px)]:rounded-[24px] [@media(max-height:860px)]:p-[0.6875rem]">
         <div className="mb-3 flex items-center justify-between xl:mb-[0.4625rem] [@media(max-height:1100px)]:mb-1.5 [@media(max-height:860px)]:mb-2">
           <div className="flex items-center gap-2">
-            <Package className="h-5 w-5 text-teal-300 [@media(max-height:860px)]:h-[18px] [@media(max-height:860px)]:w-[18px]" />
-            <h2 className="text-lg font-semibold text-white [@media(max-height:860px)]:text-[0.98rem]">Produtos e servicos</h2>
+            <Package className="h-5 w-5 text-territory-action-on-image [@media(max-height:860px)]:h-[18px] [@media(max-height:860px)]:w-[18px]" />
+            <h2 className="text-lg font-semibold text-territory-on-image [@media(max-height:860px)]:text-[0.98rem]">Produtos e serviços</h2>
           </div>
           {embedded && canExpandProducts ? (
             <button
               type="button"
               onClick={onToggleShowAll}
-              className="inline-flex items-center gap-1 text-xs font-medium text-teal-200 transition-colors hover:text-teal-100"
+              className="inline-flex items-center gap-1 text-xs font-medium text-territory-action-on-image/80 transition-colors hover:text-territory-action-on-image"
             >
-              {showAllProducts ? 'Mostrar menos' : 'Ver cardapio completo'}
+              {showAllProducts ? 'Mostrar menos' : 'Ver cardápio completo'}
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
           ) : (
-            <span className="text-xs text-white/44">{products.length} itens</span>
+            <span className="text-xs text-territory-on-image/44">{products.length} itens</span>
           )}
         </div>
 
@@ -57,8 +57,8 @@ export function EmpresaProdutosSection({
                 className={[
                   'shrink-0 rounded-full border px-3.5 py-[0.4375rem] text-xs font-medium transition-colors xl:px-3 xl:py-[0.3125rem] xl:text-[11px] [@media(max-height:980px)]:px-3 [@media(max-height:980px)]:py-[0.3125rem] [@media(max-height:860px)]:px-2.5 [@media(max-height:860px)]:py-1 [@media(max-height:860px)]:text-[11px]',
                   selectedCategory === category
-                    ? 'border-teal-400/30 bg-teal-400/12 text-teal-100'
-                    : 'border-white/10 bg-white/[0.03] text-white/68 hover:border-white/20 hover:bg-white/[0.05]',
+                    ? 'border-territory-action-on-image/30 bg-territory-action-on-image/12 text-territory-action-on-image'
+                    : 'border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/68 hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05]',
                 ].join(' ')}
               >
                 {category === 'todos' ? 'Todos' : category}
@@ -75,13 +75,13 @@ export function EmpresaProdutosSection({
             <button
               type="button"
               onClick={onToggleShowAll}
-              className="group flex min-h-[13rem] flex-col items-center justify-center rounded-[20px] border border-dashed border-white/14 bg-white/[0.02] px-4 text-center transition-colors hover:border-teal-400/28 hover:bg-teal-400/[0.05] xl:min-h-[9.75rem] [@media(max-height:1100px)]:min-h-[8.85rem] [@media(max-height:980px)]:min-h-[8.4rem] [@media(max-height:860px)]:min-h-[10rem]"
+              className="group flex min-h-[13rem] flex-col items-center justify-center rounded-[20px] border border-dashed border-territory-on-image/14 bg-territory-on-image/[0.02] px-4 text-center transition-colors hover:border-territory-action-on-image/28 hover:bg-territory-action-on-image/[0.05] xl:min-h-[9.75rem] [@media(max-height:1100px)]:min-h-[8.85rem] [@media(max-height:980px)]:min-h-[8.4rem] [@media(max-height:860px)]:min-h-[10rem]"
             >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full border border-teal-400/24 bg-teal-400/8 text-teal-200 transition-transform group-hover:scale-[1.04] xl:h-11 xl:w-11 [@media(max-height:1100px)]:h-10 [@media(max-height:1100px)]:w-10">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full border border-territory-action-on-image/24 bg-territory-action-on-image/8 text-territory-action-on-image transition-transform group-hover:scale-[1.04] xl:h-11 xl:w-11 [@media(max-height:1100px)]:h-10 [@media(max-height:1100px)]:w-10">
                 <Plus className="h-6 w-6" />
               </span>
-              <span className="mt-3 text-sm font-medium text-white xl:mt-2 xl:text-[13px] [@media(max-height:1100px)]:mt-1.5 [@media(max-height:1100px)]:text-[12px]">Ver mais itens</span>
-              <span className="mt-1 text-xs text-white/48 xl:text-[11px]">
+              <span className="mt-3 text-sm font-medium text-territory-on-image xl:mt-2 xl:text-[13px] [@media(max-height:1100px)]:mt-1.5 [@media(max-height:1100px)]:text-[12px]">Ver mais itens</span>
+              <span className="mt-1 text-xs text-territory-on-image/48 xl:text-[11px]">
                 {filteredProducts.length - displayedProducts.length} restantes
               </span>
             </button>
@@ -92,7 +92,7 @@ export function EmpresaProdutosSection({
           <button
             type="button"
             onClick={onToggleShowAll}
-            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm font-medium text-white/74 transition-colors hover:border-white/18 hover:bg-white/[0.05]"
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] px-4 py-3 text-sm font-medium text-territory-on-image/74 transition-colors hover:border-territory-on-image/18 hover:bg-territory-on-image/[0.05]"
           >
             {showAllProducts ? (
               <>
