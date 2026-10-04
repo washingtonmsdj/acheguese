@@ -1,7 +1,7 @@
 /**
  * EducationEventsPage
  *
- * Pagina de gestao de eventos da instituicao.
+ * Página de gestão de eventos da instituição.
  * Rota: /central/empresas/:businessId/educacao/eventos
  */
 
@@ -21,7 +21,7 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import {
@@ -46,7 +46,6 @@ import { useEducationProfile } from '../hooks/useEducationProfile';
 import { useEducationEvents } from '../hooks/useEducationEvents';
 import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilling';
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
-import { EducationCapabilityGuard } from '../niches/components/EducationCapabilityGuard';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
 import type { EducationEvent, SchoolEventType } from '@/core/education';
@@ -78,6 +77,9 @@ const SCHOOL_EVENT_TYPE_OPTIONS: { value: SchoolEventType; label: string }[] = [
   { value: 'other', label: 'Outro' },
 ];
 
+const selectClassName =
+  'mt-1 h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 py-2 text-sm text-territory-ink outline-none transition-colors focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20';
+
 export function EducationEventsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
@@ -100,24 +102,19 @@ export function EducationEventsPage() {
     update,
     remove,
   } = useEducationEvents(profile?.id);
-  const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
+  const dashboardUrl = businessId
+    ? EducationUrlService.buildAdminDashboardUrl(businessId)
+    : null;
 
-  // Integração nicho + billing
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
   });
 
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
-
-  // Verifica capability do nicho + plano
   const eventsCapability = nicheBilling.can('events_public');
   const canCreateEvent = nicheBilling.checkCanCreateEvent(events?.length || 0);
-  const limitReached = !canCreateEvent.allowed && events && nicheInfo && events.length >= nicheInfo.entitlements.maxEvents;
-
-  // Bloqueio por capability (nicho ou plano negou)
   const isEventsBlocked = !eventsCapability.allowed;
-  // Bloqueio apenas por limite
   const isLimitBlocked = eventsCapability.allowed && !canCreateEvent.allowed;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -132,25 +129,25 @@ export function EducationEventsPage() {
     schoolEventType: '' as SchoolEventType | '',
   });
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
 
-    // Validação de capability final = nicho permite AND plano permite
     if (isEventsBlocked) {
       toast({
         title: 'Recurso bloqueado',
         description: eventsCapability.upgradeMessage,
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
 
-    // Validação de limite operacional
     if (isLimitBlocked) {
       toast({
         title: 'Limite atingido',
-        description: canCreateEvent.reason || 'Limite de eventos atingido para este nicho.',
-        variant: 'destructive'
+        description:
+          canCreateEvent.reason ||
+          'Limite de eventos atingido para este nicho.',
+        variant: 'destructive',
       });
       return;
     }
@@ -167,17 +164,25 @@ export function EducationEventsPage() {
         isPublic: formData.isPublic,
         schoolEventType: formData.schoolEventType || undefined,
       });
-      toast({ title: 'Evento criado', description: 'O evento foi criado com sucesso.' });
+      toast({
+        title: 'Evento criado',
+        description: 'O evento foi criado com sucesso.',
+      });
       setIsDialogOpen(false);
       resetForm();
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível criar o evento.', variant: 'destructive' });
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível criar o evento.',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!editingEvent) return;
+
     try {
       await update({
         eventId: editingEvent.id,
@@ -193,28 +198,44 @@ export function EducationEventsPage() {
           school_event_type: formData.schoolEventType || null,
         },
       });
-      toast({ title: 'Evento atualizado', description: 'As alterações foram salvas.' });
+      toast({
+        title: 'Evento atualizado',
+        description: 'As alterações foram salvas.',
+      });
       setIsDialogOpen(false);
       setEditingEvent(null);
       resetForm();
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível atualizar o evento.', variant: 'destructive' });
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o evento.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDelete = async (eventId: string) => {
     const confirmed = await confirm({
       title: 'Excluir evento',
-      description: 'Este evento sera removido da instituicao e deixara de aparecer no calendario publico.',
+      description:
+        'Este evento será removido da instituição e deixará de aparecer no calendário público.',
       confirmLabel: 'Excluir',
       variant: 'destructive',
     });
     if (!confirmed) return;
+
     try {
       await remove(eventId);
-      toast({ title: 'Evento excluído', description: 'O evento foi removido com sucesso.' });
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível excluir o evento.', variant: 'destructive' });
+      toast({
+        title: 'Evento excluído',
+        description: 'O evento foi removido com sucesso.',
+      });
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o evento.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -261,17 +282,15 @@ export function EducationEventsPage() {
     });
   };
 
-  const isUpcoming = (dateString: string) => {
-    return new Date(dateString) > new Date();
-  };
+  const isUpcoming = (dateString: string) => new Date(dateString) > new Date();
 
   if (isProfileLoading || isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <Skeleton className="h-8 w-1/3 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
+      <div className="container mx-auto max-w-6xl p-6">
+        <Skeleton className="mb-6 h-8 w-1/3" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {[1, 2, 3, 4].map((item) => (
+            <Skeleton key={item} className="h-48 rounded-xl" />
           ))}
         </div>
       </div>
@@ -281,7 +300,7 @@ export function EducationEventsPage() {
   if (isProfileError || isEventsError) {
     return (
       <EducationAdminReadError
-        title="Nao foi possivel carregar os eventos"
+        title="Não foi possível carregar os eventos"
         error={profileError ?? eventsError}
         onRetry={async () => {
           await Promise.all([refetchProfile(), refetchEvents()]);
@@ -290,38 +309,40 @@ export function EducationEventsPage() {
     );
   }
 
-  const upcomingEvents = events.filter(e => isUpcoming(e.starts_at));
-  const pastEvents = events.filter(e => !isUpcoming(e.starts_at));
+  const upcomingEvents = events.filter((event) => isUpcoming(event.starts_at));
+  const pastEvents = events.filter((event) => !isUpcoming(event.starts_at));
+  const publicEvents = events.filter((event) => event.is_public).length;
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
+    <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
+            aria-label="Voltar para a gestão de Educação"
+            className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
             onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <Calendar className="w-5 h-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand shadow-sm">
+            <Calendar className="h-5 w-5 text-territory-on-image" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Eventos</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-territory-ink">Eventos</h1>
+            <p className="text-sm text-territory-muted">
               Gerencie eventos e visitas agendadas
             </p>
           </div>
         </div>
         <Button
           onClick={openNewDialog}
-          className="gap-2"
+          className="gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
           disabled={isEventsBlocked || isLimitBlocked}
           title={
             isEventsBlocked
@@ -331,25 +352,27 @@ export function EducationEventsPage() {
                 : ''
           }
         >
-          <Plus className="w-4 h-4" />
-          Novo Evento
+          <Plus className="h-4 w-4" />
+          Novo evento
         </Button>
       </motion.div>
 
-      {/* Banner de bloqueio por capability (nicho ou plano) */}
       {isEventsBlocked && (
         <div className="mb-6">
           <EducationUpgradeBanner
             nicheKey={profile?.niche_key}
             businessId={businessId || ''}
-            reason={eventsCapability.reason === 'niche_denied' ? 'niche_denied' : 'plan_denied'}
+            reason={
+              eventsCapability.reason === 'niche_denied'
+                ? 'niche_denied'
+                : 'plan_denied'
+            }
             feature="events_public"
             variant="banner"
           />
         </div>
       )}
 
-      {/* Upgrade Banner se limite atingido */}
       {isLimitBlocked && nicheInfo && (
         <div className="mb-6">
           <EducationUpgradeBanner
@@ -364,153 +387,183 @@ export function EducationEventsPage() {
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card>
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Card className="border-territory-border bg-territory-surface shadow-sm">
           <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Total</p>
-            <p className="text-2xl font-bold">{events.length}</p>
+            <p className="text-sm text-territory-muted">Total</p>
+            <p className="text-2xl font-bold text-territory-ink">{events.length}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-territory-border bg-territory-surface shadow-sm">
           <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Próximos</p>
-            <p className="text-2xl font-bold text-green-600">{upcomingEvents.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Passados</p>
-            <p className="text-2xl font-bold text-gray-400">{pastEvents.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-sm text-gray-500">Públicos</p>
-            <p className="text-2xl font-bold">
-              {events.filter(e => e.is_public).length}
+            <p className="text-sm text-territory-muted">Próximos</p>
+            <p className="text-2xl font-bold text-territory-success">
+              {upcomingEvents.length}
             </p>
+          </CardContent>
+        </Card>
+        <Card className="border-territory-border bg-territory-surface shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-sm text-territory-muted">Passados</p>
+            <p className="text-2xl font-bold text-territory-muted">
+              {pastEvents.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-territory-border bg-territory-surface shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-sm text-territory-muted">Públicos</p>
+            <p className="text-2xl font-bold text-territory-ink">{publicEvents}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Events List */}
       {events.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="border-territory-border bg-territory-surface py-12 text-center shadow-sm">
           <CardContent>
-            <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Calendar className="mx-auto mb-4 h-12 w-12 text-territory-muted/55" />
+            <h3 className="mb-2 text-lg font-medium text-territory-ink">
               Nenhum evento cadastrado
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="mb-4 text-territory-muted">
               Cadastre eventos, visitas abertas e outras atividades.
             </p>
             <Button
               onClick={openNewDialog}
               disabled={isEventsBlocked || isLimitBlocked}
+              className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Evento
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar evento
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
           {[...events]
-            .sort((a, b) => new Date(b.starts_at).getTime() - new Date(a.starts_at).getTime())
+            .sort(
+              (left, right) =>
+                new Date(right.starts_at).getTime() -
+                new Date(left.starts_at).getTime(),
+            )
             .map((event, index) => (
-            <motion.div
-              key={event.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-            >
-              <Card className={isUpcoming(event.starts_at) ? '' : 'opacity-60'}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-lg">{event.title}</h3>
-                        {isUpcoming(event.starts_at) ? (
-                          <Badge variant="default" className="bg-green-100 text-green-700 hover:bg-green-100">
-                            Em breve
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary">Concluído</Badge>
-                        )}
-                        {event.school_event_type && profile?.niche_key === 'regular_school' && (
-                          <Badge variant="secondary" className="gap-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-indigo-200">
-                            {SCHOOL_EVENT_TYPE_LABELS[event.school_event_type]}
-                          </Badge>
-                        )}
-                        {event.is_public ? (
-                          <Badge variant="outline" className="gap-1">
-                            <Globe className="w-3 h-3" />
-                            Público
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="gap-1">
-                            <Lock className="w-3 h-3" />
-                            Privado
-                          </Badge>
-                        )}
-                      </div>
+              <motion.div
+                key={event.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+              >
+                <Card
+                  className={`border-territory-border bg-territory-surface shadow-sm ${
+                    isUpcoming(event.starts_at) ? '' : 'opacity-60'
+                  }`}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg font-semibold text-territory-ink">
+                            {event.title}
+                          </h3>
+                          {isUpcoming(event.starts_at) ? (
+                            <Badge className="border-territory-success/25 bg-territory-success/10 text-territory-success hover:bg-territory-success/15">
+                              Em breve
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="secondary"
+                              className="border-territory-border bg-territory-raised text-territory-muted"
+                            >
+                              Concluído
+                            </Badge>
+                          )}
+                          {event.school_event_type &&
+                            profile?.niche_key === 'regular_school' && (
+                              <Badge
+                                variant="secondary"
+                                className="gap-1 border-territory-brand/25 bg-territory-brand/10 text-territory-brand"
+                              >
+                                {SCHOOL_EVENT_TYPE_LABELS[event.school_event_type]}
+                              </Badge>
+                            )}
+                          {event.is_public ? (
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-territory-border text-territory-muted"
+                            >
+                              <Globe className="h-3 w-3" />
+                              Público
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-territory-border text-territory-muted"
+                            >
+                              <Lock className="h-3 w-3" />
+                              Privado
+                            </Badge>
+                          )}
+                        </div>
 
-                      {event.description && (
-                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                          {event.description}
-                        </p>
-                      )}
+                        {event.description && (
+                          <p className="mb-2 line-clamp-2 text-sm text-territory-muted">
+                            {event.description}
+                          </p>
+                        )}
 
-                      <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {formatDate(event.starts_at)}
-                          {event.ends_at && ` - ${formatDate(event.ends_at)}`}
-                        </span>
-                        {event.location && (
+                        <div className="flex flex-wrap gap-3 text-sm text-territory-muted">
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {event.location}
+                            <Clock className="h-4 w-4" />
+                            {formatDate(event.starts_at)}
+                            {event.ends_at && ` - ${formatDate(event.ends_at)}`}
                           </span>
-                        )}
+                          {event.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4" />
+                              {event.location}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(event)}>
-                          <Edit2 className="w-4 h-4 mr-2" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(event.id)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label={`Ações do evento ${event.title}`}
+                            className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditDialog(event)}>
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(event.id)}
+                            className="text-territory-error focus:text-territory-error"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
-              {editingEvent ? 'Editar Evento' : 'Novo Evento'}
+              {editingEvent ? 'Editar evento' : 'Novo evento'}
             </DialogTitle>
           </DialogHeader>
           <form
@@ -522,7 +575,9 @@ export function EducationEventsPage() {
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(event) =>
+                  setFormData({ ...formData, title: event.target.value })
+                }
                 placeholder="Ex: Visita Aberta 2024"
                 required
               />
@@ -533,7 +588,9 @@ export function EducationEventsPage() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(event) =>
+                  setFormData({ ...formData, description: event.target.value })
+                }
                 placeholder="Descreva o evento..."
                 rows={3}
               />
@@ -546,7 +603,9 @@ export function EducationEventsPage() {
                   id="startsAt"
                   type="datetime-local"
                   value={formData.startsAt}
-                  onChange={(e) => setFormData({ ...formData, startsAt: e.target.value })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, startsAt: event.target.value })
+                  }
                   required
                 />
               </div>
@@ -556,7 +615,9 @@ export function EducationEventsPage() {
                   id="endsAt"
                   type="datetime-local"
                   value={formData.endsAt}
-                  onChange={(e) => setFormData({ ...formData, endsAt: e.target.value })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, endsAt: event.target.value })
+                  }
                 />
               </div>
             </div>
@@ -566,44 +627,57 @@ export function EducationEventsPage() {
               <Input
                 id="location"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(event) =>
+                  setFormData({ ...formData, location: event.target.value })
+                }
                 placeholder="Ex: Auditório Principal"
               />
             </div>
 
             <div>
-              <Label htmlFor="schoolEventType">Tipo de Evento</Label>
+              <Label htmlFor="schoolEventType">Tipo de evento</Label>
               <select
                 id="schoolEventType"
                 value={formData.schoolEventType}
-                onChange={(e) => setFormData({ ...formData, schoolEventType: e.target.value as SchoolEventType | '' })}
-                className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onChange={(event) =>
+                  setFormData({
+                    ...formData,
+                    schoolEventType: event.target.value as SchoolEventType | '',
+                  })
+                }
+                className={selectClassName}
               >
                 <option value="">Selecione o tipo...</option>
-                {SCHOOL_EVENT_TYPE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                {SCHOOL_EVENT_TYPE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 rounded-lg border border-territory-border bg-territory-raised/70 p-3">
               <Switch
                 id="isPublic"
                 checked={formData.isPublic}
-                onCheckedChange={(checked) => setFormData({ ...formData, isPublic: checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isPublic: checked })
+                }
               />
               <Label htmlFor="isPublic">Evento público (visível na página)</Label>
             </div>
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" className="flex-1">
-                {editingEvent ? 'Salvar Alterações' : 'Criar Evento'}
+              <Button
+                type="submit"
+                className="flex-1 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+              >
+                {editingEvent ? 'Salvar alterações' : 'Criar evento'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
                 onClick={() => {
                   setIsDialogOpen(false);
                   setEditingEvent(null);
