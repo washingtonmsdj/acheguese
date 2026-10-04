@@ -28,9 +28,12 @@ describe("canonical outbound account links", () => {
 
   it("keeps active push actions canonical and paused destinations fail-closed", () => {
     expect(sw).toContain("case 'security':\n      return '/conta/seguranca';");
-    expect(sw).toContain("case 'settings':\n      return '/conta/notificacoes';");
+    expect(sw).toContain("case 'settings':\n      return '/conta';");
     expect(sw).toContain("const PAUSED_NOTIFICATION_ROUTE_PATTERN =");
-    expect(sw).toContain("|planos|checkout)(?:\\/|$)|^\\/settings\\/subscription");
+    expect(sw).toContain("notificacoes|mensagens|community|comunidade");
+    expect(sw).toContain("^\\/conta\\/notificacoes");
+    expect(sw).toContain("case 'message':\n      return '/';");
+    expect(sw).toContain("case 'reply':\n      return '/';");
     expect(sw).toContain("case 'order':");
     expect(sw).toContain("getLaunchSafeNotificationUrl(");
     expect(sw).toContain("`/gastronomia/pedidos/${data.orderId || ''}`");
@@ -38,8 +41,9 @@ describe("canonical outbound account links", () => {
     expect(sw).toContain("getLaunchSafeNotificationUrl('/settings/subscription')");
     expect(sw).not.toContain("return '/settings/sessions';");
     expect(sw).not.toContain("return '/settings/notifications';");
+    expect(sw).not.toContain("return '/conta/notificacoes';");
+    expect(sw).not.toContain("return '/notificacoes';");
     expect(sw).not.toContain("return `/gastronomia/pedidos/${data.orderId || ''}`;");
     expect(sw).not.toContain("`/orders/${data.orderId || ''}`");
   });
-
 });
