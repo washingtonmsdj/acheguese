@@ -9,12 +9,10 @@ import {
   isProductModuleEnabled,
 } from "@/app/config/lifecycleRegistry";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
-import { messagingRoutes } from "@/core/messaging";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
-  buildScopedTerritorialModuleRoutePath,
   buildScopedTerritorialRoutePath,
   buildTerritorialBareRoutePath,
   buildTerritorialModuleRoutePath,
@@ -50,29 +48,14 @@ export function AppLayoutRoutes() {
 
   const profilesEnabled = isPlatformCapabilityEnabled("profiles");
   const accountEnabled = isPlatformCapabilityEnabled("account");
-  const notificationsEnabled = isPlatformCapabilityEnabled("notifications");
   const territoryEnabled = isPlatformCapabilityEnabled("territory");
   const mapEnabled = isPlatformCapabilityEnabled("map");
   const nearbyEnabled = isPlatformCapabilityEnabled("nearby");
   const searchEnabled = isPlatformCapabilityEnabled("search");
-  const messagingEnabled = isPlatformCapabilityEnabled("messaging");
 
   return (
     <Routes>
       <Route element={<AppLayoutSidebar />}>
-        {notificationsEnabled ? (
-          <>
-            <Route
-              path="/notificacoes"
-              element={protectedElement(<P.NotificationsPage />)}
-            />
-            <Route
-              path="/settings/email-logs"
-              element={protectedElement(<P.EmailLogsPage />)}
-            />
-          </>
-        ) : null}
-
         {profilesEnabled ? (
           <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
         ) : null}
@@ -83,12 +66,6 @@ export function AppLayoutRoutes() {
               path="/conta/preferencias"
               element={protectedElement(<P.ContaPreferenciasPage />)}
             />
-            {notificationsEnabled ? (
-              <Route
-                path="/conta/notificacoes"
-                element={protectedElement(<P.NotificationPreferencesPage />)}
-              />
-            ) : null}
             <Route
               path="/conta/privacidade"
               element={protectedElement(<P.PrivacySettingsPage />)}
@@ -124,19 +101,6 @@ export function AppLayoutRoutes() {
                   enabledVerticalKeys={activeBusinessVerticalKeys}
                 />,
               )}
-            />
-          </>
-        ) : null}
-
-        {messagingEnabled ? (
-          <>
-            <Route
-              path={messagingRoutes.inbox()}
-              element={protectedElement(<P.MensagensPage />)}
-            />
-            <Route
-              path={messagingRoutes.threadPattern()}
-              element={protectedElement(<P.MensagensPage />)}
             />
           </>
         ) : null}
@@ -190,10 +154,7 @@ export function AppLayoutRoutes() {
               path={buildTerritorialBareRoutePath()}
               element={<P.ActiveTerritorialLayout />}
             >
-              <Route
-                index
-                element={<TerritoryHomePage />}
-              />
+              <Route index element={<TerritoryHomePage />} />
             </Route>
             <Route path="/:state" element={<P.StateLandingPage />} />
             <Route path="/brasil" element={<P.BrasilShowcasePage />} />
