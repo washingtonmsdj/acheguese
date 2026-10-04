@@ -118,9 +118,9 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // PASSWORD_RECOVERY + replay de claims verificados sÃ£o a Ãºnica autoridade
-    // para liberar a mutaÃ§Ã£o. Query, hash, user persistido e tokens presentes
-    // na URL jamais promovem a tela para "reset" por conta prÃ³pria.
+    // PASSWORD_RECOVERY + replay de claims verificados são a única autoridade
+    // para liberar a mutação. Query, hash, user persistido e tokens presentes
+    // na URL jamais promovem a tela para "reset" por conta própria.
     const unsubscribe = AuthService.onPasswordRecovery(() => setView("reset"));
     const timeout = window.setTimeout(() => {
       setView((current) => (current === "checking" ? "invalid" : current));
@@ -135,7 +135,7 @@ export default function ResetPasswordPage() {
   const sendRecovery = async (nextView: "sent" = "sent") => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
-      toast({ title: "Informe um e-mail vÃ¡lido", variant: "destructive" });
+      toast({ title: "Informe um e-mail válido", variant: "destructive" });
       return;
     }
 
@@ -147,8 +147,8 @@ export default function ResetPasswordPage() {
     }
     if (!requestTurnstile.isReady) {
       toast({
-        title: "VerificaÃ§Ã£o necessÃ¡ria",
-        description: "Conclua a verificaÃ§Ã£o de seguranÃ§a antes de enviar.",
+        title: "Verificação necessária",
+        description: "Conclua a verificação de segurança antes de enviar.",
         variant: "destructive",
       });
       return;
@@ -167,16 +167,16 @@ export default function ResetPasswordPage() {
       setResendCooldown(getRecoveryCooldownSeconds(normalizedEmail));
     } catch (error) {
       if (isAuthRateLimitError(error)) {
-        // O Auth Ã© autoritativo. Espelhamos a janela apenas para evitar cliques
+        // O Auth é autoritativo. Espelhamos a janela apenas para evitar cliques
         // repetidos e reload como bypass visual enquanto o servidor limita.
         startPasswordRecoveryResendCooldown(normalizedEmail);
         setResendCooldown(getRecoveryCooldownSeconds(normalizedEmail));
       }
       toast({
-        title: "NÃ£o foi possÃ­vel enviar agora",
+        title: "Não foi possível enviar agora",
         description: getAuthErrorMessage(
           error,
-          "Confira sua conexÃ£o e tente novamente.",
+          "Confira sua conexão e tente novamente.",
         ),
         variant: "destructive",
       });
@@ -207,7 +207,7 @@ export default function ResetPasswordPage() {
         return;
       }
       toast({
-        title: "NÃ£o foi possÃ­vel salvar a nova senha",
+        title: "Não foi possível salvar a nova senha",
         description: getAuthErrorMessage(error),
         variant: "destructive",
       });
@@ -225,9 +225,9 @@ export default function ResetPasswordPage() {
       setView("success");
     } catch {
       toast({
-        title: "Ainda nÃ£o foi possÃ­vel encerrar a sessÃ£o temporÃ¡ria",
+        title: "Ainda não foi possível encerrar a sessão temporária",
         description:
-          "NÃ£o repita a troca de senha. Tente encerrar a sessÃ£o novamente antes de entrar com a nova senha.",
+          "Não repita a troca de senha. Tente encerrar a sessão novamente antes de entrar com a nova senha.",
         variant: "destructive",
       });
     } finally {
@@ -244,7 +244,7 @@ export default function ResetPasswordPage() {
         : view === "reset"
           ? "Nova senha"
           : view === "dispose-error"
-            ? "Finalizar recuperaÃ§Ã£o"
+            ? "Finalizar recuperação"
             : view === "success"
               ? "Senha atualizada"
               : view === "invalid"
@@ -266,7 +266,7 @@ export default function ResetPasswordPage() {
         <title>{title} | Achegue-se</title>
         <meta
           name="description"
-          content="Recupere o acesso Ã  sua conta Achegue-se com seguranÃ§a."
+          content="Recupere o acesso à sua conta Achegue-se com segurança."
         />
       </Helmet>
 
@@ -282,14 +282,14 @@ export default function ResetPasswordPage() {
         >
           <section className="hidden lg:block" aria-label="Recuperar acesso">
             <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-territory-brand">
-              Vamos ajudar<br />vocÃª a voltar.
+              Vamos ajudar<br />você a voltar.
             </h1>
             <p className="mt-4 max-w-[350px] text-[17px] leading-6 text-territory-ink">
-              Use o e-mail cadastrado, mesmo que entre com @usuÃ¡rio.
+              Use o e-mail cadastrado, mesmo que entre com @usuário.
             </p>
             <img
               src="/auth/recovery-hero.webp"
-              alt="IlustraÃ§Ã£o de um territÃ³rio e placas de orientaÃ§Ã£o"
+              alt="Ilustração de um território e placas de orientação"
               className="mt-5 w-full max-w-[390px] object-cover"
             />
           </section>
@@ -331,8 +331,8 @@ export default function ResetPasswordPage() {
                     className="h-11 rounded-lg border-territory-border bg-territory-surface px-3 text-[16px] shadow-none"
                   />
                   <p className="text-[11px] leading-4 text-territory-muted lg:hidden">
-                    A recuperaÃ§Ã£o Ã© feita por e-mail, mesmo quando vocÃª entra com
-                    @usuÃ¡rio.
+                    A recuperação é feita por e-mail, mesmo quando você entra com
+                    @usuário.
                   </p>
                 </div>
 
@@ -343,7 +343,7 @@ export default function ResetPasswordPage() {
                     <AuthConceptIcon name="shield" className="text-territory-brand" />
                     <div>
                       <p className="text-[12px] font-semibold text-territory-ink">
-                        VerificaÃ§Ã£o de seguranÃ§a
+                        Verificação de segurança
                       </p>
                       <p className="text-[11px] text-territory-muted">
                         Conclua quando solicitada.
@@ -363,14 +363,14 @@ export default function ResetPasswordPage() {
                   className="mt-5 flex h-11 w-full items-center justify-center rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {sending
-                    ? "Enviandoâ€¦"
+                    ? "Enviando…"
                     : resendCooldown > 0
                       ? `Aguarde ${resendCooldown}s`
-                      : "Enviar link de recuperaÃ§Ã£o"}
+                      : "Enviar link de recuperação"}
                 </button>
 
                 <p className="mt-4 hidden text-center text-[11px] leading-4 text-territory-muted lg:block">
-                  Se houver uma conta associada, enviaremos as instruÃ§Ãµes.
+                  Se houver uma conta associada, enviaremos as instruções.
                 </p>
 
                 <button
@@ -384,7 +384,7 @@ export default function ResetPasswordPage() {
                 <div className="mt-6 flex items-start gap-3 rounded-xl bg-territory-raised px-4 py-3 lg:hidden">
                   <AuthConceptIcon name="help" className="text-territory-brand" />
                   <p className="text-[11px] leading-5 text-territory-muted">
-                    NÃ£o consegue acessar esse e-mail?<br />
+                    Não consegue acessar esse e-mail?<br />
                     <Link
                       to={SUPPORT_PATH}
                       className="font-medium text-territory-brand underline underline-offset-2"
@@ -408,7 +408,7 @@ export default function ResetPasswordPage() {
                       to={SUPPORT_PATH}
                       className="rounded px-2 py-1 underline underline-offset-2"
                     >
-                      NÃ£o tenho acesso ao e-mail
+                      Não tenho acesso ao e-mail
                     </Link>
                   </div>
                 </div>
@@ -426,8 +426,8 @@ export default function ResetPasswordPage() {
                   Confira sua caixa<br />de entrada
                 </h1>
                 <p className="mx-auto mt-3 max-w-[310px] text-[13px] leading-5 text-territory-muted">
-                  Se houver uma conta associada a esse e-mail, vocÃª receberÃ¡ as
-                  instruÃ§Ãµes de recuperaÃ§Ã£o.
+                  Se houver uma conta associada a esse e-mail, você receberá as
+                  instruções de recuperação.
                 </p>
 
                 <div className="mt-5 rounded-xl bg-territory-raised p-3 text-left">
@@ -438,7 +438,7 @@ export default function ResetPasswordPage() {
                 </div>
                 <div className="mt-3 flex items-center gap-3 rounded-xl bg-info/10 p-3 text-left text-[11px] text-territory-muted">
                   <AuthConceptIcon name="info" className="text-info" />
-                  <span>Confira tambÃ©m o spam.</span>
+                  <span>Confira também o spam.</span>
                 </div>
 
                 {requestTurnstile.enabled ? (
@@ -456,7 +456,7 @@ export default function ResetPasswordPage() {
                   className="mt-5 h-11 w-full rounded-lg border border-territory-border bg-territory-surface text-[14px] font-bold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                 >
                   {sending
-                    ? "Enviandoâ€¦"
+                    ? "Enviando…"
                     : resendCooldown > 0
                       ? `Reenviar em ${resendCooldown}s`
                       : "Reenviar link"}
@@ -491,10 +491,10 @@ export default function ResetPasswordPage() {
               <div role="status" className="py-16 text-center">
                 <div className="mx-auto mb-4 h-9 w-9 animate-spin rounded-full border-2 border-territory-border border-t-territory-brand" />
                 <h1 className="font-heading text-xl font-bold text-territory-ink">
-                  Validando seu linkâ€¦
+                  Validando seu link…
                 </h1>
                 <p className="mt-2 text-sm text-territory-muted">
-                  Aguarde enquanto confirmamos a recuperaÃ§Ã£o.
+                  Aguarde enquanto confirmamos a recuperação.
                 </p>
               </div>
             ) : null}
@@ -579,7 +579,7 @@ export default function ResetPasswordPage() {
                 <div className="mt-4 flex items-start gap-3 rounded-xl bg-territory-raised px-4 py-3 text-[11px] leading-4 text-territory-muted">
                   <AuthConceptIcon name="lightbulb" className="text-territory-brand" />
                   <span>
-                    Use uma senha que vocÃª nÃ£o utiliza em outros serviÃ§os.
+                    Use uma senha que você não utiliza em outros serviços.
                   </span>
                 </div>
 
@@ -589,7 +589,7 @@ export default function ResetPasswordPage() {
                   className="mt-4 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {form.formState.isSubmitting
-                    ? "Salvandoâ€¦"
+                    ? "Salvando…"
                     : "Salvar nova senha"}
                 </button>
 
@@ -607,12 +607,12 @@ export default function ResetPasswordPage() {
                   >
                     Termos de Uso
                   </Link>
-                  <span aria-hidden="true"> Â· </span>
+                  <span aria-hidden="true"> · </span>
                   <Link
                     to={PRIVACY_POLICY_PATH}
                     className="underline underline-offset-2"
                   >
-                    PolÃ­tica de Privacidade
+                    Política de Privacidade
                   </Link>
                 </nav>
               </form>
@@ -627,10 +627,10 @@ export default function ResetPasswordPage() {
                   <div>
                     <p className="text-[11px] text-territory-muted">Senha atualizada</p>
                     <h1 className="mt-1 font-heading text-[18px] font-extrabold text-territory-ink">
-                      Falta encerrar a sessÃ£o temporÃ¡ria.
+                      Falta encerrar a sessão temporária.
                     </h1>
                     <p className="mt-2 text-[12px] leading-5 text-territory-muted">
-                      Sua nova senha jÃ¡ foi salva. Por seguranÃ§a, nÃ£o repita a troca de senha: tente apenas encerrar esta sessÃ£o de recuperaÃ§Ã£o.
+                      Sua nova senha já foi salva. Por segurança, não repita a troca de senha: tente apenas encerrar esta sessão de recuperação.
                     </p>
                   </div>
                 </div>
@@ -641,8 +641,8 @@ export default function ResetPasswordPage() {
                   className="mt-4 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {disposingRecoverySession
-                    ? "Encerrando sessÃ£oâ€¦"
-                    : "Tentar encerrar sessÃ£o"}
+                    ? "Encerrando sessão…"
+                    : "Tentar encerrar sessão"}
                 </button>
                 <Link
                   to={SUPPORT_PATH}
@@ -661,7 +661,7 @@ export default function ResetPasswordPage() {
                     <AuthConceptIcon name="check" />
                   </span>
                   <div>
-                    <p className="text-[11px] text-territory-muted">ApÃ³s salvar</p>
+                    <p className="text-[11px] text-territory-muted">Após salvar</p>
                     <h1 className="mt-2 font-heading text-[18px] font-extrabold text-territory-ink">
                       Senha atualizada.
                     </h1>
@@ -692,10 +692,10 @@ export default function ResetPasswordPage() {
                   </span>
                 </div>
                 <h1 className="mt-5 font-heading text-[27px] font-extrabold leading-[1.06] tracking-[-0.04em] text-territory-ink">
-                  Este link nÃ£o estÃ¡<br />mais disponÃ­vel.
+                  Este link não está<br />mais disponível.
                 </h1>
                 <p className="mt-3 text-[13px] leading-5 text-territory-muted">
-                  Ele pode ter expirado ou jÃ¡ ter sido usado.
+                  Ele pode ter expirado ou já ter sido usado.
                   <br />Solicite um novo link.
                 </p>
 
@@ -729,7 +729,7 @@ export default function ResetPasswordPage() {
                   className="mt-4 h-11 w-full rounded-lg bg-territory-sun text-[14px] font-extrabold text-territory-ink transition-colors hover:bg-territory-sun/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:opacity-55"
                 >
                   {sending
-                    ? "Enviandoâ€¦"
+                    ? "Enviando…"
                     : resendCooldown > 0
                       ? `Aguarde ${resendCooldown}s`
                       : "Enviar novo link"}
@@ -744,7 +744,7 @@ export default function ResetPasswordPage() {
                 <div className="mt-6 flex items-start gap-3 rounded-xl bg-info/10 p-4 text-left text-[11px] leading-5 text-territory-muted">
                   <AuthConceptIcon name="info" className="text-info" />
                   <p>
-                    Sua senha nÃ£o foi alterada por este link.
+                    Sua senha não foi alterada por este link.
                     <br />
                     <Link
                       to={SUPPORT_PATH}
