@@ -145,19 +145,19 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
       {isAuthSurface ? (
         <div
           data-consent-banner
-          className={`fixed inset-x-4 ${mobileBannerBottomClass} z-50 mx-auto max-w-[20rem] rounded-[20px] border border-border/70 bg-background/94 px-2.5 py-2 shadow-[0_20px_48px_-28px_rgba(0,0,0,0.85)] backdrop-blur-xl`}
+          className={`fixed inset-x-4 ${mobileBannerBottomClass} z-50 mx-auto max-w-[20rem] rounded-[20px] border border-territory-border/70 bg-territory-surface/95 px-2.5 py-2 shadow-xl backdrop-blur-xl`}
         >
           <div className="grid grid-cols-[auto,1fr,auto] items-center gap-2">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary">
-              <Cookie className="h-3.5 w-3.5" />
+            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-territory-brand/12 text-territory-brand">
+              <Cookie className="h-3.5 w-3.5" aria-hidden="true" />
             </div>
 
             <div className="min-w-0">
-              <p className="text-[0.66rem] font-semibold leading-none text-foreground">
+              <p className="text-[0.66rem] font-semibold leading-none text-territory-ink">
                 Cookies
               </p>
-              <p className="mt-0.5 truncate text-[0.56rem] leading-none text-muted-foreground">
-                {"Seguran\u00e7a e prefer\u00eancias."}
+              <p className="mt-0.5 truncate text-[0.56rem] leading-none text-territory-muted">
+                Segurança e preferências.
               </p>
             </div>
 
@@ -165,15 +165,15 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-7 rounded-lg border-slate-300 !bg-white px-2 text-[0.62rem] font-medium !text-slate-950 hover:!bg-slate-100"
+                className="h-7 rounded-lg border-territory-border bg-territory-surface px-2 text-[0.62rem] font-medium text-territory-ink hover:bg-territory-raised"
                 onClick={rejectOptionalConsents}
                 disabled={isSaving}
               >
-                {"N\u00e3o"}
+                Não
               </Button>
               <Button
                 size="sm"
-                className="h-7 rounded-lg !bg-teal-700 px-2 text-[0.62rem] font-medium !text-white hover:!bg-teal-800"
+                className="h-7 rounded-lg bg-territory-brand px-2 text-[0.62rem] font-medium text-territory-on-image hover:bg-territory-brand/90"
                 onClick={acceptAllConsents}
                 disabled={isSaving}
               >
@@ -184,18 +184,18 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
                 onMouseEnter={warmPreferencesDialog}
                 onFocus={warmPreferencesDialog}
                 onClick={() => setShowDetails(true)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-100 transition-colors hover:bg-white/15 hover:text-white"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
                 aria-label="Personalizar cookies"
               >
-                <Shield className="h-3.5 w-3.5" />
+                <Shield className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
               <button
                 type="button"
                 onClick={() => setShowBanner(false)}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-100 transition-colors hover:bg-white/15 hover:text-white"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
                 aria-label="Fechar"
               >
-                <X className="h-3.5 w-3.5" />
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -208,19 +208,19 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
       ) : (
         <div
           data-consent-banner
-          className={`fixed inset-x-3 ${mobileBannerBottomClass} z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/70 bg-background/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[40rem] md:max-w-[40rem] md:rounded-2xl md:p-3.5`}
+          className={`fixed inset-x-3 ${mobileBannerBottomClass} z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-territory-border/70 bg-territory-surface/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[40rem] md:max-w-[40rem] md:rounded-2xl md:p-3.5`}
         >
           <div className="flex items-center gap-2 md:hidden">
-            <div className="shrink-0 rounded-full bg-primary/10 p-1.5">
-              <Cookie className="h-3.5 w-3.5 text-primary" />
+            <div className="shrink-0 rounded-full bg-territory-brand/10 p-1.5">
+              <Cookie className="h-3.5 w-3.5 text-territory-brand" aria-hidden="true" />
             </div>
-            <p className="min-w-0 flex-1 truncate text-[0.7rem] font-medium leading-tight text-foreground">
+            <p className="min-w-0 flex-1 truncate text-[0.7rem] font-medium leading-tight text-territory-ink">
               Usamos cookies para melhorar sua experiência.
             </p>
             <Button
               variant="outline"
               size="sm"
-              className="h-7 shrink-0 rounded-lg border-slate-300 !bg-white px-2 text-[0.65rem] font-semibold !text-slate-950 hover:!bg-slate-100"
+              className="h-7 shrink-0 rounded-lg border-territory-border bg-territory-surface px-2 text-[0.65rem] font-semibold text-territory-ink hover:bg-territory-raised"
               onClick={rejectOptionalConsents}
               disabled={isSaving}
             >
@@ -228,7 +228,7 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
             </Button>
             <Button
               size="sm"
-              className="h-7 shrink-0 rounded-lg !bg-teal-700 px-2.5 text-[0.65rem] font-semibold !text-white hover:!bg-teal-800"
+              className="h-7 shrink-0 rounded-lg bg-territory-brand px-2.5 text-[0.65rem] font-semibold text-territory-on-image hover:bg-territory-brand/90"
               onClick={acceptAllConsents}
               disabled={isSaving}
             >
@@ -239,22 +239,22 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
               onMouseEnter={warmPreferencesDialog}
               onFocus={warmPreferencesDialog}
               onClick={() => setShowDetails(true)}
-              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+              className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
               aria-label="Personalizar cookies"
             >
-              <Shield className="h-3.5 w-3.5" />
+              <Shield className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
 
           <div className="hidden md:flex md:flex-nowrap md:items-center md:gap-3">
-            <div className="shrink-0 rounded-full bg-primary/10 p-2">
-              <Cookie className="h-4 w-4 text-primary" />
+            <div className="shrink-0 rounded-full bg-territory-brand/10 p-2">
+              <Cookie className="h-4 w-4 text-territory-brand" aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-sm font-semibold leading-tight text-foreground">
+              <h3 className="truncate text-sm font-semibold leading-tight text-territory-ink">
                 Privacidade e Cookies
               </h3>
-              <p className="mt-0.5 truncate text-xs leading-snug text-muted-foreground">
+              <p className="mt-0.5 truncate text-xs leading-snug text-territory-muted">
                 Utilizamos cookies e dados pessoais para melhorar sua experiência.
               </p>
             </div>
@@ -262,7 +262,7 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-9 whitespace-nowrap rounded-xl px-3 text-xs !text-muted-foreground hover:!bg-white/10 hover:!text-foreground"
+                className="h-9 whitespace-nowrap rounded-xl px-3 text-xs text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                 onMouseEnter={warmPreferencesDialog}
                 onFocus={warmPreferencesDialog}
                 onClick={() => setShowDetails(true)}
@@ -272,7 +272,7 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9 whitespace-nowrap rounded-xl border-slate-300 !bg-white px-4 text-xs font-medium !text-slate-950 hover:!bg-slate-100"
+                className="h-9 whitespace-nowrap rounded-xl border-territory-border bg-territory-surface px-4 text-xs font-medium text-territory-ink hover:bg-territory-raised"
                 onClick={rejectOptionalConsents}
                 disabled={isSaving}
               >
@@ -280,7 +280,7 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
               </Button>
               <Button
                 size="sm"
-                className="h-9 whitespace-nowrap rounded-xl !bg-teal-700 px-4 text-xs font-semibold !text-white hover:!bg-teal-800"
+                className="h-9 whitespace-nowrap rounded-xl bg-territory-brand px-4 text-xs font-semibold text-territory-on-image hover:bg-territory-brand/90"
                 onClick={acceptAllConsents}
                 disabled={isSaving}
               >
@@ -289,10 +289,10 @@ export function ConsentBannerContent({ pathname }: ConsentBannerContentProps) {
               <button
                 type="button"
                 onClick={() => setShowBanner(false)}
-                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
                 aria-label="Fechar"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
