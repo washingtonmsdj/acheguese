@@ -45,6 +45,14 @@ type EducationInstitutionSectionProps = {
   onPatch: PatchEducationSetupForm;
 };
 
+const sectionCardClassName =
+  'border-territory-border bg-territory-surface text-territory-ink shadow-sm';
+const sectionTitleClassName = 'flex items-center gap-2 text-lg text-territory-ink';
+const helperTextClassName = 'mt-1 text-xs text-territory-muted';
+const separatorClassName = 'bg-territory-border';
+const outlineActionClassName =
+  'border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/40 hover:bg-territory-raised';
+
 export function EducationInstitutionSection({
   formData,
   selectedNiche,
@@ -53,16 +61,16 @@ export function EducationInstitutionSection({
   onPatch,
 }: EducationInstitutionSectionProps) {
   return (
-    <Card>
+    <Card className={sectionCardClassName}>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <School className="w-5 h-5 text-blue-500" />
-          Tipo de Instituicao
+        <CardTitle className={sectionTitleClassName}>
+          <School className="h-5 w-5 text-territory-brand" />
+          Tipo de instituição
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="nicheKey">Tipo de instituicao educacional</Label>
+          <Label htmlFor="nicheKey">Tipo de instituição educacional</Label>
           <Select
             value={formData.nicheKey}
             onValueChange={(value) =>
@@ -83,8 +91,8 @@ export function EducationInstitutionSection({
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-gray-500 mt-1">
-            Esta escolha define as capacidades do modulo; o tipo tecnico e derivado automaticamente.
+          <p className={helperTextClassName}>
+            Esta escolha define os recursos do módulo; o tipo técnico é derivado automaticamente.
           </p>
         </div>
 
@@ -122,10 +130,10 @@ export function EducationDataSection({
   }
 
   return (
-    <Card>
+    <Card className={sectionCardClassName}>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <School className="w-5 h-5 text-blue-500" />
+        <CardTitle className={sectionTitleClassName}>
+          <School className="h-5 w-5 text-territory-brand" />
           Dados educacionais
         </CardTitle>
       </CardHeader>
@@ -151,7 +159,7 @@ export function EducationDataSection({
                     id="schoolType"
                     data-testid="education-school-type-trigger"
                   >
-                    <SelectValue placeholder="Publica, privada..." />
+                    <SelectValue placeholder="Pública, privada..." />
                   </SelectTrigger>
                   <SelectContent>
                     {SCHOOL_TYPES.map((type) => (
@@ -188,7 +196,7 @@ export function EducationDataSection({
 
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label htmlFor="schoolInepCode">Codigo INEP</Label>
+                <Label htmlFor="schoolInepCode">Código INEP</Label>
                 <Input
                   id="schoolInepCode"
                   data-testid="education-school-inep"
@@ -201,7 +209,7 @@ export function EducationDataSection({
               </div>
 
               <div>
-                <Label htmlFor="schoolSourceUrl">Fonte publica</Label>
+                <Label htmlFor="schoolSourceUrl">Fonte pública</Label>
                 <Input
                   id="schoolSourceUrl"
                   data-testid="education-school-source-url"
@@ -209,19 +217,19 @@ export function EducationDataSection({
                   onChange={(event) =>
                     onPatch({ schoolSourceUrl: event.target.value })
                   }
-                  placeholder="URL do Censo, secretaria ou diretorio publico"
+                  placeholder="URL do Censo, secretaria ou diretório público"
                 />
               </div>
             </div>
 
-            <Separator />
+            <Separator className={separatorClassName} />
           </>
         )}
 
         <div className="space-y-5">
           {showEducationLevels && (
             <EducationOptionCheckboxGroup
-              title="Niveis educacionais"
+              title="Níveis educacionais"
               options={EDUCATION_LEVEL_OPTIONS}
               selected={formData.educationLevels}
               onToggle={(key) => onToggleArrayField('educationLevels', key)}
@@ -237,7 +245,7 @@ export function EducationDataSection({
 
           <div className="grid gap-4 md:grid-cols-3">
             <div>
-              <Label htmlFor="ageRangeMin">{ageGroupLabel} minima</Label>
+              <Label htmlFor="ageRangeMin">{ageGroupLabel} mínima</Label>
               <Input
                 id="ageRangeMin"
                 data-testid="education-age-min"
@@ -250,7 +258,7 @@ export function EducationDataSection({
               />
             </div>
             <div>
-              <Label htmlFor="ageRangeMax">{ageGroupLabel} maxima</Label>
+              <Label htmlFor="ageRangeMax">{ageGroupLabel} máxima</Label>
               <Input
                 id="ageRangeMax"
                 data-testid="education-age-max"
@@ -263,7 +271,7 @@ export function EducationDataSection({
               />
             </div>
             <div>
-              <Label htmlFor="enrollmentStatus">Situacao de matricula</Label>
+              <Label htmlFor="enrollmentStatus">Situação de matrícula</Label>
               <Select
                 value={
                   formData.enrollmentOpen === true
@@ -283,19 +291,19 @@ export function EducationDataSection({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unknown">Nao informado</SelectItem>
-                  <SelectItem value="open">Matriculas abertas</SelectItem>
-                  <SelectItem value="closed">Matriculas fechadas</SelectItem>
+                  <SelectItem value="unknown">Não informado</SelectItem>
+                  <SelectItem value="open">Matrículas abertas</SelectItem>
+                  <SelectItem value="closed">Matrículas fechadas</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
 
-        <Separator />
+        <Separator className={separatorClassName} />
 
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold">Presets rapidos</h4>
+          <h4 className="text-sm font-semibold text-territory-ink">Presets rápidos</h4>
           <div className="flex flex-wrap gap-2">
             {isSchoolProfile && (
               <>
@@ -303,6 +311,7 @@ export function EducationDataSection({
                   type="button"
                   variant="outline"
                   size="sm"
+                  className={outlineActionClassName}
                   onClick={() => onApplyPreset('daycare')}
                 >
                   Creche/CMEI
@@ -311,9 +320,10 @@ export function EducationDataSection({
                   type="button"
                   variant="outline"
                   size="sm"
+                  className={outlineActionClassName}
                   onClick={() => onApplyPreset('basic_school')}
                 >
-                  Escola basica
+                  Escola básica
                 </Button>
               </>
             )}
@@ -321,6 +331,7 @@ export function EducationDataSection({
               type="button"
               variant="outline"
               size="sm"
+              className={outlineActionClassName}
               onClick={() => onApplyPreset('accessible')}
             >
               Acessibilidade
@@ -328,36 +339,36 @@ export function EducationDataSection({
           </div>
         </div>
 
-        <Separator />
+        <Separator className={separatorClassName} />
 
         <div className="space-y-5">
           <EducationOptionCheckboxGroup
-                title="Recursos basicos"
-                options={BASIC_RESOURCE_OPTIONS}
-                selected={formData.schoolBasicResources}
-                onToggle={(key) => onToggleArrayField('schoolBasicResources', key)}
+            title="Recursos básicos"
+            options={BASIC_RESOURCE_OPTIONS}
+            selected={formData.schoolBasicResources}
+            onToggle={(key) => onToggleArrayField('schoolBasicResources', key)}
           />
 
           <EducationOptionCheckboxGroup
-                title="Acessibilidade"
-                options={ACCESSIBILITY_OPTIONS}
-                selected={formData.schoolAccessibilityFeatures}
-                onToggle={(key) =>
-                  onToggleArrayField('schoolAccessibilityFeatures', key)
-                }
+            title="Acessibilidade"
+            options={ACCESSIBILITY_OPTIONS}
+            selected={formData.schoolAccessibilityFeatures}
+            onToggle={(key) =>
+              onToggleArrayField('schoolAccessibilityFeatures', key)
+            }
           />
 
           <EducationOptionCheckboxGroup
-                title="Equipamentos"
-                options={EQUIPMENT_OPTIONS}
-                selected={formData.schoolEquipmentFeatures}
-                onToggle={(key) =>
-                  onToggleArrayField('schoolEquipmentFeatures', key)
-                }
-              />
+            title="Equipamentos"
+            options={EQUIPMENT_OPTIONS}
+            selected={formData.schoolEquipmentFeatures}
+            onToggle={(key) =>
+              onToggleArrayField('schoolEquipmentFeatures', key)
+            }
+          />
 
           <EducationOptionCheckboxGroup
-            title="Instalacoes"
+            title="Instalações"
             options={FACILITY_OPTIONS}
             selected={formData.schoolFacilityFeatures}
             onToggle={(key) =>
@@ -384,11 +395,11 @@ export function EducationDescriptionSection({
   onPatch,
 }: EducationDescriptionSectionProps) {
   return (
-    <Card>
+    <Card className={sectionCardClassName}>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-500" />
-          Descricao
+        <CardTitle className={sectionTitleClassName}>
+          <FileText className="h-5 w-5 text-territory-brand" />
+          Descrição
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -403,7 +414,7 @@ export function EducationDescriptionSection({
             rows={4}
             maxLength={500}
           />
-          <p className="text-xs text-gray-500 mt-1 text-right">
+          <p className={`${helperTextClassName} text-right`}>
             {summary.length}/500 caracteres
           </p>
         </div>
@@ -422,10 +433,10 @@ export function EducationContactSection({
   onPatch,
 }: EducationContactSectionProps) {
   return (
-    <Card>
+    <Card className={sectionCardClassName}>
       <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Phone className="w-5 h-5 text-blue-500" />
+        <CardTitle className={sectionTitleClassName}>
+          <Phone className="h-5 w-5 text-territory-brand" />
           Contato
         </CardTitle>
       </CardHeader>
@@ -439,8 +450,8 @@ export function EducationContactSection({
             onChange={(event) => onPatch({ whatsappNumber: event.target.value })}
             placeholder="+5588999999999"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Numero que sera exibido para contato na pagina publica.
+          <p className={helperTextClassName}>
+            Número que será exibido para contato na página pública.
           </p>
         </div>
       </CardContent>
