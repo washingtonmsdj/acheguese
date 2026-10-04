@@ -19,21 +19,26 @@ export function EducationSetupHeader({ onBack }: EducationSetupHeaderProps) {
       animate={{ opacity: 1, y: 0 }}
       className="mb-8"
     >
-      <Button variant="ghost" size="sm" className="mb-4" onClick={onBack}>
-        <ArrowLeft className="w-4 h-4 mr-1" />
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-4 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+        onClick={onBack}
+      >
+        <ArrowLeft className="mr-1 h-4 w-4" />
         Voltar
       </Button>
 
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-          <Settings className="w-5 h-5 text-white" />
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand shadow-sm">
+          <Settings className="h-5 w-5 text-territory-on-image" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            Configurar Educacao
+          <h1 className="text-2xl font-bold text-territory-ink">
+            Configurar Educação
           </h1>
-          <p className="text-sm text-gray-500">
-            Configure os dados da sua instituicao
+          <p className="text-sm text-territory-muted">
+            Configure os dados da sua instituição
           </p>
         </div>
       </div>
@@ -43,8 +48,8 @@ export function EducationSetupHeader({ onBack }: EducationSetupHeaderProps) {
 
 export function EducationSetupSkeleton() {
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Skeleton className="h-8 w-1/3 mb-6" />
+    <div className="container mx-auto max-w-3xl p-6">
+      <Skeleton className="mb-6 h-8 w-1/3" />
       <Skeleton className="h-96 rounded-xl" />
     </div>
   );
@@ -53,13 +58,29 @@ export function EducationSetupSkeleton() {
 function EducationNicheStatusBadge({ status }: { status: string }) {
   switch (status) {
     case 'full_enabled':
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Completo</Badge>;
+      return (
+        <Badge className="border-territory-success/25 bg-territory-success/10 text-territory-success hover:bg-territory-success/15">
+          Completo
+        </Badge>
+      );
     case 'basic_enabled':
-      return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Basico</Badge>;
+      return (
+        <Badge className="border-territory-brand/25 bg-territory-brand/10 text-territory-brand hover:bg-territory-brand/15">
+          Básico
+        </Badge>
+      );
     case 'beta':
-      return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Beta</Badge>;
+      return (
+        <Badge className="border-territory-warning/30 bg-territory-warning/10 text-territory-warning hover:bg-territory-warning/15">
+          Beta
+        </Badge>
+      );
     case 'planned':
-      return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Planejado</Badge>;
+      return (
+        <Badge className="border-territory-border bg-territory-raised text-territory-muted hover:bg-territory-raised">
+          Planejado
+        </Badge>
+      );
     default:
       return <Badge variant="secondary">{status}</Badge>;
   }
@@ -75,35 +96,37 @@ export function EducationNicheDetails({
   businessId,
 }: EducationNicheDetailsProps) {
   return (
-    <div className="mt-4 p-4 bg-muted/30 rounded-lg border border-dashed">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="font-medium text-sm">{niche.displayName}</h4>
+    <div className="mt-4 rounded-lg border border-dashed border-territory-border bg-territory-raised/70 p-4 text-territory-ink">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <h4 className="text-sm font-medium">{niche.displayName}</h4>
         <EducationNicheStatusBadge status={niche.supportLevel} />
       </div>
-      <p className="text-xs text-muted-foreground mb-3">{niche.description}</p>
+      <p className="mb-3 text-xs text-territory-muted">{niche.description}</p>
 
-      <Separator className="my-2" />
+      <Separator className="my-2 bg-territory-border" />
 
-      <div className="text-xs space-y-1">
+      <div className="space-y-1 text-xs text-territory-muted">
         <p>
-          <span className="font-medium">Limites:</span>{' '}
+          <span className="font-medium text-territory-ink">Limites:</span>{' '}
           {niche.entitlements.maxPrograms} programas,{' '}
           {niche.entitlements.maxEvents} eventos,{' '}
-          {niche.entitlements.maxLeadsPerMonth} leads/mes
+          {niche.entitlements.maxLeadsPerMonth} leads/mês
         </p>
         <p>
-          <span className="font-medium">Capabilities:</span>{' '}
-          {niche.enabledCapabilities.length} ativas
+          <span className="font-medium text-territory-ink">Recursos habilitados:</span>{' '}
+          {niche.enabledCapabilities.length} ativos
         </p>
       </div>
 
       {niche.isBeta && (
-        <EducationUpgradeBanner
-          nicheKey={niche.nicheKey}
-          businessId={businessId}
-          reason="feature_unavailable"
-          variant="inline"
-        />
+        <div className="mt-3">
+          <EducationUpgradeBanner
+            nicheKey={niche.nicheKey}
+            businessId={businessId}
+            reason="feature_unavailable"
+            variant="inline"
+          />
+        </div>
       )}
     </div>
   );
@@ -124,12 +147,12 @@ export function EducationOptionCheckboxGroup<T extends string>({
 }: EducationOptionCheckboxGroupProps<T>) {
   return (
     <div>
-      <h4 className="text-sm font-semibold">{title}</h4>
+      <h4 className="text-sm font-semibold text-territory-ink">{title}</h4>
       <div className="mt-3 grid gap-2 md:grid-cols-2">
         {options.map((option) => (
           <label
             key={option.key}
-            className="flex items-center gap-2 rounded-md border px-3 py-2"
+            className="flex items-center gap-2 rounded-md border border-territory-border bg-territory-surface px-3 py-2 text-territory-ink transition-colors hover:border-territory-brand/40 hover:bg-territory-raised"
           >
             <Checkbox
               checked={selected.includes(option.key)}
@@ -161,12 +184,17 @@ export function EducationSetupActions({
         data-testid="education-save-setup"
         disabled={isSaving}
         onClick={onSave}
-        className="flex-1 gap-2"
+        className="flex-1 gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
       >
-        <Save className="w-4 h-4" />
-        {isSaving ? 'Salvando...' : 'Salvar Configuracoes'}
+        <Save className="h-4 w-4" />
+        {isSaving ? 'Salvando...' : 'Salvar configurações'}
       </Button>
-      <Button type="button" variant="outline" onClick={onCancel}>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onCancel}
+        className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+      >
         Cancelar
       </Button>
     </div>
