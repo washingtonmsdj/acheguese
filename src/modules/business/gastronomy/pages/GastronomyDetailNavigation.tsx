@@ -23,20 +23,20 @@ export function ServiceBar({ profile }: ServiceBarProps) {
     profile.delivery_enabled && {
       label: "Entrega",
       icon: Truck,
-      color: "text-success",
-      bgColor: "bg-success/10",
+      color: "text-territory-success",
+      bgColor: "bg-territory-success/10",
     },
     profile.takeout_enabled && {
       label: "Retirada",
       icon: ShoppingBag,
-      color: "text-warning",
-      bgColor: "bg-warning/10",
+      color: "text-territory-warning",
+      bgColor: "bg-territory-warning/10",
     },
     profile.dine_in_enabled && {
       label: "No local",
       icon: Store,
-      color: "text-accent",
-      bgColor: "bg-accent/10",
+      color: "text-territory-brand",
+      bgColor: "bg-territory-brand/10",
     },
   ].filter(Boolean) as Array<{
     label: string;
@@ -51,13 +51,13 @@ export function ServiceBar({ profile }: ServiceBarProps) {
           {
             label: "No local",
             icon: Store,
-            color: "text-muted-foreground",
-            bgColor: "bg-muted/60",
+            color: "text-territory-muted",
+            bgColor: "bg-territory-raised",
           },
         ];
 
   return (
-    <div className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur-md">
+    <div className="sticky top-0 z-30 border-b border-territory-border bg-territory-surface/95 text-territory-ink backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-3">
           <div className="flex items-center gap-3">
@@ -70,34 +70,34 @@ export function ServiceBar({ profile }: ServiceBarProps) {
                   mode.color,
                 )}
               >
-                <mode.icon className="h-4 w-4" />
+                <mode.icon className="h-4 w-4" aria-hidden="true" />
                 <span className="hidden sm:inline">{mode.label}</span>
               </div>
             ))}
           </div>
 
           <div className="flex items-center gap-3 text-sm">
-            {profile.delivery_enabled && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <span className="text-muted-foreground/70">Taxa:</span>
-                <span className="font-medium text-foreground">
+            {profile.delivery_enabled ? (
+              <div className="flex items-center gap-1.5 text-territory-muted">
+                <span className="text-territory-muted/75">Taxa:</span>
+                <span className="font-medium text-territory-ink">
                   {formatBrl(profile.delivery_fee ?? 0)}
                 </span>
               </div>
-            )}
-            {profile.minimum_order && profile.minimum_order > 0 && (
+            ) : null}
+            {profile.minimum_order && profile.minimum_order > 0 ? (
               <>
-                {profile.delivery_enabled && (
-                  <Separator orientation="vertical" className="h-4" />
-                )}
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <span className="text-muted-foreground/70">Min:</span>
-                  <span className="font-medium text-foreground">
+                {profile.delivery_enabled ? (
+                  <Separator orientation="vertical" className="h-4 bg-territory-border" />
+                ) : null}
+                <div className="flex items-center gap-1.5 text-territory-muted">
+                  <span className="text-territory-muted/75">Mín:</span>
+                  <span className="font-medium text-territory-ink">
                     {formatBrl(profile.minimum_order)}
                   </span>
                 </div>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@ export function CategoryNav({
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="sticky top-[73px] z-20 border-b border-border bg-card/95 backdrop-blur-md">
+    <div className="sticky top-[73px] z-20 border-b border-territory-border bg-territory-surface/95 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <ScrollArea className="w-full">
           <div ref={scrollRef} className="flex gap-2 py-3">
@@ -136,28 +136,28 @@ export function CategoryNav({
                   onClick={() => onSelect(category.id)}
                   aria-pressed={isActive}
                   className={cn(
-                    "relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "relative whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-muted text-muted-foreground hover:bg-muted/70",
+                      ? "border-territory-brand bg-territory-brand text-territory-on-image shadow-sm"
+                      : "border-territory-border bg-territory-raised text-territory-muted hover:border-territory-brand/35 hover:text-territory-ink",
                   )}
                 >
                   {category.name}
-                  {count > 0 && (
+                  {count > 0 ? (
                     <span
                       className={cn(
                         "ml-1.5 text-xs",
                         isActive
-                          ? "text-primary-foreground/70"
-                          : "text-muted-foreground/60",
+                          ? "text-territory-on-image/75"
+                          : "text-territory-muted/70",
                       )}
                     >
                       {count}
                     </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute -bottom-3 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-primary" />
-                  )}
+                  ) : null}
+                  {isActive ? (
+                    <span className="absolute -bottom-3 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-territory-brand" />
+                  ) : null}
                 </button>
               );
             })}
