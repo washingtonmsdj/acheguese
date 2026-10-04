@@ -1,18 +1,18 @@
 /**
  * EducationAnalyticsPage
  *
- * Pagina de analytics da instituicao.
+ * Página de analytics da instituição.
  * Rota: /central/empresas/:businessId/educacao/analytics
  *
  * Regra:
  * - leitura de analytics usa o profile Education real;
- * - analytics basico exige nicho + entitlement canonico;
- * - exportacao exige allowsExport do nicho + canExportReports do Billing;
- * - CSV e derivado apenas do read model carregado, sem segunda fonte.
+ * - analytics básico exige nicho + entitlement canônico;
+ * - exportação exige allowsExport do nicho + canExportReports do Billing;
+ * - CSV é derivado apenas do read model carregado, sem segunda fonte.
  */
 
 import { useParams } from 'react-router-dom';
-import { AlertCircle, BarChart3, Download, RefreshCw } from 'lucide-react';
+import { BarChart3, Download } from 'lucide-react';
 import { useEducationAnalytics } from '../hooks';
 import {
   EducationAnalyticsOverviewCard,
@@ -92,9 +92,9 @@ export function EducationAnalyticsPage() {
   const handleExport = () => {
     if (!businessId || !data || !canExportAnalytics) {
       toast({
-        title: 'Exportacao indisponivel',
+        title: 'Exportação indisponível',
         description:
-          'Os dados ou a permissao de exportacao ainda nao estao disponiveis.',
+          'Os dados ou a permissão de exportação ainda não estão disponíveis.',
         variant: 'destructive',
       });
       return;
@@ -102,16 +102,16 @@ export function EducationAnalyticsPage() {
 
     downloadCsv(buildEducationAnalyticsCsv(data), businessId);
     toast({
-      title: 'Relatorio exportado',
-      description: 'O CSV foi gerado com as metricas carregadas desta instituicao.',
+      title: 'Relatório exportado',
+      description: 'O CSV foi gerado com as métricas carregadas desta instituição.',
     });
   };
 
   if (isProfileLoading || nicheBilling.isLoading) {
     return (
-      <div className="container mx-auto max-w-6xl p-6">
-        <Skeleton className="mb-6 h-8 w-48" />
-        <Skeleton className="h-64 w-full rounded-xl" />
+      <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
+        <Skeleton className="mb-6 h-8 w-48 bg-territory-raised" />
+        <Skeleton className="h-64 w-full rounded-xl bg-territory-raised" />
       </div>
     );
   }
@@ -119,7 +119,7 @@ export function EducationAnalyticsPage() {
   if (isProfileError) {
     return (
       <EducationAdminReadError
-        title="Nao foi possivel carregar o perfil de Educacao"
+        title="Não foi possível carregar o perfil de Educação"
         error={profileError}
         onRetry={() => void refetchProfile()}
       />
@@ -128,35 +128,23 @@ export function EducationAnalyticsPage() {
 
   if (isAnalyticsError) {
     return (
-      <div className="container mx-auto max-w-4xl p-6">
-        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
-          <div className="mb-3 flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            <h1 className="font-semibold">Nao foi possivel carregar o Analytics</h1>
-          </div>
-          <p className="mb-4 text-sm text-muted-foreground">
-            {analyticsError instanceof Error
-              ? analyticsError.message
-              : 'A leitura das metricas falhou. Nenhum zero artificial foi exibido.'}
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => void refetchAnalytics()}
-            className="gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Tentar novamente
-          </Button>
-        </div>
-      </div>
+      <EducationAdminReadError
+        title="Não foi possível carregar o Analytics"
+        error={
+          analyticsError instanceof Error
+            ? analyticsError
+            : new Error('A leitura das métricas falhou. Nenhum zero artificial foi exibido.')
+        }
+        onRetry={() => void refetchAnalytics()}
+      />
     );
   }
 
   if (!canAccessAnalytics || !canViewAnalytics.allowed) {
     return (
-      <div className="container mx-auto max-w-4xl p-6">
-        <h1 className="mb-6 flex items-center gap-2 text-2xl font-bold">
-          <BarChart3 className="h-6 w-6" />
+      <div className="container mx-auto max-w-4xl p-6 text-territory-ink">
+        <h1 className="mb-6 flex items-center gap-2 font-heading text-2xl font-bold">
+          <BarChart3 className="h-6 w-6 text-territory-brand" aria-hidden="true" />
           Analytics
         </h1>
 
@@ -176,10 +164,10 @@ export function EducationAnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <BarChart3 className="h-6 w-6" />
+    <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="flex items-center gap-2 font-heading text-2xl font-bold">
+          <BarChart3 className="h-6 w-6 text-territory-brand" aria-hidden="true" />
           Analytics
         </h1>
 
@@ -189,10 +177,10 @@ export function EducationAnalyticsPage() {
             size="sm"
             onClick={handleExport}
             disabled={!data || isAnalyticsLoading}
-            className="gap-2"
+            className="gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised hover:text-territory-ink"
           >
-            <Download className="h-4 w-4" />
-            Exportar Relatorio
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Exportar Relatório
           </Button>
         ) : (
           <EducationUpgradeBanner
