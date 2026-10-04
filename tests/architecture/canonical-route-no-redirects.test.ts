@@ -67,7 +67,9 @@ describe("MVP canonical routing without compatibility redirects", () => {
 
     expect(prefetch).not.toContain('path.startsWith("/notificacoes")');
     expect(prefetch).not.toContain('path.startsWith("/notifications")');
-    expect(serviceWorker).toContain("fallback = '/notificacoes'");
+    expect(serviceWorker).toContain("function getLaunchSafeNotificationUrl(url, fallback = '/')");
+    expect(serviceWorker).toContain("notificacoes|mensagens");
+    expect(serviceWorker).not.toContain("fallback = '/notificacoes'");
     expect(serviceWorker).not.toContain("return '/notifications'");
     expect(serviceWorker).toContain("gastronomia|servicos|services|classificados|classifieds");
     expect(serviceWorker).toContain("getLaunchSafeNotificationUrl(");
