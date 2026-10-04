@@ -12,6 +12,7 @@ const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/pages/EducationDashboardPage.tsx",
   "src/modules/business/education/pages/EducationLeadsPage.tsx",
   "src/modules/business/education/pages/EducationSetupControls.tsx",
+  "src/modules/business/education/pages/EducationSetupSections.tsx",
   "src/modules/business/education/components/analytics/EducationAnalyticsOverviewCard.tsx",
   "src/modules/business/education/components/analytics/EducationAnalyticsConversionCard.tsx",
   "src/modules/business/education/components/EducationLeadForm.tsx",
