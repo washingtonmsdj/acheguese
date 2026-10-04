@@ -1,12 +1,12 @@
 /**
  * AppLayoutSidebar
  *
- * Layout global unificado: sidebar completa com navegação integrada + topbar + bottom nav mobile.
+ * Layout global unificado da aplicação autenticada e das superfícies públicas
+ * que ainda não possuem shell territorial próprio.
  *
- * ✅ Sidebar contém: logo, território, navegação, mensagens, notificações, perfil, tema
- * ✅ Topbar com ações rápidas (notificações, mensagens, perfil, logout)
- * ✅ Bottom nav apenas no mobile
- * ✅ Estrutura idêntica à Central
+ * Capabilities pausadas, como Mensagens e Notificações, permanecem versionadas
+ * em seus owners, mas não são anunciadas por esta shell enquanto estiverem fora
+ * do lifecycle ativo do MVP.
  */
 
 import { useEffect } from "react";
@@ -78,7 +78,6 @@ export function AppLayoutSidebar() {
     isAccountRoute ||
     isPublicPersonalProfileRoute;
 
-  // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
@@ -150,8 +149,8 @@ export function AppLayoutSidebar() {
         <div
           className={
             useDocumentScrollPublicShell
-              ? "flex min-h-screen w-full bg-background"
-              : "flex h-screen w-full overflow-hidden bg-background"
+              ? "flex min-h-screen w-full bg-territory-canvas"
+              : "flex h-screen w-full overflow-hidden bg-territory-canvas"
           }
         >
           <main
@@ -184,11 +183,9 @@ export function AppLayoutSidebar() {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        {/* Sidebar unificada com tudo */}
+      <div className="min-h-screen flex w-full bg-territory-canvas">
         <AppSidebar />
 
-        {/* Conteúdo principal com topbar */}
         <div className="flex-1 flex flex-col min-w-0 w-full">
           <AppTopbar />
           <main
