@@ -134,6 +134,24 @@ describe("education visual SSOT", () => {
     expect(analyticsGuard).not.toContain('capability="basic_programs_catalog"');
   });
 
+  it("keeps Education billing consumers on canonical PlanTier authority", () => {
+    const subscription = readSource(
+      "src/modules/business/education/services/education-subscription.service.ts",
+    );
+    const nicheBilling = readSource(
+      "src/modules/business/education/niches/hooks/useEducationNicheBilling.ts",
+    );
+    const plansPage = readSource(
+      "src/modules/business/education/pages/EducationPlansPage.tsx",
+    );
+
+    expect(subscription).toContain("planTier: subscription.plan_tier");
+    expect(nicheBilling).toContain("planTier: subscriptionData.status.planTier");
+    expect(nicheBilling).not.toContain("mapPlanTypeToTier");
+    expect(plansPage).toContain("const currentPlanCode = planTier;");
+    expect(plansPage).not.toContain("planType === 'premium'");
+  });
+
   it("keeps Education paused while its owners are hardened for later activation", () => {
     expect(PRODUCT_MODULE_REGISTRY.education.status).toBe("paused");
   });
