@@ -6,23 +6,15 @@ export interface TerritoryModuleNavItem {
   label: string;
   description: string;
   icon: ComponentType<{ className?: string }>;
-  href?: string;
-  disabled?: boolean;
-  badge?: string;
-}
-
-export interface TerritoryModuleNavMoreItem {
-  label: string;
-  href?: string;
-  disabled?: boolean;
-  badge?: string;
+  href: string;
 }
 
 export interface TerritoryModuleNavProps {
   items: readonly TerritoryModuleNavItem[];
   activeModule: string;
-  moreItems?: readonly TerritoryModuleNavMoreItem[];
 }
+
+const ACTIVE_MVP_NAV_IDS = ["business", "nearby", "map", "search"] as const;
 
 export function TerritoryModuleNav({
   items,
@@ -44,28 +36,14 @@ export function TerritoryModuleNav({
     return () => window.cancelAnimationFrame(frame);
   }, [activeModule]);
 
+  const activeItems = ACTIVE_MVP_NAV_IDS.flatMap((id) =>
+    items.filter((item) => item.id === id),
+  );
+
   return (
     <div className="tmh-nav tmh-nav--mvp" aria-label="Atalhos do território" ref={navigationRef}>
-      {["business", "nearby", "map", "search"].flatMap((id) => items.filter((item) => item.id === id && item.href && !item.disabled)).map((item) => {
+      {activeItems.map((item) => {
         const Icon = item.icon;
-        const content = (
-          <>
-            <Icon />
-            <span>
-              <strong>{item.id === "search" ? "Buscar" : item.label}</strong>
-              <small>{item.description}</small>
-            </span>
-            {item.disabled || item.badge ? <b>{item.badge ?? "Em breve"}</b> : null}
-          </>
-        );
-
-        if (item.disabled || !item.href) {
-          return (
-            <div className="tmh-nav__item tmh-nav__item--disabled" aria-disabled="true" key={item.id}>
-              {content}
-            </div>
-          );
-        }
 
         return (
           <Link
@@ -74,11 +52,14 @@ export function TerritoryModuleNav({
             key={item.id}
             aria-current={item.id === activeModule ? "page" : undefined}
           >
-            {content}
+            <Icon />
+            <span>
+              <strong>{item.id === "search" ? "Buscar" : item.label}</strong>
+              <small>{item.description}</small>
+            </span>
           </Link>
         );
       })}
-
     </div>
   );
 }
