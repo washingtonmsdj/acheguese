@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
@@ -14,16 +14,14 @@ describe("nearby MVP boundary", () => {
   const surfaceAvailabilityHook = read(
     "src/core/territorial/hooks/useGroupSurfaceAvailability.ts",
   );
-  const surfaceAvailability = read(
-    "src/core/territorial/groupSurfaceAvailability.ts",
-  );
+  const surfaceAvailability = read("src/core/territorial/groupSurfaceAvailability.ts");
   const providerRegistry = read("src/core/nearby/providers/registry.ts");
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const hook = read("src/core/nearby/hooks/useNearbyBusinesses.ts");
-  const card = read("src/core/nearby/components/NearbyCard.tsx");
   const map = read("src/core/nearby/components/NearbyMiniMap.tsx");
-  const filters = read("src/core/nearby/components/NearbyFilters.tsx");
-  const section = read("src/core/nearby/components/NearbySection.tsx");
+  const quickRoutes = read("src/core/nearby/components/NearbyQuickRoutes.tsx");
+  const componentBarrel = read("src/core/nearby/components/index.ts");
+  const visualValidator = read("tools/architecture/validate-visual-ssot.ts");
   const territorialLayout = read("src/core/routing/components/TerritorialLayout.tsx");
   const nearbyConfig = read("src/core/nearby/config/nearbyConfig.ts");
 
@@ -88,35 +86,30 @@ describe("nearby MVP boundary", () => {
     expect(page).not.toContain("services");
   });
 
-  it("navigates exclusively through canonical Business URLs", () => {
-    expect(card).toContain("business.canonicalUrl");
-    expect(card).not.toContain("APP_MODULE_SLUGS");
-    expect(card).not.toContain("useFriendlyModuleUrls");
+  it("navigates exclusively through canonical Business URLs in the mounted experience", () => {
+    expect(page).toContain("navigate(business.canonicalUrl)");
+    expect(page).not.toContain("useFriendlyModuleUrls");
     expect(map).toContain("url: business.canonicalUrl");
     expect(map).toContain("navigate(business.canonicalUrl)");
     expect(map).toContain("onMarkerClick={handleMarkerClick}");
     expect(map).toContain("projectBusiness");
+    expect(quickRoutes).toContain("navigate(business.canonicalUrl)");
   });
 
-  it("never renders personal distance or a user marker from a territorial center", () => {
-    expect(card).toContain("const hasRealDistance =");
-    expect(card).toContain("isPreciseNearbyDistance");
-    expect(card).not.toContain("100000");
-    expect(nearbyConfig).toContain("showProximity && Number.isFinite(meters) && meters > 0");
-    expect(card).toContain("em linha reta");
-    expect(card).not.toContain("getWalkingTime");
-    expect(card).not.toContain("<Clock");
-    expect(filters).toContain(
-      'showProximity ? "Raio:" : "Recorte a partir do centro:"',
+  it("never presents personal distance from a territorial-only center", () => {
+    expect(page).toContain("const isGoodForProximity = Boolean(savedReference)");
+    expect(page).toContain(
+      "precise ? formatNearbyDistance(business.distanceMeters) : formatNearbyTerritoryDistance(business.distanceMeters)",
     );
+    expect(page).toContain("precise={isGoodForProximity}");
+    expect(nearbyConfig).toContain("showProximity && Number.isFinite(meters) && meters > 0");
     expect(map).toContain("enabled: showProximity");
     expect(map).toContain("autoAdd: showProximity");
+    expect(quickRoutes).toContain("formatNearbyDistance(business.distanceMeters)");
+    expect(quickRoutes).toContain("formatNearbyTerritoryDistance(business.distanceMeters)");
   });
 
   it("keeps zero-result states explicit instead of hiding Nearby content", () => {
-    expect(section).toContain('emptyMessage = "Nenhum resultado encontrado neste recorte."');
-    expect(section).toContain("{emptyMessage}");
-    expect(section).not.toContain("if (isEmpty && !isLoading) return null");
     expect(page).toContain("Nenhum resultado neste recorte");
     expect(page).toContain("Amplie o raio ou remova os filtros para ver mais opções.");
     expect(page).toContain('className="nb-no-results"');
@@ -134,7 +127,22 @@ describe("nearby MVP boundary", () => {
     expect(page).not.toContain('value: "alimentacao"');
     expect(page).not.toContain('value: "mercados"');
     expect(page).not.toContain('value: "beleza"');
-    expect(filters).not.toContain("QUICK_CATEGORIES");
+  });
+
+  it("removes obsolete duplicate Nearby presentation owners from the active code graph", () => {
+    for (const path of [
+      "src/core/nearby/components/NearbyCard.tsx",
+      "src/core/nearby/components/NearbyFilters.tsx",
+      "src/core/nearby/components/NearbySection.tsx",
+    ]) {
+      expect(existsSync(path)).toBe(false);
+      expect(visualValidator).not.toContain(path);
+    }
+
+    expect(componentBarrel).toContain('export { NearbyMiniMap } from "./NearbyMiniMap";');
+    expect(componentBarrel).not.toContain("NearbyCard");
+    expect(componentBarrel).not.toContain("NearbyFilters");
+    expect(componentBarrel).not.toContain("NearbySection");
   });
 
   it("keeps the active Nearby presentation on the territorial visual SSOT", () => {
