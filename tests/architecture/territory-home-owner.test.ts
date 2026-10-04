@@ -44,4 +44,33 @@ describe("Territory Home ownership", () => {
     expect(activeLazyImports).not.toContain("NationalHubPage");
     expect(routes).not.toContain('path="/inicio"');
   });
+
+  it("keeps hero navigation limited to active MVP surfaces without paused presentation API", () => {
+    const portal = read("src/app/pages/TerritoryPortalPage.tsx");
+    const hero = read("src/app/components/territorial/TerritorialModuleHero.tsx");
+    const navigation = read("src/app/components/territorial/TerritoryModuleNav.tsx");
+    const barrel = read("src/app/components/territorial/index.ts");
+
+    for (const activeId of ["home", "map", "business", "nearby", "search"]) {
+      expect(portal).toContain(`id: "${activeId}"`);
+    }
+
+    expect(portal).not.toContain('id: "community"');
+    expect(portal).not.toContain("moreNavItems");
+    expect(portal).not.toContain("TerritoryModuleNavMoreItem");
+
+    expect(hero).not.toContain("moreNavItems");
+    expect(hero).not.toContain("moreItems=");
+    expect(hero).not.toContain("TerritoryModuleNavMoreItem");
+
+    expect(navigation).toContain(
+      'const ACTIVE_MVP_NAV_IDS = ["business", "nearby", "map", "search"] as const;',
+    );
+    expect(navigation).toContain("href: string;");
+    expect(navigation).not.toContain("disabled?:");
+    expect(navigation).not.toContain("badge?:");
+    expect(navigation).not.toContain("moreItems?:");
+    expect(navigation).not.toContain("Em breve");
+    expect(barrel).not.toContain("TerritoryModuleNavMoreItem");
+  });
 });
