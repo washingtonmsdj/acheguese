@@ -8,7 +8,10 @@ const ROOT = process.cwd();
 const GASTRONOMY_UI_OWNERS = [
   "src/modules/business/gastronomy/pages/MyFavoritesPage.tsx",
   "src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx",
+  "src/modules/business/gastronomy/pages/GastronomyDetailMenuSection.tsx",
 ] as const;
+
+const GASTRONOMY_PAGE_SHELLS = GASTRONOMY_UI_OWNERS.slice(0, 2);
 
 const LEGACY_VISUAL_TOKENS = [
   "bg-background",
@@ -26,7 +29,6 @@ describe("gastronomy visual SSOT", () => {
       expect(fs.existsSync(absolutePath), relativePath).toBe(true);
 
       const source = fs.readFileSync(absolutePath, "utf8");
-      expect(source, relativePath).toContain("bg-territory-canvas");
       expect(source, relativePath).toContain("bg-territory-surface");
       expect(source, relativePath).toContain("text-territory-ink");
       expect(source, relativePath).toContain("text-territory-muted");
@@ -34,6 +36,12 @@ describe("gastronomy visual SSOT", () => {
       for (const token of LEGACY_VISUAL_TOKENS) {
         expect(source, `${relativePath}: legacy visual token returned: ${token}`).not.toContain(token);
       }
+    }
+
+    for (const relativePath of GASTRONOMY_PAGE_SHELLS) {
+      expect(fs.readFileSync(path.join(ROOT, relativePath), "utf8"), relativePath).toContain(
+        "bg-territory-canvas",
+      );
     }
 
     const favorites = fs.readFileSync(
@@ -44,7 +52,7 @@ describe("gastronomy visual SSOT", () => {
     expect(favorites).toContain("bg-territory-sun");
   });
 
-  it("keeps migrated Gastronomy owners disconnected while the product is paused", () => {
+  it("keeps migrated Gastronomy page owners disconnected while the product is paused", () => {
     expect(PRODUCT_MODULE_REGISTRY.gastronomy.status).toBe("paused");
 
     const routes = fs.readFileSync(
