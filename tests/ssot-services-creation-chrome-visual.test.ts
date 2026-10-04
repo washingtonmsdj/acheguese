@@ -3,19 +3,20 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const SERVICES_CREATION_SURFACES = [
+const SERVICES_VISUAL_SURFACES = [
   "src/modules/professionals/services/pages/CadastrarServicoPage.tsx",
   "src/modules/professionals/services/pages/CadastrarServicoChrome.tsx",
   "src/modules/professionals/services/pages/CadastrarServicoSteps.tsx",
   "src/modules/professionals/services/pages/CadastrarServicoReview.tsx",
+  "src/modules/professionals/services/pages/EditarServicoPage.tsx",
 ] as const;
 
 const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
-describe("Services creation visual SSOT", () => {
-  it("uses territorial tokens across the complete creation flow", () => {
-    const source = SERVICES_CREATION_SURFACES.map(read).join("\n");
+describe("Services visual SSOT", () => {
+  it("uses territorial tokens across creation and edit shells", () => {
+    const source = SERVICES_VISUAL_SURFACES.map(read).join("\n");
 
     for (const token of [
       "territory-canvas",
@@ -33,7 +34,7 @@ describe("Services creation visual SSOT", () => {
   });
 
   it("does not regress to generic theme tokens or hardcoded shadows", () => {
-    for (const relativePath of SERVICES_CREATION_SURFACES) {
+    for (const relativePath of SERVICES_VISUAL_SURFACES) {
       const source = read(relativePath);
 
       for (const legacyToken of [
@@ -56,7 +57,7 @@ describe("Services creation visual SSOT", () => {
   });
 
   it("keeps user-facing Portuguese copy accented", () => {
-    const source = SERVICES_CREATION_SURFACES.map(read).join("\n");
+    const source = SERVICES_VISUAL_SURFACES.map(read).join("\n");
 
     for (const copy of [
       "Cadastrar serviço",
