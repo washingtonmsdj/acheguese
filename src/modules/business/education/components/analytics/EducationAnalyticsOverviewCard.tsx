@@ -35,15 +35,19 @@ export function EducationAnalyticsOverviewCard({
 }: EducationAnalyticsOverviewCardProps) {
   if (isLoading) {
     return (
-      <Card>
+      <Card className="border-territory-border bg-territory-surface text-territory-ink">
         <CardHeader>
-          <CardTitle className="text-sm font-medium text-gray-500">
+          <CardTitle className="font-heading text-sm font-medium text-territory-muted">
             Visão Geral
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <CardContent className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-16 bg-gray-100 animate-pulse rounded-lg" />
+            <div
+              key={i}
+              className="h-16 animate-pulse rounded-lg bg-territory-raised"
+              aria-hidden="true"
+            />
           ))}
         </CardContent>
       </Card>
@@ -56,52 +60,57 @@ export function EducationAnalyticsOverviewCard({
       label: 'Total de Leads',
       value: leads.total,
       change: `+${leads.new} novos`,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      iconClassName: 'text-territory-info',
+      iconSurfaceClassName: 'bg-territory-info/10',
     },
     {
       icon: GraduationCap,
       label: 'Programas',
       value: programs.total,
       change: `${programs.active} ativos`,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
+      iconClassName: 'text-territory-success',
+      iconSurfaceClassName: 'bg-territory-success/10',
     },
     {
       icon: Calendar,
       label: 'Eventos',
       value: events.total,
       change: `${events.upcoming} próximos`,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
+      iconClassName: 'text-territory-warning',
+      iconSurfaceClassName: 'bg-territory-warning/10',
     },
     {
       icon: TrendingUp,
       label: 'Taxa de Conversão',
       value: `${leads.conversionRate}%`,
       change: `${leads.enrolled} matriculados`,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      iconClassName: 'text-territory-brand',
+      iconSurfaceClassName: 'bg-territory-brand/10',
     },
   ];
 
   return (
-    <Card>
+    <Card className="border-territory-border bg-territory-surface text-territory-ink">
       <CardHeader>
-        <CardTitle className="text-sm font-medium text-gray-500">
+        <CardTitle className="font-heading text-sm font-medium text-territory-muted">
           Visão Geral
         </CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <CardContent className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {metrics.map((metric) => (
           <div key={metric.label} className="space-y-2">
-            <div className={`w-10 h-10 rounded-lg ${metric.bgColor} flex items-center justify-center`}>
-              <metric.icon className={`w-5 h-5 ${metric.color}`} />
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-lg ${metric.iconSurfaceClassName}`}
+            >
+              <metric.icon
+                className={`h-5 w-5 ${metric.iconClassName}`}
+                aria-hidden="true"
+              />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
-              <p className="text-sm text-gray-500">{metric.label}</p>
-              <p className="text-xs text-gray-400">{metric.change}</p>
+              <p className="text-2xl font-bold text-territory-ink">{metric.value}</p>
+              <p className="text-sm text-territory-muted">{metric.label}</p>
+              <p className="text-xs text-territory-muted">{metric.change}</p>
             </div>
           </div>
         ))}

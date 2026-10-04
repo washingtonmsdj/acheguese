@@ -8,6 +8,8 @@ const ROOT = process.cwd();
 const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/pages/explorerNicheChip.tsx",
   "src/modules/business/education/pages/EducationDetailStateViews.tsx",
+  "src/modules/business/education/components/analytics/EducationAnalyticsOverviewCard.tsx",
+  "src/modules/business/education/components/analytics/EducationAnalyticsConversionCard.tsx",
 ] as const;
 
 const LEGACY_VISUAL_TOKENS = [
@@ -17,6 +19,21 @@ const LEGACY_VISUAL_TOKENS = [
   "text-muted-foreground",
   "text-primary",
   "bg-primary",
+  "text-gray-",
+  "bg-gray-",
+  "border-gray-",
+  "text-blue-",
+  "bg-blue-",
+  "text-green-",
+  "bg-green-",
+  "text-orange-",
+  "bg-orange-",
+  "text-purple-",
+  "bg-purple-",
+  "text-cyan-",
+  "bg-cyan-",
+  "text-red-",
+  "bg-red-",
 ] as const;
 
 describe("education visual SSOT", () => {
