@@ -11,12 +11,12 @@ import { getAllCategories } from "@/core/business/config/categoryFilters";
 import type { Category, QuickFilter } from "../sections/types";
 
 export const CATEGORIES: readonly Category[] = getAllCategories().map((category) => ({
-    icon: category.icon,
-    label: category.labelPlural,
-    iconColor: "text-territory-brand",
-    bg: "border-territory-border bg-territory-brand/10",
-    slug: category.slug,
-  }));
+  icon: category.icon,
+  label: category.labelPlural,
+  iconColor: "text-territory-brand",
+  bg: "border-territory-border bg-territory-brand/10",
+  slug: category.slug,
+}));
 
 export const QUICK_FILTERS: readonly QuickFilter[] = [
   { id: "open_now", label: "Aberto agora", icon: Clock3 },
@@ -28,13 +28,13 @@ export const QUICK_FILTERS: readonly QuickFilter[] = [
 
 export const HERO_TRUST_ITEMS = [
   "Empresas verificadas pela equipe Achegue-se.",
-  "Recomendacoes reais de moradores do bairro.",
-  "Avaliacoes publicas e transparentes.",
-  "Negocios que apoiam a comunidade.",
+  "Recomendações reais de moradores do bairro.",
+  "Avaliações públicas e transparentes.",
+  "Negócios que apoiam a comunidade.",
 ] as const;
 
 export const HERO_BADGES = [
-  { id: "territory", label: "Territorio ativo", icon: Grid2x2 },
-  { id: "public", label: "Leitura publica", icon: CheckCircle2 },
+  { id: "territory", label: "Território ativo", icon: Grid2x2 },
+  { id: "public", label: "Leitura pública", icon: CheckCircle2 },
   { id: "community", label: "Moradores recomendam", icon: Star },
 ] as const;
