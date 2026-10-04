@@ -56,12 +56,11 @@ describe("account settings concept contract", () => {
     expect(preferences).toContain("ACCOUNT_PATHS.addresses");
   });
 
-  it("keeps the canonical account information architecture in one shell", () => {
+  it("keeps the canonical active account information architecture in one shell", () => {
     for (const label of [
       "Visão geral",
       "Dados de acesso",
       "Segurança",
-      "Notificações",
       "Privacidade e dados",
       "Meus perfis",
       "Preferências",
@@ -70,6 +69,12 @@ describe("account settings concept contract", () => {
     ]) {
       expect(shell).toContain(label);
     }
+    expect(shell).not.toContain('label: "Notificações"');
+    expect(shell).not.toContain("ACCOUNT_PATHS.notifications");
+    expect(overview).not.toContain('title="Notificações"');
+    expect(overview).not.toContain("navigate(ACCOUNT_PATHS.notifications)");
+    expect(preferences).not.toContain('title: "Notificações"');
+    expect(preferences).not.toContain('hrefKey: "notifications"');
     expect(shell).toContain("achegue-se");
     expect(shell).toContain("showBack");
     expect(shell).toContain('search: "?section=profiles"');
@@ -95,7 +100,7 @@ describe("account settings concept contract", () => {
     expect(shell).toContain("to={ACCOUNT_PATHS.profiles}");
   });
 
-  it("keeps live overview aligned with the concept without dropping real features", () => {
+  it("keeps live overview aligned with the concept without dropping active features", () => {
     expect(overview).toContain('profilesView ? "Meus perfis" : "Minha conta"');
     expect(overview).toContain("Dados de acesso");
     expect(overview).toContain("Senha e segurança");
@@ -196,7 +201,7 @@ describe("account settings concept contract", () => {
     expect(addresses).not.toContain("ArrowLeft");
   });
 
-  it("preserves canonical notification and privacy service writes", () => {
+  it("preserves canonical notification owner writes while its UI remains paused", () => {
     expect(notifications).toContain("NotificationPreferencesService.get()");
     expect(notifications).toContain("NotificationPreferencesService.patchAll(prefs)");
     expect(privacy).toContain("PrivacySettingsService.recordConsent");
@@ -217,7 +222,7 @@ describe("account settings concept contract", () => {
     expect(legal).toContain('DATA_PROTECTION_CONTACT_PATH = "/dpo"');
   });
 
-  it("keeps the existing quiet-hours day scope editable instead of dropping it for concept fidelity", () => {
+  it("keeps the paused notification owner's quiet-hours capability covered", () => {
     expect(notifications).toContain("QUIET_DAY_OPTIONS");
     expect(notifications).toContain("quiet_hours_days");
     expect(notifications).toContain("toggleQuietDay");
@@ -257,7 +262,7 @@ describe("account settings concept contract", () => {
     expect(existsSync(resolve(root, "src/modules/profile/components/cards/SecurityActionCard.tsx"))).toBe(false);
   });
 
-  it("exposes concept export and device states without inventing data", () => {
+  it("exposes concept export and preserved notification device states without inventing data", () => {
     expect(privacy).toContain('location.hash === "#exportar"');
     expect(privacy).toContain('title="Uma cópia dos seus dados"');
     expect(privacy).toContain('idPrefix="summary"');
