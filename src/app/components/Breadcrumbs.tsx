@@ -1,7 +1,6 @@
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
 import { ChevronRight, Home } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
 import { USER_ROLE } from "@/shared/types/constants";
 
 const routeNames: Record<string, string> = {
@@ -100,10 +99,10 @@ export function Breadcrumbs() {
   if (pathnames.length === 0) return null;
 
   return (
-    <nav className="flex items-center gap-2 text-sm mb-4">
+    <nav className="mb-4 flex items-center gap-2 text-sm text-territory-muted" aria-label="Navegação estrutural">
       <Link
         to="/"
-        className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+        className="flex items-center gap-1 text-territory-muted transition-colors hover:text-territory-ink"
       >
         <Home className="h-4 w-4" />
         <span>Início</span>
@@ -117,13 +116,15 @@ export function Breadcrumbs() {
 
         return (
           <div key={routeTo} className="flex items-center gap-2">
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            <ChevronRight className="h-4 w-4 text-territory-muted" aria-hidden="true" />
             {isLast ? (
-              <span className="font-medium text-foreground">{displayName}</span>
+              <span className="font-medium text-territory-ink" aria-current="page">
+                {displayName}
+              </span>
             ) : (
               <Link
                 to={routeTo}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-territory-muted transition-colors hover:text-territory-ink"
               >
                 {displayName}
               </Link>
