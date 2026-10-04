@@ -18,7 +18,7 @@ describe("bootstrap error boundary", () => {
     );
   });
 
-  it("renders an assertive and readable recovery surface", () => {
+  it("renders an assertive and readable territorial recovery surface", () => {
     const boundary = read("src/app/components/BootstrapErrorBoundary.tsx");
 
     expect(boundary).toContain('role="alert"');
@@ -26,5 +26,13 @@ describe("bootstrap error boundary", () => {
     expect(boundary).toContain("Não foi possível iniciar o Achegue-se");
     expect(boundary).toContain("Recarregue a página para tentar novamente.");
     expect(boundary).toContain("window.location.reload()");
+    expect(boundary).toContain("bg-territory-canvas");
+    expect(boundary).toContain("bg-territory-surface");
+    expect(boundary).toContain("bg-territory-brand");
+    expect(boundary).toContain("text-territory-muted");
+    expect(boundary).not.toContain("bg-background");
+    expect(boundary).not.toContain("bg-card");
+    expect(boundary).not.toContain("bg-primary");
+    expect(boundary).not.toContain("text-muted-foreground");
   });
 });
