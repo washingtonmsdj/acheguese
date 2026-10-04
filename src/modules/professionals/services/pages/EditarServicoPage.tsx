@@ -364,7 +364,7 @@ export default function EditarServicoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-territory-canvas pb-28 text-territory-ink">
       <EditarServicoHeader hasChanges={hasChanges} onBack={() => navigate(-1)} />
       <EditarServicoTabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
