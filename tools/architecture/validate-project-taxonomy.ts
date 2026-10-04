@@ -25,6 +25,7 @@ const APP_LAYOUT_ROUTE_REGISTRY_PATH =
 const CANONICAL_MODULES = [
   "admin",
   "ai",
+  "billing",
   "business",
   "central",
   "classifieds",
@@ -35,6 +36,7 @@ const CANONICAL_MODULES = [
   "community-lost-found",
   "community-recommendations",
   "communication-territorial",
+  "gamification",
   "guide",
   "mobility",
   "messaging",
@@ -81,6 +83,7 @@ const LEGACY_FORBIDDEN_CORE_ROOTS = [
 
 const REQUIRED_NESTED_PATHS = [
   "src/modules/business/company",
+  "src/modules/business/education",
   "src/modules/business/gastronomy",
   "src/modules/business/promotions",
   "src/modules/community-events",
@@ -175,7 +178,6 @@ const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
   "src/modules/community-feed/hooks/composer/useCreatePostForm.ts",
   "src/modules/community-groups/index.ts",
   "src/modules/community-groups/pages/GruposPage.tsx",
-  "src/modules/community-groups/pages/GrupoDetailPage.tsx",
   "src/modules/community-recommendations/index.ts",
   "src/modules/community-recommendations/pages/RecomendacoesPage.tsx",
   "src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx",
