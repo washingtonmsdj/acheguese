@@ -49,16 +49,13 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-[100] border-t border-border/80 bg-card/95 font-sans shadow-[0_-12px_32px_-24px_rgba(15,23,42,0.65)] backdrop-blur-xl safe-area-bottom md:hidden"
-      aria-label="Navegacao principal mobile"
+      className="fixed inset-x-0 bottom-0 z-[100] border-t border-territory-border/80 bg-territory-surface/95 font-sans shadow-lg backdrop-blur-xl safe-area-bottom md:hidden"
+      aria-label="Navegação principal mobile"
     >
       <div className="mx-auto flex h-16 max-w-lg items-stretch px-1">
         {mainTabs.map((tab) => {
           const Icon = tab.icon;
-          const activeTab = isTerritoryNavigationModeActive(
-            pathname,
-            tab,
-          );
+          const activeTab = isTerritoryNavigationModeActive(pathname, tab);
           return (
             <Link
               key={`${tab.label}:${tab.href}`}
@@ -70,8 +67,8 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
               className={cn(
                 "relative mx-0.5 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-1.5 transition-colors",
                 activeTab
-                  ? "text-primary"
-                  : "text-muted-foreground active:bg-muted active:text-foreground",
+                  ? "text-territory-brand"
+                  : "text-territory-muted active:bg-territory-raised active:text-territory-ink",
               )}
               aria-label={tab.label}
               aria-current={activeTab ? "page" : undefined}
@@ -80,10 +77,12 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
               <span
                 className={cn(
                   "flex h-7 w-9 items-center justify-center rounded-full transition-colors",
-                  activeTab && "bg-primary/12",
+                  activeTab && "bg-territory-brand/12",
                 )}
               >
-                <Icon className={cn("h-5 w-5", activeTab && "stroke-[2.5]")} />
+                <Icon
+                  className={cn("h-5 w-5", activeTab && "stroke-[2.5]")}
+                />
               </span>
               <span
                 className={cn(
