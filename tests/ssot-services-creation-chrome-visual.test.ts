@@ -3,14 +3,17 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const CHROME_PATH =
-  "src/modules/professionals/services/pages/CadastrarServicoChrome.tsx";
+const SERVICES_CREATION_SURFACES = [
+  "src/modules/professionals/services/pages/CadastrarServicoChrome.tsx",
+  "src/modules/professionals/services/pages/CadastrarServicoReview.tsx",
+] as const;
 
-const read = () => fs.readFileSync(path.join(ROOT, CHROME_PATH), "utf8");
+const read = (relativePath: string) =>
+  fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
-describe("Services creation chrome visual SSOT", () => {
-  it("uses territorial tokens for header, steps and navigation", () => {
-    const source = read();
+describe("Services creation visual SSOT", () => {
+  it("uses territorial tokens for chrome, review and navigation", () => {
+    const source = SERVICES_CREATION_SURFACES.map(read).join("\n");
 
     for (const token of [
       "territory-brand",
@@ -26,30 +29,43 @@ describe("Services creation chrome visual SSOT", () => {
   });
 
   it("does not regress to generic theme tokens or hardcoded brand shadows", () => {
-    const source = read();
+    for (const relativePath of SERVICES_CREATION_SURFACES) {
+      const source = read(relativePath);
 
-    for (const legacyToken of [
-      "border-border",
-      "bg-background",
-      "bg-card",
-      "text-foreground",
-      "text-muted-foreground",
-      "border-primary",
-      "bg-primary",
-      "text-primary",
-      "bg-secondary",
-      "rgba(0,214,201",
-    ]) {
-      expect(source, legacyToken).not.toContain(legacyToken);
+      for (const legacyToken of [
+        "border-border",
+        "bg-background",
+        "bg-card",
+        "text-foreground",
+        "text-muted-foreground",
+        "border-primary",
+        "bg-primary",
+        "text-primary",
+        "bg-secondary",
+        "rgba(0,214,201",
+      ]) {
+        expect(source, `${relativePath}: ${legacyToken}`).not.toContain(legacyToken);
+      }
     }
   });
 
   it("keeps user-facing Portuguese copy accented", () => {
-    const source = read();
+    const source = SERVICES_CREATION_SURFACES.map(read).join("\n");
 
-    expect(source).toContain("Cadastrar serviço");
-    expect(source).toContain("cadastrando serviço como");
-    expect(source).toContain("Próximo");
-    expect(source).toContain("Publicar serviço");
+    for (const copy of [
+      "Cadastrar serviço",
+      "cadastrando serviço como",
+      "Próximo",
+      "Publicar serviço",
+      "Título do serviço",
+      "Descrição",
+      "Experiência",
+      "Preço",
+      "Horário",
+      "Formação",
+      "ficará disponível",
+    ]) {
+      expect(source, `missing accented copy: ${copy}`).toContain(copy);
+    }
   });
 });
