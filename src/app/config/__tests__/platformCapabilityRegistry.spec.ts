@@ -10,7 +10,7 @@ import {
 } from "../lifecycleRegistry";
 
 describe("platformCapabilityRegistry", () => {
-  it("keeps the MVP horizontal platform capabilities active", () => {
+  it("keeps only certified MVP horizontal platform capabilities active", () => {
     expect(getActivePlatformCapabilities().sort()).toEqual(
       [
         "auth",
@@ -18,24 +18,20 @@ describe("platformCapabilityRegistry", () => {
         "profiles",
         "territory",
         "location",
-        "notifications",
         "central",
         "map",
         "nearby",
         "search",
-        "messaging",
       ].sort(),
     );
-
-    expect(isPlatformCapabilityEnabled("messaging")).toBe(true);
   });
 
-  it("keeps horizontal Notifications active independently of paused vertical modules", () => {
+  it("keeps post-MVP Notifications versioned but paused", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.notifications).toEqual({
-      status: "active",
+      status: "paused",
       dependsOnCapabilities: ["auth"],
     });
-    expect(isPlatformCapabilityEnabled("notifications")).toBe(true);
+    expect(isPlatformCapabilityEnabled("notifications")).toBe(false);
   });
 
   it("keeps Nearby horizontal while product providers are lifecycle-scoped separately", () => {
@@ -46,12 +42,12 @@ describe("platformCapabilityRegistry", () => {
     expect(isPlatformCapabilityEnabled("nearby")).toBe(true);
   });
 
-  it("keeps Messaging horizontal while vertical providers are lifecycle-scoped separately", () => {
+  it("keeps post-MVP Messaging versioned but paused", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.messaging).toEqual({
-      status: "active",
+      status: "paused",
       dependsOnCapabilities: ["auth", "profiles"],
     });
-    expect(isPlatformCapabilityEnabled("messaging")).toBe(true);
+    expect(isPlatformCapabilityEnabled("messaging")).toBe(false);
   });
 
   it("references only declared capability dependencies and contains no capability cycle", () => {
