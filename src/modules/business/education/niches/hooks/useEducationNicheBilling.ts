@@ -1,25 +1,21 @@
 /**
  * useEducationNicheBilling Hook
- * 
+ *
  * Hook para acesso integrado a nicho + billing.
  * Combina useEducationNiche + useEducationSubscription.
- * 
- * Regra: capability final = nicho permite AND plano permite
+ *
+ * Regra: capability final = nicho permite AND plano permite.
+ * O tier usado para autorização vem diretamente do Billing canônico.
  */
 
 import { useMemo } from 'react';
 import { useEducationSubscription } from '../../hooks/useEducationSubscription';
 import { useEducationNiche } from './useEducationNiche';
 import { EducationNicheBillingIntegration } from '../services/EducationNicheBillingIntegration';
-import type { 
+import type {
   EducationNicheCapability,
-  EducationNicheValidationResult 
+  EducationNicheValidationResult
 } from '../types';
-import { PlanTier } from '@/core/billing/types';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TIPOS
-// ═══════════════════════════════════════════════════════════════════════════
 
 export interface UseEducationNicheBillingOptions {
   nicheKey: string | null | undefined;
@@ -54,35 +50,25 @@ export interface OperationalLimitsCheck {
   };
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HOOK
-// ═══════════════════════════════════════════════════════════════════════════
-
 export function useEducationNicheBilling(options: UseEducationNicheBillingOptions) {
   const { nicheKey, businessId, enabled = true } = options;
-  
-  // Hooks base
+
   const nicheData = useEducationNiche(nicheKey);
-  const subscriptionData = useEducationSubscription({ 
-    businessId, 
-    enabled: enabled && Boolean(businessId) 
+  const subscriptionData = useEducationSubscription({
+    businessId,
+    enabled: enabled && Boolean(businessId)
   });
-  
-  // Contexto combinado
+
   const context = useMemo(() => {
-    if (!nicheKey || !subscriptionData.planType) return null;
-    
-    // Mapeia planType string para PlanTier enum
-    const planTier = mapPlanTypeToTier(subscriptionData.planType);
-    
+    if (!nicheKey || !subscriptionData.status) return null;
+
     return {
       nicheKey,
-      planTier,
+      planTier: subscriptionData.status.planTier,
       businessId,
     };
-  }, [nicheKey, subscriptionData.planType, businessId]);
-  
-  // Helpers de capability
+  }, [nicheKey, subscriptionData.status, businessId]);
+
   const can = useMemo(() => {
     return (capability: EducationNicheCapability): CapabilityCheck => {
       if (!context) {
@@ -92,12 +78,12 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
           upgradeMessage: 'Nicho ou plano não configurado.',
         };
       }
-      
+
       const result = EducationNicheBillingIntegration.resolveEffectiveCapability(
         context,
         capability
       );
-      
+
       return {
         allowed: result.allowed,
         reason: result.reason,
@@ -108,30 +94,28 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
       };
     };
   }, [context]);
-  
-  // Verificações específicas
+
   const checkCanCreateProgram = useMemo(() => {
     return (currentCount: number): { allowed: boolean; reason?: string } => {
       if (!context) return { allowed: false, reason: 'Nicho ou plano não configurado' };
       return EducationNicheBillingIntegration.canCreateProgram(context, currentCount);
     };
   }, [context]);
-  
+
   const checkCanCreateEvent = useMemo(() => {
     return (currentCount: number): { allowed: boolean; reason?: string } => {
       if (!context) return { allowed: false, reason: 'Nicho ou plano não configurado' };
       return EducationNicheBillingIntegration.canCreateEvent(context, currentCount);
     };
   }, [context]);
-  
+
   const checkCanReceiveLead = useMemo(() => {
     return (currentCount: number): { allowed: boolean; reason?: string } => {
       if (!context) return { allowed: false, reason: 'Nicho ou plano não configurado' };
       return EducationNicheBillingIntegration.canReceiveLead(context, currentCount);
     };
   }, [context]);
-  
-  // Validação de ações
+
   const validateAction = useMemo(() => {
     return (
       action: 'create_program' | 'create_event' | 'receive_lead' | 'view_analytics' | 'export_data',
@@ -143,8 +127,7 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
       return EducationNicheBillingIntegration.validateAction(context, action, payload);
     };
   }, [context]);
-  
-  // Calcula limites com uso atual
+
   const calculateLimits = useMemo(() => {
     return (usage: {
       programCount: number;
@@ -152,9 +135,9 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
       leadsThisMonth: number;
     }): OperationalLimitsCheck | null => {
       if (!context) return null;
-      
+
       const opLimits = EducationNicheBillingIntegration.getOperationalLimits(context, usage);
-      
+
       return {
         programs: {
           ...opLimits.programs,
@@ -171,55 +154,23 @@ export function useEducationNicheBilling(options: UseEducationNicheBillingOption
       };
     };
   }, [context]);
-  
-  // Estado combinado
+
   const isReady = Boolean(nicheData.config && subscriptionData.status);
   const hasErrors = nicheData.config === null || subscriptionData.isError;
-  
+
   return {
-    // Dados base
     niche: nicheData,
     subscription: subscriptionData,
-    
-    // Estado
     isReady,
     isLoading: nicheData.config === undefined || subscriptionData.isLoading,
     hasErrors,
-    
-    // Helpers de capability
     can,
-    
-    // Verificações operacionais
     checkCanCreateProgram,
     checkCanCreateEvent,
     checkCanReceiveLead,
     calculateLimits,
-    
-    // Validação
     validateAction,
   };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════════════════
-
-function mapPlanTypeToTier(planType: string): PlanTier {
-  switch (planType.toLowerCase()) {
-    case 'free':
-      return PlanTier.FREE;
-    case 'basic':
-      return PlanTier.PRO;
-    case 'pro':
-    case 'premium':
-      return PlanTier.PRO;
-    case 'delivery':
-      return PlanTier.DELIVERY;
-    case 'enterprise':
-      return PlanTier.PRO;
-    default:
-      return PlanTier.FREE;
-  }
 }
 
 export default useEducationNicheBilling;
