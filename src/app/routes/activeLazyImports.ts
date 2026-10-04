@@ -1,9 +1,9 @@
 /**
  * Lazy imports reachable from the active AppLayout runtime only.
  *
- * Post-MVP modules deliberately do not belong here. Their code remains in the
- * repository for future certification, but paused owners must not enter the
- * active route module graph.
+ * Post-MVP modules and paused platform capabilities deliberately do not belong
+ * here. Their code remains in the repository for future certification, but
+ * inactive owners must not enter the active route module graph.
  */
 import { lazy } from "react";
 
@@ -49,13 +49,6 @@ export const ContaEnderecosPage = lazy(
   () => import("@/modules/profile/pages/ContaEnderecosPage"),
 );
 
-export const NotificationsPage = lazy(
-  () => import("@/app/pages/NotificationsPage"),
-);
-export const NotificationPreferencesPage = lazy(
-  () => import("@/app/pages/NotificationPreferencesPage"),
-);
-export const EmailLogsPage = lazy(() => import("@/app/pages/EmailLogsPage"));
 export const ProfileSettingsPage = lazy(
   () => import("@/app/pages/ProfileSettingsPage"),
 );
@@ -73,9 +66,6 @@ export const BusinessRouteResolver = lazy(
   () => import("@/core/routing/components/BusinessRouteResolver"),
 );
 
-export const MensagensPage = lazy(
-  () => import("@/app/pages/MessagingInboxPage"),
-);
 export const MapaPage = lazy(() => import("@/app/pages/MapaPage"));
 
 export const TerritorialCategoryBusinessPage = lazy(() =>
