@@ -57,10 +57,5 @@ export * from "./tooltip";
 export * from "./visually-hidden";
 
 // Custom UI components
-export {
-  BusinessHeaderSkeleton,
-  BusinessSectionSkeleton,
-  BusinessGallerySkeleton,
-} from "./BusinessSkeleton";
 export { OptimizedImage } from "./optimized-image";
 export { InfiniteScrollTrigger } from "./InfiniteScrollTrigger";
