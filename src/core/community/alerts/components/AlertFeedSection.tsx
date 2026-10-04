@@ -1,8 +1,8 @@
 /**
- * AlertFeedSection — Seção de alertas no feed da comunidade
+ * AlertFeedSection — Seção de alertas no feed da comunidade.
  *
- * Exibida separadamente dos posts comuns.
- * Controlada por feature flag COMMUNITY_ALERTS_ENABLED.
+ * Exibida separadamente dos posts comuns e mantida fora do runtime enquanto o
+ * produto Community Alerts estiver pausado.
  */
 
 import { useState } from "react";
@@ -46,47 +46,45 @@ export function AlertFeedSection({
     setModalOpen(true);
   };
 
-  // Feature flag — seção inteira oculta se desativada
   if (!COMMUNITY_ALERTS_ENABLED) return null;
 
   return (
     <section aria-label="Alertas da comunidade" className="space-y-3">
-      {/* Header da seção */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <button
-          className="flex items-center gap-2 text-sm font-semibold text-red-600 dark:text-red-400"
-          onClick={() => setCollapsed((c) => !c)}
+          type="button"
+          className="flex min-w-0 items-center gap-2 text-sm font-semibold text-territory-error transition-colors hover:text-territory-error/80"
+          onClick={() => setCollapsed((current) => !current)}
           aria-expanded={!collapsed}
         >
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-          Alertas da comunidade
-          {alerts.length > 0 && (
-            <span className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-bold px-1.5 py-0.5 rounded-full">
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="truncate">Alertas da comunidade</span>
+          {alerts.length > 0 ? (
+            <span className="rounded-full bg-territory-error/12 px-1.5 py-0.5 text-xs font-bold text-territory-error">
               {alerts.length}
             </span>
-          )}
+          ) : null}
           {collapsed ? (
-            <ChevronDown className="h-3 w-3" aria-hidden />
+            <ChevronDown className="h-3 w-3 shrink-0" aria-hidden="true" />
           ) : (
-            <ChevronUp className="h-3 w-3" aria-hidden />
+            <ChevronUp className="h-3 w-3 shrink-0" aria-hidden="true" />
           )}
         </button>
 
         <Button
           size="sm"
           variant="outline"
-          className="text-xs gap-1 border-red-300 text-red-600 hover:bg-red-50 dark:border-red-700 dark:text-red-400"
+          className="shrink-0 gap-1 border-territory-error/30 bg-territory-surface text-xs text-territory-error hover:bg-territory-error/10 hover:text-territory-error"
           onClick={handleOpenCreateAlert}
           disabled={!locationId}
           aria-label="Criar novo alerta"
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3 w-3" aria-hidden="true" />
           Novo alerta
         </Button>
       </div>
 
-      {/* Lista de alertas */}
-      {!collapsed && (
+      {!collapsed ? (
         <div className="space-y-3">
           {isLoading ? (
             <>
@@ -94,16 +92,14 @@ export function AlertFeedSection({
               <AlertCardSkeleton />
             </>
           ) : alerts.length === 0 ? (
-            <p className="text-xs text-muted-foreground py-2">
+            <p className="py-2 text-xs text-territory-muted">
               Nenhum alerta ativo nesta região.
             </p>
           ) : (
-            alerts.map((alert) => (
-              <AlertCard key={alert.id} alert={alert} />
-            ))
+            alerts.map((alert) => <AlertCard key={alert.id} alert={alert} />)
           )}
         </div>
-      )}
+      ) : null}
 
       <CreateAlertModal
         open={modalOpen}
