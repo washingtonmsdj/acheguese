@@ -1,4 +1,10 @@
 import React from "react";
+import { SafeLink } from "@/shared/components/security/SafeLink";
+import {
+  buildMailtoUrl,
+  buildTelUrl,
+  buildWebsiteUrl,
+} from "@/shared/utils/contactLinks";
 
 interface ContactLinkProps {
   type: "phone" | "website" | "email";
@@ -11,37 +17,36 @@ export const ContactLink: React.FC<ContactLinkProps> = ({
   value,
   className,
 }) => {
-  const getHref = () => {
+  const href = (() => {
     switch (type) {
       case "phone":
-        return `tel:${value}`;
+        return buildTelUrl(value);
       case "email":
-        return `mailto:${value}`;
+        return buildMailtoUrl(value);
       case "website":
-        return value.startsWith("http") ? value : `https://${value}`;
+        return buildWebsiteUrl(value);
       default:
-        return value;
+        return null;
     }
-  };
+  })();
 
-  const getDisplayValue = () => {
-    switch (type) {
-      case "website":
-        return value.replace(/^https?:\/\//, "").replace(/\/$/, "");
-      default:
-        return value;
-    }
-  };
+  const displayValue =
+    type === "website"
+      ? value.replace(/^https?:\/\//, "").replace(/\/$/, "")
+      : value;
+
+  if (!href) {
+    return <span className={className}>{displayValue}</span>;
+  }
 
   return (
-    <a
-      href={getHref()}
+    <SafeLink
+      href={href}
       target={type === "website" ? "_blank" : undefined}
-      rel={type === "website" ? "noopener noreferrer" : undefined}
       className={className}
     >
-      {getDisplayValue()}
-    </a>
+      {displayValue}
+    </SafeLink>
   );
 };
 
