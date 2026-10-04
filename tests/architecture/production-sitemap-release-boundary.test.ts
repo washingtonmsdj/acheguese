@@ -40,6 +40,9 @@ describe("production sitemap release boundary", () => {
   it("publishes an uncached Git-backed runtime identity and waits for deployment convergence", () => {
     const releaseIdentity = read("tools/release/release-identity.mjs");
     const generator = read("tools/release/generate-release-identity.mjs");
+    const deploymentStatusCheck = read(
+      "tools/release/check-production-deployment-status.mjs",
+    );
     const waiter = read("tools/release/wait-for-production-release.mjs");
     const workflow = read(".github/workflows/ssot-tests.yml");
     const securityConfig = read("src/shared/config/security.config.ts");
@@ -50,9 +53,27 @@ describe("production sitemap release boundary", () => {
     expect(releaseIdentity).toContain('deployFingerprint');
     expect(releaseIdentity).toContain('"exact" : "equivalent"');
     expect(generator).toContain('"dist", "release.json"');
+    expect(deploymentStatusCheck).toContain("RELEASE_DEPLOYMENT_STATUS_CONTEXT");
+    expect(deploymentStatusCheck).toContain('statusContext =');
+    expect(deploymentStatusCheck).toContain('state === "failure" || state === "error"');
+    expect(deploymentStatusCheck).toContain('/commits/" + sha + "/status');
     expect(waiter).toContain("classifyReleaseIdentityMatch");
     expect(waiter).toContain('cache: "no-store"');
+    expect(workflow).toContain("Check production deployment status");
+    expect(workflow).toContain(
+      "node tools/release/check-production-deployment-status.mjs",
+    );
+    expect(workflow).toContain("GITHUB_TOKEN: ${{ github.token }}");
+    expect(workflow).toContain("RELEASE_DEPLOYMENT_STATUS_CONTEXT: Vercel");
     expect(workflow).toContain("Wait for deployed runtime identity");
+    const deploymentStatusStep = workflow.indexOf(
+      "Check production deployment status",
+    );
+    const releaseIdentityStep = workflow.indexOf(
+      "Wait for deployed runtime identity",
+    );
+    expect(deploymentStatusStep).toBeGreaterThanOrEqual(0);
+    expect(releaseIdentityStep).toBeGreaterThan(deploymentStatusStep);
     const normalizedWorkflow = workflow.replace(/\r\n/g, "\n");
     const pushBlock =
       normalizedWorkflow.match(/\n  push:\n[\s\S]*?(?=\n  pull_request:)/)?.[0] ?? "";

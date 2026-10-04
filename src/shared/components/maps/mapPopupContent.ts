@@ -8,10 +8,10 @@ interface CreateMapPopupContentOptions {
 }
 
 const TITLE_TONE_CLASSES: Record<MapPopupTone, string> = {
-  default: 'text-foreground',
-  success: 'text-emerald-600',
-  danger: 'text-destructive',
-  muted: 'text-muted-foreground',
+  default: 'text-territory-ink',
+  success: 'text-territory-success',
+  danger: 'text-territory-error',
+  muted: 'text-territory-muted',
 };
 
 function getTitleToneClass(tone: MapPopupTone): string {
@@ -52,7 +52,7 @@ export function createMapPopupContent({
 
   if (description) {
     const descriptionElement = document.createElement('p');
-    descriptionElement.className = 'm-0 mt-1 text-xs leading-snug text-muted-foreground';
+    descriptionElement.className = 'm-0 mt-1 text-xs leading-snug text-territory-muted';
     descriptionElement.textContent = description;
     root.appendChild(descriptionElement);
   }

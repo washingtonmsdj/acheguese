@@ -176,6 +176,12 @@ jobs:
           node-version: "24"
           cache: npm
 
+      - name: Check production deployment status
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_DEPLOYMENT_STATUS_CONTEXT: Vercel
+        run: node tools/release/check-production-deployment-status.mjs
+
       - name: Wait for deployed runtime identity
         id: release_identity
         env:
