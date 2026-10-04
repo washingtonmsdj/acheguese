@@ -18,17 +18,18 @@ export default function NotificationsPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="mx-auto w-full max-w-4xl px-4 py-8 text-territory-ink sm:px-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-start justify-between gap-4 rounded-3xl border border-territory-border bg-territory-surface p-5 shadow-sm sm:p-6">
         <div>
-          <h1 className="text-3xl font-bold">Notificações</h1>
-          <p className="text-muted-foreground mt-1">
-            Acompanhe suas atualizacoes e avisos
+          <h1 className="text-3xl font-bold tracking-tight text-territory-ink">Notificações</h1>
+          <p className="mt-1 text-sm text-territory-muted">
+            Acompanhe suas atualizações e avisos
           </p>
         </div>
         <Button
           variant="outline"
+          className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
           onClick={() => navigate(ACCOUNT_PATHS.notifications)}
         >
           <Settings className="h-4 w-4 mr-2" />

@@ -47,13 +47,13 @@ export function NotificationItem({
   const getIcon = () => {
     switch (notification.type) {
       case "success":
-        return <CheckCircle className="h-5 w-5 text-green-600" />;
+        return <CheckCircle className="h-5 w-5 text-territory-success" />;
       case "warning":
-        return <AlertTriangle className="h-5 w-5 text-yellow-600" />;
+        return <AlertTriangle className="h-5 w-5 text-territory-warning" />;
       case "error":
-        return <XCircle className="h-5 w-5 text-red-600" />;
+        return <XCircle className="h-5 w-5 text-territory-error" />;
       default:
-        return <Info className="h-5 w-5 text-blue-600" />;
+        return <Info className="h-5 w-5 text-territory-info" />;
     }
   };
 
@@ -62,20 +62,20 @@ export function NotificationItem({
 
     switch (notification.type) {
       case "success":
-        return "bg-green-50 border-green-200";
+        return "bg-territory-success/10 border-territory-success/25";
       case "warning":
-        return "bg-yellow-50 border-yellow-200";
+        return "bg-territory-warning/10 border-territory-warning/25";
       case "error":
-        return "bg-red-50 border-red-200";
+        return "bg-territory-error/10 border-territory-error/25";
       default:
-        return "bg-blue-50 border-blue-200";
+        return "bg-territory-info/10 border-territory-info/25";
     }
   };
 
   return (
     <Card
       className={cn(
-        "transition-colors",
+        "border-territory-border bg-territory-surface text-territory-ink transition-colors",
         !notification.read && getBackgroundColor(),
       )}
     >
@@ -94,10 +94,10 @@ export function NotificationItem({
                 >
                   {notification.title}
                 </h4>
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-sm text-territory-muted">
                   {notification.message}
                 </p>
-                <p className="mt-2 text-xs text-muted-foreground">
+                <p className="mt-2 text-xs text-territory-muted">
                   {formatDistanceToNow(new Date(notification.created_at), {
                     addSuffix: true,
                     locale: ptBR,
@@ -110,10 +110,10 @@ export function NotificationItem({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="h-8 w-8 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                     onClick={handleMarkAsRead}
                     disabled={isPending}
-                    aria-label="Marcar notificacao como lida"
+                    aria-label="Marcar notificação como lida"
                     title="Marcar como lida"
                   >
                     <Check className="h-4 w-4" />
@@ -122,11 +122,11 @@ export function NotificationItem({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-8 w-8 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                   onClick={handleDelete}
                   disabled={isPending}
-                  aria-label="Remover notificacao"
-                  title="Remover notificacao"
+                  aria-label="Remover notificação"
+                  title="Remover notificação"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -134,7 +134,7 @@ export function NotificationItem({
             </div>
 
             {actionTarget && (
-              <Button variant="outline" size="sm" className="mt-3" asChild>
+              <Button variant="outline" size="sm" className="mt-3 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised" asChild>
                 <SafeLink
                   href={actionTarget.href}
                   allowInternal

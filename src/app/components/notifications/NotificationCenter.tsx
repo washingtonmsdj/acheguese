@@ -65,9 +65,9 @@ export function NotificationCenter() {
 
   if (loading) {
     return (
-      <Card>
+      <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-sm">
         <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Loader2 className="h-8 w-8 animate-spin text-territory-muted" />
         </CardContent>
       </Card>
     );
@@ -76,25 +76,26 @@ export function NotificationCenter() {
   const hasUnread = (unreadCount || 0) > 0;
 
   return (
-    <Card>
+    <Card className="border-territory-border bg-territory-surface text-territory-ink shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
+              <Bell className="h-5 w-5 text-territory-brand" />
               Notificações
               {hasUnread && (
-                <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                <span className="ml-2 rounded-full bg-territory-sun px-2 py-0.5 text-xs text-territory-ink">
                   {unreadCount}
                 </span>
               )}
             </CardTitle>
-            <CardDescription>Suas notificações e atualizações</CardDescription>
+            <CardDescription className="text-territory-muted">Suas notificações e atualizações</CardDescription>
           </div>
           {hasUnread && (
             <Button
               variant="outline"
               size="sm"
+              className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
               onClick={handleMarkAllAsRead}
               disabled={isMarkingAll}
             >
@@ -112,9 +113,9 @@ export function NotificationCenter() {
       </CardHeader>
       <CardContent>
         <Tabs value={filter} onValueChange={(v) => setFilter(v as "all" | "unread")}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="all">Todas</TabsTrigger>
-            <TabsTrigger value="unread">
+          <TabsList className="grid w-full grid-cols-2 bg-territory-raised text-territory-muted">
+            <TabsTrigger value="all" className="data-[state=active]:bg-territory-surface data-[state=active]:text-territory-ink">Todas</TabsTrigger>
+            <TabsTrigger value="unread" className="data-[state=active]:bg-territory-surface data-[state=active]:text-territory-ink">
               Não lidas {hasUnread && `(${unreadCount})`}
             </TabsTrigger>
           </TabsList>
@@ -122,8 +123,8 @@ export function NotificationCenter() {
           <TabsContent value={filter} className="mt-4">
             {!notifications || notifications.length === 0 ? (
               <div className="py-12 text-center">
-                <Bell className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="text-muted-foreground">
+                <Bell className="mx-auto mb-4 h-12 w-12 text-territory-muted" />
+                <p className="text-territory-muted">
                   {filter === "unread"
                     ? "Nenhuma notificação não lida"
                     : "Nenhuma notificação"}

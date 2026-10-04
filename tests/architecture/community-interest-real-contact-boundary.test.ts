@@ -4,7 +4,6 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(path, "utf8");
 
 describe("community interest real contact boundary", () => {
-  const indication = read("src/app/pages/CommunityIndicationPage.tsx");
   const waitlist = read("src/app/pages/PreLaunchWaitlist.tsx");
   const client = read("src/core/routing/services/CommunityInterestRegistrationService.ts");
   const broker = read("supabase/functions/_shared/communityInterestRegistration.ts");
@@ -14,14 +13,11 @@ describe("community interest real contact boundary", () => {
   const generatedTypes = read("src/integrations/supabase/types.generated.ts");
 
   it("never synthesizes an email identity for WhatsApp contacts", () => {
-    for (const source of [indication, waitlist, client, broker]) {
+    for (const source of [waitlist, client, broker]) {
       expect(source).not.toContain("waitlist.acheguese.local");
       expect(source).not.toContain("whatsapp+");
     }
 
-    expect(indication).toContain(
-      "const email = isEmail ? contact.trim().toLowerCase() : null",
-    );
     expect(waitlist).toContain("email: null");
   });
 

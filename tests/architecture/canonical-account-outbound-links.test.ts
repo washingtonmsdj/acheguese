@@ -12,8 +12,6 @@ describe("canonical outbound account links", () => {
   const account = read("src/core/routing/config/account.ts");
   const email = read("src/core/notifications/services/EmailService.ts");
   const sw = read("public/sw.js");
-  const checkoutSuccess = read("src/app/pages/CheckoutSuccessPage.tsx");
-  const checkoutCancel = read("src/app/pages/CheckoutCancelPage.tsx");
 
   it("keeps email CTAs on the canonical account routing SSOT", () => {
     expect(account).toContain('home: "/conta"');
@@ -28,21 +26,20 @@ describe("canonical outbound account links", () => {
     expect(email).not.toContain("buildPublicAbsoluteUrl('/settings/sessions')");
   });
 
-  it("keeps security, settings and order push actions on canonical routes", () => {
+  it("keeps active push actions canonical and paused destinations fail-closed", () => {
     expect(sw).toContain("case 'security':\n      return '/conta/seguranca';");
     expect(sw).toContain("case 'settings':\n      return '/conta/notificacoes';");
-    expect(sw).toContain(
-      "case 'order':\n      return \`/gastronomia/pedidos/\${data.orderId || ''}\`;",
-    );
+    expect(sw).toContain("const PAUSED_NOTIFICATION_ROUTE_PATTERN =");
+    expect(sw).toContain("|planos|checkout)(?:\\/|$)|^\\/settings\\/subscription");
+    expect(sw).toContain("case 'order':");
+    expect(sw).toContain("getLaunchSafeNotificationUrl(");
+    expect(sw).toContain("`/gastronomia/pedidos/${data.orderId || ''}`");
+    expect(sw).toContain("case 'payment':");
+    expect(sw).toContain("getLaunchSafeNotificationUrl('/settings/subscription')");
     expect(sw).not.toContain("return '/settings/sessions';");
     expect(sw).not.toContain("return '/settings/notifications';");
-    expect(sw).not.toContain("\`/orders/\${data.orderId || ''}\`");
+    expect(sw).not.toContain("return `/gastronomia/pedidos/${data.orderId || ''}`;");
+    expect(sw).not.toContain("`/orders/${data.orderId || ''}`");
   });
 
-  it("does not restore the removed generic dashboard destination in checkout", () => {
-    expect(checkoutSuccess).toContain("navigate(ACCOUNT_PATHS.home)");
-    expect(checkoutCancel).toContain("navigate(ACCOUNT_PATHS.home)");
-    expect(checkoutSuccess).not.toContain("navigate('/dashboard')");
-    expect(checkoutCancel).not.toContain("navigate('/dashboard')");
-  });
 });

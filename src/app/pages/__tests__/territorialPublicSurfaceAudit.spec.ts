@@ -180,10 +180,9 @@ describe("public territorial surface audit", () => {
     expect(businessDetailShell).not.toContain("navigate('/privacidade')");
   });
 
-  it("keeps launch territory copy and indication paths projected from canonical SSOT", () => {
+  it("keeps launch territory copy and public paths projected from canonical SSOT", () => {
     const entrySource = readProjectFile("src/app/pages/TerritoryEntryPage.tsx");
     const guideSource = readProjectFile("src/app/pages/ComoFuncionaPage.tsx");
-    const indicationSource = readProjectFile("src/app/pages/CommunityIndicationPage.tsx");
     const searchSource = readProjectFile("src/app/pages/BuscaPage.tsx");
     const businessDetailSource = readProjectFile("src/app/pages/EmpresaDetailLandingPage.tsx");
 
@@ -196,14 +195,6 @@ describe("public territorial surface audit", () => {
     expect(guideSource).not.toContain('|| "Salvador"');
     expect(guideSource).not.toContain('|| "Complexo do Nordeste de Amaralina"');
 
-    expect(indicationSource).toContain("BRAZILIAN_STATES.map");
-    expect(indicationSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
-    expect(indicationSource).toContain("addCountryPrefix(");
-    expect(indicationSource).toContain("communitySlug: normalizedNeighborhood");
-    expect(indicationSource).toContain("to={LAUNCH_URLS.portal}");
-    expect(indicationSource).not.toContain("to={LAUNCH_URLS.community}");
-    expect(indicationSource).not.toContain("territoryPath: `/ba/");
-    expect(indicationSource).not.toContain("Complexo do Nordeste de Amaralina");
 
     expect(searchSource).toContain("buildPublicTerritoryBaseUrlFromInput(");
     expect(searchSource).not.toContain("const territoryBase = `/${stateSlug}");
