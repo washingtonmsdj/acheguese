@@ -5,10 +5,8 @@ import {
   Check,
   ChevronRight,
   GraduationCap,
-  Heart,
   MapPin,
   MessageCircle,
-  ScanSearch,
 } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -28,8 +26,6 @@ function buildWhatsAppHref(phone?: string | null): string | null {
 interface EditorialCardProps {
   profile: EducationPublicProfile;
   index: number;
-  onCompareToggle: (id: string) => void;
-  comparing: boolean;
   view: ViewMode;
   nicheIcons: Record<string, React.ElementType>;
   nicheAccent: Record<string, string>;
@@ -47,8 +43,6 @@ const outlineActionClassName =
 export function EditorialCard({
   profile,
   index,
-  onCompareToggle,
-  comparing,
   view,
   nicheIcons,
   nicheAccent,
@@ -133,20 +127,7 @@ export function EditorialCard({
             )}
           </div>
         </div>
-        <div className="flex flex-col justify-between gap-2 border-l border-territory-border/60 p-5">
-          <button
-            type="button"
-            onClick={() => onCompareToggle(profile.id)}
-            className={cn(
-              'inline-flex items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
-              comparing
-                ? 'border-territory-brand bg-territory-brand/10 text-territory-brand'
-                : 'border-territory-border text-territory-muted hover:border-territory-brand/40 hover:text-territory-ink',
-            )}
-          >
-            <ScanSearch className="h-3.5 w-3.5" aria-hidden="true" />
-            {comparing ? 'Adicionado' : 'Comparar'}
-          </button>
+        <div className="flex flex-col justify-end gap-2 border-l border-territory-border/60 p-5">
           {detailHref ? (
             <Button
               size="sm"
@@ -195,44 +176,23 @@ export function EditorialCard({
     >
       <div className={cn('h-1 bg-gradient-to-r', gradient)} />
       <div className="flex flex-1 flex-col p-3">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-2">
-            <div
-              className="flex h-12 w-12 items-center justify-center rounded-lg border border-territory-border bg-territory-raised text-territory-brand shadow-sm"
-              aria-label="Espaço para logo da escola"
-            >
-              <Icon className="h-5 w-5" aria-hidden="true" />
-            </div>
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              <Badge
-                variant="secondary"
-                className={`${secondaryBadgeClassName} px-2 py-0 text-[10px]`}
-              >
-                {profile.school_network
-                  ? schoolNetworkLabels[profile.school_network] ?? 'Escola'
-                  : nicheConfig?.displayName ?? profile.niche_key}
-              </Badge>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => onCompareToggle(profile.id)}
-            className={cn(
-              'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition',
-              comparing
-                ? 'border-territory-brand bg-territory-brand text-territory-on-image'
-                : 'border-territory-border text-territory-muted hover:border-territory-brand/40 hover:bg-territory-raised hover:text-territory-brand',
-            )}
-            aria-label={
-              comparing ? 'Remover do comparador' : 'Adicionar ao comparador'
-            }
+        <div className="min-w-0 space-y-2">
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-lg border border-territory-border bg-territory-raised text-territory-brand shadow-sm"
+            aria-label="Espaço para logo da escola"
           >
-            {comparing ? (
-              <Check className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Heart className="h-4 w-4" aria-hidden="true" />
-            )}
-          </button>
+            <Icon className="h-5 w-5" aria-hidden="true" />
+          </div>
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <Badge
+              variant="secondary"
+              className={`${secondaryBadgeClassName} px-2 py-0 text-[10px]`}
+            >
+              {profile.school_network
+                ? schoolNetworkLabels[profile.school_network] ?? 'Escola'
+                : nicheConfig?.displayName ?? profile.niche_key}
+            </Badge>
+          </div>
         </div>
 
         {detailHref ? (
