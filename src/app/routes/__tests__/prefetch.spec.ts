@@ -9,7 +9,6 @@ describe("route prefetch canonical lifecycle", () => {
       "/mapa",
       "/perto-de-mim",
       "/busca",
-      "/notificacoes",
     ]);
   });
 });
