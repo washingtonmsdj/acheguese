@@ -8,6 +8,7 @@ const ROOT = process.cwd();
 const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/pages/explorerNicheChip.tsx",
   "src/modules/business/education/pages/explorerPresentation.constants.ts",
+  "src/modules/business/education/pages/explorerCards.tsx",
   "src/modules/business/education/pages/EducationExplorerPage.tsx",
   "src/modules/business/education/pages/EducationDetailStateViews.tsx",
   "src/modules/business/education/pages/EducationDetailPresentation.tsx",
