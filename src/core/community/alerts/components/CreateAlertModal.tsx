@@ -1,5 +1,7 @@
 /**
- * CreateAlertModal - Modal multi-etapas para criacao de alerta comunitario
+ * CreateAlertModal - Modal multi-etapas para criação de alerta comunitário.
+ * A projeção visual usa exclusivamente tokens territoriais sem alterar as
+ * regras de validação, confirmação ou persistência do domínio.
  */
 
 import { useEffect, useState } from "react";
@@ -70,7 +72,7 @@ export function CreateAlertModal({
   locationId,
   onAlertCreated,
   canCreate = true,
-  blockedMessage = "Verifique sua residencia para criar alertas nesta comunidade.",
+  blockedMessage = "Verifique sua residência para criar alertas nesta comunidade.",
 }: CreateAlertModalProps) {
   const [step, setStep] = useState(1);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export function CreateAlertModal({
     }
 
     const valid = await trigger(getFieldsForStep(step));
-    if (valid) setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+    if (valid) setStep((current) => Math.min(current + 1, TOTAL_STEPS));
   }
 
   async function onSubmit(data: CreateAlertFormData) {
@@ -166,19 +168,23 @@ export function CreateAlertModal({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-lg">
+    <Dialog open={open} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
+      <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
         <DialogHeader>
-          <DialogTitle>Alerta da Comunidade</DialogTitle>
-          {!success && <p className="text-xs text-muted-foreground">Etapa {step} de {TOTAL_STEPS}</p>}
+          <DialogTitle className="text-territory-ink">Alerta da Comunidade</DialogTitle>
+          {!success ? (
+            <p className="text-xs text-territory-muted">
+              Etapa {step} de {TOTAL_STEPS}
+            </p>
+          ) : null}
         </DialogHeader>
 
         {success ? (
           <SuccessState onClose={handleClose} />
         ) : (
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {step === 1 && <StepCategory control={control} errors={errors} />}
-            {step === 2 && (
+            {step === 1 ? <StepCategory control={control} errors={errors} /> : null}
+            {step === 2 ? (
               <StepLocation
                 control={control}
                 errors={errors}
@@ -186,36 +192,75 @@ export function CreateAlertModal({
                 neighborhood={neighborhood}
                 locationId={locationId}
               />
-            )}
-            {step === 3 && <StepObjective control={control} errors={errors} watch={watch} setValue={setValue} />}
-            {step === 4 && <StepDescription control={control} errors={errors} charCount={description.length} />}
-            {step === 5 && <StepConfirmation control={control} errors={errors} serverError={serverError} />}
+            ) : null}
+            {step === 3 ? (
+              <StepObjective
+                control={control}
+                errors={errors}
+                watch={watch}
+                setValue={setValue}
+              />
+            ) : null}
+            {step === 4 ? (
+              <StepDescription
+                control={control}
+                errors={errors}
+                charCount={description.length}
+              />
+            ) : null}
+            {step === 5 ? (
+              <StepConfirmation
+                control={control}
+                errors={errors}
+                serverError={serverError}
+              />
+            ) : null}
 
-            {!canSubmit && (
-              <p className="text-xs text-amber-600">
+            {!canSubmit ? (
+              <p className="text-xs font-medium text-territory-warning">
                 {canCreate
-                  ? "Selecione um bairro valido para publicar alertas."
+                  ? "Selecione um bairro válido para publicar alertas."
                   : blockedMessage}
               </p>
-            )}
+            ) : null}
 
-            <div className="flex justify-between pt-2">
+            <div className="flex justify-between gap-3 pt-2">
               {step > 1 ? (
-                <Button type="button" variant="ghost" onClick={() => setStep((s) => s - 1)} disabled={isPending}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-territory-ink hover:bg-territory-raised"
+                  onClick={() => setStep((current) => current - 1)}
+                  disabled={isPending}
+                >
                   Voltar
                 </Button>
               ) : (
-                <Button type="button" variant="ghost" onClick={handleClose}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-territory-ink hover:bg-territory-raised"
+                  onClick={handleClose}
+                >
                   Cancelar
                 </Button>
               )}
 
               {step < TOTAL_STEPS ? (
-                <Button type="button" onClick={goNext} disabled={!canSubmit}>
+                <Button
+                  type="button"
+                  className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+                  onClick={goNext}
+                  disabled={!canSubmit}
+                >
                   Continuar
                 </Button>
               ) : (
-                <Button type="submit" disabled={isPending || !canSubmit} className="bg-red-600 hover:bg-red-700">
+                <Button
+                  type="submit"
+                  disabled={isPending || !canSubmit}
+                  className="bg-territory-error text-territory-on-image hover:bg-territory-error/90"
+                >
                   {isPending ? "Publicando..." : "Publicar alerta"}
                 </Button>
               )}
@@ -256,18 +301,24 @@ function StepCategory({ control, errors }: StepProps) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">Qual e o tipo de alerta?</p>
+      <p className="text-sm font-medium text-territory-ink">Qual é o tipo de alerta?</p>
       <Controller
         name="category"
         control={control}
         render={({ field }) => (
-          <RadioGroup value={field.value} onValueChange={field.onChange} className="grid grid-cols-1 gap-2">
+          <RadioGroup
+            value={field.value}
+            onValueChange={field.onChange}
+            className="grid grid-cols-1 gap-2"
+          >
             {categories.map(([value, label]) => (
               <label
                 key={value}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg border p-3 cursor-pointer text-sm transition-colors",
-                  field.value === value ? "border-red-500 bg-red-50 dark:bg-red-950/20" : "border-border hover:bg-muted"
+                  "flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm text-territory-ink transition-colors",
+                  field.value === value
+                    ? "border-territory-error/50 bg-territory-error/10"
+                    : "border-territory-border bg-territory-surface hover:bg-territory-raised",
                 )}
               >
                 <RadioGroupItem value={value} />
@@ -277,7 +328,9 @@ function StepCategory({ control, errors }: StepProps) {
           </RadioGroup>
         )}
       />
-      {errors.category && <p className="text-xs text-destructive">{errors.category.message}</p>}
+      {errors.category ? (
+        <p className="text-xs text-territory-error">{errors.category.message}</p>
+      ) : null}
     </div>
   );
 }
@@ -286,10 +339,15 @@ function StepLocation({ control, errors, city, neighborhood, locationId }: StepL
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-medium">Confirme a regiao aproximada do alerta</p>
-        <p className="mt-3 text-sm text-muted-foreground rounded-lg bg-muted/50 px-3 py-2.5 border border-border">
+        <p className="text-sm font-medium text-territory-ink">
+          Confirme a região aproximada do alerta
+        </p>
+        <p className="mt-3 rounded-xl border border-territory-border bg-territory-raised/70 px-3 py-2.5 text-sm text-territory-muted">
           Este alerta será publicado para moradores de{" "}
-          <span className="font-semibold text-foreground">{neighborhood ? `${neighborhood}, ${city}` : city}</span>.
+          <span className="font-semibold text-territory-ink">
+            {neighborhood ? `${neighborhood}, ${city}` : city}
+          </span>
+          .
         </p>
       </div>
 
@@ -298,11 +356,14 @@ function StepLocation({ control, errors, city, neighborhood, locationId }: StepL
         control={control}
         render={({ field }) => <input {...field} value={locationId ?? ""} type="hidden" />}
       />
-      {errors.location_id && <p className="text-xs text-destructive">{errors.location_id.message}</p>}
+      {errors.location_id ? (
+        <p className="text-xs text-territory-error">{errors.location_id.message}</p>
+      ) : null}
 
       <div className="space-y-1.5">
-        <Label htmlFor="location_reference">
-          Referencia aproximada <span className="text-muted-foreground font-normal">(opcional)</span>
+        <Label htmlFor="location_reference" className="text-territory-ink">
+          Referência aproximada{" "}
+          <span className="font-normal text-territory-muted">(opcional)</span>
         </Label>
         <Controller
           name="location_reference"
@@ -311,13 +372,17 @@ function StepLocation({ control, errors, city, neighborhood, locationId }: StepL
             <input
               {...field}
               id="location_reference"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              placeholder="Ex.: proximo ao parque, na praca central, perto do mercado"
+              className="w-full rounded-xl border border-territory-border bg-territory-surface px-3 py-2 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/15"
+              placeholder="Ex.: próximo ao parque, na praça central, perto do mercado"
               maxLength={120}
             />
           )}
         />
-        {errors.location_reference && <p className="text-xs text-destructive">{errors.location_reference.message}</p>}
+        {errors.location_reference ? (
+          <p className="text-xs text-territory-error">
+            {errors.location_reference.message}
+          </p>
+        ) : null}
       </div>
     </div>
   );
@@ -326,41 +391,55 @@ function StepLocation({ control, errors, city, neighborhood, locationId }: StepL
 function StepObjective({ control, errors, watch, setValue }: StepObjectiveProps) {
   const isHappeningNow = watch("is_happening_now");
 
-  function handleIsHappeningNowChange(checked: boolean, onChange: (v: boolean) => void) {
+  function handleIsHappeningNowChange(
+    checked: boolean,
+    onChange: (value: boolean) => void,
+  ) {
     onChange(checked);
     if (checked) setValue("still_risky", true, { shouldValidate: true });
   }
 
   return (
-    <div className="space-y-5">
-      <p className="text-sm font-medium">Algumas perguntas rapidas.</p>
+    <div className="space-y-5 text-territory-ink">
+      <p className="text-sm font-medium">Algumas perguntas rápidas.</p>
 
       <div className="space-y-2">
-        <Label>Quando comecou?</Label>
+        <Label>Quando começou?</Label>
         <Controller
           name="started_at_approx"
           control={control}
           render={({ field }) => (
             <RadioGroup value={field.value} onValueChange={field.onChange} className="space-y-1">
-              {(Object.entries(ALERT_STARTED_APPROX_LABELS) as [AlertStartedApprox, string][]).map(([value, label]) => (
-                <label key={value} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <RadioGroupItem value={value} />
-                  {label}
-                </label>
-              ))}
+              {(Object.entries(ALERT_STARTED_APPROX_LABELS) as [AlertStartedApprox, string][]).map(
+                ([value, label]) => (
+                  <label key={value} className="flex cursor-pointer items-center gap-2 text-sm">
+                    <RadioGroupItem value={value} />
+                    {label}
+                  </label>
+                ),
+              )}
             </RadioGroup>
           )}
         />
-        {errors.started_at_approx && <p className="text-xs text-destructive">{errors.started_at_approx.message}</p>}
+        {errors.started_at_approx ? (
+          <p className="text-xs text-territory-error">
+            {errors.started_at_approx.message}
+          </p>
+        ) : null}
       </div>
 
       <Controller
         name="is_happening_now"
         control={control}
         render={({ field }) => (
-          <label className="flex items-center gap-3 text-sm cursor-pointer">
-            <Checkbox checked={field.value} onCheckedChange={(checked) => handleIsHappeningNowChange(checked as boolean, field.onChange)} />
-            Esta acontecendo agora
+          <label className="flex cursor-pointer items-center gap-3 text-sm">
+            <Checkbox
+              checked={field.value}
+              onCheckedChange={(checked) =>
+                handleIsHappeningNowChange(checked as boolean, field.onChange)
+              }
+            />
+            Está acontecendo agora
           </label>
         )}
       />
@@ -369,19 +448,25 @@ function StepObjective({ control, errors, watch, setValue }: StepObjectiveProps)
         name="still_risky"
         control={control}
         render={({ field }) => (
-          <label className="flex items-center gap-3 text-sm cursor-pointer">
-            <Checkbox checked={field.value} onCheckedChange={field.onChange} disabled={isHappeningNow} />
+          <label className="flex cursor-pointer items-center gap-3 text-sm">
+            <Checkbox
+              checked={field.value}
+              onCheckedChange={field.onChange}
+              disabled={isHappeningNow}
+            />
             Ainda representa risco
           </label>
         )}
       />
-      {errors.still_risky && <p className="text-xs text-destructive">{errors.still_risky.message}</p>}
+      {errors.still_risky ? (
+        <p className="text-xs text-territory-error">{errors.still_risky.message}</p>
+      ) : null}
 
       <Controller
         name="seen_personally"
         control={control}
         render={({ field }) => (
-          <label className="flex items-center gap-3 text-sm cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-3 text-sm">
             <Checkbox checked={field.value} onCheckedChange={field.onChange} />
             Presenciei pessoalmente
           </label>
@@ -396,8 +481,12 @@ function StepDescription({ control, errors, charCount }: StepDescriptionProps) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium">Descreva o alerta de forma objetiva.</p>
-      <p className="text-xs text-muted-foreground">Apenas fatos observáveis. Sem nomes, placas ou endereços exatos.</p>
+      <p className="text-sm font-medium text-territory-ink">
+        Descreva o alerta de forma objetiva.
+      </p>
+      <p className="text-xs text-territory-muted">
+        Apenas fatos observáveis. Sem nomes, placas ou endereços exatos.
+      </p>
 
       <Controller
         name="description"
@@ -407,25 +496,29 @@ function StepDescription({ control, errors, charCount }: StepDescriptionProps) {
             {...field}
             rows={4}
             placeholder="Ex: tiroteio na altura da praça, próximo ao mercado. Evitem a área."
-            className="resize-none"
+            className="resize-none border-territory-border bg-territory-surface text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-brand/20"
             maxLength={DESCRIPTION_MAX_LENGTH}
           />
         )}
       />
 
-      <div className="flex justify-between text-xs text-muted-foreground">
+      <div className="flex justify-between text-xs text-territory-muted">
         <span>Mínimo: {DESCRIPTION_MIN_LENGTH} caracteres</span>
         <span
           className={cn(
-            charCount > DESCRIPTION_MAX_LENGTH && "text-destructive",
-            charCount >= DESCRIPTION_MIN_LENGTH && charCount <= DESCRIPTION_MAX_LENGTH && "text-green-600"
+            charCount > DESCRIPTION_MAX_LENGTH && "text-territory-error",
+            charCount >= DESCRIPTION_MIN_LENGTH &&
+              charCount <= DESCRIPTION_MAX_LENGTH &&
+              "text-territory-success",
           )}
         >
           {charCount}/{DESCRIPTION_MAX_LENGTH}
         </span>
       </div>
 
-      {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+      {errors.description ? (
+        <p className="text-xs text-territory-error">{errors.description.message}</p>
+      ) : null}
     </div>
   );
 }
@@ -433,19 +526,25 @@ function StepDescription({ control, errors, charCount }: StepDescriptionProps) {
 function StepConfirmation({ control, errors, serverError }: StepConfirmationProps) {
   return (
     <div className="space-y-4">
-      <div className="rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
-        <p className="text-xs text-amber-800 dark:text-amber-200 whitespace-pre-line leading-relaxed">{ALERT_MODAL_DISCLAIMER}</p>
+      <div className="rounded-xl border border-territory-warning/30 bg-territory-warning/10 p-3">
+        <p className="whitespace-pre-line text-xs leading-relaxed text-territory-warning">
+          {ALERT_MODAL_DISCLAIMER}
+        </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 text-territory-ink">
         {ALERT_CONFIRMATION_CHECKBOXES.map((item) => (
           <Controller
             key={item.id}
             name={item.id as keyof CreateAlertFormData}
             control={control}
             render={({ field }) => (
-              <label className="flex items-start gap-3 text-sm cursor-pointer">
-                <Checkbox checked={!!field.value} onCheckedChange={field.onChange} className="mt-0.5" />
+              <label className="flex cursor-pointer items-start gap-3 text-sm">
+                <Checkbox
+                  checked={!!field.value}
+                  onCheckedChange={field.onChange}
+                  className="mt-0.5"
+                />
                 <span>{item.label}</span>
               </label>
             )}
@@ -453,24 +552,33 @@ function StepConfirmation({ control, errors, serverError }: StepConfirmationProp
         ))}
       </div>
 
-      {(errors.confirm_real || errors.confirm_no_ops || errors.confirm_consequences) && (
-        <p className="text-xs text-destructive">Todas as confirmações são obrigatórias.</p>
-      )}
+      {errors.confirm_real || errors.confirm_no_ops || errors.confirm_consequences ? (
+        <p className="text-xs text-territory-error">
+          Todas as confirmações são obrigatórias.
+        </p>
+      ) : null}
 
-      {serverError && <p className="text-sm text-destructive font-medium">{serverError}</p>}
+      {serverError ? (
+        <p className="text-sm font-medium text-territory-error">{serverError}</p>
+      ) : null}
     </div>
   );
 }
 
 function SuccessState({ onClose }: { onClose: () => void }) {
   return (
-    <div className="flex flex-col items-center gap-4 py-6 text-center">
-      <div className="rounded-full bg-destructive/10 p-4">
-        <Siren className="h-8 w-8 text-destructive" aria-hidden="true" />
+    <div className="flex flex-col items-center gap-4 py-6 text-center text-territory-ink">
+      <div className="rounded-full bg-territory-error/10 p-4">
+        <Siren className="h-8 w-8 text-territory-error" aria-hidden="true" />
       </div>
       <p className="font-semibold">Alerta publicado</p>
-      <p className="text-sm text-muted-foreground">Sua comunidade foi notificada. O alerta expira automaticamente.</p>
-      <Button onClick={onClose} className="w-full">
+      <p className="text-sm text-territory-muted">
+        Sua comunidade foi notificada. O alerta expira automaticamente.
+      </p>
+      <Button
+        onClick={onClose}
+        className="w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+      >
         Fechar
       </Button>
     </div>
