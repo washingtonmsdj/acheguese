@@ -38,9 +38,9 @@ const protectedElement = (element: ReactNode) => (
 /**
  * Active MVP route tree.
  *
- * Paused product modules are intentionally absent from this graph. Their code
- * stays versioned in its bounded context for post-MVP work, while unmatched
- * public URLs fall through to the canonical NotFound route.
+ * Paused product modules and platform capabilities are intentionally absent
+ * from the rendered graph. Their code stays versioned in its bounded context
+ * for post-MVP work, while unmatched public URLs fall through to NotFound.
  */
 export function AppLayoutRoutes() {
   const businessEnabled = isProductModuleEnabled("business");
@@ -83,10 +83,12 @@ export function AppLayoutRoutes() {
               path="/conta/preferencias"
               element={protectedElement(<P.ContaPreferenciasPage />)}
             />
-            <Route
-              path="/conta/notificacoes"
-              element={protectedElement(<P.NotificationPreferencesPage />)}
-            />
+            {notificationsEnabled ? (
+              <Route
+                path="/conta/notificacoes"
+                element={protectedElement(<P.NotificationPreferencesPage />)}
+              />
+            ) : null}
             <Route
               path="/conta/privacidade"
               element={protectedElement(<P.PrivacySettingsPage />)}
