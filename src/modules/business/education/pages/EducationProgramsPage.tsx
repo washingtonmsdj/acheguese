@@ -1,7 +1,7 @@
 /**
  * EducationProgramsPage
  *
- * Pagina de gestao de programas/turmas da instituicao.
+ * Página de gestão de programas/turmas da instituição.
  * Rota: /central/empresas/:businessId/educacao/programas
  */
 
@@ -29,7 +29,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/shared/components/ui/dialog';
 import {
   DropdownMenu,
@@ -71,6 +70,9 @@ const MODALITIES = [
   { value: 'hybrid', label: 'Híbrido' },
 ];
 
+const selectClassName =
+  'h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none transition-colors focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20';
+
 function parseCurriculumTopics(value: string): string[] {
   return Array.from(
     new Set(
@@ -103,28 +105,20 @@ export function EducationProgramsPage() {
     create,
     update,
     remove,
-  } = useEducationPrograms(
-    profile?.id,
-    { includeInactive: true },
-  );
-  const dashboardUrl = businessId ? EducationUrlService.buildAdminDashboardUrl(businessId) : null;
+  } = useEducationPrograms(profile?.id, { includeInactive: true });
+  const dashboardUrl = businessId
+    ? EducationUrlService.buildAdminDashboardUrl(businessId)
+    : null;
 
-  // Integração nicho + billing
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
   });
 
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
-
-  // Verifica capability do nicho + plano
   const programsCapability = nicheBilling.can('basic_programs_catalog');
   const canCreateProgram = nicheBilling.checkCanCreateProgram(programs?.length || 0);
-  const limitReached = !canCreateProgram.allowed && programs && nicheInfo && programs.length >= nicheInfo.entitlements.maxPrograms;
-
-  // Bloqueio por capability (nicho ou plano negou)
   const isProgramsBlocked = !programsCapability.allowed;
-  // Bloqueio apenas por limite
   const isLimitBlocked = programsCapability.allowed && !canCreateProgram.allowed;
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -158,35 +152,50 @@ export function EducationProgramsPage() {
 
     if (formData.gradeOption === SCHOOL_STAGE_OTHER_VALUE) {
       const custom = formData.customGrade.trim();
-      return { name: custom, grade: custom, educationLevel: undefined as EducationLevel | undefined };
+      return {
+        name: custom,
+        grade: custom,
+        educationLevel: undefined as EducationLevel | undefined,
+      };
     }
 
-    const selected = schoolStageOptions.find((opt) => opt.value === formData.gradeOption);
+    const selected = schoolStageOptions.find(
+      (option) => option.value === formData.gradeOption,
+    );
     if (!selected) {
-      return { name: '', grade: '', educationLevel: undefined as EducationLevel | undefined };
+      return {
+        name: '',
+        grade: '',
+        educationLevel: undefined as EducationLevel | undefined,
+      };
     }
-    return { name: selected.label, grade: selected.label, educationLevel: selected.educationLevel };
+
+    return {
+      name: selected.label,
+      grade: selected.label,
+      educationLevel: selected.educationLevel,
+    };
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
 
-    // Validação de capability final = nicho permite AND plano permite
     if (isProgramsBlocked) {
       toast({
         title: 'Recurso bloqueado',
         description: programsCapability.upgradeMessage,
-        variant: 'destructive'
+        variant: 'destructive',
       });
       return;
     }
 
-    // Validação de limite operacional
     if (isLimitBlocked) {
       toast({
         title: 'Limite atingido',
-        description: canCreateProgram.reason || 'Limite de programas atingido para este nicho.',
-        variant: 'destructive'
+        description:
+          canCreateProgram.reason ||
+          'Limite de programas atingido para este nicho.',
+        variant: 'destructive',
       });
       return;
     }
@@ -201,6 +210,7 @@ export function EducationProgramsPage() {
         });
         return;
       }
+
       await create({
         name: stage.name,
         description: formData.description,
@@ -213,17 +223,25 @@ export function EducationProgramsPage() {
         educationLevel: stage.educationLevel,
         curriculumTopics: parseCurriculumTopics(formData.curriculumTopics),
       });
-      toast({ title: 'Programa criado', description: 'O programa foi criado com sucesso.' });
+      toast({
+        title: 'Programa criado',
+        description: 'O programa foi criado com sucesso.',
+      });
       setIsDialogOpen(false);
       resetForm();
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível criar o programa.', variant: 'destructive' });
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível criar o programa.',
+        variant: 'destructive',
+      });
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!editingProgram) return;
+
     try {
       const stage = resolveStagePayload();
       if (!stage.name) {
@@ -234,6 +252,7 @@ export function EducationProgramsPage() {
         });
         return;
       }
+
       await update({
         programId: editingProgram.id,
         payload: {
@@ -250,34 +269,50 @@ export function EducationProgramsPage() {
           is_active: formData.isActive,
         } as Partial<EducationProgram>,
       });
-      toast({ title: 'Programa atualizado', description: 'As alterações foram salvas.' });
+      toast({
+        title: 'Programa atualizado',
+        description: 'As alterações foram salvas.',
+      });
       setIsDialogOpen(false);
       setEditingProgram(null);
       resetForm();
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível atualizar o programa.', variant: 'destructive' });
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível atualizar o programa.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleDelete = async (programId: string) => {
     const confirmed = await confirm({
       title: 'Excluir programa',
-      description: 'Este programa sera removido da instituicao e deixara de aparecer no catalogo.',
+      description:
+        'Este programa será removido da instituição e deixará de aparecer no catálogo.',
       confirmLabel: 'Excluir',
       variant: 'destructive',
     });
     if (!confirmed) return;
+
     try {
       await remove(programId);
-      toast({ title: 'Programa excluído', description: 'O programa foi removido com sucesso.' });
-    } catch (error) {
-      toast({ title: 'Erro', description: 'Não foi possível excluir o programa.', variant: 'destructive' });
+      toast({
+        title: 'Programa excluído',
+        description: 'O programa foi removido com sucesso.',
+      });
+    } catch {
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível excluir o programa.',
+        variant: 'destructive',
+      });
     }
   };
 
   const openEditDialog = (program: EducationProgram) => {
     setEditingProgram(program);
-      setFormData({
+    setFormData({
       name: program.name,
       description: program.description || '',
       ageGroup: program.age_group || '',
@@ -294,14 +329,17 @@ export function EducationProgramsPage() {
     if (isSchoolNiche(profile?.niche_key)) {
       const stageOptions = getSchoolStageOptions(profile?.niche_key);
       const match = stageOptions.find(
-        (opt) => opt.label.toLowerCase() === (program.grade || program.name || '').toLowerCase()
+        (option) =>
+          option.label.toLowerCase() ===
+          (program.grade || program.name || '').toLowerCase(),
       );
-      setFormData((prev) => ({
-        ...prev,
+      setFormData((previous) => ({
+        ...previous,
         gradeOption: match ? match.value : SCHOOL_STAGE_OTHER_VALUE,
-        customGrade: match ? '' : (program.grade || program.name || ''),
+        customGrade: match ? '' : program.grade || program.name || '',
       }));
     }
+
     setIsDialogOpen(true);
   };
 
@@ -329,11 +367,11 @@ export function EducationProgramsPage() {
 
   if (isProfileLoading || isLoading) {
     return (
-      <div className="container mx-auto p-6">
-        <Skeleton className="h-8 w-1/3 mb-6" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
+      <div className="container mx-auto max-w-6xl p-6">
+        <Skeleton className="mb-6 h-8 w-1/3" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {[1, 2, 3, 4].map((item) => (
+            <Skeleton key={item} className="h-48 rounded-xl" />
           ))}
         </div>
       </div>
@@ -343,7 +381,7 @@ export function EducationProgramsPage() {
   if (isProfileError || isProgramsError) {
     return (
       <EducationAdminReadError
-        title="Nao foi possivel carregar os programas"
+        title="Não foi possível carregar os programas"
         error={profileError ?? programsError}
         onRetry={async () => {
           await Promise.all([refetchProfile(), refetchPrograms()]);
@@ -353,34 +391,37 @@ export function EducationProgramsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
+    <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
+            aria-label="Voltar para a gestão de Educação"
+            className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
             onClick={() => (dashboardUrl ? navigate(dashboardUrl) : navigate(-1))}
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand shadow-sm">
+            <BookOpen className="h-5 w-5 text-territory-on-image" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Programas e Turmas</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="text-2xl font-bold text-territory-ink">
+              Programas e turmas
+            </h1>
+            <p className="text-sm text-territory-muted">
               Gerencie os programas oferecidos pela sua instituição
             </p>
           </div>
         </div>
         <Button
           onClick={openNewDialog}
-          className="gap-2"
+          className="gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
           disabled={isProgramsBlocked || isLimitBlocked}
           title={
             isProgramsBlocked
@@ -390,25 +431,27 @@ export function EducationProgramsPage() {
                 : ''
           }
         >
-          <Plus className="w-4 h-4" />
-          Novo Programa
+          <Plus className="h-4 w-4" />
+          Novo programa
         </Button>
       </motion.div>
 
-      {/* Banner de bloqueio por capability (nicho ou plano) */}
       {isProgramsBlocked && (
         <div className="mb-6">
           <EducationUpgradeBanner
             nicheKey={profile?.niche_key}
             businessId={businessId || ''}
-            reason={programsCapability.reason === 'niche_denied' ? 'niche_denied' : 'plan_denied'}
+            reason={
+              programsCapability.reason === 'niche_denied'
+                ? 'niche_denied'
+                : 'plan_denied'
+            }
             feature="basic_programs_catalog"
             variant="banner"
           />
         </div>
       )}
 
-      {/* Upgrade Banner se limite atingido */}
       {isLimitBlocked && nicheInfo && (
         <div className="mb-6">
           <EducationUpgradeBanner
@@ -423,28 +466,28 @@ export function EducationProgramsPage() {
         </div>
       )}
 
-      {/* Programs Grid */}
       {programs.length === 0 ? (
-        <Card className="text-center py-12">
+        <Card className="border-territory-border bg-territory-surface py-12 text-center text-territory-ink shadow-sm">
           <CardContent>
-            <BookOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <BookOpen className="mx-auto mb-4 h-12 w-12 text-territory-muted/55" />
+            <h3 className="mb-2 text-lg font-medium text-territory-ink">
               Nenhum programa cadastrado
             </h3>
-            <p className="text-gray-500 mb-4">
+            <p className="mb-4 text-territory-muted">
               Cadastre os programas e turmas que sua instituição oferece.
             </p>
             <Button
               onClick={openNewDialog}
               disabled={isProgramsBlocked || isLimitBlocked}
+              className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Programa
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar programa
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {programs.map((program, index) => (
             <motion.div
               key={program.id}
@@ -452,13 +495,24 @@ export function EducationProgramsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
             >
-              <Card className={program.is_active ? '' : 'opacity-60'}>
+              <Card
+                className={`border-territory-border bg-territory-surface text-territory-ink shadow-sm ${
+                  program.is_active ? '' : 'opacity-60'
+                }`}
+              >
                 <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <CardTitle className="text-lg">{program.name}</CardTitle>
+                      <CardTitle className="text-lg text-territory-ink">
+                        {program.name}
+                      </CardTitle>
                       {!program.is_active && (
-                        <Badge variant="secondary" className="mt-1">Inativo</Badge>
+                        <Badge
+                          variant="secondary"
+                          className="mt-1 border-territory-border bg-territory-raised text-territory-muted"
+                        >
+                          Inativo
+                        </Badge>
                       )}
                     </div>
                     <DropdownMenu>
@@ -467,20 +521,21 @@ export function EducationProgramsPage() {
                           variant="ghost"
                           size="sm"
                           aria-label={`Ações do programa ${program.name}`}
+                          className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                         >
-                          <MoreVertical className="w-4 h-4" />
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => openEditDialog(program)}>
-                          <Edit2 className="w-4 h-4 mr-2" />
+                          <Edit2 className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => handleDelete(program.id)}
-                          className="text-red-600"
+                          className="text-territory-error focus:text-territory-error"
                         >
-                          <Trash2 className="w-4 h-4 mr-2" />
+                          <Trash2 className="mr-2 h-4 w-4" />
                           Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -488,25 +543,35 @@ export function EducationProgramsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                  <p className="mb-4 line-clamp-2 text-sm text-territory-muted">
                     {program.description || 'Sem descrição'}
                   </p>
-                  <div className="flex flex-wrap gap-2 text-sm text-gray-500">
+                  <div className="flex flex-wrap gap-2 text-sm text-territory-muted">
                     {program.age_group && (
-                      <Badge variant="outline" className="gap-1">
-                        <Users className="w-3 h-3" />
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-territory-border text-territory-muted"
+                      >
+                        <Users className="h-3 w-3" />
                         {program.age_group}
                       </Badge>
                     )}
                     {program.shift && (
-                      <Badge variant="outline" className="gap-1">
-                        <Clock className="w-3 h-3" />
-                        {SHIFTS.find(s => s.value === program.shift)?.label || program.shift}
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-territory-border text-territory-muted"
+                      >
+                        <Clock className="h-3 w-3" />
+                        {SHIFTS.find((shift) => shift.value === program.shift)?.label ||
+                          program.shift}
                       </Badge>
                     )}
                     {!isPublicSchool && program.price_from && (
-                      <Badge variant="outline" className="gap-1">
-                        <DollarSign className="w-3 h-3" />
+                      <Badge
+                        variant="outline"
+                        className="gap-1 border-territory-border text-territory-muted"
+                      >
+                        <DollarSign className="h-3 w-3" />
                         A partir de {formatBrl(program.price_from)}
                       </Badge>
                     )}
@@ -514,19 +579,26 @@ export function EducationProgramsPage() {
                   {program.curriculum_topics && program.curriculum_topics.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {program.curriculum_topics.slice(0, 6).map((topic) => (
-                        <Badge key={topic} variant="secondary" className="text-xs">
+                        <Badge
+                          key={topic}
+                          variant="secondary"
+                          className="border-territory-border bg-territory-raised text-xs text-territory-ink"
+                        >
                           {topic}
                         </Badge>
                       ))}
                       {program.curriculum_topics.length > 6 && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge
+                          variant="outline"
+                          className="border-territory-border text-xs text-territory-muted"
+                        >
                           +{program.curriculum_topics.length - 6}
                         </Badge>
                       )}
                     </div>
                   )}
                   {program.available_slots !== null && (
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="mt-2 text-sm text-territory-muted">
                       {program.available_slots} vagas disponíveis
                     </p>
                   )}
@@ -537,12 +609,11 @@ export function EducationProgramsPage() {
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
-              {editingProgram ? 'Editar Programa' : 'Novo Programa'}
+              {editingProgram ? 'Editar programa' : 'Novo programa'}
             </DialogTitle>
           </DialogHeader>
           <form
@@ -556,17 +627,21 @@ export function EducationProgramsPage() {
                   <select
                     id="gradeOption"
                     value={formData.gradeOption}
-                    onChange={(e) => setFormData({ ...formData, gradeOption: e.target.value })}
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                    onChange={(event) =>
+                      setFormData({ ...formData, gradeOption: event.target.value })
+                    }
+                    className={selectClassName}
                     required
                   >
                     <option value="">Selecione...</option>
-                    {schoolStageOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
+                    {schoolStageOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
                       </option>
                     ))}
-                    <option value={SCHOOL_STAGE_OTHER_VALUE}>Outros (informar manualmente)</option>
+                    <option value={SCHOOL_STAGE_OTHER_VALUE}>
+                      Outros (informar manualmente)
+                    </option>
                   </select>
                 </div>
 
@@ -576,13 +651,21 @@ export function EducationProgramsPage() {
                     <Input
                       id="customGrade"
                       value={formData.customGrade}
-                      onChange={(e) => setFormData({ ...formData, customGrade: e.target.value })}
+                      onChange={(event) =>
+                        setFormData({ ...formData, customGrade: event.target.value })
+                      }
                       placeholder="Ex: Classe hospitalar, multisseriada..."
                       required
                     />
-                    <Button type="button" variant="outline" size="sm" asChild className="gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+                    >
                       <a href="/contato">
-                        <LifeBuoy className="w-4 h-4" />
+                        <LifeBuoy className="h-4 w-4" />
                         Contatar suporte para adicionar opção oficial
                       </a>
                     </Button>
@@ -595,7 +678,9 @@ export function EducationProgramsPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, name: event.target.value })
+                  }
                   placeholder="Ex: Curso Intensivo"
                   required
                 />
@@ -607,7 +692,9 @@ export function EducationProgramsPage() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(event) =>
+                  setFormData({ ...formData, description: event.target.value })
+                }
                 placeholder="Descreva o programa..."
                 rows={3}
               />
@@ -615,11 +702,13 @@ export function EducationProgramsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="ageGroup">Faixa Etária</Label>
+                <Label htmlFor="ageGroup">Faixa etária</Label>
                 <Input
                   id="ageGroup"
                   value={formData.ageGroup}
-                  onChange={(e) => setFormData({ ...formData, ageGroup: e.target.value })}
+                  onChange={(event) =>
+                    setFormData({ ...formData, ageGroup: event.target.value })
+                  }
                   placeholder="Ex: 6-10 anos"
                 />
               </div>
@@ -628,8 +717,10 @@ export function EducationProgramsPage() {
                 <select
                   id="shift"
                   value={formData.shift}
-                  onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  onChange={(event) =>
+                    setFormData({ ...formData, shift: event.target.value })
+                  }
+                  className={selectClassName}
                 >
                   <option value="">Selecione...</option>
                   {SHIFTS.map((shift) => (
@@ -647,24 +738,31 @@ export function EducationProgramsPage() {
                 <select
                   id="modality"
                   value={formData.modality}
-                  onChange={(e) => setFormData({ ...formData, modality: e.target.value })}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background"
+                  onChange={(event) =>
+                    setFormData({ ...formData, modality: event.target.value })
+                  }
+                  className={selectClassName}
                 >
                   <option value="">Selecione...</option>
-                  {MODALITIES.map((mod) => (
-                    <option key={mod.value} value={mod.value}>
-                      {mod.label}
+                  {MODALITIES.map((modality) => (
+                    <option key={modality.value} value={modality.value}>
+                      {modality.label}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
-                <Label htmlFor="availableSlots">Vagas Disponíveis</Label>
+                <Label htmlFor="availableSlots">Vagas disponíveis</Label>
                 <Input
                   id="availableSlots"
                   type="number"
                   value={formData.availableSlots}
-                  onChange={(e) => setFormData({ ...formData, availableSlots: parseInt(e.target.value) || 0 })}
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      availableSlots: parseInt(event.target.value, 10) || 0,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -674,11 +772,13 @@ export function EducationProgramsPage() {
               <Textarea
                 id="curriculumTopics"
                 value={formData.curriculumTopics}
-                onChange={(e) => setFormData({ ...formData, curriculumTopics: e.target.value })}
+                onChange={(event) =>
+                  setFormData({ ...formData, curriculumTopics: event.target.value })
+                }
                 placeholder="Ex: Português, Matemática, Ciências"
                 rows={2}
               />
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-territory-muted">
                 Separe por vírgulas. Em cursos, use módulos ou conteúdos principais.
               </p>
             </div>
@@ -692,31 +792,40 @@ export function EducationProgramsPage() {
                   step="0.01"
                   min="0"
                   value={formData.priceFrom}
-                  onChange={(e) =>
-                    setFormData({ ...formData, priceFrom: parseFloat(e.target.value) || 0 })
+                  onChange={(event) =>
+                    setFormData({
+                      ...formData,
+                      priceFrom: parseFloat(event.target.value) || 0,
+                    })
                   }
                 />
               </div>
             )}
 
             {editingProgram && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-lg border border-territory-border bg-territory-raised/70 p-3">
                 <Switch
                   id="isActive"
                   checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, isActive: checked })
+                  }
                 />
                 <Label htmlFor="isActive">Programa ativo</Label>
               </div>
             )}
 
             <div className="flex gap-4 pt-4">
-              <Button type="submit" className="flex-1">
-                {editingProgram ? 'Salvar Alterações' : 'Criar Programa'}
+              <Button
+                type="submit"
+                className="flex-1 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+              >
+                {editingProgram ? 'Salvar alterações' : 'Criar programa'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
+                className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
                 onClick={() => {
                   setIsDialogOpen(false);
                   setEditingProgram(null);
