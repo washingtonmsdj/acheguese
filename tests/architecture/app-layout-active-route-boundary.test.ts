@@ -58,6 +58,8 @@ describe("active AppLayout route boundary", () => {
       'path="/achados-perdidos',
       'path="/ranking"',
       'path="/gamificacao"',
+      'path="/notificacoes"',
+      'path="/mensagens"',
     ]) {
       expect(appLayout).not.toContain(pausedPath);
     }
@@ -70,15 +72,19 @@ describe("active AppLayout route boundary", () => {
     for (const capability of [
       "profiles",
       "account",
-      "notifications",
       "territory",
       "map",
       "nearby",
       "search",
-      "messaging",
     ]) {
       expect(appLayout).toContain(
         `isPlatformCapabilityEnabled("${capability}")`,
+      );
+    }
+
+    for (const pausedCapability of ["notifications", "messaging"]) {
+      expect(appLayout).not.toContain(
+        `isPlatformCapabilityEnabled("${pausedCapability}")`,
       );
     }
 
@@ -86,8 +92,8 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('path="/mapa"');
     expect(appLayout).toContain('path="/perto-de-mim"');
     expect(appLayout).toContain('path="/busca"');
-    expect(appLayout).toContain("messagingRoutes.inbox()");
-    expect(appLayout).toContain("messagingRoutes.threadPattern()");
+    expect(appLayout).not.toContain("messagingRoutes.inbox()");
+    expect(appLayout).not.toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
   });
 
@@ -103,6 +109,8 @@ describe("active AppLayout route boundary", () => {
       "APP_MODULE_SLUGS.gastronomy",
       "APP_MODULE_SLUGS.community",
       "APP_MODULE_SLUGS.touristPoints",
+      "@/app/pages/NotificationsPage",
+      "@/app/pages/MessagingInboxPage",
     ]) {
       expect(prefetch).not.toContain(forbidden);
     }
@@ -112,14 +120,14 @@ describe("active AppLayout route boundary", () => {
       "@/app/pages/MapaPage",
       "@/app/pages/NearbyPage",
       "@/app/pages/BuscaPage",
-      "@/app/pages/NotificationsPage",
     ]) {
       expect(prefetch).toContain(activeOwner);
     }
 
     expect(prefetch).not.toContain("@/app/config/launchScope");
     expect(prefetch).toContain('isProductModuleEnabled("business")');
-    expect(prefetch).toContain('isPlatformCapabilityEnabled("notifications")');
+    expect(prefetch).not.toContain('isPlatformCapabilityEnabled("notifications")');
+    expect(prefetch).not.toContain('isPlatformCapabilityEnabled("messaging")');
   });
 
   it("keeps the active lazy graph free of post-MVP owners", () => {
@@ -132,6 +140,8 @@ describe("active AppLayout route boundary", () => {
       "@/modules/community-",
       "@/modules/business/education",
       "@/core/mobility",
+      "NotificationsPage",
+      "MessagingInboxPage",
     ]) {
       expect(activeLazyImports).not.toContain(forbidden);
     }
