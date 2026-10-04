@@ -5,6 +5,14 @@ const appLayout = readFileSync(
   "src/app/components/AppLayoutSidebar.tsx",
   "utf8",
 );
+const bootstrapLoader = readFileSync(
+  "src/app/components/AppBootstrapLoader.tsx",
+  "utf8",
+);
+const breadcrumbs = readFileSync(
+  "src/app/components/Breadcrumbs.tsx",
+  "utf8",
+);
 const bottomNav = readFileSync(
   "src/core/navigation/BottomNav.tsx",
   "utf8",
@@ -19,6 +27,25 @@ describe("global shell visual SSOT", () => {
     expect(appLayout).toContain("bg-territory-canvas");
     expect(appLayout).not.toContain("bg-background");
     expect(appLayout).not.toContain("@/app/config/lifecycleRegistry");
+  });
+
+  it("keeps bootstrap loading on territorial presentation tokens", () => {
+    expect(bootstrapLoader).toContain("bg-territory-canvas");
+    expect(bootstrapLoader).toContain("border-territory-brand/30");
+    expect(bootstrapLoader).toContain("border-t-territory-brand");
+    expect(bootstrapLoader).toContain("text-territory-muted");
+    expect(bootstrapLoader).not.toContain("bg-background");
+    expect(bootstrapLoader).not.toContain("border-primary");
+    expect(bootstrapLoader).not.toContain("text-muted-foreground");
+  });
+
+  it("keeps breadcrumbs on territorial text tokens", () => {
+    expect(breadcrumbs).toContain("text-territory-muted");
+    expect(breadcrumbs).toContain("text-territory-ink");
+    expect(breadcrumbs).not.toContain("text-muted-foreground");
+    expect(breadcrumbs).not.toContain("text-foreground");
+    expect(breadcrumbs).toContain('aria-label="Navegação estrutural"');
+    expect(breadcrumbs).toContain('aria-current="page"');
   });
 
   it("keeps the MVP mobile navigation on territorial visual tokens", () => {
