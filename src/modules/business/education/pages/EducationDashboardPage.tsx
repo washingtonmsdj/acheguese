@@ -1,7 +1,7 @@
 /**
  * EducationDashboardPage
  *
- * Dashboard administrativo da instituicao de educacao.
+ * Dashboard administrativo da instituição de educação.
  * Rota: /central/empresas/:businessId/educacao
  */
 
@@ -16,7 +16,6 @@ import {
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { Badge } from '@/shared/components/ui/badge';
@@ -47,20 +46,46 @@ export function EducationDashboardPage() {
       }
     : null;
 
-  // Helper para status do nicho
   const getStatusBadge = (status?: string) => {
     if (!status) return null;
+
     switch (status) {
       case 'full_enabled':
-        return <Badge className="bg-green-100 text-green-800">Completo</Badge>;
+        return (
+          <Badge className="border-territory-success/25 bg-territory-success/10 text-territory-success hover:bg-territory-success/10">
+            Completo
+          </Badge>
+        );
       case 'basic_enabled':
-        return <Badge className="bg-blue-100 text-blue-800">Básico</Badge>;
+        return (
+          <Badge className="border-territory-info/25 bg-territory-info/10 text-territory-info hover:bg-territory-info/10">
+            Básico
+          </Badge>
+        );
       case 'beta':
-        return <Badge className="bg-amber-100 text-amber-800">Beta</Badge>;
+        return (
+          <Badge className="border-territory-warning/25 bg-territory-warning/10 text-territory-warning hover:bg-territory-warning/10">
+            Beta
+          </Badge>
+        );
       case 'planned':
-        return <Badge variant="outline">Planejado</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="border-territory-border bg-territory-surface text-territory-muted"
+          >
+            Planejado
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-territory-raised text-territory-ink"
+          >
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -99,11 +124,11 @@ export function EducationDashboardPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-8 w-1/3" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="container mx-auto space-y-6 p-6 text-territory-ink">
+        <Skeleton className="h-8 w-1/3 bg-territory-raised" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3, 4, 5].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
+            <Skeleton key={i} className="h-32 rounded-xl bg-territory-raised" />
           ))}
         </div>
       </div>
@@ -113,7 +138,7 @@ export function EducationDashboardPage() {
   if (isError) {
     return (
       <EducationAdminReadError
-        title="Nao foi possivel carregar a gestao de Educacao"
+        title="Não foi possível carregar a gestão de Educação"
         error={error}
         onRetry={() => void refetch()}
       />
@@ -121,70 +146,72 @@ export function EducationDashboardPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
+    <div className="container mx-auto p-6 text-territory-ink">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
+        <div className="mb-2 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand text-territory-on-image shadow-sm">
+            <GraduationCap className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Educação</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="font-heading text-2xl font-bold text-territory-ink">Educação</h1>
+            <p className="text-sm text-territory-muted">
               {profile?.institution_type ?? 'Instituição não configurada'}
             </p>
           </div>
         </div>
       </motion.div>
 
-      {/* Quick Stats */}
       {profile && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <Card className="border-territory-border bg-territory-surface text-territory-ink">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
+              <CardTitle className="font-heading text-sm font-medium text-territory-muted">
                 Status
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold capitalize">{profile.status}</p>
+              <p className="text-2xl font-bold capitalize text-territory-ink">{profile.status}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-territory-border bg-territory-surface text-territory-ink">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
+              <CardTitle className="font-heading text-sm font-medium text-territory-muted">
                 Nicho
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-lg font-bold">{nicheInfo?.displayName || profile.niche_key}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {nicheInfo ? `${nicheInfo.enabledCapabilities.length} capabilities` : 'Nicho não configurado'}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate text-lg font-bold text-territory-ink">
+                    {nicheInfo?.displayName || profile.niche_key}
+                  </p>
+                  <p className="text-xs text-territory-muted">
+                    {nicheInfo
+                      ? `${nicheInfo.enabledCapabilities.length} recursos habilitados`
+                      : 'Nicho não configurado'}
                   </p>
                 </div>
                 {getStatusBadge(nicheInfo?.supportLevel)}
               </div>
               {nicheData.isBeta && (
-                <p className="text-xs text-amber-600 mt-2">
+                <p className="mt-2 text-xs text-territory-warning">
                   Este nicho está em beta. Algumas funcionalidades podem ser limitadas.
                 </p>
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-territory-border bg-territory-surface text-territory-ink">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
+              <CardTitle className="font-heading text-sm font-medium text-territory-muted">
                 WhatsApp
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold text-territory-ink">
                 {profile.whatsapp_number ? 'Configurado' : 'Não configurado'}
               </p>
             </CardContent>
@@ -193,33 +220,42 @@ export function EducationDashboardPage() {
       )}
 
       {profile && (
-        <Card className="mb-8">
+        <Card className="mb-8 border-territory-border bg-territory-surface text-territory-ink">
           <CardHeader>
-            <CardTitle className="text-base">Infraestrutura cadastrada</CardTitle>
+            <CardTitle className="font-heading text-base text-territory-ink">
+              Infraestrutura cadastrada
+            </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            <div className="rounded-lg border p-3">
-              <div className="text-xs text-muted-foreground">Recursos basicos</div>
-              <div className="text-xl font-bold">{profile.school_basic_resources?.length ?? 0}</div>
+            <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
+              <div className="text-xs text-territory-muted">Recursos básicos</div>
+              <div className="text-xl font-bold text-territory-ink">
+                {profile.school_basic_resources?.length ?? 0}
+              </div>
             </div>
-            <div className="rounded-lg border p-3">
-              <div className="text-xs text-muted-foreground">Acessibilidade</div>
-              <div className="text-xl font-bold">{profile.school_accessibility_features?.length ?? 0}</div>
+            <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
+              <div className="text-xs text-territory-muted">Acessibilidade</div>
+              <div className="text-xl font-bold text-territory-ink">
+                {profile.school_accessibility_features?.length ?? 0}
+              </div>
             </div>
-            <div className="rounded-lg border p-3">
-              <div className="text-xs text-muted-foreground">Equipamentos</div>
-              <div className="text-xl font-bold">{profile.school_equipment_features?.length ?? 0}</div>
+            <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
+              <div className="text-xs text-territory-muted">Equipamentos</div>
+              <div className="text-xl font-bold text-territory-ink">
+                {profile.school_equipment_features?.length ?? 0}
+              </div>
             </div>
-            <div className="rounded-lg border p-3">
-              <div className="text-xs text-muted-foreground">Instalacoes</div>
-              <div className="text-xl font-bold">{profile.school_facility_features?.length ?? 0}</div>
+            <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
+              <div className="text-xs text-territory-muted">Instalações</div>
+              <div className="text-xl font-bold text-territory-ink">
+                {profile.school_facility_features?.length ?? 0}
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Menu */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {menuItems.map((item, index) => (
           <motion.div
             key={item.label}
@@ -227,22 +263,22 @@ export function EducationDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Link to={item.href}>
-              <Card className="group hover:shadow-md transition-shadow cursor-pointer">
+            <Link to={item.href} className="block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2 focus-visible:ring-offset-territory-canvas">
+              <Card className="group h-full cursor-pointer border-territory-border bg-territory-surface text-territory-ink transition-[border-color,box-shadow] hover:border-territory-brand/35 hover:shadow-md">
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                        <item.icon className="w-5 h-5 text-blue-600" />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-territory-brand/10 text-territory-brand transition-colors group-hover:bg-territory-brand/15">
+                        <item.icon className="h-5 w-5" aria-hidden="true" />
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                      <div className="min-w-0">
+                        <h3 className="font-heading font-semibold text-territory-ink transition-colors group-hover:text-territory-brand">
                           {item.label}
                         </h3>
-                        <p className="text-sm text-gray-500">{item.description}</p>
+                        <p className="text-sm text-territory-muted">{item.description}</p>
                       </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
+                    <ChevronRight className="h-5 w-5 shrink-0 text-territory-muted transition-colors group-hover:text-territory-brand" aria-hidden="true" />
                   </div>
                 </CardContent>
               </Card>
