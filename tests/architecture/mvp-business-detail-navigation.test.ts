@@ -8,9 +8,11 @@ describe("MVP Business detail navigation", () => {
       "utf8",
     );
 
-    expect(source).toContain('to="/buscar"');
-    expect(source).toContain('to="/notificacoes"');
     expect(source).toContain("LAUNCH_URLS.business");
+    expect(source).toContain("LAUNCH_URLS.search");
+    expect(source).toContain('isPlatformCapabilityEnabled(\'notifications\')');
+    expect(source).toContain("appUrls.notifications");
+    expect(source).not.toContain('to="/notificacoes"');
 
     expect(source).not.toContain('to="/explorar"');
     expect(source).not.toContain('to="/favoritos"');
