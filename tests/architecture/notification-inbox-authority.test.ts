@@ -65,24 +65,23 @@ describe("Notification inbox authority", () => {
     );
   });
 
-  it("keeps inbox actions lifecycle-scoped at the app boundary", () => {
+  it("keeps historical notification actions lifecycle-scoped and non-navigable when their owner is paused", () => {
     expect(notificationItem).toContain("resolveNotificationActionTarget");
     expect(notificationItem).toContain("actionTarget.href");
     expect(notificationItem).not.toContain(
       "href={notification.action_url}",
     );
+    expect(notificationItem).not.toContain("data-notification-action-fallback");
     expect(notificationActionScope).not.toContain("launchScope");
     expect(notificationActionScope).not.toContain("isLaunchSurfaceEnabled");
     expect(notificationActionScope).toContain("isProductModuleEnabled");
     expect(notificationActionScope).toContain("isPlatformCapabilityEnabled");
     expect(notificationActionScope).toContain('surface: "gastronomy"');
     expect(notificationActionScope).toContain('surface: "mobility"');
-    expect(notificationActionScope).toContain(
-      'NOTIFICATION_INBOX_PATH = "/notificacoes"',
-    );
-    expect(notificationActionScope).toContain(
-      "RETIRED_NOTIFICATION_ROUTE_PATTERNS",
-    );
+    expect(notificationActionScope).not.toContain("NOTIFICATION_INBOX_PATH");
+    expect(notificationActionScope).not.toContain("NOTIFICATION_FALLBACK_ACTION_LABEL");
+    expect(notificationActionScope).toContain("/^\\/notificacoes");
+    expect(notificationActionScope).toContain("RETIRED_NOTIFICATION_ROUTE_PATTERNS");
   });
 
   it("keeps notification preferences behind their canonical RPC owner", () => {

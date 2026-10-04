@@ -22,7 +22,7 @@ const featureMap = read("docs/FEATURE-MAP.md");
 const homeInventory = read("docs/05-ux/HOME-INVENTORY.md");
 
 describe("MVP launch-scope alignment", () => {
-  it("keeps Business as the active domain while Map/Nearby/Search are horizontal capabilities", () => {
+  it("keeps Business active with Map/Nearby/Search horizontal and Messaging/Notifications paused", () => {
     expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
 
     for (const moduleKey of [
@@ -41,7 +41,8 @@ describe("MVP launch-scope alignment", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.map.status).toBe("active");
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby.status).toBe("active");
     expect(PLATFORM_CAPABILITY_REGISTRY.search.status).toBe("active");
-    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("paused");
+    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.status).toBe("paused");
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby.dependsOnCapabilities).toEqual([
       "map",
       "location",
@@ -65,9 +66,14 @@ describe("MVP launch-scope alignment", () => {
     expect(launchScope).toContain(
       'nearby: isPlatformCapabilityEnabled("nearby")',
     );
+    expect(launchScope).toContain(
+      'messaging: isPlatformCapabilityEnabled("messaging")',
+    );
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("map")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("search")');
+    expect(appRoutes).not.toContain('path="/mensagens"');
+    expect(appRoutes).not.toContain('path="/notificacoes"');
     expect(appRoutes).not.toContain("launchElement(");
     expect(appRoutes).not.toContain("LaunchPausedPage");
   });
@@ -115,7 +121,8 @@ describe("MVP launch-scope alignment", () => {
         "map=true",
         "nearby=true",
         "search=true",
-        "messaging=true",
+        "messaging=false",
+        "notifications=false",
         "billing=false",
         "services=false",
         "events=false",
@@ -128,11 +135,13 @@ describe("MVP launch-scope alignment", () => {
     expect(featureMap).toContain("Domínio de produto ativo");
     expect(featureMap).toContain("Empresas (`business`)");
     expect(featureMap).toContain("Capacidades horizontais ativas");
+    expect(featureMap).toContain("Capacidades horizontais pausadas");
+    expect(featureMap).toContain("`messaging=false`");
+    expect(featureMap).toContain("`notifications=false`");
     expect(featureMap).toContain("Business Direct Messaging");
     expect(featureMap).toContain("Community;");
     expect(featureMap).toContain("Classificados;");
     expect(featureMap).toContain("Billing.");
-    expect(featureMap).not.toContain("messaging=false");
   });
 
   it("keeps representative paused routes in the public 404 E2E", () => {

@@ -134,14 +134,13 @@ export function NotificationItem({
             </div>
 
             {actionTarget && (
-              <Button variant="outline" size="sm" className="mt-3 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised" asChild>
-                <SafeLink
-                  href={actionTarget.href}
-                  allowInternal
-                  data-notification-action-fallback={
-                    actionTarget.isFallback ? "true" : undefined
-                  }
-                >
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+                asChild
+              >
+                <SafeLink href={actionTarget.href} allowInternal>
                   {actionTarget.label}
                   <ExternalLink className="ml-2 h-3 w-3" />
                 </SafeLink>

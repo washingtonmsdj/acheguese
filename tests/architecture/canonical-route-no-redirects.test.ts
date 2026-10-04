@@ -43,7 +43,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     ).toBe(false);
   });
 
-  it("keeps notification owners versioned while their paused routes stay outside the MVP graph", () => {
+  it("keeps notification owners versioned while paused routes and dead fallbacks stay outside the MVP graph", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
     const notifications = read("src/app/pages/NotificationsPage.tsx");
     const preferences = read("src/app/pages/NotificationPreferencesPage.tsx");
@@ -77,11 +77,12 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(serviceWorker).not.toContain("return '/perto-de-mim';");
     expect(notificationItem).toContain("resolveNotificationActionTarget");
     expect(notificationItem).not.toContain("href={notification.action_url}");
-    expect(notificationActionScope).toContain(
-      'NOTIFICATION_INBOX_PATH = "/notificacoes"',
-    );
+    expect(notificationItem).not.toContain("data-notification-action-fallback");
+    expect(notificationActionScope).not.toContain("NOTIFICATION_INBOX_PATH");
+    expect(notificationActionScope).not.toContain("NOTIFICATION_FALLBACK_ACTION_LABEL");
     expect(notificationActionScope).toContain('surface: "gastronomy"');
     expect(notificationActionScope).toContain('surface: "mobility"');
+    expect(notificationActionScope).toContain("/^\\/notificacoes");
   });
 
   it("does not preserve query-param redirects for retired account navigation", () => {

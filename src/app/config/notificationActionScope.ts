@@ -10,9 +10,6 @@ import {
   type AppModuleSlug,
 } from "@/shared/config/moduleSlugs";
 
-export const NOTIFICATION_INBOX_PATH = "/notificacoes";
-export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
-
 type NotificationLifecycleSurfaceKey =
   | ProductModuleKey
   | PlatformCapabilityKey;
@@ -34,7 +31,6 @@ type NotificationActionRouteRule = NotificationLifecycleOwner & {
 export interface NotificationActionTarget {
   href: string;
   label: string;
-  isFallback: boolean;
   surface?: NotificationLifecycleSurfaceKey;
 }
 
@@ -96,6 +92,7 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
     surface: "profiles",
   },
 ];
+
 const MODULE_ROUTE_OWNERS: Readonly<
   Partial<Record<AppModuleSlug, NotificationLifecycleOwner>>
 > = {
@@ -236,6 +233,8 @@ function isNotificationRouteOwnerEnabled(
 }
 
 const RETIRED_NOTIFICATION_ROUTE_PATTERNS: readonly RegExp[] = [
+  /^\/notificacoes(?:\/|$)/i,
+  /^\/conta\/notificacoes(?:\/|$)/i,
   /^\/notifications(?:\/|$)/i,
   /^\/settings\/notifications(?:\/|$)/i,
   /^\/perfil(?:\/|$)/i,
@@ -261,7 +260,6 @@ export function resolveNotificationActionTarget(
     return {
       href: actionUrl,
       label: actionLabel,
-      isFallback: false,
     };
   }
 
@@ -272,40 +270,25 @@ export function resolveNotificationActionTarget(
       pattern.test(pathname),
     )
   ) {
-    return {
-      href: NOTIFICATION_INBOX_PATH,
-      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
-      isFallback: true,
-    };
+    return null;
   }
 
   const communitySurface = getCommunityChildSurface(pathname);
   if (communitySurface && !isProductModuleEnabled(communitySurface)) {
-    return {
-      href: NOTIFICATION_INBOX_PATH,
-      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
-      isFallback: true,
-      surface: communitySurface,
-    };
+    return null;
   }
 
   const routeOwner =
     getModuleRouteOwner(pathname) ??
     ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
 
-  if (!routeOwner || isNotificationRouteOwnerEnabled(routeOwner)) {
-    return {
-      href: actionUrl,
-      label: actionLabel,
-      isFallback: false,
-      surface: routeOwner?.surface,
-    };
+  if (routeOwner && !isNotificationRouteOwnerEnabled(routeOwner)) {
+    return null;
   }
 
   return {
-    href: NOTIFICATION_INBOX_PATH,
-    label: NOTIFICATION_FALLBACK_ACTION_LABEL,
-    isFallback: true,
-    surface: routeOwner.surface,
+    href: actionUrl,
+    label: actionLabel,
+    surface: routeOwner?.surface,
   };
 }

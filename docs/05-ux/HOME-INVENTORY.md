@@ -2,7 +2,7 @@
 
 > **MVP atual:** **Empresas + Mapa + Perto de mim + Busca**.
 >
-> Flags do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=true`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
+> Flags do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=false`, `notifications=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
 ## Papel da Home
 
@@ -17,7 +17,7 @@ A Home deve ser pequena e derivada do lifecycle. Ela pode:
 - oferecer CTA para **Busca**;
 - expor estados de loading/empty/error reais.
 
-Ela não deve consultar, contar, destacar ou anunciar módulos pausados.
+Ela não deve consultar, contar, destacar ou anunciar módulos ou capabilities pausados.
 
 ## Conteúdo permitido no MVP
 
@@ -31,9 +31,9 @@ Ela não deve consultar, contar, destacar ou anunciar módulos pausados.
 
 ## Conteúdo proibido enquanto pausado
 
-Não renderizar previews, contadores ou CTAs de Comunidade, Gastronomia, Serviços, Classificados, Turismo, Educação, Vagas, Eventos, Mobilidade, Cupons, Analytics ou Gamificação.
+Não renderizar previews, contadores ou CTAs de Comunidade, Gastronomia, Serviços, Classificados, Turismo, Educação, Vagas, Eventos, Mobilidade, Cupons, Analytics, Gamificação, Mensagens ou Notificações.
 
-Mensagens é capability ativa, mas a Home não precisa promover a Inbox: o acesso nasce de contextos legítimos (por exemplo, o CTA `Mensagem` de uma Empresa) e da navegação autenticada.
+Os owners de Mensagens e Notificações permanecem versionados para reativação futura, mas não podem criar navegação, Inbox, preferência ou CTA no corte atual.
 
 ## Regras de dados
 
@@ -45,4 +45,4 @@ Mensagens é capability ativa, mas a Home não precisa promover a Inbox: o acess
 
 ## Arquitetura
 
-A Home não possui lógica própria para decidir quais módulos existem. Toda visibilidade deve derivar do registry/launch scope. Adicionar ou pausar um módulo não pode exigir editar arrays independentes na Home.
+A Home não possui lógica própria para decidir quais módulos existem. Toda visibilidade deve derivar do registry/launch scope. Adicionar ou pausar um módulo ou capability não pode exigir editar arrays independentes na Home.
