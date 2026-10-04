@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode } from "react";
 import { ArrowLeft, Home } from "lucide-react";
 import { Link } from "react-router-dom";
-import { TerritoryModuleNav, type TerritoryModuleNavItem, type TerritoryModuleNavMoreItem } from "./TerritoryModuleNav";
+import { TerritoryModuleNav, type TerritoryModuleNavItem } from "./TerritoryModuleNav";
 import "./TerritorialModuleHero.css";
 
 export interface TerritorialHeroBreadcrumb {
@@ -22,7 +22,6 @@ export interface TerritorialModuleHeroProps {
   breadcrumbs: readonly TerritorialHeroBreadcrumb[];
   backgroundImage: string;
   navItems: readonly TerritoryModuleNavItem[];
-  moreNavItems?: readonly TerritoryModuleNavMoreItem[];
 }
 
 export function TerritorialModuleHero({
@@ -37,7 +36,6 @@ export function TerritorialModuleHero({
   breadcrumbs,
   backgroundImage,
   navItems,
-  moreNavItems,
 }: TerritorialModuleHeroProps) {
   const TitleIcon = Icon && iconPlacement === "title" ? Icon : null;
   const EyebrowIcon = Icon && iconPlacement === "eyebrow" ? Icon : null;
@@ -80,11 +78,11 @@ export function TerritorialModuleHero({
           </div>
         </div>
 
-        <TerritoryModuleNav items={navItems} activeModule={activeModule} moreItems={moreNavItems} />
+        <TerritoryModuleNav items={navItems} activeModule={activeModule} />
       </div>
     </section>
   );
 }
 
 export { TerritoryModuleNav } from "./TerritoryModuleNav";
-export type { TerritoryModuleNavItem, TerritoryModuleNavMoreItem } from "./TerritoryModuleNav";
+export type { TerritoryModuleNavItem } from "./TerritoryModuleNav";
