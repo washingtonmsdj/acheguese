@@ -1,14 +1,12 @@
 import { type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Bell,
   Building2,
   ChevronRight,
   CircleAlert,
   Globe2,
   LockKeyhole,
   MapPin,
-  MessageCircle,
   RefreshCw,
   Shield,
   SlidersHorizontal,
@@ -210,23 +208,6 @@ function ContaHubLivePage() {
               description="Endereço privado e contexto territorial autorizado."
               meta={data.territoryLabel || "Pendente"}
               onClick={() => navigate(data.appUrls.profile.addresses)}
-            />
-            <AccountAction
-              icon={Bell}
-              title="Notificações"
-              description="Canais, frequência e avisos da conta."
-              meta={
-                data.notifications.unread > 0
-                  ? `${data.notifications.unread} não lidas`
-                  : "Em dia"
-              }
-              onClick={() => navigate(data.appUrls.profile.notifications)}
-            />
-            <AccountAction
-              icon={MessageCircle}
-              title="Mensagens"
-              description="Conversas privadas com empresas e outros providers habilitados."
-              onClick={() => navigate(data.appUrls.messages)}
             />
             <AccountAction
               icon={SlidersHorizontal}
