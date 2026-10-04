@@ -164,28 +164,32 @@ export function PublicCitySelector({ compact = false }: PublicCitySelectorProps)
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
-          className={`w-full justify-between text-sm ${compact ? "h-9 px-2" : "h-10 rounded-xl px-3"}`}
+          className={`w-full justify-between text-sm text-territory-ink hover:bg-territory-raised ${compact ? "h-9 px-2" : "h-10 rounded-xl px-3"}`}
         >
           <span className="inline-flex min-w-0 items-center gap-2">
-            <MapPin className="h-4 w-4 text-primary" />
+            <MapPin className="h-4 w-4 text-territory-brand" />
             <span className="truncate">
               Cidade: <strong>{currentLabel}</strong>
             </span>
           </span>
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          <ChevronDown className="h-4 w-4 text-territory-muted" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[340px] rounded-2xl border-border/80 p-3 shadow-xl" align="start">
+      <PopoverContent
+        className="w-[340px] rounded-2xl border-territory-border bg-territory-surface p-3 text-territory-ink shadow-xl"
+        align="start"
+      >
         <div className="space-y-3">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-territory-muted">
             Navegação pública por cidade. Não altera endereço residencial ou comunidade.
           </p>
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Buscar cidade..."
+            className="border-territory-border bg-territory-surface text-territory-ink placeholder:text-territory-muted"
           />
-          <div className="max-h-72 overflow-y-auto rounded-xl border">
+          <div className="max-h-72 overflow-y-auto rounded-xl border border-territory-border">
             {filtered.map((city) => {
               const parts = city.geographic_path.split("/").filter(Boolean);
               const state = parts[1];
@@ -200,8 +204,8 @@ export function PublicCitySelector({ compact = false }: PublicCitySelectorProps)
                 <button
                   key={city.id}
                   type="button"
-                  className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-accent ${
-                    isActive ? "bg-accent" : ""
+                  className={`flex w-full items-center justify-between px-3 py-2.5 text-left text-sm text-territory-ink hover:bg-territory-raised ${
+                    isActive ? "bg-territory-brand/10" : ""
                   }`}
                   onClick={() => {
                     setSelectedCity(state, citySlug);
@@ -213,12 +217,14 @@ export function PublicCitySelector({ compact = false }: PublicCitySelectorProps)
                   <span className="flex items-center gap-2">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                        cityStatus === "Ativa" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                        cityStatus === "Ativa"
+                          ? "bg-territory-success/12 text-territory-success"
+                          : "bg-territory-warning/12 text-territory-warning"
                       }`}
                     >
                       {cityStatus}
                     </span>
-                    <span className="text-xs uppercase text-muted-foreground">{state}</span>
+                    <span className="text-xs uppercase text-territory-muted">{state}</span>
                   </span>
                 </button>
               );
