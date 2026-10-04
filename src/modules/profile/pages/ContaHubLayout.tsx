@@ -3,7 +3,6 @@ import type { ChangeEvent, ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Accessibility,
-  Bell,
   ChevronDown,
   ChevronRight,
   CircleHelp,
@@ -184,12 +183,6 @@ export function ContaHubLayout({
                 title="Senha e segurança"
                 description="Senha, recuperação e autenticação em duas etapas."
                 onClick={() => navigate(ACCOUNT_PATHS.security)}
-              />
-              <OverviewRow
-                icon={<Bell className="h-5 w-5" aria-hidden="true" />}
-                title="Notificações"
-                description="Canais, tipos de aviso e horário de silêncio."
-                onClick={() => navigate(ACCOUNT_PATHS.notifications)}
               />
               <OverviewRow
                 icon={<Shield className="h-5 w-5" aria-hidden="true" />}
