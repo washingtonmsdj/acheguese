@@ -13,11 +13,13 @@ const BILLING_UI = [
 ] as const;
 
 describe("paused module UI ownership", () => {
-  it("keeps future billing and gamification UI versioned in their bounded contexts", () => {
+  it("keeps future billing, gamification, community and virtual try-on UI versioned in their bounded contexts", () => {
     for (const relativePath of BILLING_UI) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(true);
     }
     expect(fs.existsSync(path.join(ROOT, "src/modules/gamification/pages/RankingPage.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(ROOT, "src/core/community/pages/CommunityIndicationPage.tsx"))).toBe(true);
+    expect(fs.existsSync(path.join(ROOT, "src/modules/ai/virtual-tryon/components/VirtualTryOnStudio.tsx"))).toBe(true);
     const ranking = read("src/modules/gamification/pages/RankingPage.tsx");
     expect(ranking).not.toContain("@/modules/mobility/");
   });
@@ -29,8 +31,17 @@ describe("paused module UI ownership", () => {
 
     expect(registry).toContain('gamification: { status: "paused" }');
     expect(registry).toContain('billing: { status: "paused" }');
+    expect(registry).toContain('community: { status: "paused" }');
 
-    for (const pageName of ["PricingPage", "CheckoutSuccessPage", "CheckoutCancelPage", "SubscriptionManagementPage", "RankingPage"]) {
+    for (const pageName of [
+      "PricingPage",
+      "CheckoutSuccessPage",
+      "CheckoutCancelPage",
+      "SubscriptionManagementPage",
+      "RankingPage",
+      "CommunityIndicationPage",
+      "VirtualTryOnStudio",
+    ]) {
       expect(routes).not.toContain(pageName);
       expect(lazyImports).not.toContain(pageName);
     }
