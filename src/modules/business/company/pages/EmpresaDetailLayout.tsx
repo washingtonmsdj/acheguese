@@ -8,8 +8,10 @@
 import type { ReactNode } from 'react';
 import { ArrowLeft, Bell, Building2, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { isPlatformCapabilityEnabled } from '@/app/config/lifecycleRegistry';
 import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
+import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
 import { PRIVACY_POLICY_PATH, TERMS_OF_SERVICE_PATH } from '@/shared/constants/legal';
 
 interface EmpresaDetailLayoutProps {
@@ -18,6 +20,8 @@ interface EmpresaDetailLayoutProps {
 
 export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
   const navigate = useNavigate();
+  const appUrls = useAppUrls();
+  const notificationsEnabled = isPlatformCapabilityEnabled('notifications');
   const shellGutterClass = 'mx-auto w-full max-w-7xl px-4 sm:px-6';
 
   return (
@@ -72,13 +76,15 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
           </Link>
 
           <div className="hidden items-center gap-2.5 lg:flex">
-            <Link
-              to="/notificacoes"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/70 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05] hover:text-territory-on-image"
-              aria-label="Notificações"
-            >
-              <Bell className="h-[18px] w-[18px]" />
-            </Link>
+            {notificationsEnabled ? (
+              <Link
+                to={appUrls.notifications}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-territory-on-image/10 bg-territory-on-image/[0.03] text-territory-on-image/70 transition-colors hover:border-territory-on-image/20 hover:bg-territory-on-image/[0.05] hover:text-territory-on-image"
+                aria-label="Notificações"
+              >
+                <Bell className="h-[18px] w-[18px]" />
+              </Link>
+            ) : null}
             <button
               type="button"
               onClick={() => navigate(ACCOUNT_PATHS.home)}
