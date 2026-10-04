@@ -178,6 +178,7 @@ const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
   "src/modules/community-feed/hooks/composer/useCreatePostForm.ts",
   "src/modules/community-groups/index.ts",
   "src/modules/community-groups/pages/GruposPage.tsx",
+  "src/modules/community-groups/pages/GrupoDetailPage.tsx",
   "src/modules/community-recommendations/index.ts",
   "src/modules/community-recommendations/pages/RecomendacoesPage.tsx",
   "src/modules/community-recommendations/pages/NovaRecomendacaoPage.tsx",
