@@ -16,9 +16,8 @@ const SORT_LABELS: Record<BusinessSortOption, string> = {
   recent: "Mais recentes",
 };
 
-const SORTABLE_OPTIONS = Object.entries(SORT_LABELS).filter(
-  ([value]) => value !== "distance",
-) as Array<[BusinessSortOption, string]>;
+const SORTABLE_OPTIONS = Object.entries(SORT_LABELS)
+  .filter(([value]) => value !== "distance") as Array<[BusinessSortOption, string]>;
 
 interface BusinessSortSelectProps {
   sortBy: BusinessSortOption;
@@ -107,7 +106,7 @@ export function EmpresasFiltrosSection({
         </div>
 
         <div className="overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex min-w-max gap-2" aria-label="Filtros rápidos">
+          <div className="flex min-w-max gap-2" aria-label="filtros rápidos">
             {filters.map((filter) => (
               <QuickFilterChip
                 key={filter.id}
