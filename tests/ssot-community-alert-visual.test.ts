@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const ALERT_SURFACES = [
   "src/core/community/alerts/components/AlertCard.tsx",
+  "src/core/community/alerts/components/AlertCardSkeleton.tsx",
   "src/core/community/alerts/components/AlertFeedSection.tsx",
   "src/core/community/alerts/components/CreateAlertModal.tsx",
 ] as const;
