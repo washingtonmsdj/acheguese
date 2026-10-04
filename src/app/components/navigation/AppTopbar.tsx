@@ -31,6 +31,7 @@ function getInitials(value?: string | null): string {
 export function AppTopbar() {
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
+  const showNotifications = isPlatformCapabilityEnabled("notifications");
   const showMessages = isPlatformCapabilityEnabled("messaging");
   const showBilling = isProductModuleEnabled("billing");
 
@@ -52,9 +53,11 @@ export function AppTopbar() {
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
-        <Link to={appUrls.notifications} className="relative text-muted-foreground transition-colors hover:text-foreground">
-          <Bell className="h-5 w-5" />
-        </Link>
+        {showNotifications ? (
+          <Link to={appUrls.notifications} className="relative text-muted-foreground transition-colors hover:text-foreground">
+            <Bell className="h-5 w-5" />
+          </Link>
+        ) : null}
         {showMessages ? (
           <Link to={appUrls.messages} className="relative text-muted-foreground transition-colors hover:text-foreground">
             <MessageCircle className="h-5 w-5" />
