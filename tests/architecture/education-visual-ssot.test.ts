@@ -12,6 +12,8 @@ const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/pages/explorerFilterControls.tsx",
   "src/modules/business/education/pages/explorerMarketingSections.tsx",
   "src/modules/business/education/pages/EducationExplorerPage.tsx",
+  "src/modules/business/education/pages/EducationDetailPage.tsx",
+  "src/modules/business/education/pages/EducationDetailPresentationData.ts",
   "src/modules/business/education/pages/EducationDetailStateViews.tsx",
   "src/modules/business/education/pages/EducationDetailPresentation.tsx",
   "src/modules/business/education/pages/EducationDetailSidebar.tsx",
@@ -102,6 +104,22 @@ describe("education visual SSOT", () => {
     expect(explorer).not.toContain("setComparing");
     expect(cards).not.toContain("onCompareToggle");
     expect(marketing).not.toContain("EducationCompareBar");
+  });
+
+  it("keeps Education favorites and map links on canonical shared owners", () => {
+    const detail = readSource(
+      "src/modules/business/education/pages/EducationDetailPage.tsx",
+    );
+    const presentationData = readSource(
+      "src/modules/business/education/pages/EducationDetailPresentationData.ts",
+    );
+
+    expect(detail).toContain("useCanonicalBusinessFavorite");
+    expect(detail).toContain("buildGoogleMapsSearchUrl");
+    expect(detail).not.toContain("setFavorited");
+    expect(detail).not.toContain("https://www.google.com/maps/search");
+    expect(presentationData).toContain("buildWhatsAppUrl");
+    expect(presentationData).not.toContain("https://wa.me/");
   });
 
   it("keeps Education paused while its owners are hardened for later activation", () => {
