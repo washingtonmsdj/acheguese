@@ -232,34 +232,33 @@ export const TURNSTILE_CLIENT_CONFIG = {
   scriptUrl: `${SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url}/turnstile/v0/api.js`,
 } as const;
 
+/**
+ * Browser policy for the currently active MVP runtime.
+ *
+ * Dormant-module domains stay documented in SECURITY_DOMAINS, but are not
+ * authorized here until their owning module is deliberately reactivated and
+ * its browser dependency is reviewed again. This keeps production fail-closed
+ * instead of pre-authorizing future or paused integrations.
+ */
 export const CSP_DIRECTIVES = {
   'default-src': ["'self'"],
   'script-src': [
     "'self'",
     ...(IS_DEV ? ["'unsafe-inline'", "'unsafe-eval'"] : []),
-    SECURITY_DOMAINS.CDN_JSDELIVR.url,
-    SECURITY_DOMAINS.SUPABASE_HTTPS.url,
     SECURITY_DOMAINS.VERCEL_SCRIPTS.url,
     SECURITY_DOMAINS.VERCEL_LIVE.url,
     SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_SCRIPT.url,
     SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
-    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
-    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
-    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
+  'script-src-attr': ["'none'"],
   'style-src': [
     "'self'",
     "'unsafe-inline'",
-    SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.GOOGLE_FONTS_CSS.url,
   ],
   'font-src': [
     "'self'",
     'data:',
-    SECURITY_DOMAINS.CDN_JSDELIVR.url,
     SECURITY_DOMAINS.GOOGLE_FONTS_FILES.url,
   ],
   'img-src': ["'self'", 'data:', 'https:', 'blob:'],
@@ -280,21 +279,11 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.SENTRY_INGEST.url,
     SECURITY_DOMAINS.VERCEL_VITALS.url,
     SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_COLLECT.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_SCRIPT.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_STATIC.url,
-    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
-    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
-    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
   'worker-src': ["'self'", 'blob:'],
   'frame-src': [
     "'self'",
     SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url,
-    SECURITY_DOMAINS.GOOGLE_ADSENSE_ADS.url,
-    SECURITY_DOMAINS.GOOGLE_DOUBLECLICK.url,
-    SECURITY_DOMAINS.GOOGLE_ADTRAFFIC.url,
-    SECURITY_DOMAINS.GOOGLE_CORE.url,
   ],
   'frame-ancestors': ["'none'"],
   'base-uri': ["'self'"],
@@ -439,16 +428,18 @@ export const INPUT_VALIDATION = {
 } as const;
 
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-09-21',
+  lastReview: '2026-10-04',
   reviewer: 'OpenAI',
-  version: '2.24.0',
+  version: '2.25.0',
   changes: [
+    'Production CSP follows active MVP runtime dependencies and keeps paused advertising origins unauthorized',
+    'Inline HTML event-handler attributes are blocked by script-src-attr none',
     'CSP/security domain registry remain the canonical browser security authority',
     'HIBP k-Anonymity endpoint explicitly allowed in connect-src',
     'Historical change log moved out of executable configuration to keep the SSOT operational',
     'Production release identity is explicitly no-store so smoke gates observe deployment convergence',
   ],
-  nextReview: '2026-10-21',
+  nextReview: '2026-11-04',
 } as const;
 
 export const CACHE_HEADERS = {
@@ -505,9 +496,9 @@ export const CACHE_HEADERS = {
 } as const;
 
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.24.0',
+  version: '2.25.0',
   created: '2026-04-18',
-  lastModified: '2026-09-21',
+  lastModified: '2026-10-04',
   author: 'Achegue-se engineering',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
@@ -518,89 +509,3 @@ export const SECURITY_CONFIG_METADATA = {
 
 export type SecurityDomain = keyof typeof SECURITY_DOMAINS;
 export type CSPDirective = keyof typeof CSP_DIRECTIVES;
-export type SecurityHeader = keyof typeof SECURITY_HEADERS;
-export type AllowedImageExtension = (typeof ALLOWED_IMAGE_EXTENSIONS)[number];
-export type BlockedImageExtension = (typeof BLOCKED_IMAGE_EXTENSIONS)[number];
-export type AllowedImageProtocol = (typeof ALLOWED_IMAGE_PROTOCOLS)[number];
-export type AllowedImageDataMimeType = (typeof ALLOWED_IMAGE_DATA_MIME_TYPES)[number];
-export type AllowedURLProtocol = (typeof ALLOWED_URL_PROTOCOLS)[number];
-export type BlockedURLProtocol = (typeof BLOCKED_URL_PROTOCOLS)[number];
-
-export function validateCSPConfig(): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  const getDirectiveValue = (directive: CSPDirective): readonly string[] => {
-    switch (directive) {
-      case 'default-src':
-        return CSP_DIRECTIVES['default-src'];
-      case 'script-src':
-        return CSP_DIRECTIVES['script-src'];
-      case 'frame-ancestors':
-        return CSP_DIRECTIVES['frame-ancestors'];
-      case 'base-uri':
-        return CSP_DIRECTIVES['base-uri'];
-      default:
-        return [];
-    }
-  };
-
-  const criticalDirectives: CSPDirective[] = [
-    'default-src',
-    'script-src',
-    'frame-ancestors',
-    'base-uri',
-  ];
-
-  for (const directive of criticalDirectives) {
-    if (getDirectiveValue(directive).length === 0) {
-      errors.push(`Missing critical CSP directive: ${directive}`);
-    }
-  }
-
-  if (!IS_DEV) {
-    if (CSP_DIRECTIVES['script-src'].includes("'unsafe-inline'")) {
-      errors.push("WARNING: 'unsafe-inline' in script-src is dangerous");
-    }
-    if (CSP_DIRECTIVES['script-src'].includes("'unsafe-eval'")) {
-      errors.push("WARNING: 'unsafe-eval' in script-src is dangerous");
-    }
-  }
-
-  return { valid: errors.length === 0, errors };
-}
-
-export function isURLProtocolSafe(url: string): boolean {
-  const protocol = `${url.split(':')[0]?.toLowerCase()}:`;
-  return ALLOWED_URL_PROTOCOLS.includes(protocol as AllowedURLProtocol);
-}
-
-export function isImageExtensionSafe(filename: string): boolean {
-  const extension = filename.toLowerCase().match(/\.[^.]+$/)?.[0];
-  if (!extension) return false;
-  return (
-    ALLOWED_IMAGE_EXTENSIONS.includes(extension as AllowedImageExtension) &&
-    !BLOCKED_IMAGE_EXTENSIONS.includes(extension as BlockedImageExtension)
-  );
-}
-
-export function getSecurityConfigSummary() {
-  return {
-    version: SECURITY_CONFIG_METADATA.version,
-    lastModified: SECURITY_CONFIG_METADATA.lastModified,
-    totalDomains: Object.keys(SECURITY_DOMAINS).length,
-    cspDirectives: Object.keys(CSP_DIRECTIVES).length,
-    securityHeaders: Object.keys(SECURITY_HEADERS).length,
-    lastAudit: SECURITY_AUDIT_LOG.lastReview,
-    nextAudit: SECURITY_AUDIT_LOG.nextReview,
-  };
-}
-
-if (
-  typeof import.meta.env !== 'undefined' &&
-  import.meta.env.DEV &&
-  import.meta.env.VITE_SECURITY_DEBUG === 'true'
-) {
-  const validation = validateCSPConfig();
-  if (!validation.valid) {
-    console.warn('Security Configuration Warnings:', validation.errors);
-  }
-}
