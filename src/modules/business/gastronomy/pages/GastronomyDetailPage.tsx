@@ -2,10 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { RefreshCw, UtensilsCrossed } from "lucide-react";
 
-import { Button } from "@/shared/components/ui/button";
-import { Skeleton } from "@/shared/components/ui/skeleton";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { usePublicGastronomySnapshot } from "@/modules/business/public/hooks";
 import { GastronomyUrlService } from "@/core/verticals/gastronomy/services/GastronomyUrlService";
+import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { buildGoogleMapsDirectionsUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 
@@ -15,17 +16,16 @@ import {
   ReviewsSection,
   StickyOrderBar,
 } from "../components";
-import { useFavoritesManager } from "../hooks";
 import { getCuisineLabel } from "../constants";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
-import type { MenuItemWithRelations } from "../types";
+import { useFavoritesManager } from "../hooks";
 import { useGastronomyOpeningStatus } from "../hooks/useGastronomyOpeningStatus";
+import type { MenuItemWithRelations } from "../types";
 import { GastronomyBusinessInfoSidebar } from "./GastronomyBusinessInfoSidebar";
 import { GastronomyDetailHeroSection } from "./GastronomyDetailHeroSection";
-import { CategoryNav, ServiceBar } from "./GastronomyDetailNavigation";
 import { GastronomyDetailMenuSection } from "./GastronomyDetailMenuSection";
-import { useGastronomyDetailMenu } from "./useGastronomyDetailMenu";
+import { CategoryNav, ServiceBar } from "./GastronomyDetailNavigation";
 import { GastronomyDetailSeo } from "./GastronomyDetailSeo";
+import { useGastronomyDetailMenu } from "./useGastronomyDetailMenu";
 
 interface GastronomyDetailPageProps {
   routeParams?: {
@@ -40,18 +40,21 @@ interface GastronomyDetailPageProps {
 
 function GastronomyDetailNotFound({ homeUrl }: { homeUrl: string }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4">
-      <div className="rounded-full bg-muted p-6">
-        <UtensilsCrossed className="h-12 w-12 text-muted-foreground/60" />
+    <div className="flex min-h-screen flex-col items-center justify-center bg-territory-canvas px-4 text-territory-ink">
+      <div className="rounded-full bg-territory-raised p-6 text-territory-muted">
+        <UtensilsCrossed className="h-12 w-12" aria-hidden="true" />
       </div>
-      <h1 className="mt-6 text-2xl font-bold text-foreground">
+      <h1 className="mt-6 font-heading text-2xl font-bold">
         Estabelecimento não encontrado
       </h1>
-      <p className="mt-2 max-w-md text-center text-muted-foreground">
+      <p className="mt-2 max-w-md text-center text-territory-muted">
         O endereço informado não pertence a um estabelecimento ativo neste
         território.
       </p>
-      <Button asChild className="mt-6">
+      <Button
+        asChild
+        className="mt-6 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+      >
         <Link to={homeUrl}>Voltar para gastronomia</Link>
       </Button>
     </div>
@@ -67,25 +70,33 @@ function GastronomyDetailLoadError({
 }) {
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center px-4 text-center"
+      className="flex min-h-screen flex-col items-center justify-center bg-territory-canvas px-4 text-center text-territory-ink"
       role="alert"
     >
-      <div className="rounded-full bg-muted p-6">
-        <RefreshCw className="h-12 w-12 text-muted-foreground/60" aria-hidden="true" />
+      <div className="rounded-full bg-territory-error/10 p-6 text-territory-error">
+        <RefreshCw className="h-12 w-12" aria-hidden="true" />
       </div>
-      <h1 className="mt-6 text-2xl font-bold text-foreground">
+      <h1 className="mt-6 font-heading text-2xl font-bold">
         Não conseguimos carregar este cardápio
       </h1>
-      <p className="mt-2 max-w-md text-muted-foreground">
+      <p className="mt-2 max-w-md text-territory-muted">
         O serviço está temporariamente indisponível. Tente novamente em alguns
         instantes.
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <Button type="button" onClick={onRetry}>
+        <Button
+          type="button"
+          onClick={onRetry}
+          className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+        >
           <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
           Tentar novamente
         </Button>
-        <Button asChild variant="outline">
+        <Button
+          asChild
+          variant="outline"
+          className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+        >
           <Link to={homeUrl}>Voltar para gastronomia</Link>
         </Button>
       </div>
@@ -95,14 +106,14 @@ function GastronomyDetailLoadError({
 
 function GastronomyDetailSkeleton() {
   return (
-    <div className="min-h-screen">
-      <Skeleton className="h-[32vh] min-h-[240px] w-full" />
+    <div className="min-h-screen bg-territory-canvas">
+      <Skeleton className="h-[32vh] min-h-[240px] w-full bg-territory-raised" />
       <div className="mx-auto max-w-7xl space-y-4 px-4 py-8 sm:px-6 lg:px-8">
-        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-10 w-64 bg-territory-raised" />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full bg-territory-raised" />
+          <Skeleton className="h-40 w-full bg-territory-raised" />
+          <Skeleton className="h-40 w-full bg-territory-raised" />
         </div>
       </div>
     </div>
@@ -129,9 +140,7 @@ function GastronomyDetailLivePage({
     isError: hasSnapshotError,
     isLoading: isLoadingSnapshot,
     refetch: refetchSnapshot,
-  } = usePublicGastronomySnapshot(
-    { state, city, territorySlug, slug },
-  );
+  } = usePublicGastronomySnapshot({ state, city, territorySlug, slug });
 
   const showCoupons = isLaunchSurfaceEnabled("coupons");
   const business = snapshot?.gastronomy.business ?? null;
@@ -208,7 +217,7 @@ function GastronomyDetailLivePage({
         gastronomyHomeUrl={gastronomyHomeUrl}
       />
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-territory-canvas text-territory-ink">
         <GastronomyDetailHeroSection
           business={business}
           profile={profile}
@@ -229,38 +238,38 @@ function GastronomyDetailLivePage({
 
         <ServiceBar profile={profile} />
 
-        {menuView.categoriesWithAll.length > 0 && (
+        {menuView.categoriesWithAll.length > 0 ? (
           <CategoryNav
             categories={menuView.categoriesWithAll}
             activeCategory={menuView.activeCategory}
             onSelect={menuView.setActiveCategory}
             itemCounts={menuView.itemCounts}
           />
-        )}
+        ) : null}
 
         <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
-          {promotions.length > 0 && (
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <h2 className="mb-4 text-lg font-semibold text-card-foreground">
-                Promoções Ativas
+          {promotions.length > 0 ? (
+            <section className="rounded-2xl border border-territory-border bg-territory-surface p-5 shadow-sm">
+              <h2 className="mb-4 font-heading text-lg font-bold text-territory-ink">
+                Promoções ativas
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {promotions.map((promo) => (
-                  <div
+                  <article
                     key={promo.id}
-                    className="rounded-xl border border-success/30 bg-success/10 p-4"
+                    className="rounded-xl border border-territory-success/25 bg-territory-success/10 p-4"
                   >
-                    <p className="font-medium text-success">{promo.title}</p>
-                    {promo.description && (
-                      <p className="mt-1 text-sm text-success/90">
+                    <p className="font-semibold text-territory-success">{promo.title}</p>
+                    {promo.description ? (
+                      <p className="mt-1 text-sm text-territory-muted">
                         {promo.description}
                       </p>
-                    )}
-                  </div>
+                    ) : null}
+                  </article>
                 ))}
               </div>
             </section>
-          )}
+          ) : null}
 
           <GastronomyDetailMenuSection
             view={menuView}
@@ -268,7 +277,7 @@ function GastronomyDetailLivePage({
             hasMenu={Boolean(menu)}
           />
 
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <section className="rounded-2xl border border-territory-border bg-territory-surface p-5 shadow-sm">
             <ReviewsSection
               businessProfileId={business.profile_id}
               businessName={business.name}
@@ -277,10 +286,10 @@ function GastronomyDetailLivePage({
 
           <section className="space-y-4">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">
+              <h2 className="font-heading text-lg font-bold text-territory-ink">
                 Sobre o estabelecimento
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-territory-muted">
                 Contato, horário de funcionamento e comodidades.
               </p>
             </div>
