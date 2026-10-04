@@ -1,16 +1,14 @@
 import { Link } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import type { Dispatch, ElementType, SetStateAction } from 'react';
 import {
   ArrowUpRight,
-  Award,
   Check,
   GraduationCap,
   Info,
   Layers,
   Lightbulb,
   MapPin,
-  ScanSearch,
   Sparkles,
   Star,
   X,
@@ -33,9 +31,13 @@ import {
 import type { FilterState } from './explorerFilters';
 
 type EducationNiche = ReturnType<typeof getPublicNiches>[number];
-
 type SetFilters = Dispatch<SetStateAction<FilterState>>;
 type NicheIconMap = Record<string, ElementType>;
+
+const filterBadgeClassName =
+  'gap-1 border-territory-border bg-territory-raised text-territory-ink';
+const outlineButtonClassName =
+  'border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/40 hover:bg-territory-raised';
 
 export function ActiveEducationFilterChips({
   filters,
@@ -58,95 +60,149 @@ export function ActiveEducationFilterChips({
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      {filters.niches.map((n) => (
-        <Badge key={n} variant="secondary" className="gap-1">
-          {getNicheByKey(n)?.displayName ?? n}
+      {filters.niches.map((niche) => (
+        <Badge
+          key={niche}
+          variant="secondary"
+          className={filterBadgeClassName}
+        >
+          {getNicheByKey(niche)?.displayName ?? niche}
           <button
+            type="button"
             onClick={() =>
-              setFilters((prev) => ({
-                ...prev,
-                niches: prev.niches.filter((v) => v !== n),
+              setFilters((previous) => ({
+                ...previous,
+                niches: previous.niches.filter((value) => value !== niche),
               }))
             }
+            className="rounded-full text-territory-muted hover:text-territory-ink"
             aria-label="Remover filtro"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3" aria-hidden="true" />
           </button>
         </Badge>
       ))}
+
       {filters.schoolNetworks.map((network) => (
-        <Badge key={network} variant="secondary" className="gap-1">
+        <Badge
+          key={network}
+          variant="secondary"
+          className={filterBadgeClassName}
+        >
           {labelFromOptions(SCHOOL_NETWORK_FILTERS, network)}
           <button
+            type="button"
             onClick={() =>
-              setFilters((prev) => ({
-                ...prev,
-                schoolNetworks: prev.schoolNetworks.filter((v) => v !== network),
+              setFilters((previous) => ({
+                ...previous,
+                schoolNetworks: previous.schoolNetworks.filter(
+                  (value) => value !== network,
+                ),
               }))
             }
+            className="rounded-full text-territory-muted hover:text-territory-ink"
             aria-label="Remover filtro"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3" aria-hidden="true" />
           </button>
         </Badge>
       ))}
+
       {filters.institutionTypes.map((type) => (
-        <Badge key={type} variant="secondary" className="gap-1">
+        <Badge
+          key={type}
+          variant="secondary"
+          className={filterBadgeClassName}
+        >
           {labelFromOptions(INSTITUTION_TYPE_FILTERS, type)}
           <button
+            type="button"
             onClick={() =>
-              setFilters((prev) => ({
-                ...prev,
-                institutionTypes: prev.institutionTypes.filter((v) => v !== type),
+              setFilters((previous) => ({
+                ...previous,
+                institutionTypes: previous.institutionTypes.filter(
+                  (value) => value !== type,
+                ),
               }))
             }
+            className="rounded-full text-territory-muted hover:text-territory-ink"
             aria-label="Remover filtro"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3" aria-hidden="true" />
           </button>
         </Badge>
       ))}
-      {filters.infrastructure.map((infra) => (
-        <Badge key={infra} variant="secondary" className="gap-1">
-          {labelFromOptions(INFRASTRUCTURE_FILTERS, infra)}
+
+      {filters.infrastructure.map((infrastructure) => (
+        <Badge
+          key={infrastructure}
+          variant="secondary"
+          className={filterBadgeClassName}
+        >
+          {labelFromOptions(INFRASTRUCTURE_FILTERS, infrastructure)}
           <button
+            type="button"
             onClick={() =>
-              setFilters((prev) => ({
-                ...prev,
-                infrastructure: prev.infrastructure.filter((v) => v !== infra),
+              setFilters((previous) => ({
+                ...previous,
+                infrastructure: previous.infrastructure.filter(
+                  (value) => value !== infrastructure,
+                ),
               }))
             }
+            className="rounded-full text-territory-muted hover:text-territory-ink"
             aria-label="Remover filtro"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3" aria-hidden="true" />
           </button>
         </Badge>
       ))}
+
       {filters.district && (
-        <Badge variant="secondary" className="gap-1 capitalize">
+        <Badge
+          variant="secondary"
+          className={`${filterBadgeClassName} capitalize`}
+        >
           {filters.district.replace(/-/g, ' ')}
           <button
-            onClick={() => setFilters((prev) => ({ ...prev, district: null }))}
+            type="button"
+            onClick={() =>
+              setFilters((previous) => ({ ...previous, district: null }))
+            }
+            className="rounded-full text-territory-muted hover:text-territory-ink"
             aria-label="Remover filtro"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3" aria-hidden="true" />
           </button>
         </Badge>
       )}
+
       {filters.onlyAvailable && (
-        <Badge variant="secondary" className="gap-1">
+        <Badge
+          variant="secondary"
+          className="gap-1 border-territory-success/25 bg-territory-success/10 text-territory-success"
+        >
           Com vagas
           <button
-            onClick={() => setFilters((prev) => ({ ...prev, onlyAvailable: false }))}
+            type="button"
+            onClick={() =>
+              setFilters((previous) => ({
+                ...previous,
+                onlyAvailable: false,
+              }))
+            }
+            className="rounded-full"
             aria-label="Remover filtro"
           >
-            <X className="h-3 w-3" />
+            <X className="h-3 w-3" aria-hidden="true" />
           </button>
         </Badge>
       )}
+
       <button
+        type="button"
         onClick={clearFilters}
-        className="ml-1 text-xs text-muted-foreground underline hover:text-foreground"
+        className="ml-1 text-xs text-territory-muted underline hover:text-territory-ink"
       >
         Limpar tudo
       </button>
@@ -168,50 +224,64 @@ export function EducationNicheShowcase({
   nicheAccent: Record<string, string>;
 }) {
   return (
-    <div className="mt-12 rounded-3xl border border-border bg-gradient-to-br from-card to-muted/30 p-6 md:p-8">
+    <div className="mt-12 rounded-3xl border border-territory-border bg-gradient-to-br from-territory-surface to-territory-raised/60 p-6 text-territory-ink md:p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold">Categorias educacionais</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl font-bold text-territory-ink">
+            Categorias educacionais
+          </h2>
+          <p className="text-sm text-territory-muted">
             Navegue por tipo de instituição e descubra opções especializadas.
           </p>
         </div>
-        <Layers className="h-6 w-6 text-primary" />
+        <Layers className="h-6 w-6 text-territory-brand" aria-hidden="true" />
       </div>
+
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {niches.map((n) => {
-          const Icon = nicheIcons[n.nicheKey] ?? GraduationCap;
-          const gradient = nicheAccent[n.nicheKey] ?? 'from-primary to-primary/70';
+        {niches.map((niche) => {
+          const Icon = nicheIcons[niche.nicheKey] ?? GraduationCap;
+          const gradient =
+            nicheAccent[niche.nicheKey] ??
+            'from-territory-brand/90 to-territory-brand/70';
           const hasLoadedProfile = sourceProfiles.some(
-            (profile) => profile.niche_key === n.nicheKey,
+            (profile) => profile.niche_key === niche.nicheKey,
           );
           return (
             <button
-              key={n.nicheKey}
+              key={niche.nicheKey}
               type="button"
               onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  niches: prev.niches.includes(n.nicheKey)
-                    ? prev.niches.filter((v) => v !== n.nicheKey)
-                    : [...prev.niches, n.nicheKey],
+                setFilters((previous) => ({
+                  ...previous,
+                  niches: previous.niches.includes(niche.nicheKey)
+                    ? previous.niches.filter(
+                        (value) => value !== niche.nicheKey,
+                      )
+                    : [...previous.niches, niche.nicheKey],
                 }))
               }
-              className="group relative overflow-hidden rounded-2xl border border-border bg-card p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md"
+              className="group relative overflow-hidden rounded-2xl border border-territory-border bg-territory-surface p-4 text-left transition-all hover:-translate-y-0.5 hover:border-territory-brand/30 hover:bg-territory-raised/40 hover:shadow-md"
             >
               <div
                 className={cn(
-                  'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-sm',
+                  'inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br text-territory-on-image shadow-sm',
                   gradient,
                 )}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" aria-hidden="true" />
               </div>
-              <div className="mt-3 text-sm font-semibold">{n.displayName}</div>
-              <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                <span>{hasLoadedProfile ? 'Ver opções' : 'Explorar categoria'}</span>
-                {n.isBeta && (
-                  <Badge variant="outline" className="text-[10px]">
+              <div className="mt-3 text-sm font-semibold text-territory-ink">
+                {niche.displayName}
+              </div>
+              <div className="mt-1 flex items-center justify-between text-xs text-territory-muted">
+                <span>
+                  {hasLoadedProfile ? 'Ver opções' : 'Explorar categoria'}
+                </span>
+                {niche.isBeta && (
+                  <Badge
+                    variant="outline"
+                    className="border-territory-warning/30 bg-territory-warning/10 text-[10px] text-territory-warning"
+                  >
                     Beta
                   </Badge>
                 )}
@@ -240,28 +310,31 @@ export function FeaturedEducationSection({
   sanitizeSummary: (value?: string | null) => string;
 }) {
   return (
-    <section className="border-t border-border bg-gradient-to-b from-muted/30 via-background to-background py-16">
+    <section className="border-t border-territory-border bg-gradient-to-b from-territory-raised/45 via-territory-surface to-territory-surface py-16 text-territory-ink">
       <div className="container mx-auto px-4">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <Badge className="mb-3" variant="secondary">
-              <Star className="mr-1 h-3 w-3 fill-current" />
-              Instituicoes em Destaque
+            <Badge
+              className="mb-3 border-territory-sun/40 bg-territory-sun/15 text-territory-ink"
+              variant="secondary"
+            >
+              <Star className="mr-1 h-3 w-3 fill-current" aria-hidden="true" />
+              Instituições em destaque
             </Badge>
-            <h2 className="text-3xl font-bold capitalize text-foreground">
-              Instituicoes em destaque em {territoryLabel}
+            <h2 className="text-3xl font-bold capitalize text-territory-ink">
+              Instituições em destaque em {territoryLabel}
             </h2>
-            <p className="mt-2 max-w-2xl text-muted-foreground">
+            <p className="mt-2 max-w-2xl text-territory-muted">
               Curadoria com base em dados territoriais e informações institucionais públicas.
             </p>
           </div>
           <Button
             variant="outline"
-            className="hidden rounded-full sm:flex"
+            className={`hidden rounded-full sm:flex ${outlineButtonClassName}`}
             onClick={clearFilters}
           >
             Ver todas
-            <ArrowUpRight className="ml-2 h-4 w-4" />
+            <ArrowUpRight className="ml-2 h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
 
@@ -270,14 +343,17 @@ export function FeaturedEducationSection({
             const route = profile.public_route;
             if (!route) return null;
 
-            const FeaturedIcon = nicheIcons[profile.niche_key] ?? GraduationCap;
+            const FeaturedIcon =
+              nicheIcons[profile.niche_key] ?? GraduationCap;
             const featuredGradient =
-              nicheAccent[profile.niche_key] ?? 'from-primary to-primary/70';
+              nicheAccent[profile.niche_key] ??
+              'from-territory-brand/90 to-territory-brand/70';
             const nicheLabel =
               getNicheByKey(profile.niche_key)?.displayName ??
               profile.niche_key;
             const detailHref = EducationUrlService.buildDetailUrl(route);
-            const institutionName = profile.business_name ?? profile.institution_type;
+            const institutionName =
+              profile.business_name ?? profile.institution_type;
 
             return (
               <motion.article
@@ -286,74 +362,106 @@ export function FeaturedEducationSection({
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.08, duration: 0.4 }}
-                className="group relative overflow-hidden rounded-3xl border border-border bg-card transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl"
+                className="group relative overflow-hidden rounded-3xl border border-territory-border bg-territory-surface transition-all hover:-translate-y-1 hover:border-territory-brand/30 hover:shadow-xl"
               >
-                <div className={cn('relative h-28 bg-gradient-to-br p-5', featuredGradient)}>
+                <div
+                  className={cn(
+                    'relative h-28 bg-gradient-to-br p-5',
+                    featuredGradient,
+                  )}
+                >
                   <div className="flex items-start justify-between">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                      <FeaturedIcon className="h-6 w-6 text-white" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-territory-on-image/20 text-territory-on-image backdrop-blur-sm">
+                      <FeaturedIcon className="h-6 w-6" aria-hidden="true" />
                     </div>
-                    <Badge className="border-white/30 bg-white/20 text-white backdrop-blur-sm">
-                      <Star className="mr-1 h-3 w-3 fill-current" />
+                    <Badge className="border-territory-on-image/30 bg-territory-on-image/20 text-territory-on-image backdrop-blur-sm">
+                      <Star className="mr-1 h-3 w-3 fill-current" aria-hidden="true" />
                       Destaque
                     </Badge>
                   </div>
                 </div>
 
                 <div className="p-5">
-                  <Badge variant="secondary" className="text-[11px]">
+                  <Badge
+                    variant="secondary"
+                    className="border-territory-border bg-territory-raised text-[11px] text-territory-ink"
+                  >
                     {nicheLabel}
                   </Badge>
-                  <h3 className="mt-2 text-lg font-bold text-foreground transition-colors group-hover:text-primary">
+                  <h3 className="mt-2 text-lg font-bold text-territory-ink transition-colors group-hover:text-territory-brand">
                     {institutionName}
                   </h3>
                   {sanitizeSummary(profile.summary) && (
-                    <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    <p className="mt-1 line-clamp-2 text-sm text-territory-muted">
                       {sanitizeSummary(profile.summary)}
                     </p>
                   )}
 
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     {[
-                      profile.school_network ? { label: 'Rede', value: profile.school_network } : null,
-                      profile.enrollment_open ? { label: 'Matrículas', value: 'Abertas' } : null,
+                      profile.school_network
+                        ? { label: 'Rede', value: profile.school_network }
+                        : null,
+                      profile.enrollment_open
+                        ? { label: 'Matrículas', value: 'Abertas' }
+                        : null,
                     ]
-                      .filter((stat): stat is { label: string; value: string } => Boolean(stat))
+                      .filter(
+                        (stat): stat is { label: string; value: string } =>
+                          Boolean(stat),
+                      )
                       .map((stat) => (
                         <div
                           key={stat.label}
-                          className="rounded-xl bg-muted/60 px-3 py-2 transition-colors group-hover:bg-muted"
+                          className="rounded-xl bg-territory-raised/70 px-3 py-2 transition-colors group-hover:bg-territory-raised"
                         >
-                          <div className="text-base font-bold text-foreground">{stat.value}</div>
-                          <div className="text-[11px] text-muted-foreground">{stat.label}</div>
+                          <div className="text-base font-bold text-territory-ink">
+                            {stat.value}
+                          </div>
+                          <div className="text-[11px] text-territory-muted">
+                            {stat.label}
+                          </div>
                         </div>
                       ))}
                   </div>
 
                   {(profile.education_levels ?? []).length > 0 && (
                     <div className="mt-4 space-y-1.5">
-                      {(profile.education_levels ?? []).slice(0, 3).map((level) => (
-                        <div key={level} className="flex items-start gap-2 text-xs capitalize text-muted-foreground">
-                        <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                          <span className="line-clamp-1">{level.replace(/_/g, ' ')}</span>
-                      </div>
-                      ))}
+                      {(profile.education_levels ?? [])
+                        .slice(0, 3)
+                        .map((level) => (
+                          <div
+                            key={level}
+                            className="flex items-start gap-2 text-xs capitalize text-territory-muted"
+                          >
+                            <Check
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-territory-success"
+                              aria-hidden="true"
+                            />
+                            <span className="line-clamp-1">
+                              {level.replace(/_/g, ' ')}
+                            </span>
+                          </div>
+                        ))}
                     </div>
                   )}
 
-                  <div className="mt-5 flex items-center justify-between">
-                    <Link to={detailHref}>
-                      <Button
-                        size="sm"
-                        className="rounded-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-                      >
+                  <div className="mt-5 flex items-center justify-between gap-3">
+                    <Button
+                      size="sm"
+                      asChild
+                      className="rounded-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
+                    >
+                      <Link to={detailHref}>
                         Explorar
-                        <ArrowUpRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <span className="inline-flex items-center gap-1 text-xs capitalize text-muted-foreground">
-                      <MapPin className="h-3 w-3" />
-                      {route.district.replace(/-/g, ' ')}
+                        <ArrowUpRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                      </Link>
+                    </Button>
+                    <span className="inline-flex min-w-0 items-center gap-1 text-xs capitalize text-territory-muted">
+                      <MapPin className="h-3 w-3 shrink-0" aria-hidden="true" />
+                      <span className="truncate">
+                        {route.district.replace(/-/g, ' ')}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -368,10 +476,13 @@ export function FeaturedEducationSection({
 
 export function EducationDataDisclaimer() {
   return (
-    <section className="border-t border-border bg-background py-6">
+    <section className="border-t border-territory-border bg-territory-surface py-6">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col gap-2 rounded-2xl border border-border bg-muted/30 p-4 text-xs leading-5 text-muted-foreground md:flex-row md:items-start md:gap-3">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+        <div className="flex flex-col gap-2 rounded-2xl border border-territory-info/25 bg-territory-info/10 p-4 text-xs leading-5 text-territory-muted md:flex-row md:items-start md:gap-3">
+          <Info
+            className="mt-0.5 h-4 w-4 shrink-0 text-territory-info"
+            aria-hidden="true"
+          />
           <p>
             Os dados iniciais das escolas públicas são organizados a partir de bases
             públicas e consultas institucionais. Podem existir divergências,
@@ -385,12 +496,25 @@ export function EducationDataDisclaimer() {
   );
 }
 
-export function EducationInstitutionCta({ businessExplorerHref }: { businessExplorerHref: string }) {
+export function EducationInstitutionCta({
+  businessExplorerHref,
+}: {
+  businessExplorerHref: string;
+}) {
   return (
-    <section className="relative overflow-hidden border-t border-border py-20">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/10" />
-      <div className="absolute -right-24 top-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
-      <div className="absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+    <section className="relative overflow-hidden border-t border-territory-border bg-territory-surface py-20">
+      <div
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-territory-brand/5 via-territory-surface to-territory-brand/10"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-territory-brand/10 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-territory-info/10 blur-3xl"
+        aria-hidden="true"
+      />
 
       <div className="container relative mx-auto px-4">
         <motion.div
@@ -399,25 +523,25 @@ export function EducationInstitutionCta({ businessExplorerHref }: { businessExpl
           viewport={{ once: true }}
           className="mx-auto max-w-4xl"
         >
-          <div className="overflow-hidden rounded-3xl border border-border bg-card/80 p-8 shadow-xl backdrop-blur-sm md:p-12">
+          <div className="overflow-hidden rounded-3xl border border-territory-border bg-territory-surface/90 p-8 text-territory-ink shadow-xl backdrop-blur-sm md:p-12">
             <div className="grid items-center gap-8 md:grid-cols-[1fr_auto]">
               <div>
                 <Badge
                   variant="outline"
-                  className="mb-4 inline-flex items-center gap-1.5 rounded-full border-primary/30 bg-primary/5 px-3 py-1 text-xs uppercase tracking-wide text-primary"
+                  className="mb-4 inline-flex items-center gap-1.5 rounded-full border-territory-brand/30 bg-territory-brand/5 px-3 py-1 text-xs uppercase tracking-wide text-territory-brand"
                 >
-                  <Lightbulb className="h-3 w-3" />
-                  Para instituicoes
+                  <Lightbulb className="h-3 w-3" aria-hidden="true" />
+                  Para instituições
                 </Badge>
-                <h2 className="text-balance text-3xl font-bold text-foreground md:text-4xl">
+                <h2 className="text-balance text-3xl font-bold text-territory-ink md:text-4xl">
                   Tem uma instituição de ensino?
                 </h2>
-                <p className="mt-3 max-w-xl text-balance text-muted-foreground md:text-lg">
+                <p className="mt-3 max-w-xl text-balance text-territory-muted md:text-lg">
                   Cadastre-se no Achegue-se e alcance famílias em busca de educação de
-                  qualidade. Capture leads, gerencie visitas e aumente suas matrículas.
+                  qualidade. Organize contatos, visitas e sua presença institucional.
                 </p>
 
-                <ul className="mt-5 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                <ul className="mt-5 grid gap-2 text-sm text-territory-muted sm:grid-cols-2">
                   {[
                     'Vitrine territorial com SEO',
                     'Captação e pipeline de leads',
@@ -425,34 +549,50 @@ export function EducationInstitutionCta({ businessExplorerHref }: { businessExpl
                     'Analytics de conversão',
                   ].map((item) => (
                     <li key={item} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
+                      <Check
+                        className="mt-0.5 h-4 w-4 shrink-0 text-territory-success"
+                        aria-hidden="true"
+                      />
                       {item}
                     </li>
                   ))}
                 </ul>
 
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Link to={getBusinessCreateRoute('education')}>
-                    <Button size="lg" className="w-full rounded-full sm:w-auto">
+                  <Button
+                    size="lg"
+                    asChild
+                    className="w-full rounded-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90 sm:w-auto"
+                  >
+                    <Link to={getBusinessCreateRoute('education')}>
                       Cadastrar instituição
-                      <ArrowUpRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                  <Link to={businessExplorerHref}>
-                    <Button size="lg" variant="outline" className="w-full rounded-full sm:w-auto">
-                      Ver empresas
-                    </Button>
-                  </Link>
+                      <ArrowUpRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    asChild
+                    className={`w-full rounded-full sm:w-auto ${outlineButtonClassName}`}
+                  >
+                    <Link to={businessExplorerHref}>Ver empresas</Link>
+                  </Button>
                 </div>
               </div>
 
               <div className="relative hidden h-48 w-48 md:block">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary to-primary/60 shadow-2xl" />
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-territory-brand to-territory-brand/65 shadow-2xl" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <GraduationCap className="h-20 w-20 text-white drop-shadow" />
+                  <GraduationCap
+                    className="h-20 w-20 text-territory-on-image drop-shadow"
+                    aria-hidden="true"
+                  />
                 </div>
-                <div className="absolute -right-3 -top-3 inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold shadow-md">
-                  <Sparkles className="h-3 w-3 text-amber-500" />
+                <div className="absolute -right-3 -top-3 inline-flex items-center gap-1 rounded-full border border-territory-border bg-territory-surface px-3 py-1.5 text-xs font-semibold text-territory-ink shadow-md">
+                  <Sparkles
+                    className="h-3 w-3 text-territory-sun"
+                    aria-hidden="true"
+                  />
                   Premium
                 </div>
               </div>
@@ -461,59 +601,5 @@ export function EducationInstitutionCta({ businessExplorerHref }: { businessExpl
         </motion.div>
       </div>
     </section>
-  );
-}
-
-export function EducationCompareBar({
-  comparing,
-  sourceProfiles,
-  toggleCompare,
-  clearCompare,
-}: {
-  comparing: string[];
-  sourceProfiles: EducationPublicProfile[];
-  toggleCompare: (id: string) => void;
-  clearCompare: () => void;
-}) {
-  return (
-    <AnimatePresence>
-      {comparing.length > 0 && (
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 100, opacity: 0 }}
-          className="fixed inset-x-3 bottom-3 z-40 mx-auto max-w-3xl rounded-2xl border border-border bg-card/95 p-3 shadow-xl backdrop-blur-md md:inset-x-auto md:right-6 md:bottom-6"
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2">
-              <ScanSearch className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold">Comparando {comparing.length}/4</span>
-            </div>
-            <div className="flex flex-1 flex-wrap gap-1.5">
-              {comparing.map((id) => {
-                const profile = sourceProfiles.find((p) => p.id === id);
-                return profile ? (
-                  <Badge key={id} variant="outline" className="gap-1">
-                    {profile.institution_type}
-                    <button onClick={() => toggleCompare(id)} aria-label="Remover">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ) : null;
-              })}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button size="sm" variant="ghost" onClick={clearCompare} className="rounded-full">
-                Limpar
-              </Button>
-              <Button size="sm" disabled={comparing.length < 2} className="rounded-full">
-                <Award className="mr-1 h-4 w-4" />
-                Comparar
-              </Button>
-            </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
   );
 }
