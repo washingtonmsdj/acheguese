@@ -10,12 +10,44 @@ const heroSection = readFileSync(
   "src/app/features/business-landing/sections/EmpresasHeroSection.tsx",
   "utf8",
 );
-const companyHeroSection = readFileSync(
-  "src/modules/business/company/sections/EmpresaHeroSection.tsx",
+const categoriesSection = readFileSync(
+  "src/app/features/business-landing/sections/EmpresasCategoriasSection.tsx",
   "utf8",
 );
 const filtersSection = readFileSync(
   "src/app/features/business-landing/sections/EmpresasFiltrosSection.tsx",
+  "utf8",
+);
+const recommendationsSection = readFileSync(
+  "src/app/features/business-landing/sections/EmpresasRecomendacoesSection.tsx",
+  "utf8",
+);
+const listSection = readFileSync(
+  "src/app/features/business-landing/sections/EmpresasListaSection.tsx",
+  "utf8",
+);
+const categoryCard = readFileSync(
+  "src/app/features/business-landing/components/cards/CategoryCard.tsx",
+  "utf8",
+);
+const businessCard = readFileSync(
+  "src/app/features/business-landing/components/cards/BusinessCard.tsx",
+  "utf8",
+);
+const topBusinessCard = readFileSync(
+  "src/app/features/business-landing/components/cards/TopBusinessCard.tsx",
+  "utf8",
+);
+const quickFilterChip = readFileSync(
+  "src/app/features/business-landing/components/filters/QuickFilterChip.tsx",
+  "utf8",
+);
+const landingConstants = readFileSync(
+  "src/app/features/business-landing/utils/landing.constants.ts",
+  "utf8",
+);
+const companyHeroSection = readFileSync(
+  "src/modules/business/company/sections/EmpresaHeroSection.tsx",
   "utf8",
 );
 const relatedSection = readFileSync(
@@ -44,6 +76,21 @@ const remoteProbe = readFileSync(
   "utf8",
 );
 
+const businessLandingVisualOwners = [
+  heroSection,
+  categoriesSection,
+  filtersSection,
+  recommendationsSection,
+  listSection,
+  categoryCard,
+  businessCard,
+  topBusinessCard,
+  quickFilterChip,
+] as const;
+
+const directBusinessLandingPalette =
+  /\b(?:text|bg|border|ring|ring-offset)-(?:teal|cyan|emerald|slate|white|black|amber|rose)(?:[-/]|\b)/;
+
 describe("MVP Business public flow", () => {
   it("keeps Business category visibility independent from specialized vertical lifecycle", () => {
     expect(launchScope).not.toContain("BUSINESS_CATEGORY_SURFACES");
@@ -70,16 +117,35 @@ describe("MVP Business public flow", () => {
     );
   });
 
-  it("keeps the active Business hero on the territorial visual SSOT", () => {
+  it("keeps the active Business landing on the territorial visual SSOT", () => {
     expect(heroSection).toContain("bg-territory-image-overlay");
     expect(heroSection).toContain("text-territory-on-image");
     expect(heroSection).toContain("text-territory-action-on-image");
-    expect(heroSection).toContain("border-territory-on-image/10");
-    expect(heroSection).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
-    expect(heroSection).not.toMatch(/\brgba?\s*\(/);
-    expect(heroSection).not.toMatch(
-      /\b(?:text|bg|border)-(?:teal|cyan|emerald|slate|white|black)-/,
-    );
+    expect(categoryCard).toContain("category.iconColor");
+    expect(categoryCard).toContain("category.bg");
+    expect(quickFilterChip).toContain("bg-territory-success");
+    expect(businessCard).toContain("text-territory-success");
+    expect(businessCard).toContain("text-territory-error");
+    expect(topBusinessCard).toContain("text-territory-info");
+    expect(listSection).toContain("border-territory-error/30");
+
+    for (const owner of businessLandingVisualOwners) {
+      expect(owner).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+      expect(owner).not.toMatch(/\brgba?\s*\(/);
+      expect(owner).not.toMatch(directBusinessLandingPalette);
+    }
+  });
+
+  it("keeps Business landing copy normalized in pt-BR", () => {
+    expect(filtersSection).toContain("Mais úteis no bairro");
+    expect(filtersSection).toContain("Mais próximas");
+    expect(filtersSection).toContain("filtros rápidos");
+    expect(listSection).toContain("Lista pública com negócios ativos, recomendados e próximos do território.");
+    expect(landingConstants).toContain("Recomendações reais de moradores do bairro.");
+    expect(landingConstants).toContain("Avaliações públicas e transparentes.");
+    expect(landingConstants).toContain("Negócios que apoiam a comunidade.");
+    expect(landingConstants).toContain('label: "Território ativo"');
+    expect(landingConstants).toContain('label: "Leitura pública"');
   });
 
   it("keeps standalone Business SEO inside active discovery capabilities", () => {
