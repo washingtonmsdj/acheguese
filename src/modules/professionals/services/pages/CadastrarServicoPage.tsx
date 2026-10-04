@@ -265,7 +265,7 @@ export default function CadastrarServicoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-28">
+    <div className="min-h-screen bg-territory-canvas pb-28 text-territory-ink">
       <CadastrarServicoHeader step={step} onBack={handleBack} />
 
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-4 sm:px-6 sm:py-6">
@@ -275,7 +275,7 @@ export default function CadastrarServicoPage() {
           onStepChange={goToStep}
         />
 
-        <div className="rounded-[24px] border border-border/70 bg-card/78 p-4 shadow-[0_26px_100px_-70px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-6">
+        <div className="rounded-[24px] border border-territory-border bg-territory-surface/80 p-4 shadow-sm backdrop-blur-sm sm:p-6">
           {step === "info" && (
             <CadastrarServicoInfoStep
               form={form}
