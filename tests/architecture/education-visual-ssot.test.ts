@@ -31,6 +31,7 @@ const EDUCATION_VISUAL_OWNERS = [
   "src/modules/business/education/components/EducationLeadForm.tsx",
   "src/modules/business/education/components/EducationAdminReadError.tsx",
   "src/modules/business/education/niches/components/EducationUpgradeBanner.tsx",
+  "src/modules/business/education/niches/components/EducationCapabilityGuard.tsx",
 ] as const;
 
 const LEGACY_VISUAL_TOKENS = [
@@ -121,6 +122,16 @@ describe("education visual SSOT", () => {
     expect(detail).not.toContain("https://www.google.com/maps/search");
     expect(presentationData).toContain("buildWhatsAppUrl");
     expect(presentationData).not.toContain("https://wa.me/");
+  });
+
+  it("keeps AnalyticsGuard bound to the analytics authority", () => {
+    const guard = readSource(
+      "src/modules/business/education/niches/components/EducationCapabilityGuard.tsx",
+    );
+    const analyticsGuard = guard.slice(guard.indexOf("export function AnalyticsGuard"));
+
+    expect(analyticsGuard).toContain('capability="analytics_basic"');
+    expect(analyticsGuard).not.toContain('capability="basic_programs_catalog"');
   });
 
   it("keeps Education paused while its owners are hardened for later activation", () => {
