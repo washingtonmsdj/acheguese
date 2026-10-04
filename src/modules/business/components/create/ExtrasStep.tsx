@@ -88,10 +88,10 @@ export function ExtrasStep({
               Etapa 3
             </p>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-territory-ink">
-              ApresentaÃ§Ã£o e detalhes
+              Apresentação e detalhes
             </h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-territory-muted">
-              Finalize a vitrine do seu {copy.entityNoun} com imagem, canais digitais e informaÃ§Ãµes Ãºteis para quem encontrar a pÃ¡gina.
+              Finalize a vitrine do seu {copy.entityNoun} com imagem, canais digitais e informações úteis para quem encontrar a página.
             </p>
           </div>
         </div>
@@ -104,7 +104,7 @@ export function ExtrasStep({
             <Label className="text-sm font-semibold text-territory-ink">Imagem de capa</Label>
           </div>
           <p className="mt-1 text-sm leading-5 text-territory-muted">
-            Use uma imagem horizontal que represente bem a empresa. VocÃª poderÃ¡ trocar depois.
+            Use uma imagem horizontal que represente bem a empresa. Você poderá trocar depois.
           </p>
 
           {capaPreview ? (
@@ -142,7 +142,7 @@ export function ExtrasStep({
               <Upload className="h-4 w-4" />
               {capaPreview ? "Trocar capa" : "Adicionar capa"}
             </Button>
-            <p className="text-xs text-territory-muted">Opcional Â· imagem horizontal recomendada.</p>
+            <p className="text-xs text-territory-muted">Opcional · imagem horizontal recomendada.</p>
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export function ExtrasStep({
             <div>
               <h3 className="text-sm font-semibold text-territory-ink">Formas de pagamento</h3>
               <p className="mt-0.5 text-xs text-territory-muted">
-                Marque as opÃ§Ãµes aceitas normalmente pela empresa.
+                Marque as opções aceitas normalmente pela empresa.
               </p>
             </div>
           </div>
@@ -235,7 +235,7 @@ export function ExtrasStep({
               placeholder={copy.specialtiesPlaceholder}
               className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
-            <p className="text-xs text-territory-muted">Separe os itens por vÃ­rgula.</p>
+            <p className="text-xs text-territory-muted">Separe os itens por vírgula.</p>
           </div>
 
           <div className="space-y-2">
@@ -247,12 +247,12 @@ export function ExtrasStep({
               placeholder={copy.facilitiesPlaceholder}
               className="h-11 rounded-xl border-territory-border bg-territory-surface text-territory-ink focus-visible:ring-territory-focus"
             />
-            <p className="text-xs text-territory-muted">Separe os itens por vÃ­rgula.</p>
+            <p className="text-xs text-territory-muted">Separe os itens por vírgula.</p>
           </div>
         </div>
 
         <div className="rounded-[20px] border border-territory-border bg-territory-raised/60 p-4">
-          <Label htmlFor="status">PublicaÃ§Ã£o inicial</Label>
+          <Label htmlFor="status">Publicação inicial</Label>
           <select
             id="status"
             value={status}
@@ -263,7 +263,7 @@ export function ExtrasStep({
             <option value="pending">Salvar para revisar depois</option>
           </select>
           <p className="mt-2 text-xs leading-5 text-territory-muted">
-            VocÃª poderÃ¡ ajustar essas informaÃ§Ãµes depois pela Central da empresa.
+            Você poderá ajustar essas informações depois pela Central da empresa.
           </p>
         </div>
 

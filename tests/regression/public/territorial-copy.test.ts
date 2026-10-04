@@ -19,6 +19,8 @@ const suspiciousMojibakeTokens = [
   "Ãº",
   "Ã‡",
   "Â°",
+  "Â·",
+  "â€¦",
   "â€¢",
   "â˜…",
   "â€“",
@@ -27,18 +29,26 @@ const suspiciousMojibakeTokens = [
   "â€",
 ] as const;
 
-const publicSurfaceFiles = [
+const activeMvpCopyFiles = [
   "src/app/pages/TerritoryEntryPage.tsx",
   "src/app/pages/TerritoryHomePage.tsx",
   "src/app/pages/TerritoryPortalPage.tsx",
   "src/app/pages/EmpresasLandingPage.tsx",
   "src/core/maps/pages/MapaPageV4.tsx",
   "src/core/nearby/pages/NearbyPage.tsx",
+  "src/app/pages/LoginPage.tsx",
+  "src/app/pages/ResetPasswordPage.tsx",
+  "src/app/pages/EmailChangeConfirmationPage.tsx",
+  "src/app/features/onboarding/pages/CadastroPage.tsx",
+  "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+  "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
+  "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
+  "src/modules/business/components/create/ExtrasStep.tsx",
 ] as const;
 
-describe("public territorial copy regression", () => {
-  it("keeps active public territorial surfaces free from common mojibake tokens", () => {
-    for (const file of publicSurfaceFiles) {
+describe("active MVP copy regression", () => {
+  it("keeps active MVP surfaces free from common mojibake tokens", () => {
+    for (const file of activeMvpCopyFiles) {
       const content = read(file);
       for (const token of suspiciousMojibakeTokens) {
         expect(

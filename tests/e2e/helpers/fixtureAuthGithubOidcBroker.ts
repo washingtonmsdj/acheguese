@@ -2,8 +2,9 @@ import type { FixtureAuthPasswordGrantSession } from "./fixtureAuthPasswordGrant
 
 export const GITHUB_OIDC_AUDIENCE = "acheguese-supabase-ci-auth";
 export const CI_AUTH_FUNCTION_REGION = "us-west-2";
+export const CI_AUTH_BROKER_MAX_ATTEMPTS = 5;
+export const CI_AUTH_BROKER_RETRY_DELAY_MS = 3_000;
 const CI_AUTH_FUNCTION = "ci-auth-fixture-session";
-const MAX_ATTEMPTS = 3;
 const DEFAULT_REQUEST_TIMEOUT_MS = 15_000;
 
 interface GithubOidcEnvironment {
@@ -205,7 +206,7 @@ export async function signInFixtureViaGithubOidcBroker({
   email,
   password,
   fetchImpl = fetch,
-  retryDelayMs = 750,
+  retryDelayMs = CI_AUTH_BROKER_RETRY_DELAY_MS,
   requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   ...oidcEnv
 }: BrokerOptions): Promise<FixtureAuthPasswordGrantSession> {
@@ -214,7 +215,7 @@ export async function signInFixtureViaGithubOidcBroker({
   }
   let lastError: Error | null = null;
 
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= CI_AUTH_BROKER_MAX_ATTEMPTS; attempt += 1) {
     try {
       const oidcToken = await requestGithubOidcToken(
         oidcEnv,
@@ -281,7 +282,7 @@ export async function signInFixtureViaGithubOidcBroker({
       }
     }
 
-    if (attempt < MAX_ATTEMPTS) {
+    if (attempt < CI_AUTH_BROKER_MAX_ATTEMPTS) {
       await new Promise((resolve) =>
         setTimeout(resolve, retryDelayMs * attempt),
       );

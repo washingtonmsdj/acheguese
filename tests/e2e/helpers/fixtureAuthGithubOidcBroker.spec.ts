@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  CI_AUTH_BROKER_MAX_ATTEMPTS,
+  CI_AUTH_BROKER_RETRY_DELAY_MS,
   CI_AUTH_FUNCTION_REGION,
   GITHUB_OIDC_AUDIENCE,
   resolveGithubOidcEnvironment,
@@ -51,6 +53,11 @@ const base = {
 };
 
 describe("GitHub OIDC fixture auth broker", () => {
+  it("keeps a bounded retry envelope for transient Auth degradation", () => {
+    expect(CI_AUTH_BROKER_MAX_ATTEMPTS).toBe(5);
+    expect(CI_AUTH_BROKER_RETRY_DELAY_MS).toBe(3_000);
+  });
+
   it("requires the complete GitHub OIDC runner environment", () => {
     expect(resolveGithubOidcEnvironment({})).toBeNull();
     expect(() =>
@@ -228,7 +235,7 @@ describe("GitHub OIDC fixture auth broker", () => {
     );
   });
 
-  it("fails fast when the GitHub OIDC request hangs", async () => {
+  it("fails within the bounded retry envelope when the GitHub OIDC request hangs", async () => {
     const fetchImpl = vi.fn<typeof fetch>((_input, init) =>
       new Promise<Response>((_resolve, reject) => {
         init?.signal?.addEventListener(
@@ -248,7 +255,7 @@ describe("GitHub OIDC fixture auth broker", () => {
     ).rejects.toThrow(
       "GitHub OIDC token request timed out after 1000ms",
     );
-    expect(fetchImpl).toHaveBeenCalledTimes(3);
+    expect(fetchImpl).toHaveBeenCalledTimes(CI_AUTH_BROKER_MAX_ATTEMPTS);
   });
 
   it("treats bounded upstream Auth unavailability as transient", async () => {
@@ -278,7 +285,7 @@ describe("GitHub OIDC fixture auth broker", () => {
     await expect(
       signInFixtureViaGithubOidcBroker({ ...base, fetchImpl }),
     ).rejects.toThrow("failed after transient-safe retry");
-    expect(brokerCalls).toBe(3);
-    expect(fetchImpl).toHaveBeenCalledTimes(6);
+    expect(brokerCalls).toBe(CI_AUTH_BROKER_MAX_ATTEMPTS);
+    expect(fetchImpl).toHaveBeenCalledTimes(CI_AUTH_BROKER_MAX_ATTEMPTS * 2);
   });
 });
