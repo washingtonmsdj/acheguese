@@ -103,6 +103,7 @@ export function AppSidebar() {
               asChild
               isActive={isActiveHref(href)}
               tooltip={item.label}
+              className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink data-[active=true]:bg-territory-brand/10 data-[active=true]:text-territory-brand"
             >
               <Link
                 to={href}
@@ -121,12 +122,15 @@ export function AppSidebar() {
   );
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
-      <SidebarHeader className="border-b border-sidebar-border p-0">
+    <Sidebar
+      collapsible="icon"
+      className="border-r border-territory-border bg-territory-surface text-territory-ink"
+    >
+      <SidebarHeader className="border-b border-territory-border bg-territory-surface p-0">
         <Link
           to="/"
           className={cn(
-            "w-full rounded-lg transition-colors hover:bg-sidebar-accent/60",
+            "w-full rounded-lg transition-colors hover:bg-territory-raised",
             collapsed
               ? "flex h-10 items-center justify-center"
               : "flex flex-col items-center justify-center gap-0 px-3 pb-3 pt-0",
@@ -141,19 +145,19 @@ export function AppSidebar() {
             )}
           />
           {!collapsed ? (
-            <span className="-mt-3 w-full text-center font-heading text-2xl font-semibold leading-none text-foreground">
-              Achegue-<span className="text-primary">se</span>
+            <span className="-mt-3 w-full text-center font-heading text-2xl font-semibold leading-none text-territory-ink">
+              Achegue-<span className="text-territory-brand">se</span>
             </span>
           ) : null}
         </Link>
         {!collapsed ? (
-          <div className="border-t border-sidebar-border px-2 py-2">
+          <div className="border-t border-territory-border px-2 py-2">
             <PublicCitySelector compact />
           </div>
         ) : null}
       </SidebarHeader>
 
-      <SidebarContent className="flex-1 gap-0 overflow-hidden">
+      <SidebarContent className="flex-1 gap-0 bg-territory-surface overflow-hidden">
         <div className="flex-1 overflow-y-auto py-2">
           {NAV_SECTIONS.map((section) => {
             const visibleItems = section.items.filter(
@@ -163,7 +167,7 @@ export function AppSidebar() {
 
             return (
               <SidebarGroup key={section.id} className="px-2 py-1">
-                <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/60">
+                <SidebarGroupLabel className="h-6 px-2 text-[11px] font-semibold uppercase tracking-wide text-territory-muted">
                   {section.label}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
@@ -175,10 +179,10 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="space-y-2 border-t border-sidebar-border p-2">
+      <SidebarFooter className="space-y-2 border-t border-territory-border bg-territory-surface p-2">
         <button
           onClick={toggleTheme}
-          className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-foreground"
+          className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
         >
           {theme === "dark" ? (
             <Sun className="h-4 w-4" />
@@ -186,33 +190,36 @@ export function AppSidebar() {
             <Moon className="h-4 w-4" />
           )}
           {!collapsed ? (
-            <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>
+            <span>{theme === "dark" ? "Modo claro" : "Modo escuro"}</span>
           ) : null}
         </button>
 
         {user ? (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Minha conta">
+              <SidebarMenuButton
+                asChild
+                tooltip="Minha conta"
+                className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+              >
                 <Link
                   to={appUrls.profile.home}
                   onMouseEnter={() => prefetchRouteByHref(appUrls.profile.home)}
                   onFocus={() => prefetchRouteByHref(appUrls.profile.home)}
                   onTouchStart={() => prefetchRouteByHref(appUrls.profile.home)}
-                  className="hover:bg-sidebar-accent/50"
                 >
-                  <Avatar className="h-6 w-6 shrink-0 border border-primary/30">
+                  <Avatar className="h-6 w-6 shrink-0 border border-territory-brand/30">
                     <AvatarImage src={activeProfile?.avatarUrl || undefined} />
-                    <AvatarFallback className="text-[10px]">
+                    <AvatarFallback className="bg-territory-raised text-[10px] text-territory-ink">
                       {getInitials(activeProfile?.displayName || user.email)}
                     </AvatarFallback>
                   </Avatar>
                   {!collapsed ? (
                     <div className="min-w-0 text-left">
-                      <p className="truncate text-sm font-medium">
+                      <p className="truncate text-sm font-medium text-territory-ink">
                         {activeProfile?.displayName || user.email?.split("@")[0]}
                       </p>
-                      <p className="truncate text-[11px] text-muted-foreground">
+                      <p className="truncate text-[11px] text-territory-muted">
                         {activeProfile?.username
                           ? `@${activeProfile.username}`
                           : "Ver perfil"}
@@ -223,7 +230,11 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Preferências da conta">
+              <SidebarMenuButton
+                asChild
+                tooltip="Preferências da conta"
+                className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+              >
                 <Link
                   to={appUrls.settings}
                   onMouseEnter={() => prefetchRouteByHref(appUrls.settings)}
@@ -239,7 +250,11 @@ export function AppSidebar() {
         ) : (
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Entrar">
+              <SidebarMenuButton
+                asChild
+                tooltip="Entrar"
+                className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+              >
                 <Link
                   to="/login"
                   onMouseEnter={() => prefetchRouteByHref("/login")}
