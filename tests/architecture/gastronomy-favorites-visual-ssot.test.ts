@@ -11,6 +11,8 @@ const GASTRONOMY_UI_OWNERS = [
   "src/modules/business/gastronomy/pages/GastronomyDetailMenuSection.tsx",
   "src/modules/business/gastronomy/pages/GastronomyDetailNavigation.tsx",
 ] as const;
+const GASTRONOMY_HERO =
+  "src/modules/business/gastronomy/pages/GastronomyDetailHeroSection.tsx";
 
 const GASTRONOMY_PAGE_SHELLS = GASTRONOMY_UI_OWNERS.slice(0, 2);
 
@@ -43,6 +45,16 @@ describe("gastronomy visual SSOT", () => {
       expect(fs.readFileSync(path.join(ROOT, relativePath), "utf8"), relativePath).toContain(
         "bg-territory-canvas",
       );
+    }
+
+    const hero = fs.readFileSync(path.join(ROOT, GASTRONOMY_HERO), "utf8");
+    expect(hero).toContain("bg-territory-raised");
+    expect(hero).toContain("bg-territory-brand/90");
+    expect(hero).toContain("bg-territory-success/90");
+    expect(hero).toContain("bg-territory-warning/90");
+    expect(hero).toContain("fill-territory-sun");
+    for (const token of LEGACY_VISUAL_TOKENS) {
+      expect(hero, `${GASTRONOMY_HERO}: legacy visual token returned: ${token}`).not.toContain(token);
     }
 
     const favorites = fs.readFileSync(
