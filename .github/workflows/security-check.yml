@@ -41,6 +41,23 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  dependency-security:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Block high-severity dependency advisories
+        run: npm audit --audit-level=high
+
   security-validation:
     name: Validate No Hardcoded Credentials
     runs-on: ubuntu-latest
