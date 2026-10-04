@@ -605,7 +605,10 @@ describe("MVP core module boundary", () => {
       "returned non-JSON response",
     );
     expect(packageJson).toContain(
-      "tests/e2e/messaging-authenticated.spec.ts --project=chromium --reporter=list --retries=0",
+      '"test:e2e:account-authenticated": "playwright test tests/e2e/account-authenticated.spec.ts --project=chromium --reporter=list --retries=0 && npm run test:e2e:business-lifecycle-authenticated"',
+    );
+    expect(packageJson).not.toContain(
+      '"test:e2e:account-authenticated": "playwright test tests/e2e/account-authenticated.spec.ts tests/e2e/messaging-authenticated.spec.ts',
     );
     expect(accountAuthenticatedE2e).toContain(
       "ensureFixtureCurrentTermsAcceptance(client)",
