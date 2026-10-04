@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const owners = [
   "src/modules/business/company/sections/EmpresaInfoSection.tsx",
+  "src/modules/business/company/components/info/AddressCard.tsx",
   "src/modules/business/company/components/info/HoursCard.tsx",
   "src/modules/business/company/components/info/PaymentCard.tsx",
   "src/modules/business/company/components/info/ContactCard.tsx",
@@ -25,14 +26,21 @@ describe("Business public info visual SSOT", () => {
   });
 
   it("preserves semantic status ownership for hours, payment and copied-phone feedback", () => {
-    const hours = read(owners[1]);
-    const payment = read(owners[2]);
-    const contact = read(owners[3]);
+    const hours = read("src/modules/business/company/components/info/HoursCard.tsx");
+    const payment = read("src/modules/business/company/components/info/PaymentCard.tsx");
+    const contact = read("src/modules/business/company/components/info/ContactCard.tsx");
 
     expect(hours).toContain("territory-success");
     expect(hours).toContain("territory-error");
     expect(payment).toContain("territory-success");
     expect(payment).toContain("territory-info");
     expect(contact).toContain("territory-success");
+  });
+
+  it("keeps the mini-map marker and fallback bound to territorial theme variables", () => {
+    const address = read("src/modules/business/company/components/info/AddressCard.tsx");
+
+    expect(address).toContain('markerColor="hsl(var(--territory-brand))"');
+    expect(address).toContain('fallbackClassName="bg-territory-raised"');
   });
 });
