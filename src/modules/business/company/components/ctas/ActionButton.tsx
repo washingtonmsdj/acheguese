@@ -1,66 +1,72 @@
 import { cn } from '@/shared/utils/cn';
-import type { ActionButtonProps } from '../../sections/types';
+import type { ActionButtonProps, ActionButtonTone } from '../../sections/types';
 
-function getTone(color: string, isActive: boolean): string {
-  if (color === 'emerald-400') {
-    return isActive
-      ? 'border-emerald-400/35 bg-emerald-400/12 text-emerald-200'
-      : 'border-white/10 bg-white/[0.03] text-white/74 hover:border-emerald-400/24 hover:text-emerald-200';
-  }
-
-  if (color === 'amber-400') {
-    return isActive
-      ? 'border-amber-400/35 bg-amber-400/12 text-amber-200'
-      : 'border-white/10 bg-white/[0.03] text-white/74 hover:border-amber-400/24 hover:text-amber-200';
-  }
-
-  return isActive
-    ? 'border-teal-400/35 bg-teal-400/12 text-teal-200'
-    : 'border-white/10 bg-white/[0.03] text-white/74 hover:border-teal-400/24 hover:text-teal-200';
+interface ActionButtonToneStyles {
+  readonly solid: string;
+  readonly softActive: string;
+  readonly softIdle: string;
+  readonly iconActive: string;
+  readonly iconIdle: string;
 }
 
-function getSolidTone(color: string): string {
-  if (color === 'emerald-400') {
-    return 'border-emerald-400/40 bg-[linear-gradient(135deg,rgba(34,197,94,0.92),rgba(16,185,129,0.92))] text-white hover:brightness-105';
-  }
-
-  if (color === 'sky-400') {
-    return 'border-sky-400/40 bg-[linear-gradient(135deg,rgba(14,165,233,0.92),rgba(6,182,212,0.92))] text-white hover:brightness-105';
-  }
-
-  return 'border-teal-400/40 bg-[linear-gradient(135deg,rgba(45,212,191,0.92),rgba(20,184,166,0.92))] text-slate-950 hover:brightness-105';
-}
-
-function getIconTone(color: string, isActive: boolean): string {
-  if (color === 'emerald-400') {
-    return isActive ? 'bg-emerald-400/18 text-emerald-200' : 'bg-emerald-400/10 text-emerald-300';
-  }
-
-  if (color === 'amber-400') {
-    return isActive ? 'bg-amber-400/18 text-amber-200' : 'bg-amber-400/10 text-amber-300';
-  }
-
-  return isActive ? 'bg-teal-400/18 text-teal-200' : 'bg-teal-400/10 text-teal-300';
-}
+const ACTION_BUTTON_TONES: Record<ActionButtonTone, ActionButtonToneStyles> = {
+  action: {
+    solid:
+      'border-territory-action-on-image/40 bg-territory-action-on-image text-territory-image-overlay hover:bg-territory-action-on-image/90',
+    softActive:
+      'border-territory-action-on-image/35 bg-territory-action-on-image/12 text-territory-action-on-image',
+    softIdle:
+      'border-territory-on-image/10 bg-territory-image-overlay/20 text-territory-on-image/75 hover:border-territory-action-on-image/30 hover:text-territory-action-on-image',
+    iconActive:
+      'bg-territory-action-on-image/18 text-territory-action-on-image',
+    iconIdle:
+      'bg-territory-action-on-image/10 text-territory-action-on-image',
+  },
+  success: {
+    solid:
+      'border-territory-success/40 bg-territory-success text-territory-on-image hover:bg-territory-success/90',
+    softActive:
+      'border-territory-success/35 bg-territory-success/12 text-territory-success',
+    softIdle:
+      'border-territory-on-image/10 bg-territory-image-overlay/20 text-territory-on-image/75 hover:border-territory-success/30 hover:text-territory-success',
+    iconActive: 'bg-territory-success/18 text-territory-success',
+    iconIdle: 'bg-territory-success/10 text-territory-success',
+  },
+  info: {
+    solid:
+      'border-territory-info/40 bg-territory-info text-territory-on-image hover:bg-territory-info/90',
+    softActive:
+      'border-territory-info/35 bg-territory-info/12 text-territory-info',
+    softIdle:
+      'border-territory-on-image/10 bg-territory-image-overlay/20 text-territory-on-image/75 hover:border-territory-info/30 hover:text-territory-info',
+    iconActive: 'bg-territory-info/18 text-territory-info',
+    iconIdle: 'bg-territory-info/10 text-territory-info',
+  },
+};
 
 export function ActionButton({
   icon: Icon,
   label,
   onClick,
   href,
-  color = 'primary',
+  tone = 'action',
   appearance = 'soft',
   layout = 'stacked',
   isActive = false,
   ariaPressed,
   disabled = false,
 }: ActionButtonProps) {
+  const toneStyles = ACTION_BUTTON_TONES[tone];
   const className = cn(
-    'group inline-flex rounded-[20px] border text-center transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+    'group inline-flex rounded-territory border text-center transition-colors disabled:cursor-not-allowed disabled:opacity-60',
     layout === 'inline'
       ? 'min-h-[3.15rem] flex-row items-center justify-center gap-2 px-[0.8125rem] py-2 lg:min-h-[3.05rem] lg:px-3 lg:py-1.5 [@media(max-height:1100px)]:min-h-[2.45rem] [@media(max-height:1100px)]:gap-[0.275rem] [@media(max-height:1100px)]:px-[0.5625rem] [@media(max-height:860px)]:min-h-[2.35rem] [@media(max-height:860px)]:px-2 [@media(max-height:860px)]:py-1'
       : 'min-h-[3.65rem] flex-col items-center justify-center gap-1 px-3 py-2 sm:min-h-[5.1rem] sm:gap-1.5 sm:py-2.5 lg:min-h-[5.35rem]',
-    appearance === 'solid' ? getSolidTone(color) : getTone(color, isActive),
+    appearance === 'solid'
+      ? toneStyles.solid
+      : isActive
+        ? toneStyles.softActive
+        : toneStyles.softIdle,
   );
   const content = (
     <>
@@ -70,8 +76,10 @@ export function ActionButton({
             ? 'flex h-[1.85rem] w-[1.85rem] items-center justify-center rounded-2xl lg:h-7 lg:w-7 [@media(max-height:1100px)]:h-6 [@media(max-height:1100px)]:w-6 [@media(max-height:860px)]:h-[1.375rem] [@media(max-height:860px)]:w-[1.375rem]'
             : 'flex h-7 w-7 items-center justify-center rounded-2xl sm:h-9 sm:w-9 lg:h-10 lg:w-10',
           appearance === 'solid'
-            ? 'bg-black/12 text-current'
-            : getIconTone(color, isActive),
+            ? 'bg-territory-image-overlay/20 text-current'
+            : isActive
+              ? toneStyles.iconActive
+              : toneStyles.iconIdle,
         )}
       >
         <Icon className={layout === 'inline' ? 'h-[18px] w-[18px]' : 'h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-[18px] lg:w-[18px]'} />

@@ -53,7 +53,7 @@ export function EmpresaCTAsSection({
               icon={MessageCircle}
               label="WhatsApp"
               href={whatsAppUrl}
-              color="emerald-400"
+              tone="success"
               appearance="solid"
               layout="inline"
             />
@@ -65,7 +65,6 @@ export function EmpresaCTAsSection({
               icon={MessagesSquare}
               label="Mensagem"
               onClick={onMessage}
-              color="primary"
               appearance="solid"
               layout="inline"
               disabled={messageLoading}
@@ -76,7 +75,6 @@ export function EmpresaCTAsSection({
               icon={Phone}
               label="Ligar"
               href={phoneUrl}
-              color="primary"
               appearance="solid"
               layout="inline"
             />
@@ -88,7 +86,7 @@ export function EmpresaCTAsSection({
               icon={Navigation}
               label="Rota"
               onClick={onToggleRouteOptions}
-              color="sky-400"
+              tone="info"
               appearance="solid"
               layout="inline"
             />
@@ -99,7 +97,6 @@ export function EmpresaCTAsSection({
             icon={Bookmark}
             label={isFavorite ? 'Salvo' : 'Salvar'}
             onClick={onToggleFavorite}
-            color="primary"
             isActive={isFavorite}
             ariaPressed={isFavorite}
             layout="inline"
@@ -108,7 +105,6 @@ export function EmpresaCTAsSection({
             icon={ThumbsUp}
             label={hasRecommended ? 'Recomendado' : 'Recomendar'}
             onClick={onToggleRecommended}
-            color="primary"
             isActive={hasRecommended}
             ariaPressed={hasRecommended}
             disabled={recommendLoading}
@@ -122,7 +118,6 @@ export function EmpresaCTAsSection({
               icon={MessagesSquare}
               label="Mensagem"
               onClick={onMessage}
-              color="primary"
               appearance="solid"
               disabled={messageLoading}
             />
@@ -132,7 +127,7 @@ export function EmpresaCTAsSection({
               icon={MessageCircle}
               label="WhatsApp"
               href={whatsAppUrl}
-              color="emerald-400"
+              tone="success"
               appearance="solid"
             />
           ) : null}
@@ -141,7 +136,6 @@ export function EmpresaCTAsSection({
               icon={Phone}
               label="Ligar"
               href={phoneUrl}
-              color="primary"
               appearance="solid"
             />
           ) : null}
@@ -150,7 +144,7 @@ export function EmpresaCTAsSection({
               icon={Navigation}
               label="Rota"
               onClick={onToggleRouteOptions}
-              color="sky-400"
+              tone="info"
               appearance="solid"
             />
           ) : null}
@@ -161,7 +155,6 @@ export function EmpresaCTAsSection({
             icon={Bookmark}
             label={isFavorite ? 'Salvo' : 'Salvar'}
             onClick={onToggleFavorite}
-            color="primary"
             isActive={isFavorite}
             ariaPressed={isFavorite}
           />
@@ -169,7 +162,6 @@ export function EmpresaCTAsSection({
             icon={ThumbsUp}
             label={hasRecommended ? 'Recomendado' : 'Recomendar'}
             onClick={onToggleRecommended}
-            color="primary"
             isActive={hasRecommended}
             ariaPressed={hasRecommended}
             disabled={recommendLoading}
@@ -178,7 +170,6 @@ export function EmpresaCTAsSection({
             icon={Share2}
             label="Compartilhar"
             onClick={onShare}
-            color="primary"
           />
         </div>
 

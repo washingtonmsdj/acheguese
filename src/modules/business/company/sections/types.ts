@@ -197,12 +197,14 @@ export interface FacilitiesCardProps {
   readonly facilidades: readonly string[];
 }
 
+export type ActionButtonTone = 'action' | 'success' | 'info';
+
 export interface ActionButtonProps {
   readonly icon: React.ComponentType<{ className?: string }>;
   readonly label: string;
   readonly onClick?: () => void;
   readonly href?: string;
-  readonly color?: string;
+  readonly tone?: ActionButtonTone;
   readonly appearance?: 'soft' | 'solid';
   readonly layout?: 'stacked' | 'inline';
   readonly isActive?: boolean;
