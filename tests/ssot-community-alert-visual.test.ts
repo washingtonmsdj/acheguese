@@ -6,6 +6,7 @@ const ROOT = process.cwd();
 const ALERT_SURFACES = [
   "src/core/community/alerts/components/AlertCard.tsx",
   "src/core/community/alerts/components/AlertFeedSection.tsx",
+  "src/core/community/alerts/components/CreateAlertModal.tsx",
 ] as const;
 
 const read = (relativePath: string) =>
@@ -37,9 +38,18 @@ describe("Community alert visual SSOT", () => {
       expect(source, relativePath).not.toMatch(
         /(?:bg|border|text)-(?:red|orange|amber|yellow|green|gray|slate|zinc|neutral|stone)-\d{2,3}/,
       );
-      expect(source, relativePath).not.toContain("bg-card");
-      expect(source, relativePath).not.toContain("text-muted-foreground");
-      expect(source, relativePath).not.toContain("bg-muted");
+      for (const legacyToken of [
+        "bg-card",
+        "bg-muted",
+        "text-muted-foreground",
+        "text-destructive",
+        "bg-destructive",
+        "border-border",
+        "border-input",
+        "bg-background",
+      ]) {
+        expect(source, `${relativePath}: ${legacyToken}`).not.toContain(legacyToken);
+      }
     }
   });
 });
