@@ -31,6 +31,8 @@ export interface EducationEntitlements {
 
 export interface EducationSubscriptionStatus {
   isActive: boolean;
+  planTier: PlanTier;
+  /** @deprecated Compatibilidade de apresentação. Regras de autorização usam planTier. */
   planType: 'free' | 'basic' | 'premium';
   entitlements: EducationEntitlements;
   expiresAt: string | null;
@@ -80,6 +82,7 @@ export const EducationSubscriptionService = {
 
       return {
         isActive: subscription.status === 'active',
+        planTier: subscription.plan_tier,
         planType,
         entitlements,
         expiresAt: subscription.current_period_end || null,
@@ -92,6 +95,7 @@ export const EducationSubscriptionService = {
 
       return {
         isActive: false,
+        planTier: PlanTier.FREE,
         planType: 'free',
         entitlements: toEducationEntitlements(
           EntitlementsService.getAll(PlanTier.FREE),
