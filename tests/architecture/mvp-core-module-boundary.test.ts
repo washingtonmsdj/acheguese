@@ -54,6 +54,7 @@ describe("MVP core module boundary", () => {
     "src/core/navigation/territoryNavigationModes.ts",
   );
   const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+  const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
   const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
   const rootRoutes = read("src/app/routes/AppRoutes.tsx");
   const publicMvpE2e = read("tests/e2e/territory-home-operational.spec.ts");
@@ -100,6 +101,13 @@ describe("MVP core module boundary", () => {
     expect(platformRegistry).toContain('| "nearby"');
     expect(platformRegistry).toContain('| "search"');
     expect(platformRegistry).toContain('| "messaging"');
+    expect(platformRegistry).toContain('| "notifications"');
+    const messagingBlock =
+      platformRegistry.match(/\n  messaging: \{[\s\S]*?\n  \},/)?.[0] ?? "";
+    const notificationsBlock =
+      platformRegistry.match(/\n  notifications: \{[\s\S]*?\n  \},/)?.[0] ?? "";
+    expect(messagingBlock).toContain('status: "paused"');
+    expect(notificationsBlock).toContain('status: "paused"');
     expect(platformRegistry).toContain('dependsOnCapabilities: ["map", "location"]');
     expect(nearbyProviderScope).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(nearbyProviderScope).toContain("isProductModuleEnabled(productModule)");
@@ -402,21 +410,41 @@ describe("MVP core module boundary", () => {
     );
   });
 
-  it("mounts only lifecycle-enabled MVP surfaces in the active AppLayout", () => {
+  it("mounts only certified MVP surfaces in the active AppLayout", () => {
     expect(appRoutes).toContain('isProductModuleEnabled("business")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("map")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("search")');
-    expect(appRoutes).toContain('isPlatformCapabilityEnabled("messaging")');
 
     expect(appRoutes).toContain('path="/empresas"');
     expect(appRoutes).toContain('path="/empresas/cadastrar"');
     expect(appRoutes).toContain('path="/mapa"');
     expect(appRoutes).toContain('path="/perto-de-mim"');
     expect(appRoutes).toContain('path="/busca"');
-    expect(appRoutes).toContain("messagingRoutes.inbox()");
-    expect(appRoutes).toContain("messagingRoutes.threadPattern()");
+
+    for (const pausedRouteOwner of [
+      "messagingRoutes.inbox()",
+      "messagingRoutes.threadPattern()",
+      'path="/notificacoes"',
+      'path="/conta/notificacoes"',
+      "P.NotificationsPage",
+      "P.NotificationPreferencesPage",
+      "P.MensagensPage",
+    ]) {
+      expect(appRoutes).not.toContain(pausedRouteOwner);
+    }
+    for (const pausedLazyOwner of [
+      "NotificationsPage",
+      "NotificationPreferencesPage",
+      "EmailLogsPage",
+      "MensagensPage",
+    ]) {
+      expect(activeLazyImports).not.toContain(pausedLazyOwner);
+    }
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
+    expect(messagingRoutes).toContain(
+      'threadPattern: () => "/mensagens/:providerId/:threadId"',
+    );
 
     expect(appRoutes).not.toContain("LaunchPausedPage");
     expect(appRoutes).not.toContain("DIRECT_PAUSED_ROUTES");
@@ -426,18 +454,13 @@ describe("MVP core module boundary", () => {
     expect(appRoutes).not.toContain('path="/educacao"');
   });
 
-  it("keeps paused route prefetches fail-closed before loading chunks", () => {
+  it("keeps route prefetch limited to active MVP chunks", () => {
     const prefetch = read("src/app/routes/prefetch.ts");
     expect(prefetch).not.toContain("@/app/config/launchScope");
     expect(prefetch).not.toContain("isLaunchSurfaceEnabled");
     expect(prefetch).not.toContain("LaunchSurfaceKey");
     expect(prefetch).toContain('isProductModuleEnabled("business")');
-    for (const capability of [
-      "map",
-      "nearby",
-      "search",
-      "notifications",
-    ]) {
+    for (const capability of ["map", "nearby", "search"]) {
       expect(prefetch).toContain(
         `isPlatformCapabilityEnabled("${capability}")`,
       );
@@ -446,7 +469,9 @@ describe("MVP core module boundary", () => {
     expect(prefetch).toContain('import("@/app/pages/NearbyPage")');
     expect(prefetch).toContain("if (!candidate || !candidate.enabled()) return;");
     expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter((entry) => entry.enabled())");
-    expect(prefetch).toContain('href: "/notificacoes"');
+    expect(prefetch).not.toContain('href: "/notificacoes"');
+    expect(prefetch).not.toContain('import("@/app/pages/NotificationsPage")');
+    expect(prefetch).not.toContain('isPlatformCapabilityEnabled("notifications")');
   });
 
   it("keeps primary territorial navigation on the MVP core", () => {
