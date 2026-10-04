@@ -1,7 +1,7 @@
 /**
  * EducationLeadsPage
  *
- * Pagina de gestao de leads da instituicao.
+ * Página de gestão de leads da instituição.
  * Rota: /central/empresas/:businessId/educacao/leads
  */
 
@@ -57,7 +57,7 @@ export function EducationLeadsPage() {
   if (isProfileError || isLeadsError || isPipelineError) {
     return (
       <EducationAdminReadError
-        title="Nao foi possivel carregar os leads"
+        title="Não foi possível carregar os leads"
         error={profileError ?? leadsError ?? pipelineError}
         onRetry={async () => {
           await Promise.all([
@@ -71,31 +71,31 @@ export function EducationLeadsPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
+    <div className="container mx-auto p-6 text-territory-ink">
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between mb-8"
+        className="mb-8 flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-            <Users className="w-5 h-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand text-territory-on-image shadow-sm">
+            <Users className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestão de Leads</h1>
-            <p className="text-sm text-gray-500">
+            <h1 className="font-heading text-2xl font-bold text-territory-ink">
+              Gestão de Leads
+            </h1>
+            <p className="text-sm text-territory-muted">
               Pipeline de matrículas e interessados
             </p>
           </div>
         </div>
       </motion.div>
 
-      {/* Pipeline */}
       {isLoading ? (
-        <div className="space-y-6">
+        <div className="space-y-6" role="status" aria-label="Carregando leads">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
+            <Skeleton key={i} className="h-32 rounded-xl bg-territory-raised" />
           ))}
         </div>
       ) : (
@@ -107,9 +107,9 @@ export function EducationLeadsPage() {
           />
 
           {totalCount > pageSize && (
-            <div className="mt-8 flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground">
-                Exibindo {leads.length} leads nesta pagina de {totalCount} no total.
+            <div className="mt-8 flex flex-col gap-3 border-t border-territory-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-territory-muted">
+                Exibindo {leads.length} leads nesta página de {totalCount} no total.
                 As contagens por etapa consideram todo o pipeline.
               </p>
               <div className="flex items-center gap-2">
@@ -119,11 +119,12 @@ export function EducationLeadsPage() {
                   size="sm"
                   disabled={page <= 1}
                   onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised hover:text-territory-ink"
                 >
                   Anterior
                 </Button>
-                <span className="text-sm text-muted-foreground">
-                  Pagina {page} de {totalPages}
+                <span className="text-sm text-territory-muted">
+                  Página {page} de {totalPages}
                 </span>
                 <Button
                   type="button"
@@ -133,8 +134,9 @@ export function EducationLeadsPage() {
                   onClick={() =>
                     setPage((current) => Math.min(totalPages, current + 1))
                   }
+                  className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised hover:text-territory-ink"
                 >
-                  Proxima
+                  Próxima
                 </Button>
               </div>
             </div>
