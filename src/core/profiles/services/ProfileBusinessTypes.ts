@@ -8,7 +8,6 @@
  * Used by:
  * - ProfileService.getPrivateWorkspace() for `businessModules`.
  * - useContaWorkspace and useProfileHub.
- * - FavoritesList and ContentTabsSection for associated businesses.
  * - BusinessModulesSection for active Business management views.
  */
 
