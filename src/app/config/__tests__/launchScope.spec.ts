@@ -1,12 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { ACTIVE_MODULES, getContextMessageFromPath } from "../modules";
-import {
-  PRODUCT_MODULE_REGISTRY,
-} from "../productModuleRegistry";
-import {
-  PLATFORM_CAPABILITY_REGISTRY,
-} from "../platformCapabilityRegistry";
+import { PRODUCT_MODULE_REGISTRY } from "../productModuleRegistry";
+import { PLATFORM_CAPABILITY_REGISTRY } from "../platformCapabilityRegistry";
 import {
   getActivePlatformCapabilities,
   getActiveProductModules,
@@ -18,16 +14,31 @@ import {
 } from "../launchScope";
 
 describe("launchScope", () => {
-  it("keeps Business active as domain and the MVP platform capabilities active", () => {
+  it("keeps Business active as domain and only certified MVP capabilities active", () => {
     expect(getActiveProductModules()).toEqual(["business"]);
     expect(getActivePlatformCapabilities()).toEqual(
-      expect.arrayContaining(["profiles", "map", "nearby", "search", "messaging"]),
+      expect.arrayContaining([
+        "auth",
+        "profiles",
+        "account",
+        "territory",
+        "location",
+        "central",
+        "map",
+        "nearby",
+        "search",
+      ]),
     );
+    expect(getActivePlatformCapabilities()).not.toEqual(
+      expect.arrayContaining(["notifications", "messaging"]),
+    );
+
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
       dependsOnCapabilities: ["map", "location"],
     });
-
+    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.status).toBe("paused");
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("paused");
     expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
 
     for (const enabled of [
@@ -37,12 +48,12 @@ describe("launchScope", () => {
       "map",
       "nearby",
       "search",
-      "messaging",
     ] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
     }
 
     for (const paused of [
+      "messaging",
       "community",
       "billing",
       "gastronomy",
