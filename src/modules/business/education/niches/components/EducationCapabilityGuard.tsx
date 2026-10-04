@@ -1,17 +1,13 @@
 /**
  * EducationCapabilityGuard
- * 
- * Guard visual para capabilities de education.
- * Renderiza children apenas se capability for permitida (nicho + plano).
+ *
+ * Guard visual para capabilities de Education.
+ * Renderiza children apenas se a capability for permitida pelo nicho e plano.
  */
 
 import React from 'react';
 import { useEducationNicheBilling } from '../hooks/useEducationNicheBilling';
 import type { EducationNicheCapability } from '../types';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TIPOS
-// ═══════════════════════════════════════════════════════════════════════════
 
 export interface EducationCapabilityGuardProps {
   nicheKey: string | null | undefined;
@@ -21,10 +17,6 @@ export interface EducationCapabilityGuardProps {
   fallback?: React.ReactNode;
   showUpgradeMessage?: boolean;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// COMPONENTE
-// ═══════════════════════════════════════════════════════════════════════════
 
 export function EducationCapabilityGuard({
   nicheKey,
@@ -38,49 +30,51 @@ export function EducationCapabilityGuard({
     nicheKey,
     businessId,
   });
-  
-  // Loading state
+
   if (isLoading) {
     return (
-      <div className="animate-pulse bg-muted rounded h-16" aria-busy="true">
+      <div
+        className="h-16 animate-pulse rounded-lg bg-territory-raised"
+        aria-busy="true"
+      >
         <span className="sr-only">Carregando...</span>
       </div>
     );
   }
-  
+
   const check = can(capability);
-  
-  // Capability permitida
+
   if (check.allowed) {
     return <>{children}</>;
   }
-  
-  // Capability negada - mostra fallback ou mensagem de upgrade
+
   if (fallback) {
     return <>{fallback}</>;
   }
-  
+
   if (showUpgradeMessage) {
     return (
-      <div className="p-4 bg-muted/50 border border-dashed rounded-lg text-center">
-        <p className="text-sm text-muted-foreground">
-          {check.upgradeMessage}
-        </p>
+      <div className="rounded-lg border border-dashed border-territory-border bg-territory-raised/70 p-4 text-center">
+        <p className="text-sm text-territory-muted">{check.upgradeMessage}</p>
       </div>
     );
   }
-  
+
   return null;
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// VARIANTES ESPECÍFICAS
-// ═══════════════════════════════════════════════════════════════════════════
 
 interface GuardWithFallbackProps {
   nicheKey: string | null | undefined;
   businessId: string;
   children: React.ReactNode;
+}
+
+function UnavailableCapabilityMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-lg border border-territory-border bg-territory-raised/70 p-4 text-center text-sm text-territory-muted">
+      {children}
+    </div>
+  );
 }
 
 export function LeadPipelineGuard(props: GuardWithFallbackProps) {
@@ -89,9 +83,9 @@ export function LeadPipelineGuard(props: GuardWithFallbackProps) {
       {...props}
       capability="lead_pipeline"
       fallback={
-        <div className="p-4 text-center text-muted-foreground">
+        <UnavailableCapabilityMessage>
           Pipeline de leads não disponível para este nicho.
-        </div>
+        </UnavailableCapabilityMessage>
       }
     />
   );
@@ -103,9 +97,9 @@ export function EventsPublicGuard(props: GuardWithFallbackProps) {
       {...props}
       capability="events_public"
       fallback={
-        <div className="p-4 text-center text-muted-foreground">
+        <UnavailableCapabilityMessage>
           Eventos públicos não disponíveis para este nicho.
-        </div>
+        </UnavailableCapabilityMessage>
       }
     />
   );
@@ -117,9 +111,9 @@ export function TrialClassBookingGuard(props: GuardWithFallbackProps) {
       {...props}
       capability="trial_class_booking"
       fallback={
-        <div className="p-4 text-center text-muted-foreground">
+        <UnavailableCapabilityMessage>
           Agendamento de aula experimental não disponível.
-        </div>
+        </UnavailableCapabilityMessage>
       }
     />
   );
@@ -131,9 +125,9 @@ export function DocumentUploadGuard(props: GuardWithFallbackProps) {
       {...props}
       capability="document_upload_pre_enrollment"
       fallback={
-        <div className="p-4 text-center text-muted-foreground">
+        <UnavailableCapabilityMessage>
           Upload de documentos requer plano Pro ou superior.
-        </div>
+        </UnavailableCapabilityMessage>
       }
     />
   );
@@ -143,11 +137,11 @@ export function AnalyticsGuard(props: GuardWithFallbackProps) {
   return (
     <EducationCapabilityGuard
       {...props}
-      capability="basic_programs_catalog"
+      capability="analytics_basic"
       fallback={
-        <div className="p-4 text-center text-muted-foreground">
+        <UnavailableCapabilityMessage>
           Analytics não disponível para este plano.
-        </div>
+        </UnavailableCapabilityMessage>
       }
     />
   );
