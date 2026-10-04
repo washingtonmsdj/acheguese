@@ -122,6 +122,12 @@ describe("nearby MVP boundary", () => {
     expect(page).toContain('className="nb-no-results"');
   });
 
+  it("keeps the map CTA accessible independently of responsive copy", () => {
+    expect(page).toContain('aria-label="Abrir mapa completo"');
+    expect(page).toContain('title="Abrir mapa completo"');
+    expect(page).toContain('<ArrowRight aria-hidden="true" />');
+  });
+
   it("uses the canonical Business taxonomy instead of local category aliases", () => {
     expect(page).toContain("BUSINESS_CATEGORY_OPTIONS");
     expect(page).toContain("getBusinessCategoryLabel");
