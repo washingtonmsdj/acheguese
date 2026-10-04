@@ -17,7 +17,7 @@ import {
 
 import { BrandMark, PublicBrandHeader } from "@/app/components/navigation/PublicBrandHeader";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { TerritorialModuleHero, type TerritorialHeroBreadcrumb, type TerritoryModuleNavItem, type TerritoryModuleNavMoreItem } from "@/app/components/territorial";
+import { TerritorialModuleHero, type TerritorialHeroBreadcrumb, type TerritoryModuleNavItem } from "@/app/components/territorial";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
 import { useBusinessUrls } from "@/modules/business/hooks/useBusinessUrls";
 import { getBusinessUrl, normalizeRealBusinessEntry } from "@/app/features/business-landing/utils";
@@ -173,27 +173,12 @@ export default function TerritoryPortalPage({
       icon: Navigation,
     },
     {
-      id: "community",
-      label: "Comunidade",
-      description: "Conexões do bairro",
-      icon: UsersRound,
-      disabled: true,
-    },
-    {
       id: "search",
       label: "Busca",
       description: "Procurar no território",
       href: urls.search,
       icon: Search,
     },
-  ];
-
-  const moreNavItems: readonly TerritoryModuleNavMoreItem[] = [
-    { label: "Visão geral", href: urls.home },
-    { label: "Busca", href: urls.search },
-    { label: "Comunidade", disabled: true },
-    { label: "Serviços", disabled: true },
-    { label: "Eventos", disabled: true },
   ];
 
   const heroBreadcrumbs: readonly TerritorialHeroBreadcrumb[] = [
@@ -266,7 +251,6 @@ export default function TerritoryPortalPage({
           breadcrumbs={heroBreadcrumbs}
           backgroundImage={heroImage}
           navItems={moduleNavItems}
-          moreNavItems={moreNavItems}
         />
 
         {activeView !== "home" ? (
