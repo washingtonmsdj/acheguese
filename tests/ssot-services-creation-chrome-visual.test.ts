@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const SERVICES_CREATION_SURFACES = [
+  "src/modules/professionals/services/pages/CadastrarServicoPage.tsx",
   "src/modules/professionals/services/pages/CadastrarServicoChrome.tsx",
   "src/modules/professionals/services/pages/CadastrarServicoReview.tsx",
 ] as const;
@@ -12,10 +13,11 @@ const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
 describe("Services creation visual SSOT", () => {
-  it("uses territorial tokens for chrome, review and navigation", () => {
+  it("uses territorial tokens for shell, chrome, review and navigation", () => {
     const source = SERVICES_CREATION_SURFACES.map(read).join("\n");
 
     for (const token of [
+      "territory-canvas",
       "territory-brand",
       "territory-border",
       "territory-surface",
@@ -28,7 +30,7 @@ describe("Services creation visual SSOT", () => {
     }
   });
 
-  it("does not regress to generic theme tokens or hardcoded brand shadows", () => {
+  it("does not regress to generic theme tokens or hardcoded shadows", () => {
     for (const relativePath of SERVICES_CREATION_SURFACES) {
       const source = read(relativePath);
 
@@ -43,6 +45,7 @@ describe("Services creation visual SSOT", () => {
         "text-primary",
         "bg-secondary",
         "rgba(0,214,201",
+        "rgba(0,0,0",
       ]) {
         expect(source, `${relativePath}: ${legacyToken}`).not.toContain(legacyToken);
       }
