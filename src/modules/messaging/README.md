@@ -1,20 +1,18 @@
 # Messaging UI
 
-`src/modules/messaging` is the horizontal UI owner for private Inbox/Chat.
+`src/modules/messaging` é o owner horizontal de apresentação da Inbox/Chat privada.
 
-Status: **active in the MVP with the Business provider**.
+**Status:** preservado e **pausado no MVP** (`messaging=false`).
 
-Rules:
+Regras:
 
-- the global Inbox does not belong to Community, Business, Classifieds, Mobility,
-  or Territorial Communication;
-- domain-specific persistence remains owned by the appropriate messaging
-  aggregate under `src/core/messaging` (or another domain owner when the
-  semantics are intentionally different, such as ride chat);
-- the global Inbox composes provider/adapters selected by the application lifecycle;
-- the MVP registers **Business** only;
-- enabling Messaging does not implicitly enable Community or Classifieds;
-- no universal database table or monolithic `MessagingService` is required;
-- `/mensagens` and `/mensagens/:providerId/:threadId` are authenticated routes;
-- new providers must be implemented in core, registered explicitly and enabled
-  by the application composition root before they can appear in the Inbox.
+- a Inbox global não pertence a Community, Business, Classifieds, Mobility ou Comunicação Territorial;
+- persistência específica de domínio permanece no agregado apropriado sob `src/core/messaging` (ou em outro owner quando a semântica é deliberadamente distinta, como chat de corrida);
+- a UI recebe somente providers autorizados pela camada `app` e pelo lifecycle canônico;
+- Business Direct Messaging permanece implementado/versionado, mas não é montado na Inbox enquanto `messaging=false`;
+- ativar Messaging não ativa implicitamente Community, Classificados ou qualquer outro domínio;
+- não existe tabela universal nem `MessagingService` monolítico;
+- `/mensagens` e `/mensagens/:providerId/:threadId` são rotas canônicas preservadas para futura reativação, **não rotas ativas do corte atual**;
+- `AppLayoutRoutes.tsx` e `activeLazyImports.ts` não devem importar a Inbox enquanto a capability estiver pausada;
+- novos providers devem ser implementados em core, registrados explicitamente e autorizados pelo composition root antes de aparecer na Inbox;
+- reativação exige mudança no `platformCapabilityRegistry`, autorização, testes de isolamento, build e E2E same-SHA; não criar redirect, alias ou rota paralela como atalho.

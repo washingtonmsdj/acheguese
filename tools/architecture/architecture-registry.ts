@@ -20,6 +20,7 @@ export interface DomainRegistryEntry {
     | "map"
     | "classifieds"
     | "mobility"
+    | "messaging"
     | "notifications";
   label: string;
   sourceRoots: string[];
@@ -721,6 +722,37 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "O ownership operacional de Mobilidade vive em `src/core/mobility`; `src/modules/mobility` concentra UI/testes de feature. Facades publicas so permanecem quando possuem consumidores reais, e compatibility owners aposentados nao fazem parte do registry.",
   },
   {
+    id: "messaging",
+    label: "messaging",
+    sourceRoots: ["src/core/messaging", "src/modules/messaging"],
+    docsPaths: [
+      "src/core/messaging/README.md",
+      "src/modules/messaging/README.md",
+    ],
+    ssotPaths: [
+      "src/core/messaging/providers/messagingProviderRegistry.ts",
+      "src/core/messaging/routes/messagingRoutes.ts",
+      "src/core/messaging/services/BusinessDirectMessagingService.ts",
+      "src/core/messaging/services/ClassifiedMessagingService.ts",
+      "src/core/messaging/services/CommunityDirectMessagingService.ts",
+    ],
+    routePrefixes: ["/mensagens"],
+    adminRoutePrefixes: [],
+    criticality: "high",
+    canonicalServiceBasenames: [
+      "BusinessDirectMessagingService.ts",
+      "ClassifiedMessagingService.ts",
+      "CommunityDirectMessagingService.ts",
+    ],
+    canonicalTypeBasenames: ["inboxTypes.ts"],
+    adminSummary:
+      "Capability horizontal preservada e pausada no MVP. Nao existe superficie administrativa ativa que reative a Inbox; os agregados permanecem sob autorizacao dos seus dominios.",
+    docsSummary:
+      "Os READMEs de core e UI documentam o owner horizontal, providers preservados e o lifecycle pausado. Rotas versionadas nao significam rotas ativas.",
+    ssotSummary:
+      "Core/messaging concentra contratos, providers, rotas e services; modules/messaging concentra apresentacao. A capability esta pausada e fica fora do grafo ativo ate nova certificacao.",
+  },
+  {
     id: "notifications",
     label: "notifications",
     sourceRoots: [
@@ -730,7 +762,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     docsPaths: ["src/core/notifications/README.md"],
     ssotPaths: ["src/core/notifications/services/NotificationService.ts"],
-    routePrefixes: ["/mensagens"],
+    routePrefixes: ["/notificacoes", "/conta/notificacoes"],
     adminRoutePrefixes: ["/admin/notifications"],
     criticality: "high",
     canonicalServiceBasenames: [
@@ -739,11 +771,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     canonicalTypeBasenames: ["notification.types.ts"],
     adminSummary:
-      "Parcial. O sistema agora possui leitura administrativa oficial em `/admin/notifications`, mas ainda nao cobre templates, canais externos, auditoria de entrega nem politicas globais de notificacao.",
+      "Parcial. O sistema preserva leitura administrativa em `/admin/notifications`, enquanto a Inbox publica permanece pausada no MVP.",
     docsSummary:
-      "Boa no core, mas com referencias historicas fora de lugar e sem integracao com a documentacao global do projeto.",
+      "Core/notifications documenta separadamente o lifecycle pausado da UI e a autoridade server-side/outbox preservada.",
     ssotSummary:
-      "Core/notifications e o SSOT real. O agregado admin usa `AdminNotificationsService` como superficie de leitura administrativa sem reabrir services paralelos no dominio.",
+      "Core/notifications e o SSOT real. A Inbox publica esta pausada; materializacao, preferencias e outbox permanecem server-owned e nao pertencem a Messaging.",
   },
 ];
 
