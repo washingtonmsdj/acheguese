@@ -6,6 +6,10 @@ const detailPage = readFileSync(
   "src/app/pages/EmpresaDetailLandingPage.tsx",
   "utf8",
 );
+const territoryBusinessDetail = readFileSync(
+  "src/modules/business/company/pages/TerritoryBusinessDetail.tsx",
+  "utf8",
+);
 const heroSection = readFileSync(
   "src/app/features/business-landing/sections/EmpresasHeroSection.tsx",
   "utf8",
@@ -44,26 +48,6 @@ const quickFilterChip = readFileSync(
 );
 const landingConstants = readFileSync(
   "src/app/features/business-landing/utils/landing.constants.ts",
-  "utf8",
-);
-const companyHeroSection = readFileSync(
-  "src/modules/business/company/sections/EmpresaHeroSection.tsx",
-  "utf8",
-);
-const relatedSection = readFileSync(
-  "src/modules/business/company/sections/EmpresaProximasSection.tsx",
-  "utf8",
-);
-const ctasSection = readFileSync(
-  "src/modules/business/company/sections/EmpresaCTAsSection.tsx",
-  "utf8",
-);
-const addressCard = readFileSync(
-  "src/modules/business/company/components/info/AddressCard.tsx",
-  "utf8",
-);
-const contactCard = readFileSync(
-  "src/modules/business/company/components/info/ContactCard.tsx",
   "utf8",
 );
 const constants = readFileSync(
@@ -169,41 +153,27 @@ describe("MVP Business public flow", () => {
     expect(detailPage).toContain("BusinessService.getSimilarBusinesses(");
     expect(detailPage).toContain("setNearbyBusinesses(mapped)");
     expect(detailPage).toContain("nearbyBusinesses={displayNearbyBusinesses}");
-    expect(relatedSection).toContain("Empresas relacionadas");
-    expect(relatedSection).not.toContain("Empresas proximas");
+    expect(territoryBusinessDetail).toContain("Empresas relacionadas");
+    expect(territoryBusinessDetail).not.toContain("Empresas proximas");
   });
 
   it("does not offer route or contact actions without a real target", () => {
-    expect(addressCard).toContain("const hasRouteTarget = Boolean(");
-    expect(addressCard).toContain("addressText?.trim()");
-    expect(addressCard).toContain("business.business_address?.trim()");
-    expect(addressCard).toContain("business.address?.street?.trim()");
-    expect(addressCard).toContain("'Endereço não informado'");
-    expect(addressCard).not.toContain("coordinates || addressText");
-    expect(addressCard).not.toContain("addressText?.trim() || locationText?.trim()");
-    expect(addressCard).not.toContain("addressText || locationText || business.name");
-    expect(ctasSection).toContain("business.business_address?.trim()");
-    expect(ctasSection).toContain("business.address?.street?.trim()");
-    expect(ctasSection).not.toContain("business.location?.full_name?.trim()");
-    expect(ctasSection).not.toContain("business.location?.name?.trim()");
-    expect(ctasSection).not.toContain("getPhysicalBusinessCoordinates(business)");
-    expect(ctasSection).toContain(
-      "<RouteOptions show={hasRouteTarget && showRouteOptions}",
+    expect(detailPage).toContain(
+      "const physicalRouteCoordinates = getPhysicalBusinessCoordinates(business)",
     );
-    expect(companyHeroSection).toContain("const hasRouteTarget = Boolean(");
-    expect(companyHeroSection).toContain("business.business_address?.trim()");
-    expect(companyHeroSection).toContain("business.address?.street?.trim()");
-    expect(companyHeroSection).toContain("{onRoute && hasRouteTarget ? (");
-    expect(ctasSection).toContain("const whatsAppUrl = buildWhatsAppUrl(business.whatsapp)");
-    expect(ctasSection).toContain("const phoneUrl = buildTelUrl(business.phone)");
-    expect(ctasSection).toContain("{whatsAppUrl ? (");
-    expect(ctasSection).toContain("{phoneUrl ? (");
-    expect(contactCard).toContain("const emailUrl = buildMailtoUrl(business.email)");
-    expect(contactCard).toContain("const phoneUrl = buildTelUrl(business.phone)");
-    expect(contactCard).toContain("{emailUrl ? (");
-    expect(contactCard).toContain("{phoneUrl ? (");
-    expect(contactCard).not.toContain("{business.email ? (");
-    expect(contactCard).not.toContain("{business.phone ? (");
+    expect(detailPage).toContain("const physicalAddressTarget =");
+    expect(detailPage).toContain("institutional.addressText?.trim()");
+    expect(detailPage).toContain("business.business_address?.trim()");
+    expect(detailPage).toContain("business.address?.street?.trim()");
+    expect(detailPage).toContain("const routeDestination = physicalRouteCoordinates");
+    expect(detailPage).not.toContain('institutional.addressText || business.name');
+    expect(detailPage).not.toContain('const addr = institutional.addressText || business.name');
+    expect(territoryBusinessDetail).toContain("onRoute?: () => void;");
+    expect(territoryBusinessDetail).toContain("{onRoute ? (");
+    expect(territoryBusinessDetail).toContain('className="bd-route-button"');
+    expect(territoryBusinessDetail).toContain("{phone || whatsappHref || onMessage ? (");
+    expect(territoryBusinessDetail).toContain("const whatsappHref = whatsappUrl(whatsapp)");
+    expect(territoryBusinessDetail).toContain("const phone = institutional.phone || business.phone");
   });
 
   it("keeps Business CTAs inside the active MVP module set", () => {

@@ -260,8 +260,8 @@ export default function EmpresaDetailLandingPage(
 
   const handleShare = async () => {
     const shareData = {
-      title: business.name,
-      text: business.description || `Confira ${business.name}`,
+      title: snapshotBusiness?.name ?? "Empresa",
+      text: snapshotBusiness?.description || `Confira ${snapshotBusiness?.name ?? "esta empresa"}`,
       url: window.location.href,
     };
 
@@ -382,17 +382,26 @@ export default function EmpresaDetailLandingPage(
     }
   };
 
-  const handleRoute = () => {
-    const coordinates = getPhysicalBusinessCoordinates(business);
-    const addr = institutional.addressText || business.name || "";
-    const loc = institutional.locationText || "";
-    const destination = coordinates
-      ? `${coordinates.latitude},${coordinates.longitude}`
-      : `${addr} ${loc}`;
-    openSafeExternalUrl(buildGoogleMapsSearchUrl(destination), {
-      context: "company-detail-route",
-    });
-  };
+  const physicalRouteCoordinates = getPhysicalBusinessCoordinates(business);
+  const physicalAddressTarget =
+    institutional.addressText?.trim() ||
+    business.business_address?.trim() ||
+    business.address?.street?.trim() ||
+    null;
+  const routeDestination = physicalRouteCoordinates
+    ? `${physicalRouteCoordinates.latitude},${physicalRouteCoordinates.longitude}`
+    : physicalAddressTarget
+      ? [physicalAddressTarget, institutional.locationText?.trim()]
+          .filter(Boolean)
+          .join(" ")
+      : null;
+  const handleRoute = routeDestination
+    ? () => {
+        openSafeExternalUrl(buildGoogleMapsSearchUrl(routeDestination), {
+          context: "company-detail-route",
+        });
+      }
+    : undefined;
   const robotsContent = snapshot.seo.robots;
   const territoryName = territorySlug
     ? territorySlug
