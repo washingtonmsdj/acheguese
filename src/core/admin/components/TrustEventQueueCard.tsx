@@ -7,6 +7,7 @@ import {
   Eye,
   XCircle,
 } from "lucide-react";
+import { SafeLink } from "@/shared/components/security/SafeLink";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -96,9 +97,9 @@ function ClassifiedContextActions({ event }: { event: TrustEvent }) {
     <div className="mt-2 flex flex-wrap gap-2">
       {publicUrlQuery.data ? (
         <Button size="sm" variant="outline" asChild>
-          <a href={publicUrlQuery.data} target="_blank" rel="noreferrer">
+          <SafeLink href={publicUrlQuery.data} allowInternal target="_blank">
             Abrir anuncio
-          </a>
+          </SafeLink>
         </Button>
       ) : (
         <Button size="sm" variant="outline" disabled>
