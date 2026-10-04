@@ -8,11 +8,11 @@
  * - Image caching (Stale-While-Revalidate)
  * - Offline fallback
  * 
- * @version 2.0.7
+ * @version 2.0.8
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.7';
+const SW_VERSION = '2.0.8';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
@@ -196,12 +196,14 @@ self.addEventListener('notificationclose', (event) => {
 // ============================================================================
 
 /**
- * Get URL for notification click based on notification data
+ * Get URL for notification click based on notification data.
+ * Push payloads can outlive a product release, so stale destinations must fail
+ * closed against the current MVP instead of reopening paused surfaces.
  */
 const PAUSED_NOTIFICATION_ROUTE_PATTERN =
-  /^\/(?:community|comunidade|gastronomia|servicos|services|classificados|classifieds|pontos-turisticos|tourist-points|educacao|education|vagas|jobs|eventos|events|comunicacao|communication|mobility|mobilidade|track|cupons|coupons|ranking|gamificacao|gamification|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
+  /^\/(?:notificacoes|mensagens|community|comunidade|gastronomia|servicos|services|classificados|classifieds|pontos-turisticos|tourist-points|educacao|education|vagas|jobs|eventos|events|comunicacao|communication|mobility|mobilidade|track|cupons|coupons|ranking|gamificacao|gamification|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/conta\/notificacoes(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
 
-function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes') {
+function getLaunchSafeNotificationUrl(url, fallback = '/') {
   if (!url) return fallback;
   const value = String(url);
   return PAUSED_NOTIFICATION_ROUTE_PATTERN.test(value) ? fallback : value;
@@ -213,15 +215,15 @@ function getNotificationUrl(data) {
   // Handle different notification types
   switch (data.type) {
     case 'message':
-      return '/notificacoes';
+      return '/';
     
     case 'ride':
-      return getLaunchSafeNotificationUrl('/mobilidade', '/notificacoes');
+      return getLaunchSafeNotificationUrl('/mobilidade', '/');
     
     case 'order':
       return getLaunchSafeNotificationUrl(
         `/gastronomia/pedidos/${data.orderId || ''}`,
-        '/notificacoes'
+        '/'
       );
     
     case 'payment':
@@ -250,7 +252,7 @@ function getActionUrl(action, data) {
       return getNotificationUrl(data);
     
     case 'reply':
-      return '/notificacoes';
+      return '/';
     
     case 'accept':
       return getLaunchSafeNotificationUrl(data.acceptUrl, '/');
@@ -259,7 +261,7 @@ function getActionUrl(action, data) {
       return getLaunchSafeNotificationUrl(data.declineUrl, '/');
     
     case 'settings':
-      return '/conta/notificacoes';
+      return '/conta';
     
     default:
       return '/';
