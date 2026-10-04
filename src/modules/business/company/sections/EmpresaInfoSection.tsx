@@ -77,10 +77,10 @@ export function EmpresaInfoSection({
           ) : null}
 
           <div className="hidden xl:block">
-            <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-3.5 sm:p-5 [@media(max-height:1100px)]:sm:p-4">
+            <div className="rounded-[24px] border border-territory-on-image/10 bg-territory-on-image/[0.03] p-3.5 sm:p-5 [@media(max-height:1100px)]:sm:p-4">
               <div className="mb-3 flex items-center gap-2">
-                <Truck className="h-4 w-4 text-teal-300" />
-                <h2 className="text-base font-semibold text-white">Formas de atendimento</h2>
+                <Truck className="h-4 w-4 text-territory-brand" />
+                <h2 className="text-base font-semibold text-territory-on-image">Formas de atendimento</h2>
               </div>
               <div className="space-y-2">
                 {serviceModes.slice(0, 3).map((mode) => {
@@ -89,12 +89,12 @@ export function EmpresaInfoSection({
                   return (
                     <div
                       key={mode}
-                      className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 ${getServiceModeColor(mode)}`}
+                      className={`flex items-center gap-3 rounded-2xl border border-territory-brand/20 bg-territory-brand/10 px-3 py-2.5 ${getServiceModeColor(mode)}`}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" />
                       <div className="min-w-0">
                         <p className="text-[0.92rem] font-medium">{getServiceModeLabel(mode)}</p>
-                        <p className="truncate text-[11px] text-white/52">{getServiceModeCaption(mode)}</p>
+                        <p className="truncate text-[11px] text-territory-on-image/52">{getServiceModeCaption(mode)}</p>
                       </div>
                     </div>
                   );

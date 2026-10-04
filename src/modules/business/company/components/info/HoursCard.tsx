@@ -18,22 +18,22 @@ export function HoursCard({
         : 'Horário não informado';
   const openStatusContainerClass =
     openStatus.open === true
-      ? 'border-emerald-400/20 bg-emerald-400/10'
+      ? 'border-territory-success/20 bg-territory-success/10'
       : openStatus.open === false
-        ? 'border-rose-400/20 bg-rose-400/10'
-        : 'border-white/10 bg-white/[0.04]';
+        ? 'border-territory-error/20 bg-territory-error/10'
+        : 'border-territory-on-image/10 bg-territory-on-image/[0.04]';
   const openStatusDotClass =
     openStatus.open === true
-      ? 'bg-emerald-300 animate-pulse'
+      ? 'bg-territory-success animate-pulse'
       : openStatus.open === false
-        ? 'bg-rose-300'
-        : 'bg-white/36';
+        ? 'bg-territory-error'
+        : 'bg-territory-on-image/36';
   const openStatusTextClass =
     openStatus.open === true
-      ? 'text-emerald-200'
+      ? 'text-territory-success'
       : openStatus.open === false
-        ? 'text-rose-200'
-        : 'text-white/72';
+        ? 'text-territory-error'
+        : 'text-territory-on-image/72';
 
   const orderedDays = Object.keys(WEEK_DAY_LABELS) as WeekDay[];
   const hasDetailedHours = orderedDays.some((day) => {
@@ -66,17 +66,17 @@ export function HoursCard({
   const visibleGroups = showAllHours ? groupedDays : groupedDays.slice(0, 4);
 
   return (
-    <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-3.5 sm:p-4 [@media(max-height:1100px)]:sm:p-3.5">
+    <div className="rounded-[24px] border border-territory-on-image/10 bg-territory-on-image/[0.03] p-3.5 sm:p-4 [@media(max-height:1100px)]:sm:p-3.5">
       <div className="mb-2.5 flex w-full items-center justify-between">
         <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-teal-300" />
-          <h2 className="text-base font-semibold text-white">Horário de funcionamento</h2>
+          <Clock className="h-4 w-4 text-territory-brand" />
+          <h2 className="text-base font-semibold text-territory-on-image">Horário de funcionamento</h2>
         </div>
         {hasDetailedHours ? (
           <button
             type="button"
             onClick={onToggleShowAll}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-white/44 transition-colors hover:bg-white/[0.03] hover:text-white/72"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-territory-on-image/44 transition-colors hover:bg-territory-on-image/[0.03] hover:text-territory-on-image/72"
             aria-label={showAllHours ? 'Ocultar semana completa' : 'Mostrar semana completa'}
           >
             <ChevronDown
@@ -95,7 +95,7 @@ export function HoursCard({
         <div className={cn('h-2 w-2 rounded-full', openStatusDotClass)} />
         <span className={cn('text-sm font-semibold', openStatusTextClass)}>{openStatusLabel}</span>
         {openStatus.todayHours ? (
-          <span className="text-xs text-white/48 sm:text-sm">{openStatus.todayHours}</span>
+          <span className="text-xs text-territory-on-image/48 sm:text-sm">{openStatus.todayHours}</span>
         ) : null}
       </div>
 
@@ -107,10 +107,10 @@ export function HoursCard({
               return (
                 <div
                   key={`${group.label}-${group.signature}`}
-                  className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/20 px-3 py-[0.4375rem]"
+                  className="flex items-center justify-between rounded-2xl border border-territory-on-image/8 bg-territory-image-overlay/20 px-3 py-[0.4375rem]"
                 >
-                  <span className="text-[0.92rem] font-medium text-white/74">{group.label}</span>
-                  <span className={cn('text-[0.92rem]', isClosed ? 'text-white/38' : 'text-white/64')}>
+                  <span className="text-[0.92rem] font-medium text-territory-on-image/74">{group.label}</span>
+                  <span className={cn('text-[0.92rem]', isClosed ? 'text-territory-on-image/38' : 'text-territory-on-image/64')}>
                     {group.value}
                   </span>
                 </div>
@@ -124,7 +124,7 @@ export function HoursCard({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="pt-2.5 text-xs text-white/42"
+                className="pt-2.5 text-xs text-territory-on-image/42"
               >
                 Toque para ver a semana completa.
               </motion.p>
@@ -132,7 +132,7 @@ export function HoursCard({
           </AnimatePresence>
         </>
       ) : (
-        <p className="mt-3 text-sm leading-6 text-white/44">
+        <p className="mt-3 text-sm leading-6 text-territory-on-image/44">
           Horários públicos ainda não informados.
         </p>
       )}
