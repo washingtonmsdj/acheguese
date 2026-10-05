@@ -172,54 +172,24 @@ export function ContaHubLayout({
         {!profilesView ? (
           <>
             <section className="mt-4 rounded-xl border border-territory-border bg-territory-surface px-3 sm:rounded-2xl sm:px-5">
-              <OverviewRow
-                icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
-                title="Dados de acesso"
-                description="E-mail, nome de usuário e métodos de entrada."
-                onClick={() => navigate(ACCOUNT_PATHS.access)}
-              />
-              <OverviewRow
-                icon={<LockKeyhole className="h-5 w-5" aria-hidden="true" />}
-                title="Senha e segurança"
-                description="Senha, recuperação e autenticação em duas etapas."
-                onClick={() => navigate(ACCOUNT_PATHS.security)}
-              />
-              <OverviewRow
-                icon={<Shield className="h-5 w-5" aria-hidden="true" />}
-                title="Privacidade e dados"
-                description="Consentimentos, exportação e exclusão."
-                onClick={() => navigate(ACCOUNT_PATHS.privacy)}
-              />
-              <OverviewRow
-                icon={<SlidersHorizontal className="h-5 w-5" aria-hidden="true" />}
-                title="Preferências do aplicativo"
-                description="Ajustes pessoais e vínculos da identidade."
-                onClick={() => navigate(ACCOUNT_PATHS.preferences)}
-              />
+              <OverviewRow icon={<KeyRound className="h-5 w-5" aria-hidden="true" />} title="Dados de acesso" description="E-mail, nome de usuário e métodos de entrada." onClick={() => navigate(ACCOUNT_PATHS.access)} />
+              <OverviewRow icon={<LockKeyhole className="h-5 w-5" aria-hidden="true" />} title="Senha e segurança" description="Senha, recuperação e autenticação em duas etapas." onClick={() => navigate(ACCOUNT_PATHS.security)} />
+              <OverviewRow icon={<Shield className="h-5 w-5" aria-hidden="true" />} title="Privacidade e dados" description="Consentimentos, exportação e exclusão." onClick={() => navigate(ACCOUNT_PATHS.privacy)} />
+              <OverviewRow icon={<SlidersHorizontal className="h-5 w-5" aria-hidden="true" />} title="Preferências do aplicativo" description="Ajustes pessoais e vínculos da identidade." onClick={() => navigate(ACCOUNT_PATHS.preferences)} />
             </section>
 
             <section className="mt-4 rounded-xl border border-territory-border bg-territory-surface px-3 sm:rounded-2xl sm:px-5">
-              <OverviewRow
-                icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
-                title="Meus perfis"
-                description="Identidades, equipes e visibilidade pública"
-                showDescriptionOnMobile
-                onClick={() => navigate(ACCOUNT_PATHS.profiles)}
-              />
+              <OverviewRow icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} title="Meus perfis" description="Identidades, equipes e visibilidade pública" showDescriptionOnMobile onClick={() => navigate(ACCOUNT_PATHS.profiles)} />
             </section>
 
             <section className="mt-4 rounded-xl border border-territory-border bg-territory-surface px-3 sm:rounded-2xl sm:px-5">
-              <OverviewRow
-                icon={<CircleHelp className="h-5 w-5" aria-hidden="true" />}
-                title="Ajuda"
-                onClick={() => navigate(SUPPORT_PATH)}
-              />
+              <OverviewRow icon={<CircleHelp className="h-5 w-5" aria-hidden="true" />} title="Ajuda" onClick={() => navigate(SUPPORT_PATH)} />
             </section>
 
             <button
               type="button"
               onClick={() => void handleSignOut()}
-              className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-xl border border-red-300 bg-territory-surface px-4 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 sm:rounded-2xl"
+              className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-xl border border-territory-error/30 bg-territory-surface px-4 text-left text-sm font-semibold text-territory-error hover:bg-territory-error/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-error sm:rounded-2xl"
             >
               <LogOut className="h-5 w-5" aria-hidden="true" />
               Sair da conta
@@ -231,18 +201,8 @@ export function ContaHubLayout({
                 <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
               </summary>
               <div className="mt-2 rounded-xl border border-territory-border bg-territory-surface px-3 sm:px-5">
-                <OverviewRow
-                  icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
-                  title="Endereços e território"
-                  description="Residência privada e contexto territorial."
-                  onClick={() => navigate(ACCOUNT_PATHS.addresses)}
-                />
-                <OverviewRow
-                  icon={<Accessibility className="h-5 w-5" aria-hidden="true" />}
-                  title="Acessibilidade"
-                  description="Contraste, tamanho do texto e movimento reduzido."
-                  onClick={() => navigate(ACCOUNT_PATHS.accessibility)}
-                />
+                <OverviewRow icon={<MapPin className="h-5 w-5" aria-hidden="true" />} title="Endereços e território" description="Residência privada e contexto territorial." onClick={() => navigate(ACCOUNT_PATHS.addresses)} />
+                <OverviewRow icon={<Accessibility className="h-5 w-5" aria-hidden="true" />} title="Acessibilidade" description="Contraste, tamanho do texto e movimento reduzido." onClick={() => navigate(ACCOUNT_PATHS.accessibility)} />
               </div>
             </details>
           </>
