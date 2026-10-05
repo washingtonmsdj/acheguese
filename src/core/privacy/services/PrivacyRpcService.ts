@@ -1,4 +1,5 @@
 import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
+import { TIMEOUTS } from "@/shared/constants";
 
 type PrivacyRpcAction =
   | "recordConsent"
@@ -133,6 +134,7 @@ export class PrivacyRpcService {
   private static async invoke<T>(
     action: PrivacyRpcAction,
     params: Record<string, unknown> = {},
+    options: { timeoutMs?: number } = {},
   ): Promise<T> {
     return invokeSupabaseBroker<T, PrivacyRpcAction>({
       action,
@@ -140,6 +142,7 @@ export class PrivacyRpcService {
       noDataMessage: "Privacy broker returned no data",
       params,
       serviceName: SERVICE_NAME,
+      timeoutMs: options.timeoutMs,
     });
   }
 
@@ -164,7 +167,11 @@ export class PrivacyRpcService {
   }
 
   static async getDeletionStatus(): Promise<AccountDeletionStatusBrokerData | null> {
-    const result = await this.invoke<unknown>("getDeletionStatus");
+    const result = await this.invoke<unknown>(
+      "getDeletionStatus",
+      {},
+      { timeoutMs: TIMEOUTS.PRIVACY_ACCESS_GATE },
+    );
     if (result === null) return null;
     return parseDeletionStatus(result);
   }

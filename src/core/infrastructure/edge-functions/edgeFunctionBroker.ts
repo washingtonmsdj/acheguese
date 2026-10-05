@@ -19,6 +19,7 @@ interface InvokeSupabaseBrokerInput<TAction extends string> {
   noDataMessage?: string;
   params?: object;
   serviceName: string;
+  timeoutMs?: number;
 }
 
 function hasBrokerData<T>(
@@ -27,17 +28,30 @@ function hasBrokerData<T>(
   return Boolean(response) && Object.prototype.hasOwnProperty.call(response, "data");
 }
 
+function resolveBrokerSignal(timeoutMs?: number): AbortSignal | undefined {
+  if (timeoutMs === undefined) return undefined;
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("Supabase broker timeoutMs must be a positive finite number");
+  }
+  return AbortSignal.timeout(timeoutMs);
+}
+
 async function invokeRawSupabaseBroker<T, TAction extends string>({
   action,
   client,
   functionName,
   params = {},
   serviceName,
+  timeoutMs,
 }: InvokeSupabaseBrokerInput<TAction>): Promise<SupabaseBrokerResponse<T> | null> {
   const brokerClient = client ?? supabase;
+  const signal = resolveBrokerSignal(timeoutMs);
   const { data, error } = await brokerClient.functions.invoke<SupabaseBrokerResponse<T>>(
     functionName,
-    { body: { action, params } },
+    {
+      body: { action, params },
+      ...(signal ? { signal } : {}),
+    },
   );
 
   if (error) {

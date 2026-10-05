@@ -21,6 +21,12 @@ export const TIMEOUTS = {
   
   /** Timeout para resolução de localização do usuário (10 segundos) */
   USER_LOCATION: 10000,
+
+  /**
+   * Limite da leitura fail-closed que decide acesso a rotas protegidas
+   * enquanto existe uma possível exclusão de conta (10 segundos).
+   */
+  PRIVACY_ACCESS_GATE: 10000,
   
   /** Timeout para geolocalização por IP (5 segundos) */
   IP_GEOLOCATION: 5000,
