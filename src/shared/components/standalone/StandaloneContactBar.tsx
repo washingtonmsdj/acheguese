@@ -10,6 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { toast } from "sonner";
 import type { Business as BizData } from "@/shared/types/business";
 import { logger } from "@/shared/utils/logger";
+import { isValidCoordinates } from "@/shared/validation";
 import {
   buildGoogleMapsDirectionsUrl,
   buildGoogleMapsSearchUrl,
@@ -26,6 +27,11 @@ interface StandaloneContactBarProps {
 export default function StandaloneContactBar({
   business,
 }: StandaloneContactBarProps) {
+  const hasCoordinates = isValidCoordinates(
+    business.latitude,
+    business.longitude,
+  );
+
   const handleWhatsApp = () => {
     if (business.whatsapp) {
       const url = buildWhatsAppUrl(business.whatsapp);
@@ -47,8 +53,11 @@ export default function StandaloneContactBar({
   };
 
   const handleRoute = () => {
-    if (business.latitude && business.longitude) {
-      const url = buildGoogleMapsDirectionsUrl(business.latitude, business.longitude);
+    const latitude = business.latitude;
+    const longitude = business.longitude;
+
+    if (isValidCoordinates(latitude, longitude) && typeof longitude === "number") {
+      const url = buildGoogleMapsDirectionsUrl(latitude, longitude);
       openSafeExternalUrl(url, { context: "standalone-contact-route" });
     } else if (business.address) {
       const address = `${business.address}, ${business.neighborhood}, ${business.city}`;
@@ -102,7 +111,7 @@ export default function StandaloneContactBar({
             </Button>
           )}
 
-          {(business.latitude || business.address) && (
+          {(hasCoordinates || business.address) && (
             <Button onClick={handleRoute} variant="outline" className="gap-2">
               <Navigation className="h-4 w-4" />
               <span className="hidden sm:inline">Como Chegar</span>
