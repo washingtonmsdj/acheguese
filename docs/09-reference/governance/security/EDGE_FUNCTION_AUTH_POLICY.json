@@ -20,10 +20,13 @@
       "requiredPatterns": [
         "rateLimitMiddleware\\s*\\(",
         "publicViewEventSchema",
-        "VIEW_COUNTER_RPCS",
         "increment_business_views",
         "increment_professional_views",
         "increment_vaga_view_count",
+        "business_id:\\s*entityId",
+        "professional_id:\\s*entityId",
+        "vaga_id:\\s*entityId",
+        "supabaseAdmin\\.rpc\\s*\\(\\s*functionName\\s*,\\s*rpcArgs\\s*\\)",
         "resource:\\s*['\"]track-public-view['\"]",
         "Unable to track public view"
       ]
@@ -678,7 +681,14 @@
       "label": "public view counter service_role broker",
       "requiredPatterns": [
         "rateLimitMiddleware\\s*\\(",
-        "VIEW_COUNTER_RPCS"
+        "publicViewEventSchema",
+        "increment_business_views",
+        "increment_professional_views",
+        "increment_vaga_view_count",
+        "business_id:\\s*entityId",
+        "professional_id:\\s*entityId",
+        "vaga_id:\\s*entityId",
+        "supabaseAdmin\\.rpc\\s*\\(\\s*functionName\\s*,\\s*rpcArgs\\s*\\)"
       ]
     },
     "tryon-generate": {
