@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(path, "utf8");
 
 const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const appShell = read("src/app/components/AppLayoutSidebar.tsx");
+const messagingInboxPage = read("src/app/pages/MessagingInboxPage.tsx");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
 const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
@@ -88,6 +90,17 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain("messagingRoutes.inbox()");
     expect(appLayout).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
+  });
+
+  it("keeps Messaging inbox in the app shell while threads use focused conversation mode", () => {
+    expect(appShell).toContain('pathSegments[0] === "mensagens" && pathSegments.length >= 3');
+    expect(appShell).toContain("if (isConversationRoute)");
+    expect(appShell).not.toContain("if (isMessagingRoute)");
+    expect(appShell).toContain("<AppSidebar />");
+    expect(appShell).toContain("<AppTopbar />");
+    expect(messagingInboxPage).toContain("getActiveMessagingProviderIds()");
+    expect(messagingInboxPage).not.toContain("PublicBrandHeader");
+    expect(messagingInboxPage).not.toContain("LAUNCH_URLS");
   });
 
   it("keeps prefetch and idle warmup limited to selected active chunks", () => {
