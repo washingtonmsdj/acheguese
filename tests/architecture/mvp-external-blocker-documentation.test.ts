@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("MVP external dependency documentation", () => {
-  it("keeps Supabase as the sole active external blocker", () => {
+  it("keeps resolved infrastructure dependencies out of active blocker status", () => {
     const execution = readFileSync(
       "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "utf8",
@@ -15,26 +15,27 @@ describe("MVP external dependency documentation", () => {
     for (const content of [execution, nextSteps]) {
       expect(content).toContain("#305");
       expect(content).toContain("#445");
+      expect(content).toMatch(/não há blocker externo ativo/i);
       expect(content).not.toMatch(/\b[0-9a-f]{40}\b/i);
     }
 
-    expect(execution).toContain("## Blocker externo atual");
-    expect(execution).not.toContain("## Blockers externos atuais");
-    expect(execution).toContain("Dependência externa normalizada — Vercel / #445");
-    expect(nextSteps).toContain("fechar o blocker externo restante");
+    expect(execution).toContain("## Dependências externas resolvidas");
+    expect(execution).not.toContain("## Blocker externo atual");
+    expect(nextSteps).not.toContain("fechar o blocker externo restante");
+    expect(nextSteps).toContain("#305 — Supabase** encerrado");
     expect(nextSteps).toContain("#445 — Vercel** encerrado");
   });
 
-  it("preserves release identity semantics after the Vercel rate-limit recovery", () => {
+  it("preserves canonical release identity semantics after blocker closure", () => {
     const execution = readFileSync(
       "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "utf8",
     );
 
-    expect(execution).toContain("Supabase data plane / sessão autenticada");
+    expect(execution).toContain("`exact/equivalent`");
     expect(execution).toContain("Ignored Build Step");
-    expect(execution).toContain("último commit deploy-relevante");
-    expect(execution).toContain("smoke autenticado exact-SHA");
+    expect(execution).toContain("fingerprint");
     expect(execution).toContain("deployment `READY` + smoke");
+    expect(execution).toContain("regressão de infraestrutura reabre o gate");
   });
 });

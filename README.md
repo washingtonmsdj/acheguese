@@ -14,11 +14,13 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 ## Estado de entrega
 
-O núcleo público do MVP está funcional e passa pelos gates determinísticos de arquitetura, segurança e E2E público. O bloqueio externo conhecido para a certificação final autenticada é o data plane/Auth do Supabase, acompanhado pelo issue `#305`.
+O núcleo do MVP está funcional e o candidato vigente já comprovou os gates determinísticos de arquitetura, segurança, build, E2E público e smoke autenticado de produção. **Não há blocker externo ativo conhecido para o primeiro release.**
 
-Não há workaround no frontend para mascarar indisponibilidade de infraestrutura. O MVP só recebe `READY` quando o mesmo SHA comprovar Auth/Conta/Business/Mensagens/Notificações, deploy e smoke autenticado nas superfícies realmente ativas do lifecycle.
+Os antigos blockers de infraestrutura foram encerrados com prova real: `#305` após sessão autenticada + Conta + Business no runtime certificado, e `#445` após validação da identidade de release pela política canônica `exact/equivalent`, sem forçar deployment artificial. Regressão de infraestrutura ou delta deployável reabre o gate correspondente; issue encerrada não vira permissão para ignorar falha futura.
 
-O frontend ativo está em fase final de convergência visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
+A certificação vigente cobre Auth/Conta, Business lifecycle e Business Messaging no runtime aceito. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado; não se deve transformar ausência de um cenário específico no smoke agregado em afirmação de cobertura que o teste não executou.
+
+O frontend ativo está em fase final de acabamento visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
 
 ## Stack
 
@@ -80,7 +82,7 @@ npm run typecheck
 npm run build
 ```
 
-Os workflows pesados adicionam contratos de Auth/session, regressão do MVP, boundaries territoriais e Playwright público.
+Os workflows pesados adicionam contratos de Auth/session, regressão do MVP, boundaries territoriais e Playwright público. O build canônico também exige `npm audit --omit=dev`; o audit de produção do candidato vigente está limpo. Findings dev-only permanecem sob a autoridade de residuals e não devem ser “corrigidos” por upgrade major forçado.
 
 ## Leitura para inspeção
 
@@ -98,7 +100,7 @@ A documentação possui uma única porta de entrada canônica:
 ## Política da `main`
 
 - `main` é a linha canônica de integração.
-- Durante a certificação final, mudanças operacionais são aplicadas diretamente em `main`.
+- Durante a certificação final, mudanças operacionais seguem o fluxo protegido vigente e retornam à `main` imediatamente após os gates.
 - Não duplicar funcionalidades já implementadas em branches paralelas.
 - Mudança persistente de schema exige migration versionada.
 - Commit/merge não equivale a produção validada.

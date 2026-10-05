@@ -1,7 +1,7 @@
 # Achegue-se — Execução main-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Atualizado:** 2026-09-26  
+**Atualizado:** 2026-10-05  
 **Linha de integração:** `main`
 
 Este documento contém somente o estado operacional vigente, a ordem de execução e o Definition of Done do MVP. Histórico de PRs, SHAs e investigações encerradas pertence a `docs/08-roadmap/checkpoints/`, `docs/10-archive/` ou ao histórico do Git.
@@ -40,17 +40,18 @@ Regra permanente: **vertical de produto não é capability horizontal**. Pausar 
 
 ## Regras de implementação
 
-- durante a fase final de certificação do MVP, alterações operacionais são aplicadas diretamente em `main`; não criar branch ou PR intermediário sem exigência explícita de proteção da plataforma;
+- `main` é a linha canônica; branch/PR transitório só existe para satisfazer o fluxo protegido e deve retornar imediatamente à `main` após os gates;
 - corrigir causa raiz; não introduzir paliativo;
 - não criar redirect/alias/fallback para preservar arquitetura antiga;
 - não manter duas autoridades para a mesma responsabilidade;
 - não consultar módulo pausado apenas para montar UI escondida;
 - não importar implementação interna entre módulos;
 - não mover lifecycle para `core` ou `modules`; a composição pertence à camada `app`;
-- preservar código pós-MVP somente quando ele estiver isolado do runtime ativo;
-- remover código órfão, facade sem caller, barrel artificial e documento supersedido assim que o censo provar que não existe dependência viva;
+- preservar código pós-MVP quando estiver isolado do runtime ativo;
+- remover código órfão, facade sem caller, barrel artificial e documento supersedido somente quando o censo provar ausência de dependência viva;
 - migrations históricas permanecem imutáveis quando necessárias ao ledger/proveniência;
-- merge/commit não equivale a produção validada.
+- merge/commit não equivale a produção validada;
+- não forçar deployment, upgrade major ou mudança de runtime apenas para obter um gate verde.
 
 ## Estado técnico do núcleo
 
@@ -60,12 +61,14 @@ O corte estrutural do MVP está consolidado:
 - Map, Nearby, Search e Messaging usam providers lifecycle-scoped;
 - Notifications mantém histórico horizontal e governa ações pela policy de lifecycle;
 - rotas e prefetch ativos não montam módulos pausados;
-- a Central/Conta não anuncia verticais pausadas;
-- `CentralRoutes` compõe o lifecycle de Billing e das verticais Business; `CriarEmpresaPage` recebe `enabledVerticalKeys` e não consulta `launchScope`;
-- componentes Business/Profile ativos recebem escopo de lifecycle pela camada `app`, em vez de importar `app/config` para decidir produto;
+- Central/Conta não anunciam verticais pausadas;
+- componentes Business/Profile ativos recebem escopo de lifecycle pela camada `app`;
 - Busca assistida autoriza intents explicitamente na camada `app`;
 - URLs sem owner ativo chegam ao 404 canônico, sem redirect de compatibilidade;
-- o deploy automático exact-main de Edge Functions está operacional e volta a ser tratado como gate normal da certificação do candidato.
+- Account, Business lifecycle e Business Messaging já passaram no smoke autenticado de produção do candidato certificado;
+- Notifications permanece horizontal e teve seu boundary live de RPC/RLS auditado sem escrita direta pelo browser;
+- o build canônico passa security, lint, typecheck, sitemap, build e `npm audit --omit=dev` com zero vulnerabilidades production-reachable;
+- findings de dependência exclusivamente dev permanecem sob a autoridade de residuals e não autorizam `npm audit fix --force` ou migração major improvisada.
 
 ### Frontend Finish do MVP
 
@@ -74,106 +77,105 @@ A convergência visual das superfícies ativas está em fase final:
 - catálogo de Empresas alinhado à identidade petróleo/teal;
 - detalhe público com shell responsivo alinhado ao catálogo;
 - Central da empresa com visão geral, dados e configurações repaginados;
-- Perto de mim repaginado e sem o hero legado;
+- Perto de mim sem o hero legado;
 - Busca com copy pública humanizada;
-- criação e edição de empresa alinhadas em três etapas: Identidade → Contato e local → Apresentação;
-- horário noturno que atravessa meia-noite é tratado no helper do catálogo;
-- detalhe público deixou de recalcular aberto/fechado localmente e agora consome `BusinessHoursService.getStatus()` + `getOperationConfig()`, usando o snapshot apenas como fallback de apresentação;
-- teste arquitetural impede a reintrodução de aritmética manual de horários no detalhe.
+- criação e edição de empresa alinhadas em etapas canônicas;
+- horário noturno que atravessa meia-noite tratado pelo owner de Business Hours;
+- detalhe público consome `BusinessHoursService` em vez de recalcular estado localmente;
+- testes arquiteturais impedem reintrodução de owners concorrentes.
 
-O restante do Frontend Finish é acabamento de shell e consistência visual das superfícies ativas; não há nova feature de produto prevista para o corte do MVP.
+O restante do Frontend Finish é acabamento de shell e consistência visual das superfícies ativas; não existe nova feature de produto prevista para o corte do MVP.
 
 ### Higiene documental/repositório
 
-A documentação viva está sendo reduzida ao que representa o produto atual:
+A documentação viva representa somente o produto atual:
 
-- `docs/README.md` é o único índice canônico;
+- `docs/README.md` é o índice canônico;
 - `docs/08-roadmap/README.md` separa execução atual de planos futuros;
-- handoff CP-016 concluído foi movido para `docs/10-archive/`;
-- `RECOVERY-ROADMAP.md` supersedido saiu da árvore viva;
-- sprints antigas de Feed/Post saíram de `docs/05-ux/` porque Community está pausado;
-- histórico permanece em `10-archive/` ou no Git, sem competir com SSOT vivo.
+- material concluído/supersedido vai para `docs/10-archive/` ou permanece no Git;
+- checkpoints datados podem registrar blockers históricos sem se tornarem autoridade atual;
+- módulos pausados não são apagados apenas para reduzir o repositório.
 
 Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentais correspondentes.
 
-## Blocker externo atual
+## Dependências externas resolvidas
 
-### #305 — Supabase data plane / sessão autenticada
+**Não há blocker externo ativo conhecido para o primeiro release.** Os antigos blockers permanecem citados apenas para preservar a regra de contenção e a proveniência da certificação.
 
-O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto Auth e REST/PostgREST retornam 504 em probes independentes do frontend e no production smoke autenticado.
+### #305 — Supabase / sessão autenticada
 
-Não corrigir isso no frontend com:
+Encerrado após o data plane voltar a responder e o candidato comprovar sessão real, Conta e Business no smoke autenticado de produção. A causa final encontrada no fluxo de Business foi uma leitura browser-side que tentava atravessar a tabela privada `profiles`; a correção moveu a resolução para o boundary canônico de Profile sem abrir grants nem relaxar RLS.
 
-- retry ilimitado;
-- timeout artificialmente maior;
-- fallback de login;
-- bypass de OIDC;
-- troca de RLS sem evidência;
-- fixture alternativa para mascarar indisponibilidade.
+A regressão de Auth/PostgREST, indisponibilidade do data plane ou falha de autorização volta a bloquear o release. Não compensar com retry ilimitado, timeout artificialmente maior, fallback de login, bypass OIDC, fixture alternativa ou relaxamento de RLS.
 
-A sequência de prova quando o upstream voltar é:
+### #445 — Vercel / identidade de release
 
-1. SQL mínimo;
-2. advisors/health aplicáveis;
-3. login real da fixture;
-4. Conta;
-5. Business;
-6. Mensagens;
-7. smoke autenticado exact-SHA.
+Encerrado após o gate canônico comprovar a identidade de runtime pela política **`exact/equivalent`**. Quando commits posteriores não alteram o fingerprint deployável, o runtime Production já certificado pode ser aceito como equivalente; isso evita build artificial sem reduzir a prova de identidade.
 
-### Dependência externa normalizada — Vercel / #445
+A política `tools/release/vercel-ignore-build.mjs` continua válida: mudanças exclusivas de testes/documentação podem receber `Ignored Build Step` quando não alteram bytes de runtime. Não contornar isso com commit vazio, alteração artificial de runtime ou relaxamento de `vercel.json`.
 
-O rate limit de build/deployment foi revalidado como normalizado e #445 está encerrado. O runtime deployável voltou a receber deployment de produção `READY` e smoke público HTTP 200.
+Todo novo delta deployável exige nova prova: deployment `READY` + smoke, ou equivalência de fingerprint aceita pelo gate canônico. Qualquer regressão de infraestrutura reabre o gate correspondente.
 
-A política canônica `tools/release/vercel-ignore-build.mjs` continua válida: descendentes que alteram somente testes/documentação podem receber `Ignored Build Step` porque não mudam bytes de runtime. Esse skip intencional não deve ser contornado com commit vazio, mudança artificial de runtime ou relaxamento de `vercel.json` apenas para produzir outro deployment.
+## Dívidas abertas que não são blocker genérico do MVP
 
-Para certificação, a identidade de runtime é o último commit deploy-relevante comprovado pela política canônica de ignore. Qualquer novo delta deployável exige novo deployment `READY` + smoke; commits posteriores exclusivamente de teste/documentação precisam passar seus próprios gates, mas não invalidam o runtime já comprovado.
+- **#68 — LGPD:** purge físico e exportação self-service permanecem fail-closed; não habilitar migration/worker/scheduler/export enquanto seus contratos não autorizarem rollout. O canal DPO e os fluxos seguros atuais permanecem válidos para o MVP.
+- **#85 — Security Hardening:** continua como programa de endurecimento e auditoria de drift; finding do Advisor só gera mudança quando o caller/grant indevido for comprovado.
+- **#28 — Governança da `main`:** depende de credencial/integração com permissão administrativa para ler e comprovar a proteção clássica; não existe correção de código legítima para substituir essa prova.
+- **#447/#448 — OrdaX:** dependem da autoridade OrdaX certificada. Achegue-se não compartilha banco, `service_role` ou persistência com OrdaX e a indisponibilidade da integração não pode quebrar Business, Mapa, Nearby, Busca ou Business Messaging.
+- **#50/#118:** pós-MVP.
 
-## Ordem de execução até MVP READY
+## Ordem de execução até a promoção do primeiro release
 
-1. **Fechar Frontend Finish e higiene final**
-   - concluir shell geral de Criar/Editar e última revisão de consistência das superfícies ativas;
+1. **Fechar Frontend Finish**
+   - revisar responsividade e consistência visual de Empresas, Busca, Mapa, Perto de mim, Mensagens e Notificações;
+   - corrigir somente defeitos objetivos;
+   - não ampliar escopo.
+
+2. **Concluir higiene final**
    - remover código/documento comprovadamente obsoleto;
-   - manter histórico somente em checkpoints/archive/Git;
-   - não apagar base pós-MVP com owner legítimo.
+   - manter histórico em checkpoints/archive/Git;
+   - preservar módulos pós-MVP com owner legítimo;
+   - impedir documento vivo de voltar a anunciar blocker encerrado.
 
-2. **Fechar o blocker externo restante**
-   - #305: restaurar prova real do data plane/Auth/REST sem compensações no frontend, Auth, RLS ou timeouts.
-
-3. **Certificar o candidato de runtime e seus gates**
-   - obter a identidade deploy-relevante diretamente da `main` e da política canônica de ignore;
+3. **Preservar os gates do candidato**
    - security;
    - SSOT/arquitetura;
    - lint;
    - typecheck;
-   - testes;
-   - build;
+   - testes lifecycle-scoped;
+   - build canônico;
+   - audit de dependências de produção;
    - E2E público;
    - E2E autenticado;
-   - deployment `READY` para todo delta deployável;
-   - smoke do mesmo runtime implantado.
+   - release identity;
+   - deployment/smoke quando houver delta deployável.
 
 4. **Promover**
-   - somente depois de todas as provas aplicáveis ao mesmo conteúdo de runtime;
+   - somente enquanto todas as provas aplicáveis ao mesmo conteúdo de runtime permanecerem verdes;
    - regressão crítica reabre o gate;
-   - módulos pós-MVP continuam paused após o primeiro release.
+   - módulos pós-MVP continuam `paused` após o primeiro release.
 
 ## Definition of Done — MVP READY
 
-O MVP só recebe **READY** quando o mesmo conteúdo candidato comprovar:
+O MVP recebe **READY** quando o conteúdo candidato comprovar:
 
 - Business funcional com dados reais e rotas canônicas;
 - Mapa funcional com provider Business;
 - Perto de mim funcional, com localização/distância truthful;
-- Busca funcional, incluindo Busca assistida no escopo autorizado;
+- Busca funcional dentro do escopo autorizado;
 - Mensagens Business funcionais com sessão real;
-- Notificações funcionais sem reabrir vertical pausada;
+- Notificações funcionais como capability horizontal, sem reabrir vertical pausada;
 - Conta/Auth funcionais com sessão real;
 - zero dependência ativa em módulo pausado;
 - zero redirect/alias/fallback legado usado como mecanismo de lifecycle;
 - security/lint/typecheck/test/build executados de verdade;
-- deployment `READY` + smoke para o último delta deployável; `Ignored Build Step` só é aceitável quando a política canônica comprova mudança exclusiva de teste/documentação;
+- audit de produção sem vulnerabilidade não excepcionada;
+- identidade de release `exact/equivalent` comprovada;
+- deployment `READY` + smoke para qualquer novo delta deployável;
+- `Ignored Build Step` apenas quando a política canônica provar que não houve delta deployável;
 - nenhum erro crítico recorrente.
+
+O candidato vigente já possui as provas centrais de release e **não há blocker externo ativo conhecido**. O trabalho restante antes da promoção é acabamento/higiene e preservação dos gates, não abertura de novas frentes de produto.
 
 ## Onde fica o histórico
 
