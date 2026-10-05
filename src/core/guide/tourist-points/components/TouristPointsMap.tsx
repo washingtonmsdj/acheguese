@@ -28,19 +28,19 @@ function appendText(parent: HTMLElement, className: string, text: string): HTMLE
 }
 
 function getMarkerToneClass(isFeatured: boolean): string {
-  return isFeatured ? 'bg-amber-500' : 'bg-primary';
+  return isFeatured ? 'bg-territory-sun' : 'bg-territory-brand';
 }
 
 function createMarkerElement(markerAbbr: string, isFeatured: boolean): HTMLDivElement {
   const marker = document.createElement('div');
   marker.className = [
     'flex h-9 w-9 rotate-[-45deg] cursor-pointer items-center justify-center',
-    'rounded-[50%_50%_50%_0] border-2 border-background shadow-lg',
+    'rounded-[50%_50%_50%_0] border-2 border-territory-on-image shadow-lg',
     getMarkerToneClass(isFeatured),
   ].join(' ');
 
   const label = document.createElement('span');
-  label.className = 'rotate-45 text-xs font-extrabold leading-none text-primary-foreground';
+  label.className = 'rotate-45 text-xs font-extrabold leading-none text-territory-on-image';
   label.textContent = markerAbbr;
   marker.appendChild(label);
 
@@ -76,7 +76,7 @@ function createPopupContent(
   const badge = document.createElement('span');
   badge.className = [
     'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full',
-    'text-[11px] font-extrabold text-primary-foreground',
+    'text-[11px] font-extrabold text-territory-on-image',
     getMarkerToneClass(point.is_featured),
   ].join(' ');
   badge.textContent = markerAbbr;
@@ -85,19 +85,19 @@ function createPopupContent(
   const details = document.createElement('div');
   content.appendChild(details);
 
-  appendText(details, 'text-sm font-bold leading-tight text-foreground', point.name);
-  appendText(details, 'mt-0.5 text-xs text-muted-foreground', categoryLabel);
+  appendText(details, 'text-sm font-bold leading-tight text-territory-ink', point.name);
+  appendText(details, 'mt-0.5 text-xs text-territory-muted', categoryLabel);
 
   if (neighborhoodName) {
-    appendText(details, 'mt-1 text-xs text-muted-foreground', `Bairro: ${neighborhoodName}`);
+    appendText(details, 'mt-1 text-xs text-territory-muted', `Bairro: ${neighborhoodName}`);
   }
 
   if (point.rating > 0) {
-    appendText(details, 'mt-1 text-xs font-semibold text-amber-600', `Nota: ${point.rating.toFixed(1)}`);
+    appendText(details, 'mt-1 text-xs font-semibold text-territory-warning', `Nota: ${point.rating.toFixed(1)}`);
   }
 
   if (point.visiting_hours) {
-    appendText(details, 'mt-1 text-xs text-muted-foreground', `Horário: ${point.visiting_hours}`);
+    appendText(details, 'mt-1 text-xs text-territory-muted', `Horário: ${point.visiting_hours}`);
   }
 
   return root;
@@ -182,12 +182,12 @@ export function TouristPointsMap({ points, selectedId, onSelect, className = '' 
 
   if (withCoords.length === 0) {
     return (
-      <div className={`flex flex-col items-center justify-center bg-muted/30 border border-border rounded-2xl text-muted-foreground ${className}`}>
-        <MapPin className="h-8 w-8 mb-2 opacity-40" />
+      <div className={`flex flex-col items-center justify-center rounded-2xl border border-territory-border bg-territory-raised text-territory-muted ${className}`}>
+        <MapPin className="mb-2 h-8 w-8 opacity-40" />
         <p className="text-sm">Nenhum ponto com coordenadas cadastradas</p>
       </div>
     );
   }
 
-  return <div ref={containerRef} className={`rounded-2xl border border-border z-0 ${className}`} style={{ minHeight: '100%' }} />;
+  return <div ref={containerRef} className={`z-0 rounded-2xl border border-territory-border ${className}`} style={{ minHeight: '100%' }} />;
 }
