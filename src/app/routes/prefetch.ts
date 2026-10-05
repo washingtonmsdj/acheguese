@@ -16,6 +16,7 @@ import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
 } from "@/app/config/lifecycleRegistry";
+import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 
 type PrefetchLifecycleGate = () => boolean;
 
@@ -45,6 +46,21 @@ const PREFETCHERS: PrefetchEntry[] = [
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.search),
     load: () => import("@/app/pages/BuscaPage"),
     enabled: () => isPlatformCapabilityEnabled("search"),
+  },
+  {
+    test: (path) => path.startsWith(messagingRoutes.inbox()),
+    load: () => import("@/app/pages/MessagingInboxPage"),
+    enabled: () => isPlatformCapabilityEnabled("messaging"),
+  },
+  {
+    test: (path) => path.startsWith("/notificacoes"),
+    load: () => import("@/app/pages/NotificationsPage"),
+    enabled: () => isPlatformCapabilityEnabled("notifications"),
+  },
+  {
+    test: (path) => path.startsWith("/conta/notificacoes"),
+    load: () => import("@/app/pages/NotificationPreferencesPage"),
+    enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
 ];
 
@@ -116,7 +132,9 @@ function runIdle(callback: () => void): void {
 }
 
 /**
- * Aquece em idle somente as superfícies do MVP ativo.
+ * Aquece em idle somente as superfícies públicas principais do MVP ativo.
+ * Rotas autenticadas como Mensagens/Notificações são prefetched apenas por
+ * intenção explícita do usuário (hover/focus/touch) na navegação.
  * Deve rodar uma única vez por sessão.
  */
 export function scheduleIdleRouteWarmup(): void {
