@@ -8,16 +8,28 @@ import {
 import { QuickFilterChip } from "../components/filters";
 import type { BusinessSortOption, EmpresasFiltrosSectionProps } from "./types";
 
-const SORT_LABELS: Record<BusinessSortOption, string> = {
-  relevance: "Mais úteis no bairro",
-  recommendations: "Mais recomendadas",
-  rating: "Melhor avaliadas",
-  distance: "Mais próximas",
-  recent: "Mais recentes",
-};
+const SORT_OPTIONS = [
+  { value: "relevance", label: "Mais úteis no bairro" },
+  { value: "recommendations", label: "Mais recomendadas" },
+  { value: "rating", label: "Melhor avaliadas" },
+  { value: "distance", label: "Mais próximas" },
+  { value: "recent", label: "Mais recentes" },
+] as const satisfies readonly {
+  value: BusinessSortOption;
+  label: string;
+}[];
 
-const SORTABLE_OPTIONS = Object.entries(SORT_LABELS)
-  .filter(([value]) => value !== "distance") as Array<[BusinessSortOption, string]>;
+const SORTABLE_OPTIONS = SORT_OPTIONS.filter(
+  (option) => option.value !== "distance",
+);
+
+function isBusinessSortOption(value: string): value is BusinessSortOption {
+  return SORT_OPTIONS.some((option) => option.value === value);
+}
+
+function getSortLabel(value: BusinessSortOption): string {
+  return SORT_OPTIONS.find((option) => option.value === value)?.label ?? "Ordenar por";
+}
 
 interface BusinessSortSelectProps {
   sortBy: BusinessSortOption;
@@ -30,11 +42,14 @@ function BusinessSortSelect({
   onSortChange,
   compact = false,
 }: BusinessSortSelectProps) {
+  const handleSortChange = (value: string) => {
+    if (isBusinessSortOption(value)) {
+      onSortChange(value);
+    }
+  };
+
   return (
-    <Select
-      value={sortBy}
-      onValueChange={(value) => onSortChange(value as BusinessSortOption)}
-    >
+    <Select value={sortBy} onValueChange={handleSortChange}>
       <SelectTrigger
         aria-label="Ordenar empresas"
         className={
@@ -43,16 +58,16 @@ function BusinessSortSelect({
             : "h-11 min-w-[13rem] rounded-2xl border-territory-on-image/10 bg-territory-on-image/[0.03] text-sm text-territory-on-image focus:ring-territory-action-on-image/30 focus:ring-offset-0"
         }
       >
-        <SelectValue placeholder="Ordenar por">{SORT_LABELS[sortBy]}</SelectValue>
+        <SelectValue placeholder="Ordenar por">{getSortLabel(sortBy)}</SelectValue>
       </SelectTrigger>
       <SelectContent className="border-territory-on-image/10 bg-territory-image-overlay text-territory-on-image">
-        {SORTABLE_OPTIONS.map(([value, label]) => (
+        {SORTABLE_OPTIONS.map((option) => (
           <SelectItem
-            key={value}
-            value={value}
+            key={option.value}
+            value={option.value}
             className="focus:bg-territory-on-image/[0.06] focus:text-territory-on-image"
           >
-            {label}
+            {option.label}
           </SelectItem>
         ))}
       </SelectContent>
