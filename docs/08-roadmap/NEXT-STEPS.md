@@ -46,7 +46,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - **não há blocker externo ativo conhecido** para o primeiro release;
    - regressão de Supabase/Auth, release identity ou runtime reabre o gate correspondente;
    - todo delta deployável novo exige nova prova de Production `READY` ou equivalência de fingerprint aceita pela política canônica;
-   - mudança apenas de teste/documentação não deve forçar commit ou build artificial;
+   - somente paths explicitamente classificados como skippable podem receber `Ignored Build Step`; documentos críticos de governança que participam do fingerprint, como `EXECUCAO_MAIN_ONLY.md`, exigem nova prova de release mesmo sem alterar bytes de aplicação;
 
 4. manter as dívidas corretamente fail-closed:
    - #68 continua como dívida LGPD avançada, sem habilitar exportação/purge antes de certificação;
@@ -77,6 +77,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - sem documento vivo com snapshot antigo de blocker tratado como estado atual;
 - sem apagar histórico necessário para auditoria ou proveniência;
 - sem commit artificial de runtime para contornar `Ignored Build Step` ou equivalência de fingerprint;
+- sem ampliar a allowlist de paths skippable apenas para evitar build de um input crítico de release;
 - sem `npm audit fix --force`/upgrade major apenas para silenciar finding dev-only quando o audit de produção está limpo.
 
 Detalhes e critérios completos: `EXECUCAO_MAIN_ONLY.md`.
