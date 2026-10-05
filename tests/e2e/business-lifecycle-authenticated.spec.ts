@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import {
   bootstrapFixtureSession,
   bootstrapProtectedPreviewAccess,
@@ -11,6 +12,11 @@ const FIXTURE_MARKER = "account-authenticated-e2e";
 const BUSINESS_PREFIX = "G6 E2E Empresa Canonica";
 
 test.setTimeout(180_000);
+
+type BusinessDeactivateResult = {
+  success: boolean;
+  error?: string;
+};
 
 async function chooseEnabledOption(
   page: Page,
@@ -88,12 +94,33 @@ async function assertDedicatedFixture(client: Awaited<ReturnType<typeof bootstra
   return data.user;
 }
 
+async function deactivateBusinessFixture(
+  client: Awaited<ReturnType<typeof bootstrapFixtureSession>>,
+  profileId: string,
+): Promise<void> {
+  const result = await invokeSupabaseBroker<
+    BusinessDeactivateResult,
+    "deactivateBusiness"
+  >({
+    action: "deactivateBusiness",
+    client,
+    functionName: "profile-rpc",
+    noDataMessage: "Business fixture cleanup broker returned no data",
+    params: { profileId },
+    serviceName: "BusinessLifecycleE2E",
+  });
+
+  if (!result.success) {
+    throw new Error(result.error ?? "Business fixture cleanup broker failed");
+  }
+}
+
 async function cleanupBusinessFixtures(
   client: Awaited<ReturnType<typeof bootstrapFixtureSession>>,
 ) {
   const { data: businesses, error } = await client
     .from("business_data")
-    .select("profile_id, business_name, status")
+    .select("profile_id, business_name")
     .ilike("business_name", `${BUSINESS_PREFIX}%`);
 
   if (error) throw error;
@@ -103,19 +130,10 @@ async function cleanupBusinessFixtures(
       throw new Error("Cleanup recusado para empresa fora do prefixo tecnico G6.");
     }
 
-    if (business.status !== "deleted") {
-      const { error: businessError } = await client
-        .from("business_data")
-        .update({ status: "deleted" })
-        .eq("profile_id", business.profile_id);
-      if (businessError) throw businessError;
-    }
-
-    const { error: profileError } = await client
-      .from("profiles")
-      .update({ is_active: false })
-      .eq("id", business.profile_id);
-    if (profileError) throw profileError;
+    // Business + Profile form one broker-owned lifecycle boundary. Cleanup must
+    // use the same authenticated command as the product, including for stale
+    // fixtures left partially cleaned by an interrupted/older run.
+    await deactivateBusinessFixture(client, business.profile_id);
   }
 
   const { data: remaining, error: remainingError } = await client
