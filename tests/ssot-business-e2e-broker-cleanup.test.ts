@@ -15,12 +15,18 @@ describe("Business authenticated E2E cleanup boundary", () => {
     expect(source).toContain("await deactivateBusinessFixture(client, business.profile_id)");
   });
 
-  it("does not reopen direct browser writes to Business or Profile tables", () => {
-    expect(source).not.toMatch(
-      /\.from\(["']profiles["']\)[\s\S]{0,200}?\.update\(/,
-    );
-    expect(source).not.toMatch(
-      /\.from\(["']business_data["']\)[\s\S]{0,200}?\.update\(/,
-    );
+  it("keeps Profile entirely behind its broker boundary", () => {
+    expect(source).not.toMatch(/\.from\(["']profiles["']\)/);
+  });
+
+  it("keeps business_data direct access read-only in this E2E", () => {
+    expect(source).toContain('.from("business_data")');
+    for (const mutation of ["insert", "update", "upsert", "delete"]) {
+      expect(source).not.toMatch(
+        new RegExp(
+          `\\.from\\(["']business_data["']\\)[\\s\\S]{0,240}?\\.${mutation}\\(`,
+        ),
+      );
+    }
   });
 });
