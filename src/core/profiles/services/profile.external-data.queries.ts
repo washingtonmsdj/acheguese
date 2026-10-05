@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import { getCurrentUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
 import type { ProfileRow as Profile } from "./types";
 import type { BusinessRow } from "./profile.service.types";
+import { ProfileRpcService } from "./ProfileRpcService";
 
 interface QueryError {
   message?: string | null;
@@ -46,7 +47,6 @@ type BusinessLocationRelation = {
 
 type BusinessQueryRow = Omit<BusinessRow, "profiles" | "geographic_path"> & {
   created_at?: string | null;
-  profiles?: BusinessProfileRelation | BusinessProfileRelation[] | null;
   location?: BusinessLocationRelation | BusinessLocationRelation[] | null;
 };
 
@@ -55,14 +55,35 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-function normalizeBusinessQueryRows(
+function toBusinessProfileRelation(profile: Profile): BusinessProfileRelation {
+  return {
+    name: profile.name ?? profile.display_name ?? null,
+    neighborhood: profile.neighborhood ?? null,
+    city: profile.city ?? null,
+  };
+}
+
+async function normalizeBusinessQueryRows(
   rows: readonly BusinessQueryRow[],
-): BusinessRow[] {
+): Promise<BusinessRow[]> {
+  const profileIds = [
+    ...new Set(rows.map((row) => row.profile_id).filter(Boolean)),
+  ];
+  const accessibleProfiles = profileIds.length
+    ? await ProfileRpcService.getAccessibleProfiles<Profile[]>({ profileIds })
+    : [];
+  const profilesById = new Map(
+    accessibleProfiles.map((profile) => [
+      profile.id,
+      toBusinessProfileRelation(profile),
+    ]),
+  );
+
   return rows.map((row) => {
-    const { location, profiles, ...business } = row;
+    const { location, ...business } = row;
     return {
       ...business,
-      profiles: firstRelation(profiles),
+      profiles: profilesById.get(row.profile_id) ?? null,
       geographic_path: firstRelation(location)?.geographic_path ?? null,
     };
   });
@@ -88,7 +109,6 @@ export async function getUserBusinessesByProfilesQuery(
       slug,
       description,
       created_at,
-      profiles(name, neighborhood, city),
       location:locations!location_id(geographic_path)
     `,
     )
@@ -117,8 +137,7 @@ export async function getUserBusinessesQuery(profileId: string): Promise<Busines
       is_verified,
       is_premium,
       description,
-      created_at,
-      profiles(name, neighborhood, city)
+      created_at
     `,
     )
     .eq("profile_id", profileId)
@@ -166,8 +185,7 @@ export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessR
       slug,
       is_verified,
       is_premium,
-      description,
-      profiles(name, neighborhood, city)
+      description
     `,
     )
     .in("profile_id", businessIds)
