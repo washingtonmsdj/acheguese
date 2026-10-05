@@ -12,12 +12,24 @@ const broker = readFileSync(
   "utf8",
 );
 
-describe("track-public-view exact-main deploy contract", () => {
-  it("deploys only the immutable main source to the canonical Supabase project", () => {
+describe("track-public-view exact-source deploy contract", () => {
+  it("certifies pull-request head source without credentials or deployment", () => {
+    expect(workflow).toContain("pull_request:");
+    expect(workflow).toContain("PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}");
+    expect(workflow).toContain(
+      "PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}",
+    );
+    expect(workflow).toContain('if ($env:GITHUB_EVENT_NAME -eq "pull_request")');
+    expect(workflow).toContain('$targetMode = "pull-request-head"');
+    expect(workflow).toContain("if: github.event_name != 'pull_request'");
+  });
+
+  it("deploys only immutable main source to the canonical Supabase project", () => {
     expect(workflow).toContain("branches: [main]");
     expect(workflow).toContain('SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"');
     expect(workflow).toContain('SUPABASE_CLI_VERSION: "2.115.0"');
     expect(workflow).toContain('if ($env:EVENT_REF -ne "refs/heads/main")');
+    expect(workflow).toContain('$targetMode = "main"');
     expect(workflow).toContain("ref: ${{ steps.target.outputs.sha }}");
     expect(workflow).toContain("Assert checkout provenance");
     expect(workflow).toContain("Deploy track-public-view from exact checkout");
