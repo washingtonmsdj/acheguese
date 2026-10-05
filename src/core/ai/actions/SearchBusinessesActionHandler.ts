@@ -1,4 +1,6 @@
-import { BusinessService, BusinessUrlService, type Business } from "@/core/business";
+import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import type { Business } from "@/core/business/types/Business";
 import { BusinessHoursService } from "@/core/business/BusinessHoursService";
 import { isOpenNow } from "@/core/business/utils/openingHoursHelpers";
 import { spatialSearchService, type SpatialSearchResult } from "@/core/geospatial";

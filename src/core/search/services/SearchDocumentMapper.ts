@@ -1,4 +1,4 @@
-import { BusinessUrlService } from "@/core/business";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import type { Business } from "@/core/business/types/Business";
 import type { ClassifiedData } from "@/core/classifieds/services";
 import type { CommunitySearchResult } from "@/core/community-experience/types";
