@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TIMEOUTS } from "@/shared/constants";
 
 const { invokeSupabaseBrokerMock } = vi.hoisted(() => ({
   invokeSupabaseBrokerMock: vi.fn(),
@@ -26,7 +27,7 @@ describe("PrivacyRpcService", () => {
       noDataMessage: "Privacy broker returned no data",
       params: {},
       serviceName: "PrivacyRpcService",
-      timeoutMs: 10_000,
+      timeoutMs: TIMEOUTS.PRIVACY_ACCESS_GATE,
     });
   });
 
