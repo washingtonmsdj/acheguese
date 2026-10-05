@@ -71,6 +71,19 @@ function requireTokens(
   }
 }
 
+function forbidTokens(
+  relative: string,
+  content: string,
+  tokens: readonly string[],
+  violations: string[],
+): void {
+  for (const token of tokens) {
+    if (content.includes(token)) {
+      violations.push(`${relative}: forbidden parallel URL authority present: ${token}`);
+    }
+  }
+}
+
 function main(): void {
   const violations: string[] = [];
   const runtimeFiles = walk(SRC_ROOT);
@@ -119,9 +132,19 @@ function main(): void {
       "from '@/core/public-identity'",
       "PublicIdentityService.generateAvailableIdentifier({",
       "entityType: 'business'",
-      "buildBusinessPublicUrlFromTerritory(",
+      "normalizePublicTerritoryPath(geographic_path)",
+      "const BUSINESS_TERRITORY_SEGMENT_COUNT = 3;",
+      "function buildCanonicalBusinessUrl(",
       "buildPublicEntityUrl({",
+      "const canonical = buildCanonicalBusinessUrl(ctx);",
+      "return buildCanonicalBusinessUrl(ctx);",
     ],
+    violations,
+  );
+  forbidTokens(
+    BUSINESS_URL_SERVICE,
+    businessUrl,
+    ["buildBusinessPublicUrlFromTerritory(", "extractTerritorySegments("],
     violations,
   );
 
