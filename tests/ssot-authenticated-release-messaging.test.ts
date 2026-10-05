@@ -6,7 +6,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const workflow = read(".github/workflows/ssot-tests.yml");
-const runner = read("tools/release/run-messaging-authenticated.mjs");
+const runner = read("tests/release/run-messaging-authenticated.mjs");
 const messagingE2e = read("tests/e2e/messaging-authenticated.spec.ts");
 
 describe("authenticated release Messaging certification", () => {
@@ -29,7 +29,7 @@ describe("authenticated release Messaging certification", () => {
     expect(accountBusiness).toBeGreaterThanOrEqual(0);
     expect(messaging).toBeGreaterThan(accountBusiness);
     expect(authenticatedJob).toContain(
-      "run: node tools/release/run-messaging-authenticated.mjs",
+      "run: node tests/release/run-messaging-authenticated.mjs",
     );
     expect(authenticatedJob).toContain(
       "Authenticated Business Messaging E2E ran read-only against the active Business provider.",

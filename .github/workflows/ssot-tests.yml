@@ -203,7 +203,7 @@ jobs:
         run: npm run test:e2e:account-authenticated
 
       - name: Run authenticated Business Messaging E2E
-        run: node tools/release/run-messaging-authenticated.mjs
+        run: node tests/release/run-messaging-authenticated.mjs
 
       - name: Record authenticated fixture contract
         if: always()

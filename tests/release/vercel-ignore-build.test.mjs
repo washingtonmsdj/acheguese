@@ -68,6 +68,7 @@ describe("Vercel ignored build step", () => {
       "docs/10-archive/architecture-checkpoints/G5_LIVE_REVALIDATION_2026-08-30.md",
       ".github/workflows/ssot-tests.yml",
       "tests/security/example.test.ts",
+      "tests/release/run-messaging-authenticated.mjs",
       "e2e/example.spec.ts",
     ];
 
@@ -83,6 +84,9 @@ describe("Vercel ignored build step", () => {
       "api/example.ts",
       "public/manifest.json",
       "tools/release/run-vercel-production-build.mjs",
+      "tools/release/release-identity.mjs",
+      "tools/release/wait-for-production-release.mjs",
+      "tools/release/vercel-ignore-build.mjs",
       "supabase/migrations/20260831040000_example.sql",
       "supabase/functions/health-check/index.ts",
       "supabase/config.toml",
