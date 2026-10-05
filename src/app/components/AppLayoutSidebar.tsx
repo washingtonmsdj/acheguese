@@ -11,18 +11,22 @@
 
 import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { getActiveTerritoryNavigationModeIds } from "@/app/config/territoryNavigationScope";
+import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
+import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
+import { BottomNav } from "@/core/navigation/BottomNav";
+import {
+  ACCOUNT_PATHS,
+  ACCOUNT_SETTINGS_SHELL_PATHS,
+} from "@/core/routing/config/account";
+import { isReservedSlug } from "@/core/routing/reservedSlugs";
+import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
+import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
+import { getAppModuleSlugFromPath } from "@/shared/config/moduleSlugs";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { AppSidebar } from "./navigation/AppSidebar";
 import { AppTopbar } from "./navigation/AppTopbar";
-import { BottomNav } from "@/core/navigation/BottomNav";
 import { TerritoryAdaptiveNavigation } from "./territory-vivo";
-import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
-import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
-import { ACCOUNT_PATHS, ACCOUNT_SETTINGS_SHELL_PATHS } from "@/core/routing/config/account";
-import { isReservedSlug } from "@/core/routing/reservedSlugs";
-import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
-import { getAppModuleSlugFromPath } from "@/shared/config/moduleSlugs";
-import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 
 const TERRITORY_PORTAL_MODULES = new Set<string>([
   MODULE_SLUGS.business,
@@ -33,6 +37,8 @@ const TERRITORY_PORTAL_MODULES = new Set<string>([
 
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
+  const activeNavigationModeIds = getActiveTerritoryNavigationModeIds();
+
   useEffect(() => {
     scheduleIdleRouteWarmup();
   }, []);
@@ -103,9 +109,6 @@ export function AppLayoutSidebar() {
     isConversationRoute ||
     isBusinessRegistrationRoute;
 
-  // Threads use a focused conversation shell. The Inbox itself remains inside
-  // the normal authenticated app shell so navigation does not disappear when
-  // the user enters Messaging from Sidebar/Topbar.
   if (isConversationRoute) {
     return (
       <div className="min-h-[100dvh] w-full bg-territory-canvas">
@@ -114,9 +117,6 @@ export function AppLayoutSidebar() {
     );
   }
 
-  // Superfícies Territory Vivo. As rotas de configurações já migradas possuem
-  // shell próprio. Outras rotas /conta preservam a navegação global até sua
-  // migração para evitar regressões de viewport ou navegação.
   if (usesTerritoryVivoShell) {
     return (
       <>
@@ -177,7 +177,12 @@ export function AppLayoutSidebar() {
             </div>
           </main>
         </div>
-        {!hideMobileBottomNav ? <BottomNav prefetchRoute={prefetchRouteByHref} /> : null}
+        {!hideMobileBottomNav ? (
+          <BottomNav
+            prefetchRoute={prefetchRouteByHref}
+            visibleModeIds={activeNavigationModeIds}
+          />
+        ) : null}
       </>
     );
   }
@@ -199,7 +204,12 @@ export function AppLayoutSidebar() {
           </main>
         </div>
       </div>
-      {!hideMobileBottomNav ? <BottomNav prefetchRoute={prefetchRouteByHref} /> : null}
+      {!hideMobileBottomNav ? (
+        <BottomNav
+          prefetchRoute={prefetchRouteByHref}
+          visibleModeIds={activeNavigationModeIds}
+        />
+      ) : null}
     </SidebarProvider>
   );
 }

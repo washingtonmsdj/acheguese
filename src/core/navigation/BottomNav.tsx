@@ -2,16 +2,17 @@
  * BottomNav
  *
  * Navegação primária mobile do MVP.
- * Exibe Início, Mapa, Empresas e Perto de mim; Conta/Entrar é infraestrutura
- * de identidade e não constitui um módulo adicional de produto.
+ * Exibe somente os modos autorizados pela camada de composição. O core não
+ * conhece lifecycle de produto; ele apenas renderiza o conjunto recebido.
  */
 
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { Link, useLocation as useRouterLocation } from "react-router-dom";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import {
   buildTerritoryNavigationModes,
   isTerritoryNavigationModeActive,
+  type TerritoryNavigationModeId,
 } from "@/core/navigation/territoryNavigationModes";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
@@ -23,11 +24,15 @@ import { cn } from "@/shared/utils/cn";
 
 interface BottomNavProps {
   prefetchRoute?: (href: string) => void;
+  visibleModeIds?: readonly TerritoryNavigationModeId[];
 }
 
 const noopPrefetch = () => undefined;
 
-export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
+export function BottomNav({
+  prefetchRoute = noopPrefetch,
+  visibleModeIds,
+}: BottomNavProps) {
   const { pathname } = useRouterLocation();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
@@ -35,6 +40,10 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     (listener) => lastTerritoryStore.subscribe(listener),
     () => lastTerritoryStore.get(),
     () => null,
+  );
+  const visibleModeIdSet = useMemo(
+    () => (visibleModeIds ? new Set(visibleModeIds) : null),
+    [visibleModeIds],
   );
 
   if (pathname === "/") return null;
@@ -45,7 +54,7 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
     fallbackBaseUrl:
       lastTerritory?.baseUrl ?? TERRITORY_CONFIG.launch.community.path,
     authenticated: Boolean(user),
-  });
+  }).filter((tab) => !visibleModeIdSet || visibleModeIdSet.has(tab.id));
 
   return (
     <nav
