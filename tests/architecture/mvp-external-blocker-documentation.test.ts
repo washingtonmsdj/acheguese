@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("MVP external dependency documentation", () => {
-  it("keeps living release docs free of resolved external blockers", () => {
+  it("keeps resolved Supabase history separate from the current release blocker", () => {
     const execution = readFileSync(
       "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "utf8",
@@ -13,28 +13,30 @@ describe("MVP external dependency documentation", () => {
     );
 
     for (const content of [execution, nextSteps]) {
-      expect(content).not.toContain("blocker externo restante");
       expect(content).not.toContain("auth_upstream_unavailable");
-      expect(content).not.toContain("Connection terminated due to connection timeout");
+      expect(content).not.toContain(
+        "Connection terminated due to connection timeout",
+      );
       expect(content).not.toMatch(/\b[0-9a-f]{40}\b/i);
     }
 
-    expect(execution).toContain("## Estado da certificação externa");
-    expect(execution).toContain("Dependência externa normalizada — Vercel / #445");
+    expect(execution).toContain("Supabase / #305 — encerrado");
+    expect(execution).toContain("Release/Vercel / #445 — aberto");
     expect(nextSteps).toContain("#305 — Supabase** encerrado");
-    expect(nextSteps).toContain("#445 — Vercel** encerrado");
+    expect(nextSteps).toContain("#445 — Vercel / certificação de produção permanece aberto");
   });
 
-  it("preserves release identity semantics after external recovery", () => {
+  it("preserves exact/equivalent release identity without weakening the smoke", () => {
     const execution = readFileSync(
       "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "utf8",
     );
 
-    expect(execution).toContain("certificação autenticada de produção");
-    expect(execution).toContain("Ignored Build Step");
-    expect(execution).toContain("último commit deploy-relevante");
-    expect(execution).toContain("E2E autenticado");
-    expect(execution).toContain("deployment `READY` + smoke");
+    expect(execution).toContain("`exact`");
+    expect(execution).toContain("`equivalent`");
+    expect(execution).toContain("Business lifecycle");
+    expect(execution).toContain("Business Messaging");
+    expect(execution).toContain("All Tests Passed");
+    expect(execution).toContain("service-role key");
   });
 });
