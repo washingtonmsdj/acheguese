@@ -18,6 +18,7 @@ import { getStateByNameOrCode } from '@/core/location/data/brazilianStates';
 import type { Location } from '@/core/location/types';
 import type { TerritorialGroup } from '@/core/territorial/contracts';
 import { ROUTING_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
+import { resolveOptionalSafeInternalPath } from '@/shared/utils/safeRedirect';
 import { slugifyTerritory } from '@/shared/utils/slugify';
 
 export const MODULE_SLUGS = ROUTING_MODULE_SLUGS;
@@ -37,11 +38,18 @@ export type CommunityCanonicalSuffixSegment = (typeof COMMUNITY_CANONICAL_SUFFIX
 
 const COMMUNITY_CANONICAL_SUFFIX_SET = new Set<string>(COMMUNITY_CANONICAL_SUFFIX_SEGMENTS);
 
-
 function cleanUrlSegment(value: string, label: string): string {
   const segment = value.trim().replace(/^\/+|\/+$/g, '');
-  if (!segment || /[/?#]/.test(segment)) {
-    throw new Error(`${label} exige um unico segmento de URL.`);
+  const safeSegmentPath = segment ? resolveOptionalSafeInternalPath(`/${segment}`) : null;
+
+  if (
+    !segment ||
+    segment === '.' ||
+    segment === '..' ||
+    /[\\/?#]/.test(segment) ||
+    safeSegmentPath !== `/${segment}`
+  ) {
+    throw new Error(`${label} exige um unico segmento de URL seguro.`);
   }
   return segment;
 }
@@ -75,15 +83,15 @@ export function isEntityDetailRoute(pathname: string): boolean {
 }
 
 export function geoPathToPublicUrl(geoPath: string): string {
-  const parts = geoPath.split('/').filter(Boolean);
-  return '/' + parts.slice(1).join('/');
+  return normalizePublicTerritoryPath(geoPath);
 }
 
 export function normalizePublicTerritoryPath(path: string): string {
   const parts = path.split('/').filter(Boolean);
   if (!parts.length) return '/';
 
-  const normalizedParts = parts[0] === 'br' ? parts.slice(1) : parts;
+  const cleanedParts = parts.map((part) => cleanUrlSegment(part, 'segmento territorial'));
+  const normalizedParts = cleanedParts[0] === 'br' ? cleanedParts.slice(1) : cleanedParts;
   return '/' + normalizedParts.join('/');
 }
 
@@ -132,8 +140,12 @@ function buildScopedTerritoryBaseUrl(territoryBaseUrl: string): string {
 
 export function hasPublicCityTerritoryPath(path: string | null | undefined): boolean {
   if (!path) return false;
-  const parts = normalizePublicTerritoryPath(path).split('/').filter(Boolean);
-  return parts.length >= 2 && /^[a-z]{2}$/i.test(parts[0]);
+  try {
+    const parts = normalizePublicTerritoryPath(path).split('/').filter(Boolean);
+    return parts.length >= 2 && /^[a-z]{2}$/i.test(parts[0]);
+  } catch {
+    return false;
+  }
 }
 
 export function buildLocationBaseUrl(location: Location): string {
@@ -142,7 +154,7 @@ export function buildLocationBaseUrl(location: Location): string {
 
 export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): string {
   const publicCity = buildCityTerritoryBaseUrl(cityPath);
-  return `${publicCity}/${group.slug}`;
+  return `${publicCity}/${cleanUrlSegment(group.slug, 'slug do grupo territorial')}`;
 }
 
 export function buildLocationModuleUrl(location: Location, module: ModuleSlug): string {
@@ -196,10 +208,7 @@ export function buildModuleTerritoryEntityUrl(
   territoryBaseUrl: string,
   entitySlug: string,
 ): string {
-  const normalizedSlug = entitySlug.trim().replace(/^\/+|\/+$/g, '');
-  if (!normalizedSlug || /[/?#]/.test(normalizedSlug)) {
-    throw new Error('buildModuleTerritoryEntityUrl exige slug de entidade em segmento unico.');
-  }
+  const normalizedSlug = cleanUrlSegment(entitySlug, 'slug de entidade');
   return `${buildModuleTerritoryUrl(module, territoryBaseUrl)}/${normalizedSlug}`;
 }
 
