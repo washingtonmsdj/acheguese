@@ -19,15 +19,11 @@ function slugToLabel(value: string): string {
 
 function resolvePortalView(value: string | undefined): TerritoryPortalView | null {
   if (!value) return "home";
-
-  const views: Partial<Record<string, TerritoryPortalView>> = {
-    [MODULE_SLUGS.map]: "map",
-    [MODULE_SLUGS.business]: "business",
-    [MODULE_SLUGS.nearby]: "nearby",
-    [MODULE_SLUGS.search]: "search",
-  };
-
-  return views[value] ?? null;
+  if (value === MODULE_SLUGS.map) return "map";
+  if (value === MODULE_SLUGS.business) return "business";
+  if (value === MODULE_SLUGS.nearby) return "nearby";
+  if (value === MODULE_SLUGS.search) return "search";
+  return null;
 }
 
 export default function TerritoryHomePage({
