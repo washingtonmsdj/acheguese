@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { PublicInfoPageShell } from "@/app/components/public/PublicInfoPageShell";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import { SafeLink } from "@/shared/components/security";
 import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 
 const contactEmail = import.meta.env.VITE_CONTACT_EMAIL ?? "";
@@ -22,6 +23,7 @@ export default function ContactPage() {
   const requestedCity = searchParams.get("cidade")?.trim();
   const launchPlace = `${TERRITORY_CONFIG.launch.name}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;
   const territoryContext = requestedCity ? `${requestedCity}, contexto territorial solicitado` : launchPlace;
+  const contactEmailUrl = buildMailtoUrl(contactEmail);
 
   return (
     <>
@@ -74,13 +76,13 @@ export default function ContactPage() {
                   <p className="mt-2 text-sm leading-6 text-territory-muted">
                     Canal recomendado para suporte geral, comercial e alinhamento institucional.
                   </p>
-                  {contactEmail ? (
-                    <a
-                      href={buildMailtoUrl(contactEmail) ?? undefined}
+                  {contactEmailUrl ? (
+                    <SafeLink
+                      href={contactEmailUrl}
                       className="mt-3 inline-flex break-all text-sm font-medium text-territory-brand underline-offset-4 hover:underline"
                     >
                       {contactEmail}
-                    </a>
+                    </SafeLink>
                   ) : (
                     <p className="mt-3 text-sm text-territory-muted">
                       E-mail público ainda não configurado.
