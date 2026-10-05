@@ -56,4 +56,23 @@ describe("authenticated release Messaging certification", () => {
     expect(messagingE2e).not.toContain("insert(");
     expect(messagingE2e).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
   });
+
+  it("keeps the horizontal Notifications Inbox in the authenticated release proof without mutations", () => {
+    expect(messagingE2e).toContain(
+      'test("abre a Inbox horizontal de Notificações sob RLS sem mutar estado"',
+    );
+    expect(messagingE2e).toContain('page.goto("/notificacoes"');
+    expect(messagingE2e).toContain(
+      'response.request().method() === "GET"',
+    );
+    expect(messagingE2e).toContain(
+      'response.url().includes("/rest/v1/notifications")',
+    );
+    expect(messagingE2e).toContain(
+      "notificationReadStatuses.every(",
+    );
+    expect(messagingE2e).not.toContain("markAsRead(");
+    expect(messagingE2e).not.toContain("markAllAsRead(");
+    expect(messagingE2e).not.toContain("deleteNotification(");
+  });
 });
