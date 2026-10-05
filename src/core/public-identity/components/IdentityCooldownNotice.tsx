@@ -1,7 +1,6 @@
 /**
  * IdentityCooldownNotice
  * Aviso de cooldown ativo para troca de identificador.
- * Recebe CooldownResult - sem lógica de cooldown própria.
  */
 
 import { Clock } from 'lucide-react';
@@ -25,16 +24,9 @@ export function IdentityCooldownNotice({ cooldown, isLoading }: IdentityCooldown
     : IDENTITY_MESSAGES.cooldown_blocked;
 
   return (
-    <div
-      className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800"
-      role="alert"
-    >
-      <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-      <span>
-        {message}
-        {nextDate && ` (${nextDate})`}.
-      </span>
+    <div className="flex items-start gap-2 rounded-md border border-territory-warning/20 bg-territory-warning/10 px-3 py-2 text-xs text-territory-warning" role="alert">
+      <Clock className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <span>{message}{nextDate && ` (${nextDate})`}.</span>
     </div>
   );
 }
-
