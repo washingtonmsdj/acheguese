@@ -69,6 +69,7 @@ describe("Vercel ignored build step", () => {
       ".github/workflows/ssot-tests.yml",
       "tests/security/example.test.ts",
       "e2e/example.spec.ts",
+      "tools/release/run-messaging-authenticated.mjs",
     ];
 
     for (const path of skippable) {
@@ -83,6 +84,9 @@ describe("Vercel ignored build step", () => {
       "api/example.ts",
       "public/manifest.json",
       "tools/release/run-vercel-production-build.mjs",
+      "tools/release/release-identity.mjs",
+      "tools/release/wait-for-production-release.mjs",
+      "tools/release/vercel-ignore-build.mjs",
       "supabase/migrations/20260831040000_example.sql",
       "supabase/functions/health-check/index.ts",
       "supabase/config.toml",
