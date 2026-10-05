@@ -210,9 +210,8 @@ export function resolveSafeHttpUrl(
   }
 }
 
-export function resolveSafeInternalPath(rawUrl: unknown, fallback = '/'): string {
-  const fallbackPath = typeof fallback === 'string' && isRelativeUrl(fallback) ? fallback : '/';
-  if (typeof rawUrl !== 'string') return fallbackPath;
+export function resolveOptionalSafeInternalPath(rawUrl: unknown): string | null {
+  if (typeof rawUrl !== 'string') return null;
 
   const input = rawUrl.trim();
   if (
@@ -220,7 +219,7 @@ export function resolveSafeInternalPath(rawUrl: unknown, fallback = '/'): string
     input.length > INPUT_VALIDATION.MAX_URL_LENGTH ||
     hasControlCharacters(input)
   ) {
-    return fallbackPath;
+    return null;
   }
 
   if (isRelativeUrl(input)) {
@@ -228,17 +227,22 @@ export function resolveSafeInternalPath(rawUrl: unknown, fallback = '/'): string
   }
 
   const currentOrigin = getCurrentOrigin();
-  if (!currentOrigin) return fallbackPath;
+  if (!currentOrigin) return null;
 
   try {
     const parsed = new URL(input);
-    if (parsed.origin !== currentOrigin) return fallbackPath;
+    if (parsed.origin !== currentOrigin) return null;
 
     const internalPath = `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    return isRelativeUrl(internalPath) ? internalPath : fallbackPath;
+    return isRelativeUrl(internalPath) ? internalPath : null;
   } catch {
-    return fallbackPath;
+    return null;
   }
+}
+
+export function resolveSafeInternalPath(rawUrl: unknown, fallback = '/'): string {
+  const fallbackPath = typeof fallback === 'string' && isRelativeUrl(fallback) ? fallback : '/';
+  return resolveOptionalSafeInternalPath(rawUrl) ?? fallbackPath;
 }
 
 export function navigateToSafeRedirect(rawUrl: string, options: SafeRedirectOptions = {}): boolean {
