@@ -182,18 +182,18 @@ export function TrustFeedbackForm({
   );
 
   return (
-    <Card className={compact ? "border-border" : "border-amber-200 bg-amber-50/40"}>
+    <Card className={compact ? "border-border" : "border-territory-warning/20 bg-territory-warning/[0.04]"}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <ShieldCheck className="h-5 w-5 text-amber-700" />
+          <ShieldCheck className="h-5 w-5 text-territory-warning" />
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {notice && (
-          <div className="rounded-lg border border-amber-200 bg-background p-3 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-territory-warning/20 bg-background p-3 text-sm text-muted-foreground">
             <div className="flex gap-2">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-territory-warning" />
               <p>{notice}</p>
             </div>
           </div>
