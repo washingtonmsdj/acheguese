@@ -34,9 +34,11 @@ import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { getPhysicalBusinessCoordinates } from "@/core/business/utils/physicalBusinessCoordinates";
 import { LazyMiniMap } from "@/core/maps/components/LazyMiniMap";
 import type { PublicSnapshotInstitutional } from "@/core/business/types/publicSnapshots";
+import { SafeLink } from "@/shared/components/security/SafeLink";
 import {
   buildFacebookUrl,
   buildInstagramUrl,
+  buildTelUrl,
   buildWebsiteUrl,
   buildWhatsAppUrl,
 } from "@/shared/utils/contactLinks";
@@ -98,21 +100,6 @@ function formatPrice(price: number) {
     style: "currency",
     currency: "BRL",
   }).format(price);
-}
-
-function normalizeUrl(value?: string) {
-  return buildWebsiteUrl(value) ?? undefined;
-}
-
-function socialUrl(network: "instagram" | "facebook", value?: string) {
-  const url = network === "instagram"
-    ? buildInstagramUrl(value)
-    : buildFacebookUrl(value);
-  return url ?? undefined;
-}
-
-function whatsappUrl(value?: string) {
-  return buildWhatsAppUrl(value) ?? undefined;
 }
 
 function humanizeLabel(value: string) {
@@ -184,7 +171,11 @@ export function TerritoryBusinessDetail({
   const headerLocation = [business.business_city, business.business_state]
     .filter(Boolean)
     .join(", ") || "Salvador, BA";
-  const whatsappHref = whatsappUrl(whatsapp);
+  const phoneHref = buildTelUrl(phone);
+  const whatsappHref = buildWhatsAppUrl(whatsapp);
+  const instagramHref = buildInstagramUrl(business.instagram);
+  const facebookHref = buildFacebookUrl(business.facebook);
+  const websiteHref = buildWebsiteUrl(institutional.website);
   const serviceModes = (business.modos_atendimento || ["Presencial"])
     .map(humanizeLabel)
     .join(", ");
@@ -431,31 +422,43 @@ export function TerritoryBusinessDetail({
               ) : null}
             </section>
 
-            {phone || whatsappHref || onMessage ? (
+            {phoneHref || whatsappHref || onMessage ? (
               <section className="bd-card bd-contact-card">
                 <SectionTitle icon={Phone}>Contato</SectionTitle>
-                {phone ? <a className="bd-phone" href={`tel:${phone.replace(/\D/g, "")}`}><Phone /><span><strong>{phone}</strong><small>Toque para ligar</small></span></a> : null}
-                {whatsappHref || (phone && onMessage) ? (
-                  <div className={`bd-contact-actions ${phone ? "" : "!mt-0"}`}>
-                    {whatsappHref ? <a href={whatsappHref} target="_blank" rel="noreferrer"><MessageCircle /> WhatsApp</a> : null}
-                    {phone && onMessage ? <button type="button" onClick={onMessage}><MessageCircle /> Mensagem</button> : null}
+                {phoneHref ? (
+                  <SafeLink className="bd-phone" href={phoneHref}>
+                    <Phone /><span><strong>{phone}</strong><small>Toque para ligar</small></span>
+                  </SafeLink>
+                ) : null}
+                {whatsappHref || (phoneHref && onMessage) ? (
+                  <div className={`bd-contact-actions ${phoneHref ? "" : "!mt-0"}`}>
+                    {whatsappHref ? (
+                      <SafeLink href={whatsappHref} target="_blank">
+                        <MessageCircle /> WhatsApp
+                      </SafeLink>
+                    ) : null}
+                    {phoneHref && onMessage ? <button type="button" onClick={onMessage}><MessageCircle /> Mensagem</button> : null}
                   </div>
                 ) : null}
-                {whatsappHref || onMessage ? (
-                  <button className="bd-order-button" type="button" onClick={whatsappHref ? () => window.open(whatsappHref, "_blank", "noopener,noreferrer") : onMessage}>
+                {whatsappHref ? (
+                  <SafeLink className="bd-order-button" href={whatsappHref} target="_blank">
+                    <PrimaryContactIcon /> {primaryContactLabel} <ArrowRight />
+                  </SafeLink>
+                ) : onMessage ? (
+                  <button className="bd-order-button" type="button" onClick={onMessage}>
                     <PrimaryContactIcon /> {primaryContactLabel} <ArrowRight />
                   </button>
                 ) : null}
               </section>
             ) : null}
 
-            {(business.instagram || business.facebook || institutional.website) ? (
+            {instagramHref || facebookHref || websiteHref ? (
               <section className="bd-card bd-social-card">
                 <SectionTitle icon={Globe2}>Redes e site</SectionTitle>
                 <div>
-                  {business.instagram ? <a href={socialUrl("instagram", business.instagram)} target="_blank" rel="noreferrer" aria-label="Instagram"><Instagram /></a> : null}
-                  {business.facebook ? <a href={socialUrl("facebook", business.facebook)} target="_blank" rel="noreferrer" aria-label="Facebook"><Facebook /></a> : null}
-                  {institutional.website ? <a href={normalizeUrl(institutional.website)} target="_blank" rel="noreferrer" aria-label="Site"><ExternalLink /></a> : null}
+                  {instagramHref ? <SafeLink href={instagramHref} target="_blank" aria-label="Instagram"><Instagram /></SafeLink> : null}
+                  {facebookHref ? <SafeLink href={facebookHref} target="_blank" aria-label="Facebook"><Facebook /></SafeLink> : null}
+                  {websiteHref ? <SafeLink href={websiteHref} target="_blank" aria-label="Site"><ExternalLink /></SafeLink> : null}
                 </div>
               </section>
             ) : null}
