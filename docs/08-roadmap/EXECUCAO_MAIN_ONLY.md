@@ -1,7 +1,7 @@
 # Achegue-se — Execução main-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Atualizado:** 2026-09-26  
+**Atualizado:** 2026-10-05  
 **Linha de integração:** `main`
 
 Este documento contém somente o estado operacional vigente, a ordem de execução e o Definition of Done do MVP. Histórico de PRs, SHAs e investigações encerradas pertence a `docs/08-roadmap/checkpoints/`, `docs/10-archive/` ou ao histórico do Git.
@@ -96,30 +96,11 @@ A documentação viva está sendo reduzida ao que representa o produto atual:
 
 Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentais correspondentes.
 
-## Blocker externo atual
+## Estado da certificação externa
 
-### #305 — Supabase data plane / sessão autenticada
+A certificação autenticada de produção já foi comprovada em candidato de `main` com sessão real, Conta e Business, sem fallback de login, bypass de OIDC, relaxamento de RLS ou abertura de acesso direto a Profile.
 
-O projeto pode aparecer `ACTIVE_HEALTHY` no control plane e ainda assim o data plane falhar. As revalidações continuam reproduzindo `Connection terminated due to connection timeout` até em consulta SQL mínima, enquanto Auth e REST/PostgREST retornam 504 em probes independentes do frontend e no production smoke autenticado.
-
-Não corrigir isso no frontend com:
-
-- retry ilimitado;
-- timeout artificialmente maior;
-- fallback de login;
-- bypass de OIDC;
-- troca de RLS sem evidência;
-- fixture alternativa para mascarar indisponibilidade.
-
-A sequência de prova quando o upstream voltar é:
-
-1. SQL mínimo;
-2. advisors/health aplicáveis;
-3. login real da fixture;
-4. Conta;
-5. Business;
-6. Mensagens;
-7. smoke autenticado exact-SHA.
+O incidente anterior do data plane/Auth do Supabase está encerrado como blocker. A causa final encontrada no smoke foi um embed direto da tabela privada `profiles` dentro de uma leitura de Business; a correção moveu essa resolução para o boundary canônico de Profile, e o smoke subsequente ficou verde.
 
 ### Dependência externa normalizada — Vercel / #445
 
@@ -137,10 +118,7 @@ Para certificação, a identidade de runtime é o último commit deploy-relevant
    - manter histórico somente em checkpoints/archive/Git;
    - não apagar base pós-MVP com owner legítimo.
 
-2. **Fechar o blocker externo restante**
-   - #305: restaurar prova real do data plane/Auth/REST sem compensações no frontend, Auth, RLS ou timeouts.
-
-3. **Certificar o candidato de runtime e seus gates**
+2. **Manter a certificação do candidato vigente**
    - obter a identidade deploy-relevante diretamente da `main` e da política canônica de ignore;
    - security;
    - SSOT/arquitetura;
@@ -152,6 +130,12 @@ Para certificação, a identidade de runtime é o último commit deploy-relevant
    - E2E autenticado;
    - deployment `READY` para todo delta deployável;
    - smoke do mesmo runtime implantado.
+
+3. **Continuar hardening apenas por evidência**
+   - priorizar superfícies ativas do MVP;
+   - não alterar grants/RLS para silenciar Advisor sem drift comprovado;
+   - manter LGPD avançado fail-closed até certificação própria;
+   - preservar módulos pós-MVP isolados e pausados.
 
 4. **Promover**
    - somente depois de todas as provas aplicáveis ao mesmo conteúdo de runtime;
