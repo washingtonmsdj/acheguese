@@ -27,6 +27,9 @@ vi.mock("@/core/business", () => ({
   BusinessService: {
     getBusinessesList: mocks.getBusinessesList,
   },
+}));
+
+vi.mock("@/core/business/services/BusinessUrlService", () => ({
   BusinessUrlService: {
     getCanonicalUrl: mocks.getBusinessCanonicalUrl,
   },
@@ -288,7 +291,9 @@ describe("SearchService", () => {
     mocks.listActiveByCommunity.mockResolvedValue([]);
     mocks.searchPublicCommunities.mockResolvedValue([community]);
     mocks.getBusinessesList.mockResolvedValue({ businesses: [business] });
-    mocks.getBusinessCanonicalUrl.mockReturnValue("/empresa/pizzaria-central");
+    mocks.getBusinessCanonicalUrl.mockReturnValue(
+      "/ba/salvador/pituba/empresas/pizzaria-central",
+    );
     mocks.searchProfessionals.mockResolvedValue([professional]);
     mocks.getProfessionalCanonicalUrl.mockReturnValue("/profissionais/maria-oliveira");
     mocks.listPublicOpportunityCards.mockResolvedValue([opportunity]);
@@ -368,7 +373,7 @@ describe("SearchService", () => {
           id: "business-1",
           type: "business",
           title: "Pizzaria Central",
-          url: "/empresa/pizzaria-central",
+          url: "/ba/salvador/pituba/empresas/pizzaria-central",
           territoryLabel: "Pituba",
         }),
         expect.objectContaining({
