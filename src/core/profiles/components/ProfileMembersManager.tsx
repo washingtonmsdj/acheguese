@@ -182,9 +182,9 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
 
   const getRoleIcon = (role: ProfileRole) => {
     switch (role) {
-      case 'owner': return <Crown className="w-4 h-4 text-yellow-500" />;
-      case 'admin': return <Shield className="w-4 h-4 text-blue-500" />;
-      case 'member': return <User className="w-4 h-4 text-gray-500" />;
+      case 'owner': return <Crown className="w-4 h-4 text-territory-sun" />;
+      case 'admin': return <Shield className="w-4 h-4 text-territory-info" />;
+      case 'member': return <User className="w-4 h-4 text-territory-muted" />;
     }
   };
 
@@ -214,12 +214,7 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
             A lista não será tratada como vazia enquanto a leitura estiver indisponível.
           </p>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => void refetch()}
-        >
+        <Button type="button" variant="outline" size="sm" onClick={() => void refetch()}>
           Tentar novamente
         </Button>
       </div>
@@ -255,7 +250,6 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
         </p>
       ) : null}
 
-      {/* Formulário de Adição */}
       {canManageAccess && showAdd && (
         <div className="bg-muted p-4 rounded-lg space-y-4">
           <div>
@@ -280,13 +274,9 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
               onValueChange={(value) => setNewMember({ ...newMember, role: value as EditableProfileRole })}
               disabled={addingMember}
             >
-              <SelectTrigger id="role">
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger id="role"><SelectValue /></SelectTrigger>
               <SelectContent>
-                {profileType !== 'business' ? (
-                  <SelectItem value="member">Membro</SelectItem>
-                ) : null}
+                {profileType !== 'business' ? <SelectItem value="member">Membro</SelectItem> : null}
                 <SelectItem value="admin">Gestor</SelectItem>
               </SelectContent>
             </Select>
@@ -295,13 +285,8 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
           <div className="flex gap-2">
             <Button onClick={handleInviteMember} size="sm" disabled={addingMember}>
               {addingMember ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Adicionando...
-                </>
-              ) : (
-                'Adicionar'
-              )}
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Adicionando...</>
+              ) : 'Adicionar'}
             </Button>
             <Button onClick={() => setShowAdd(false)} variant="outline" size="sm" disabled={addingMember}>
               Cancelar
@@ -310,24 +295,15 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
         </div>
       )}
 
-      {/* Lista de Membros */}
       {members.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          Nenhum membro adicionado ainda
-        </div>
+        <div className="text-center py-8 text-muted-foreground">Nenhum membro adicionado ainda</div>
       ) : (
         <div className="space-y-2">
           {members.map(member => (
-            <div
-              key={member.id}
-              className="flex min-w-0 flex-wrap items-center gap-3 p-3 bg-card rounded-lg border sm:p-4"
-            >
+            <div key={member.id} className="flex min-w-0 flex-wrap items-center gap-3 p-3 bg-card rounded-lg border sm:p-4">
               {getRoleIcon(member.role)}
-              
               <div className="min-w-0 flex-1 basis-36 break-words [overflow-wrap:anywhere]">
-                <p className="font-medium">
-                  {member.display_name || member.email || 'Pessoa da equipe'}
-                </p>
+                <p className="font-medium">{member.display_name || member.email || 'Pessoa da equipe'}</p>
                 <p className="text-sm text-muted-foreground">
                   {member.email ? <span>{member.email} · </span> : null}
                   Entrou em {new Date(member.joined_at).toLocaleDateString('pt-BR')}
@@ -336,46 +312,25 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
 
               {canManageAccess && member.role !== 'owner' ? (
                 <>
-                  <Select
-                    value={member.role}
-                    onValueChange={(value) =>
-                      handleUpdateRole(member.user_id, value as EditableProfileRole)
-                    }
-                  >
-                    <SelectTrigger className="min-h-11 w-full sm:w-40">
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={member.role} onValueChange={(value) => handleUpdateRole(member.user_id, value as EditableProfileRole)}>
+                    <SelectTrigger className="min-h-11 w-full sm:w-40"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {profileType !== 'business' ? (
-                        <SelectItem value="member">Membro</SelectItem>
-                      ) : null}
+                      {profileType !== 'business' ? <SelectItem value="member">Membro</SelectItem> : null}
                       <SelectItem value="admin">Gestor</SelectItem>
                     </SelectContent>
                   </Select>
-
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     className="min-h-11 whitespace-normal text-left"
                     disabled={transferringOwnerId !== null}
-                    onClick={() =>
-                      handleTransferOwnership(
-                        member.user_id,
-                        member.display_name || member.email || 'Esta pessoa',
-                      )
-                    }
+                    onClick={() => handleTransferOwnership(member.user_id, member.display_name || member.email || 'Esta pessoa')}
                   >
                     {transferringOwnerId === member.user_id ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Transferindo...
-                      </>
-                    ) : (
-                      'Transferir propriedade'
-                    )}
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Transferindo...</>
+                    ) : 'Transferir propriedade'}
                   </Button>
-
                   <Button
                     variant="ghost"
                     size="sm"
@@ -387,9 +342,7 @@ export function ProfileMembersManager({ profileId, profileType }: ProfileMembers
                   </Button>
                 </>
               ) : (
-                <span className="rounded-md border px-3 py-2 text-center text-sm">
-                  {getRoleLabel(member.role)}
-                </span>
+                <span className="rounded-md border px-3 py-2 text-center text-sm">{getRoleLabel(member.role)}</span>
               )}
             </div>
           ))}
