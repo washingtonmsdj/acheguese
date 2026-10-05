@@ -1,0 +1,289 @@
+name: Supabase Track Public View Deploy
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/functions/track-public-view/**"
+      - "supabase/functions/_shared/security.ts"
+      - "supabase/functions/_shared/validation.ts"
+      - "supabase/config.toml"
+      - ".github/workflows/supabase-track-public-view-deploy.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/track-public-view/**"
+      - "supabase/functions/_shared/security.ts"
+      - "supabase/functions/_shared/validation.ts"
+      - "supabase/config.toml"
+      - ".github/workflows/supabase-track-public-view-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-track-public-view-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SUPABASE_CLI_VERSION: "2.115.0"
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+
+jobs:
+  certify-track-public-view:
+    name: Exact-source track-public-view gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Resolve immutable target
+        id: target
+        shell: pwsh
+        env:
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+
+          if ($env:GITHUB_EVENT_NAME -eq "pull_request") {
+            if ($env:PR_HEAD_REPOSITORY -ne $env:GITHUB_REPOSITORY) {
+              throw "Fork pull requests are not authorized for this production-sensitive gate."
+            }
+            $targetSha = ([string]$env:PR_HEAD_SHA).Trim().ToLowerInvariant()
+            $targetMode = "pull-request-head"
+          } else {
+            if ($env:EVENT_REF -ne "refs/heads/main") {
+              throw "Production deployment is authorized only from refs/heads/main. Received $env:EVENT_REF"
+            }
+            if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
+              throw "Unsupported event: $env:GITHUB_EVENT_NAME"
+            }
+            $targetSha = ([string]$env:EVENT_SHA).Trim().ToLowerInvariant()
+            $targetMode = "main"
+          }
+
+          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Target SHA must be exactly 40 hex characters."
+          }
+
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "mode=$targetMode" -Encoding UTF8
+          Write-Host "Exact source accepted. mode=$targetMode sha=$targetSha"
+
+      - name: Checkout isolated Supabase source at exact SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ steps.target.outputs.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+          path: public-view-edge-gate
+          sparse-checkout: |
+            supabase
+          sparse-checkout-cone-mode: true
+
+      - name: Assert checkout provenance
+        shell: pwsh
+        working-directory: public-view-edge-gate
+        env:
+          EXPECTED_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($actual -ne $env:EXPECTED_SHA) {
+            throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual"
+          }
+          if (git status --porcelain) {
+            throw "Isolated worktree must be clean before certification or deployment."
+          }
+          Write-Host "Exact checkout provenance confirmed: $actual"
+
+      - name: Validate public broker source contracts
+        shell: pwsh
+        working-directory: public-view-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $config = Get-Content "supabase/config.toml" -Raw
+          $entry = Get-Content "supabase/functions/track-public-view/index.ts" -Raw
+
+          $section = [regex]::Match(
+            $config,
+            '(?ms)^\[functions\.track-public-view\]\s*(.*?)(?=^\[|\z)'
+          )
+          if (-not $section.Success -or $section.Groups[1].Value -notmatch '(?m)^verify_jwt\s*=\s*false\s*$') {
+            throw "track-public-view must remain verify_jwt=false because it is a deliberately public broker with in-handler controls."
+          }
+
+          $requiredMarkers = @(
+            'publicViewEventSchema',
+            'rateLimitMiddleware(req, 120, 60_000)',
+            'increment_business_views',
+            'increment_professional_views',
+            'increment_vaga_view_count',
+            '{ business_id: entityId }',
+            '{ professional_id: entityId }',
+            '{ vaga_id: entityId }',
+            'supabaseAdmin.rpc(functionName, rpcArgs)',
+            'SUPABASE_SERVICE_ROLE_KEY',
+            'resource: "track-public-view"'
+          )
+          foreach ($marker in $requiredMarkers) {
+            if (-not $entry.Contains($marker)) {
+              throw "track-public-view source contract missing: $marker"
+            }
+          }
+
+          $forbiddenMarkers = @(
+            'VIEW_COUNTER_RPCS',
+            '[counterRpc.argName]',
+            'VIEW_COUNTER_RPCS[entityType]'
+          )
+          foreach ($marker in $forbiddenMarkers) {
+            if ($entry.Contains($marker)) {
+              throw "track-public-view legacy dynamic dispatch returned: $marker"
+            }
+          }
+
+          Write-Host "Public broker whitelist, explicit dispatch, explicit args and rate-limit contracts confirmed."
+
+      - name: Record exact source bundle hashes
+        shell: pwsh
+        working-directory: public-view-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "supabase/functions/track-public-view/index.ts",
+            "supabase/functions/_shared/security.ts",
+            "supabase/functions/_shared/validation.ts"
+          )
+
+          foreach ($file in $files) {
+            if (-not (Test-Path $file)) {
+              throw "Required Edge source missing: $file"
+            }
+            $hash = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
+            Write-Host "BUNDLE_SHA256 $file $hash"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- ``$file`` — ``$hash``" -Encoding UTF8
+          }
+
+      - name: Validate Supabase credential presence
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+          Write-Host "Supabase access credential is present."
+
+      - name: Setup Node.js for production deploy
+        if: github.event_name != 'pull_request'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Pin Supabase CLI
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        working-directory: public-view-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" --version).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($version -ne $env:SUPABASE_CLI_VERSION) {
+            throw "Unexpected Supabase CLI version: $version"
+          }
+          Write-Host "Supabase CLI pinned: $version"
+
+      - name: Validate target project visibility
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        working-directory: public-view-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $raw = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list --project-ref $env:SUPABASE_PROJECT_REF --output json)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $functions = $raw | ConvertFrom-Json
+          $broker = @($functions | Where-Object { $_.slug -eq "track-public-view" -or $_.name -eq "track-public-view" })
+          if ($broker.Count -ne 1) {
+            throw "Expected exactly one remote track-public-view entry; found $($broker.Count)."
+          }
+          Write-Host "Target broker visible. current_version=$($broker[0].version)"
+
+      - name: Deploy track-public-view from exact checkout
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        working-directory: public-view-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $deployOutput = @(
+            & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy track-public-view `
+              --project-ref $env:SUPABASE_PROJECT_REF `
+              --use-api 2>&1
+          )
+          $deployExit = $LASTEXITCODE
+          $deployText = ($deployOutput | ForEach-Object { [string]$_ }) -join "`n"
+          if (-not [string]::IsNullOrWhiteSpace($deployText)) {
+            Write-Host $deployText
+          }
+          if ($deployExit -ne 0) {
+            if ($deployText -match '(?i)(401|403|unauthorized|forbidden|permission|access denied|not authorized)') {
+              throw "Supabase rejected SUPABASE_ACCESS_TOKEN for Edge Function deployment."
+            }
+            throw "Supabase Edge Function deployment failed with exit code $deployExit."
+          }
+
+      - name: Verify remote broker inventory
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        working-directory: public-view-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $raw = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list --project-ref $env:SUPABASE_PROJECT_REF --output json)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $functions = $raw | ConvertFrom-Json
+          $broker = @($functions | Where-Object { $_.slug -eq "track-public-view" -or $_.name -eq "track-public-view" })
+          if ($broker.Count -ne 1) {
+            throw "Expected exactly one remote track-public-view entry; found $($broker.Count)."
+          }
+          if ($broker[0].verify_jwt -ne $false) {
+            throw "Remote track-public-view verify_jwt is not false."
+          }
+          if ($broker[0].status -and $broker[0].status -ne "ACTIVE") {
+            throw "Remote track-public-view is not ACTIVE: $($broker[0].status)"
+          }
+          Write-Host "REMOTE_TRACK_PUBLIC_VIEW version=$($broker[0].version) status=$($broker[0].status) verify_jwt=$($broker[0].verify_jwt)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote track-public-view version: ``$($broker[0].version)``" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote verify_jwt: ``$($broker[0].verify_jwt)``" -Encoding UTF8
+
+      - name: Record gate provenance
+        if: always()
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+          TARGET_MODE: ${{ steps.target.outputs.mode }}
+        run: |
+          @(
+            "## Supabase track-public-view exact-source gate",
+            "- Repository: washingtonmsdj/acheguese",
+            "- Target SHA: $env:TARGET_SHA",
+            "- Target mode: $env:TARGET_MODE",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
+            "- Pull requests validate exact head source without credentials or deployment.",
+            "- Push/workflow_dispatch on main validate exact main and then deploy.",
+            "- Public verify_jwt=false is intentional; entity enum, UUID validation, rate limiting and explicit RPC dispatch are enforced inside the handler.",
+            "- Deployment source is the isolated exact-SHA checkout, never a reconstructed bundle."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
