@@ -112,9 +112,9 @@ A regressão de Auth/PostgREST, indisponibilidade do data plane ou falha de auto
 
 Encerrado após o gate canônico comprovar a identidade de runtime pela política **`exact/equivalent`**. Quando commits posteriores não alteram o fingerprint deployável, o runtime Production já certificado pode ser aceito como equivalente; isso evita build artificial sem reduzir a prova de identidade.
 
-A política `tools/release/vercel-ignore-build.mjs` continua válida: mudanças exclusivas de testes/documentação podem receber `Ignored Build Step` quando não alteram bytes de runtime. Não contornar isso com commit vazio, alteração artificial de runtime ou relaxamento de `vercel.json`.
+A política `tools/release/vercel-ignore-build.mjs` continua válida: somente paths classificados como **skippable** ficam fora do fingerprint deployável e podem receber `Ignored Build Step`. Testes e documentação comum normalmente entram nessa classe, mas documentos críticos de governança consumidos pela autoridade de release — incluindo este `EXECUCAO_MAIN_ONLY.md` — são deliberadamente deploy-relevant e alteram o fingerprint. Não contornar isso com commit vazio, alteração artificial de runtime, ampliação indevida da allowlist ou relaxamento de `vercel.json`.
 
-Todo novo delta deployável exige nova prova: deployment `READY` + smoke, ou equivalência de fingerprint aceita pelo gate canônico. Qualquer regressão de infraestrutura reabre o gate correspondente.
+Todo novo delta deployável — inclusive mudança em input crítico de governança que participa do fingerprint — exige nova prova: deployment `READY` + smoke, ou equivalência de fingerprint aceita pelo gate canônico. Qualquer regressão de infraestrutura reabre o gate correspondente.
 
 ## Dívidas abertas que não são blocker genérico do MVP
 
