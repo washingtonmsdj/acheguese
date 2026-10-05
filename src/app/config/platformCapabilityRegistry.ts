@@ -22,11 +22,12 @@ export interface PlatformCapabilityLifecycle {
 }
 
 /**
- * Horizontal capabilities that can serve multiple product modules.
+ * Horizontal platform capabilities.
  *
- * The MVP keeps only the capabilities required by the certified public and
- * account/business flows active. Paused capabilities remain versioned and
- * dependency-declared so they can be reactivated without duplicating owners.
+ * A capability may receive providers/events from product modules, but it must
+ * not depend on one vertical merely because that vertical is the first active
+ * provider. Pausing Business, Community or any future module must therefore
+ * not disable Messaging or Notifications at platform level.
  */
 export const PLATFORM_CAPABILITY_REGISTRY: Record<
   PlatformCapabilityKey,
@@ -38,7 +39,7 @@ export const PLATFORM_CAPABILITY_REGISTRY: Record<
   territory: { status: "active" },
   location: { status: "active" },
   notifications: {
-    status: "paused",
+    status: "active",
     dependsOnCapabilities: ["auth"],
   },
   central: {
@@ -58,7 +59,7 @@ export const PLATFORM_CAPABILITY_REGISTRY: Record<
     dependsOnCapabilities: ["territory"],
   },
   messaging: {
-    status: "paused",
+    status: "active",
     dependsOnCapabilities: ["auth", "profiles"],
   },
 };
