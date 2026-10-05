@@ -65,8 +65,8 @@ describe("track-public-view exact-main deploy contract", () => {
 
   it("verifies the remote broker remains active with the intended JWT mode", () => {
     expect(workflow).toContain("Verify remote broker inventory");
-    expect(workflow).toContain('$_ .verify_jwt'.replace(" ", ""));
-    expect(workflow).toContain('$_ .status'.replace(" ", ""));
+    expect(workflow).toContain("$broker[0].verify_jwt -ne $false");
+    expect(workflow).toContain("$broker[0].status -ne \"ACTIVE\"");
     expect(workflow).toContain("REMOTE_TRACK_PUBLIC_VIEW");
   });
 });
