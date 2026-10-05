@@ -4,10 +4,7 @@ import type {
   MapLayerProviderRuntime,
 } from "./types";
 
-const MAP_LAYER_PROVIDERS: Record<
-  MapLayerProviderId,
-  MapLayerProviderDefinition
-> = {
+const MAP_LAYER_PROVIDERS = {
   business: {
     id: "business",
     layerKey: "businesses",
@@ -17,7 +14,7 @@ const MAP_LAYER_PROVIDERS: Record<
       return module.businessMapLayerProvider;
     },
   },
-};
+} satisfies Record<MapLayerProviderId, MapLayerProviderDefinition>;
 
 export const MAP_LAYER_PROVIDER_ORDER: readonly MapLayerProviderId[] = [
   "business",
@@ -26,7 +23,10 @@ export const MAP_LAYER_PROVIDER_ORDER: readonly MapLayerProviderId[] = [
 export function getMapLayerProviderDefinition(
   providerId: MapLayerProviderId,
 ): MapLayerProviderDefinition | null {
-  return MAP_LAYER_PROVIDERS[providerId] ?? null;
+  switch (providerId) {
+    case "business":
+      return MAP_LAYER_PROVIDERS.business;
+  }
 }
 
 export async function loadMapLayerProvider(
