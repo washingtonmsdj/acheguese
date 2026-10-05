@@ -1,11 +1,11 @@
 import {
   businessMapQueryService,
   type BusinessMapEntity,
-} from "@/core/business";
+} from "@/core/business/services/BusinessMapQueryService";
 import type { TerritoryFilter } from "@/core/location/types";
 import type { BoundingBox } from "../types/core";
 
-export type { BusinessMapEntity } from "@/core/business";
+export type { BusinessMapEntity } from "@/core/business/services/BusinessMapQueryService";
 
 /**
  * Map-owned adapter for the Business geographic read model.
