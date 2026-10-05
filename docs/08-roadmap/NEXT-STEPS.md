@@ -21,7 +21,9 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - `RECOVERY-ROADMAP.md` supersedido removido da árvore viva;
 - especificações antigas de Feed/Post retiradas da UX ativa porque Community permanece pausado;
 - `docs/README.md` e `docs/08-roadmap/README.md` agora separam claramente SSOT vivo, planos futuros e histórico;
-- **#445 — Vercel** encerrado após normalização do provider, deployment `READY` do runtime deploy-relevante e smoke público HTTP 200; commits posteriores somente de teste/documentação podem ser ignorados pela política canônica de build sem alterar o runtime implantado.
+- **#445 — Vercel** encerrado após normalização do provider, deployment `READY` do runtime deploy-relevante e smoke público HTTP 200;
+- **#305 — Supabase** encerrado após smoke autenticado real no runtime de produção, com sessão, Conta e Business comprovados sem fallback, bypass de OIDC ou relaxamento de RLS;
+- a leitura privada de Profile usada por Business foi corrigida para passar pelo boundary canônico de broker, sem reabrir grants diretos.
 
 ## Agora
 
@@ -36,19 +38,17 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - preservar manifests, baselines e documentos consumidos por tooling;
    - manter histórico em checkpoints/archive/Git;
 
-3. fechar o blocker externo restante:
-   - **#305 — Supabase:** data plane/Auth/REST seguem apresentando timeout/504 apesar de control plane `ACTIVE_HEALTHY`; o production smoke autenticado continua reproduzindo `auth_upstream_unavailable`; não compensar com fallback de login, retry artificial, timeout maior, bypass OIDC ou mudança de RLS sem evidência;
+3. manter a certificação do candidato vigente:
+   - qualquer delta deployável exige novo deployment `READY` e smoke correspondente;
+   - mudanças exclusivas de teste/documentação podem usar o `Ignored Build Step` apenas quando a política canônica comprovar que os bytes de runtime não mudaram;
+   - Auth/Conta/Business/Mensagens/Notificações continuam parte do gate do conteúdo de runtime ativo;
 
-4. concluir a certificação autenticada quando o Supabase voltar:
-   - SQL mínimo e health/advisors aplicáveis;
-   - login real da fixture;
-   - Conta;
-   - Business;
-   - Mensagens Business;
-   - E2E autenticado;
-   - cruzar com o runtime deployado e já comprovado por smoke público;
+4. continuar hardening sem transformar dívida controlada em blocker artificial:
+   - priorizar somente drift live comprovado nas superfícies ativas;
+   - preservar os gates fail-closed de LGPD até certificação própria;
+   - não reabrir módulos pós-MVP para “provar” arquitetura;
 
-5. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth passarem para o mesmo conteúdo de runtime e todo delta deployável tiver deployment `READY` + smoke.
+5. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth continuarem certificados para o conteúdo de runtime candidato e todo delta deployável tiver deployment `READY` + smoke.
 
 ## Proibições
 
