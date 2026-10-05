@@ -13,7 +13,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
 
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain('path="/conta/editar/:profileId"');
-    expect(routes).not.toContain('path="/conta/notificacoes"');
+    expect(routes).toContain('path="/conta/notificacoes"');
 
     expect(routes).not.toContain('path="/perfil"');
     expect(routes).not.toContain('path="/perfil/');
@@ -43,7 +43,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     ).toBe(false);
   });
 
-  it("keeps notification owners versioned while paused routes and dead fallbacks stay outside the MVP graph", () => {
+  it("keeps canonical Notifications active while retired aliases stay dead", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
     const notifications = read("src/app/pages/NotificationsPage.tsx");
     const preferences = read("src/app/pages/NotificationPreferencesPage.tsx");
@@ -56,8 +56,8 @@ describe("MVP canonical routing without compatibility redirects", () => {
       "src/app/config/notificationActionScope.ts",
     );
 
-    expect(routes).not.toContain('path="/notificacoes"');
-    expect(routes).not.toContain('path="/conta/notificacoes"');
+    expect(routes).toContain('path="/notificacoes"');
+    expect(routes).toContain('path="/conta/notificacoes"');
     expect(routes).not.toContain('path="/notifications"');
     expect(routes).not.toContain('path="/settings/notifications"');
 
@@ -65,24 +65,22 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(notifications).not.toContain("/settings/notifications");
     expect(preferences).not.toContain("/settings/notifications");
 
-    expect(prefetch).not.toContain('path.startsWith("/notificacoes")');
+    // Active does not imply eager prefetch/warmup.
     expect(prefetch).not.toContain('path.startsWith("/notifications")');
-    expect(serviceWorker).toContain("function getLaunchSafeNotificationUrl(url, fallback = '/')");
-    expect(serviceWorker).toContain("notificacoes|mensagens");
-    expect(serviceWorker).not.toContain("fallback = '/notificacoes'");
-    expect(serviceWorker).not.toContain("return '/notifications'");
+    expect(serviceWorker).toContain("function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes')");
+    expect(serviceWorker).not.toContain("notificacoes|mensagens");
     expect(serviceWorker).toContain("gastronomia|servicos|services|classificados|classifieds");
-    expect(serviceWorker).toContain("getLaunchSafeNotificationUrl(");
-    expect(serviceWorker).not.toContain("return `/gastronomia/pedidos/");
-    expect(serviceWorker).not.toContain("return '/perto-de-mim';");
+    expect(serviceWorker).toContain("return getLaunchSafeNotificationUrl(data.url, '/mensagens')");
+    expect(serviceWorker).toContain("return '/conta/notificacoes'");
+    expect(serviceWorker).not.toContain("return '/notifications'");
+
     expect(notificationItem).toContain("resolveNotificationActionTarget");
     expect(notificationItem).not.toContain("href={notification.action_url}");
-    expect(notificationItem).not.toContain("data-notification-action-fallback");
-    expect(notificationActionScope).not.toContain("NOTIFICATION_INBOX_PATH");
-    expect(notificationActionScope).not.toContain("NOTIFICATION_FALLBACK_ACTION_LABEL");
+    expect(notificationActionScope).toContain("NOTIFICATION_INBOX_PATH");
+    expect(notificationActionScope).toContain("NOTIFICATION_FALLBACK_ACTION_LABEL");
     expect(notificationActionScope).toContain('surface: "gastronomy"');
     expect(notificationActionScope).toContain('surface: "mobility"');
-    expect(notificationActionScope).toContain("/^\\/notificacoes");
+    expect(notificationActionScope).not.toContain("/^\\/notificacoes(?:\\/|$)/i");
   });
 
   it("does not preserve query-param redirects for retired account navigation", () => {
