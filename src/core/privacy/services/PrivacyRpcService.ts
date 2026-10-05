@@ -51,6 +51,7 @@ export interface RequestAccountDeletionInput {
 
 const FUNCTION_NAME = "privacy-rpc";
 const SERVICE_NAME = "PrivacyRpcService";
+const DELETION_STATUS_TIMEOUT_MS = 10_000;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DELETION_STATUSES = new Set<AccountDeletionStatus>([
@@ -133,6 +134,7 @@ export class PrivacyRpcService {
   private static async invoke<T>(
     action: PrivacyRpcAction,
     params: Record<string, unknown> = {},
+    options: { timeoutMs?: number } = {},
   ): Promise<T> {
     return invokeSupabaseBroker<T, PrivacyRpcAction>({
       action,
@@ -140,6 +142,7 @@ export class PrivacyRpcService {
       noDataMessage: "Privacy broker returned no data",
       params,
       serviceName: SERVICE_NAME,
+      timeoutMs: options.timeoutMs,
     });
   }
 
@@ -164,7 +167,11 @@ export class PrivacyRpcService {
   }
 
   static async getDeletionStatus(): Promise<AccountDeletionStatusBrokerData | null> {
-    const result = await this.invoke<unknown>("getDeletionStatus");
+    const result = await this.invoke<unknown>(
+      "getDeletionStatus",
+      {},
+      { timeoutMs: DELETION_STATUS_TIMEOUT_MS },
+    );
     if (result === null) return null;
     return parseDeletionStatus(result);
   }
