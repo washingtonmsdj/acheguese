@@ -94,13 +94,12 @@ npm run verify:deploy
 
 `verify:deploy` deve usar o ambiente de release e falhar em valores ausentes/placeholders. Se CI/runner externo não iniciar os steps, isso deve ser tratado como indisponibilidade do gate, não como teste aprovado.
 
-## Prioridades atuais — 2026-08-26
+## Prioridades atuais — 2026-10-05
 
-1. restaurar gates de CI confiáveis (#17);
-2. proteger `main` contra force-push/deleção e exigir checks executáveis (#28);
-3. continuar hardening sistemático de RLS/RPC/grants sem ampliar superfícies públicas apenas para silenciar advisors (#85);
-4. reconciliar o fluxo LGPD antes de qualquer rollout de delete/export (#68);
-5. estabilizar SSOT/estrutura antes de refatoração visual ampla (#51);
-6. certificar fluxos funcionais reais dos módulos; `paused`, placeholder ou fallback não contam como sucesso (#50).
+1. comprovar e endurecer a governança nativa da `main`, incluindo proteção contra force-push/deleção e required checks executáveis (#28);
+2. continuar o hardening sistemático de RLS/RPC/grants, priorizando superfícies do MVP ativo e sem ampliar acesso apenas para silenciar advisors (#85);
+3. manter delete/export LGPD fail-closed até purge físico, exportação e operação correspondente estarem certificados para rollout (#68);
+4. preservar identidade de release e prova pós-rollout para todo delta deployável; merge, CI verde ou provider READY isoladamente não equivalem a `PROD/DONE`;
+5. manter módulos `paused` fora do runtime ativo e tratar sua certificação funcional como trabalho pós-MVP, sem placeholder, fallback ou reativação indireta.
 
-O estado operacional e a ordem de execução ficam em [`docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`](./docs/08-roadmap/EXECUCAO_MAIN_ONLY.md).
+Os incidentes antigos de CI (#17) e a limpeza estrutural/documental (#51) estão encerrados e não são prioridades vivas desta política. O estado operacional e a ordem de execução permanecem em [`docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`](./docs/08-roadmap/EXECUCAO_MAIN_ONLY.md).
