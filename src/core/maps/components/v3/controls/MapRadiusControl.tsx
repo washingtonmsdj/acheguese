@@ -1,8 +1,8 @@
 /**
  * MapRadiusControl - Controle de raio de busca no mapa
- * 
+ *
  * Permite ao usuário filtrar entidades por distância.
- * 
+ *
  * @module core/maps/components/v3/controls
  */
 import { logger } from '@/shared/utils/logger';
@@ -40,12 +40,12 @@ export interface MapRadiusControlProps {
 
 /**
  * Controle de raio de busca no mapa
- * 
+ *
  * COMPORTAMENTO:
  * - Usuário escolhe o raio em um dropdown/botões
  * - Clica em "Buscar" para ativar
  * - Evita múltiplas requisições durante ajuste
- * 
+ *
  * @example
  * ```tsx
  * <MapRadiusControl
@@ -72,8 +72,9 @@ export function MapRadiusControl({
 }: MapRadiusControlProps) {
   const [selectedRadius, setSelectedRadius] = useState(initialRadius);
 
-  // Opções de raio predefinidas (estilo Facebook)
-  const radiusOptions = [1, 2, 5, 10, 15, 20, 30, 50];
+  const radiusOptions = [1, 2, 5, 10, 15, 20, 30, 50].filter(
+    (option) => option >= minRadius && option <= maxRadius,
+  );
 
   if (!visible) {
     return null;
@@ -81,12 +82,10 @@ export function MapRadiusControl({
 
   const handleRadiusSelect = (radius: number) => {
     setSelectedRadius(radius);
-    // Mostrar preview do círculo imediatamente (sem buscar)
     onRadiusPreview?.(radius);
   };
 
   const handleApply = () => {
-    // Aplicar busca com o raio selecionado
     onRadiusChange?.(selectedRadius);
   };
 
@@ -95,22 +94,22 @@ export function MapRadiusControl({
   };
 
   return (
-    <Card className={`p-4 bg-white shadow-lg ${className}`}>
+    <Card
+      className={`border-territory-border bg-territory-surface p-4 text-territory-ink shadow-lg ${className}`}
+    >
       <div className="space-y-4">
-        {/* Header */}
         <div className="flex items-center justify-between gap-4">
-          <Label className="text-sm font-medium text-gray-700">
+          <Label className="text-sm font-medium text-territory-ink">
             Raio de busca
           </Label>
           {isActive && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-territory-brand/20 bg-territory-brand/10 px-2 py-0.5 text-xs font-medium text-territory-brand">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-territory-brand" />
               Ativo
             </span>
           )}
         </div>
 
-        {/* Seletor de raio (estilo Facebook) */}
         {!isActive && (
           <div className="space-y-3">
             <div className="grid grid-cols-4 gap-2">
@@ -118,57 +117,52 @@ export function MapRadiusControl({
                 <button
                   key={option}
                   onClick={() => handleRadiusSelect(option)}
-                  className={`
-                    px-3 py-2 text-sm font-medium rounded-lg transition-all
-                    ${selectedRadius === option
-                      ? 'bg-primary text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }
-                  `}
+                  className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    selectedRadius === option
+                      ? 'bg-territory-brand text-territory-on-image shadow-md'
+                      : 'bg-territory-raised text-territory-ink hover:bg-territory-brand/10'
+                  }`}
                 >
                   {option} km
                 </button>
               ))}
             </div>
 
-            {/* Botão de aplicar */}
             <button
               onClick={handleApply}
-              className="w-full px-4 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors shadow-sm"
+              className="w-full rounded-lg bg-territory-brand px-4 py-2.5 text-sm font-medium text-territory-on-image shadow-sm transition-colors hover:bg-territory-brand/90"
             >
               Aplicar busca em {selectedRadius} km
             </button>
           </div>
         )}
 
-        {/* Informações quando ativo */}
         {isActive && (
           <div className="space-y-3">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 space-y-2">
-              <p className="text-xs text-blue-700">
+            <div className="space-y-2 rounded-lg border border-territory-brand/20 bg-territory-brand/[0.06] px-3 py-2">
+              <p className="text-xs text-territory-brand">
                 📍 Mostrando resultados em <strong>{selectedRadius} km</strong>
               </p>
-              
-              {/* Contadores por tipo */}
+
               {counts && (
                 <div className="flex flex-wrap gap-2">
                   {counts.businesses !== undefined && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-white text-gray-700 border border-gray-200">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-territory-border bg-territory-surface px-2 py-0.5 text-xs font-medium text-territory-ink">
                       🏢 {counts.businesses}
                     </span>
                   )}
                   {counts.events !== undefined && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-white text-gray-700 border border-gray-200">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-territory-border bg-territory-surface px-2 py-0.5 text-xs font-medium text-territory-ink">
                       📅 {counts.events}
                     </span>
                   )}
                   {counts.alerts !== undefined && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-white text-gray-700 border border-gray-200">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-territory-border bg-territory-surface px-2 py-0.5 text-xs font-medium text-territory-ink">
                       ⚠️ {counts.alerts}
                     </span>
                   )}
                   {counts.touristPoints !== undefined && counts.touristPoints > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-white text-gray-700 border border-gray-200">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-territory-border bg-territory-surface px-2 py-0.5 text-xs font-medium text-territory-ink">
                       🏛️ {counts.touristPoints}
                     </span>
                   )}
@@ -176,10 +170,9 @@ export function MapRadiusControl({
               )}
             </div>
 
-            {/* Botão de desativar */}
             <button
               onClick={handleDisable}
-              className="w-full px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="w-full rounded-lg bg-territory-raised px-3 py-2 text-sm font-medium text-territory-ink transition-colors hover:bg-territory-brand/10"
             >
               Desativar filtro
             </button>
