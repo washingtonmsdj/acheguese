@@ -10,7 +10,7 @@ describe("auth return context", () => {
     });
   });
 
-  it("recognizes common internal destinations", () => {
+  it("recognizes active common internal destinations", () => {
     expect(getAuthReturnContext("/mensagens")).toEqual({
       label: "Conversas",
       kind: "conversation",
@@ -19,9 +19,12 @@ describe("auth return context", () => {
       label: "Minha conta",
       kind: "account",
     });
+  });
+
+  it("does not advertise a paused Community destination during auth", () => {
     expect(getAuthReturnContext("/comunidade/post/123")).toEqual({
-      label: "Comunidade",
-      kind: "community",
+      label: "onde parou",
+      kind: "generic",
     });
   });
 
