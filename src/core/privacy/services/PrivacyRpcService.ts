@@ -1,4 +1,5 @@
 import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
+import { TIMEOUTS } from "@/shared/constants";
 
 type PrivacyRpcAction =
   | "recordConsent"
@@ -51,7 +52,6 @@ export interface RequestAccountDeletionInput {
 
 const FUNCTION_NAME = "privacy-rpc";
 const SERVICE_NAME = "PrivacyRpcService";
-const DELETION_STATUS_TIMEOUT_MS = 10_000;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const DELETION_STATUSES = new Set<AccountDeletionStatus>([
@@ -170,7 +170,7 @@ export class PrivacyRpcService {
     const result = await this.invoke<unknown>(
       "getDeletionStatus",
       {},
-      { timeoutMs: DELETION_STATUS_TIMEOUT_MS },
+      { timeoutMs: TIMEOUTS.PRIVACY_ACCESS_GATE },
     );
     if (result === null) return null;
     return parseDeletionStatus(result);
