@@ -121,6 +121,38 @@ describe("active Central runtime boundary", () => {
     expect(header).toContain("billingEnabled");
   });
 
+  it("keeps primary navigation lifecycle-scoped in the app composition boundary", () => {
+    const scope = read("src/app/config/territoryNavigationScope.ts");
+    const bottomNav = read("src/core/navigation/BottomNav.tsx");
+    const adaptiveNavigation = read(
+      "src/app/components/territory-vivo/TerritoryAdaptiveNavigation.tsx",
+    );
+    const appLayout = read("src/app/components/AppLayoutSidebar.tsx");
+    const centralLayout = read(
+      "src/modules/central/components/CentralLayout.tsx",
+    );
+
+    expect(scope).toContain('business: () => isProductModuleEnabled("business")');
+    expect(scope).toContain('map: () => isPlatformCapabilityEnabled("map")');
+    expect(scope).toContain('nearby: () => isPlatformCapabilityEnabled("nearby")');
+    expect(scope).toContain('search: () => isPlatformCapabilityEnabled("search")');
+    expect(scope).toContain('account: () => isPlatformCapabilityEnabled("account")');
+
+    expect(bottomNav).toContain("visibleModeIds");
+    expect(bottomNav).toContain("visibleModeIdSet.has(tab.id)");
+    expect(bottomNav).not.toContain("@/app/config");
+
+    expect(adaptiveNavigation).toContain("filterActiveTerritoryNavigationModes(");
+    expect(appLayout).toContain("getActiveTerritoryNavigationModeIds()");
+    expect(appLayout).toContain("visibleModeIds={activeNavigationModeIds}");
+
+    expect(routes).toContain("getActiveTerritoryNavigationModeIds()");
+    expect(routes).toContain("navigationModeIds={navigationModeIds}");
+    expect(centralLayout).toContain("navigationModeIds");
+    expect(centralLayout).toContain("visibleModeIds={navigationModeIds}");
+    expect(centralLayout).not.toContain("@/app/config");
+  });
+
   it("keeps active Business management independent from paused extensions", () => {
     for (const pausedDependency of [
       "useBusinessSubscription",
