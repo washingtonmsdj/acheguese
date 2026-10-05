@@ -22,6 +22,7 @@ const ACTIVE_OWNER_ROOTS = [
 
 const EXPLICIT_MVP_CONTRACTS = [
   "src/app/pages/__tests__/BuscaPage.spec.tsx",
+  "src/core/infrastructure/edge-functions/edgeFunctionBroker.test.ts",
   "src/core/routing/seo/__tests__/generateSitemap.spec.ts",
   "src/integrations/supabase/apiKeySafeFetch.spec.ts",
   "tests/e2e/helpers/fixtureAuthPasswordGrant.spec.ts",
