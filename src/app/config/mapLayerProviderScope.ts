@@ -22,11 +22,25 @@ const PROVIDER_ROLLOUT_MODULE: Record<MapLayerProviderId, ModuleKey> = {
   business: ModuleKey.BUSINESS,
 };
 
+function getProviderProductModule(providerId: MapLayerProviderId): ProductModuleKey {
+  switch (providerId) {
+    case "business":
+      return PROVIDER_PRODUCT_MODULE.business;
+  }
+}
+
+function getProviderRolloutModule(providerId: MapLayerProviderId): ModuleKey {
+  switch (providerId) {
+    case "business":
+      return PROVIDER_ROLLOUT_MODULE.business;
+  }
+}
+
 export function getActiveMapLayerProviderIds(): MapLayerProviderId[] {
   if (!isPlatformCapabilityEnabled("map")) return [];
 
   return MAP_LAYER_PROVIDER_ORDER.filter((providerId) => {
-    const productModule = PROVIDER_PRODUCT_MODULE[providerId];
+    const productModule = getProviderProductModule(providerId);
     return (
       isProductModuleEnabled(productModule) &&
       getMapLayerProviderDefinition(providerId) !== null
@@ -44,9 +58,7 @@ export function getActiveMapLayerKeys(): MapLayerKey[] {
 export function getActiveMapLayerRolloutModuleKeys(): ModuleKey[] {
   return [
     ...new Set(
-      getActiveMapLayerProviderIds().map(
-        (providerId) => PROVIDER_ROLLOUT_MODULE[providerId],
-      ),
+      getActiveMapLayerProviderIds().map(getProviderRolloutModule),
     ),
   ];
 }
