@@ -2,6 +2,7 @@ import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
 import { Home, LogOut } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { SafeLink } from "@/shared/components/security";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import type { ReactNode } from "react";
@@ -39,14 +40,14 @@ export function CentralHeader({
 
       <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-3">
         <MultiProfileSwitcher compact />
-        <a
+        <SafeLink
           href={publicHomeUrl}
           className="hidden items-center gap-1.5 text-xs text-territory-muted transition-colors hover:text-territory-ink sm:inline-flex"
           aria-label="Voltar ao site"
         >
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline">Ver site</span>
-        </a>
+        </SafeLink>
         {billingEnabled ? (
           <Link
             to="/planos"
