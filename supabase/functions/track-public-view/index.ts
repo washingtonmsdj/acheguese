@@ -29,18 +29,6 @@ import {
 
 const ALLOWED_METHODS = "POST, OPTIONS";
 
-const VIEW_COUNTER_RPCS = {
-  business: {
-    functionName: "increment_business_views",
-  },
-  professional: {
-    functionName: "increment_professional_views",
-  },
-  vaga: {
-    functionName: "increment_vaga_view_count",
-  },
-} as const;
-
 function responseHeaders(req: Request): Record<string, string> {
   return getAllSecurityHeaders(ALLOWED_METHODS, req);
 }
@@ -74,7 +62,12 @@ serve(async (req: Request) => {
     }
 
     const { entityType, entityId } = validation.data!;
-    const counterRpc = VIEW_COUNTER_RPCS[entityType];
+    const functionName =
+      entityType === "business"
+        ? "increment_business_views"
+        : entityType === "professional"
+          ? "increment_professional_views"
+          : "increment_vaga_view_count";
     const rpcArgs =
       entityType === "business"
         ? { business_id: entityId }
@@ -87,7 +80,7 @@ serve(async (req: Request) => {
       { auth: { autoRefreshToken: false, persistSession: false } },
     );
 
-    const { error } = await supabaseAdmin.rpc(counterRpc.functionName, rpcArgs);
+    const { error } = await supabaseAdmin.rpc(functionName, rpcArgs);
 
     if (error) {
       auditLog({

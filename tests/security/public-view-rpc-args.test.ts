@@ -6,14 +6,17 @@ const publicViewBroker = readFileSync(
   "utf8",
 );
 
-describe("track-public-view RPC argument safety", () => {
-  it("keeps RPC argument names explicit after entity validation", () => {
+describe("track-public-view RPC dispatch safety", () => {
+  it("keeps RPC names and argument names explicit after entity validation", () => {
+    expect(publicViewBroker).toContain('"increment_business_views"');
+    expect(publicViewBroker).toContain('"increment_professional_views"');
+    expect(publicViewBroker).toContain('"increment_vaga_view_count"');
     expect(publicViewBroker).toContain('{ business_id: entityId }');
     expect(publicViewBroker).toContain('{ professional_id: entityId }');
     expect(publicViewBroker).toContain('{ vaga_id: entityId }');
+    expect(publicViewBroker).toContain("supabaseAdmin.rpc(functionName, rpcArgs)");
+    expect(publicViewBroker).not.toContain("VIEW_COUNTER_RPCS");
     expect(publicViewBroker).not.toContain("argName");
-    expect(publicViewBroker).toContain(
-      'const counterRpc = VIEW_COUNTER_RPCS[entityType];',
-    );
+    expect(publicViewBroker).not.toContain("[entityType]");
   });
 });

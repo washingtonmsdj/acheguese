@@ -66,13 +66,17 @@ describe("public view tracking security", () => {
     expect(clientService).not.toContain("business_views");
     expect(businessMutations).not.toContain("business_views");
 
-    expect(edgeFunction).toContain("VIEW_COUNTER_RPCS");
+    expect(edgeFunction).not.toContain("VIEW_COUNTER_RPCS");
     expect(edgeFunction).toContain("publicViewEventSchema");
     expect(edgeFunction).toContain("rateLimitMiddleware(req, 120, 60_000)");
     expect(edgeFunction).toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(edgeFunction).toContain("increment_business_views");
     expect(edgeFunction).toContain("increment_professional_views");
     expect(edgeFunction).toContain("increment_vaga_view_count");
+    expect(edgeFunction).toContain("supabaseAdmin.rpc(functionName, rpcArgs)");
+    expect(edgeFunction).toContain("{ business_id: entityId }");
+    expect(edgeFunction).toContain("{ professional_id: entityId }");
+    expect(edgeFunction).toContain("{ vaga_id: entityId }");
     expect(edgeFunction).toContain('resource: "track-public-view"');
     expect(edgeFunction).not.toMatch(/rawBody\.data[\s\S]{0,240}\.rpc/);
 
@@ -142,9 +146,15 @@ describe("public view tracking security", () => {
     expect(
       edgeFunctionAuthPolicy.noJwtAllowlist["track-public-view"]?.label,
     ).toBe("public view counter broker");
-    expect(
+    const publicViewRequiredPatterns =
       edgeFunctionAuthPolicy.noJwtAllowlist["track-public-view"]
-        ?.requiredPatterns,
-    ).toContain("VIEW_COUNTER_RPCS");
+        ?.requiredPatterns ?? [];
+    expect(publicViewRequiredPatterns).not.toContain("VIEW_COUNTER_RPCS");
+    expect(publicViewRequiredPatterns).toContain(
+      "supabaseAdmin\\.rpc\\s*\\(\\s*functionName\\s*,\\s*rpcArgs\\s*\\)",
+    );
+    expect(publicViewRequiredPatterns).toContain("business_id:\\s*entityId");
+    expect(publicViewRequiredPatterns).toContain("professional_id:\\s*entityId");
+    expect(publicViewRequiredPatterns).toContain("vaga_id:\\s*entityId");
   });
 });
