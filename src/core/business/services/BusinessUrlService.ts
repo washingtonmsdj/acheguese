@@ -17,11 +17,9 @@ import { supabase } from '@/integrations/supabase';
 import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 import { PublicIdentityService } from '@/core/public-identity';
 import { buildPublicEntityUrl } from '@/core/routing/policies';
+import { normalizePublicTerritoryPath } from '@/core/routing/utils/territoryUrls';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
-import {
-  buildBusinessPremiumUrl,
-  buildBusinessPublicUrlFromTerritory,
-} from '@/core/business/utils/businessPublicUrls';
+import { buildBusinessPremiumUrl } from '@/core/business/utils/businessPublicUrls';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +31,6 @@ export interface BusinessUrlContext {
   /** geographic_path da location associada, ex: /br/ba/salvador/pituba */
   geographic_path: string;
 }
-
 
 export interface ResolvedBusinessUrl {
   /** URL publica canonica: /:state/:city/:territorySlug/empresas/:slug. */
@@ -47,29 +44,49 @@ export interface ResolvedBusinessUrl {
 
 // ─── Helpers internos ─────────────────────────────────────────────────────────
 
-/**
- * Extrai segmentos UF, cidade e bairro de um geographic_path.
- * OBRIGATÓRIO: geographic_path deve ter 4 segmentos (país/estado/cidade/bairro).
- *
- * Ex: '/br/ba/salvador/pituba' → { uf: 'ba', cidade: 'salvador', bairro: 'pituba' }
- *
- * Retorna null se não tiver bairro (empresa inválida).
- */
-function extractTerritorySegments(
-  geoPath: string,
-): { uf: string; cidade: string; bairro: string } | null {
-  // Remove leading slash e divide
-  const parts = geoPath.replace(/^\//, '').split('/');
-  const territoryParts = parts[0] === 'br' ? parts.slice(1) : parts;
-  // Esperado: [state, city, district]
-  if (territoryParts.length < 3) {
-    logger.error(
-      `[BusinessUrlService] geographic_path inválido (sem bairro): "${geoPath}". ` +
-      `Empresas devem ter location_id apontando para bairro/district.`
+const BUSINESS_TERRITORY_SEGMENT_COUNT = 3;
+
+function normalizeBusinessTerritoryPath(ctx: BusinessUrlContext): string {
+  const { id, geographic_path } = ctx;
+
+  if (!geographic_path) {
+    throw new Error(
+      `[BusinessUrlService] Empresa ${id} sem geographic_path. ` +
+        `Empresas devem ter location_id apontando para bairro/district.`,
     );
-    return null;
   }
-  return { uf: territoryParts[0], cidade: territoryParts[1], bairro: territoryParts[2] };
+
+  let normalizedPath: string;
+  try {
+    normalizedPath = normalizePublicTerritoryPath(geographic_path);
+  } catch {
+    throw new Error(
+      `[BusinessUrlService] Empresa ${id} com geographic_path inválido: "${geographic_path}". ` +
+        `Esperado formato: /br/:uf/:cidade/:bairro`,
+    );
+  }
+
+  const territorySegments = normalizedPath.split('/').filter(Boolean);
+  if (territorySegments.length !== BUSINESS_TERRITORY_SEGMENT_COUNT) {
+    logger.error(
+      `[BusinessUrlService] geographic_path inválido: "${geographic_path}". ` +
+        `Empresas devem apontar exatamente para um território /:uf/:cidade/:bairro.`,
+    );
+    throw new Error(
+      `[BusinessUrlService] Empresa ${id} com geographic_path inválido: "${geographic_path}". ` +
+        `Esperado formato: /br/:uf/:cidade/:bairro`,
+    );
+  }
+
+  return normalizedPath;
+}
+
+function buildCanonicalBusinessUrl(ctx: BusinessUrlContext): string {
+  return buildPublicEntityUrl({
+    module: APP_MODULE_SLUGS.business,
+    geographicPath: normalizeBusinessTerritoryPath(ctx),
+    slug: ctx.slug,
+  });
 }
 
 // ─── Service ──────────────────────────────────────────────────────────────────
@@ -78,40 +95,19 @@ export class BusinessUrlService {
   /**
    * Gera todas as URLs para uma empresa a partir do contexto mínimo.
    *
-   * OBRIGATÓRIO: geographic_path deve incluir bairro.
-   * Empresas sem bairro são inválidas e retornam erro.
+   * OBRIGATÓRIO: geographic_path deve apontar exatamente para um território
+   * público /:uf/:cidade/:bairro.
    *
    * @param ctx - Contexto da empresa
    */
   static buildUrls(ctx: BusinessUrlContext): ResolvedBusinessUrl {
-    const { id, slug, is_premium, geographic_path } = ctx;
-
-    if (!geographic_path) {
-      throw new Error(
-        `[BusinessUrlService] Empresa ${id} sem geographic_path. ` +
-        `Empresas devem ter location_id apontando para bairro/district.`
-      );
-    }
-
-    const territory = extractTerritorySegments(geographic_path);
-
-    if (!territory) {
-      throw new Error(
-        `[BusinessUrlService] Empresa ${id} com geographic_path inválido: "${geographic_path}". ` +
-        `Esperado formato: /br/:uf/:cidade/:bairro`
-      );
-    }
-
-    const canonical = buildBusinessPublicUrlFromTerritory(
-      `/${territory.uf}/${territory.cidade}/${territory.bairro}`,
-      slug,
-    );
+    const { id, slug, is_premium } = ctx;
+    const canonical = buildCanonicalBusinessUrl(ctx);
     const dashboard = businessManagementRoutes.overview(id);
 
     return {
       canonical,
       premium: is_premium ? buildBusinessPremiumUrl(slug) : null,
-
       dashboard,
     };
   }
@@ -121,7 +117,7 @@ export class BusinessUrlService {
    * Uso: links em cards, SEO, compartilhamento.
    */
   static getCanonicalUrl(ctx: BusinessUrlContext): string {
-    return this.buildUrls(ctx).canonical;
+    return buildCanonicalBusinessUrl(ctx);
   }
 
   /**
@@ -129,11 +125,7 @@ export class BusinessUrlService {
    * A entidade publica pertence ao territorio; Comunidade nao altera sua URL.
    */
   static getPublicCanonicalUrl(ctx: BusinessUrlContext): string {
-    return buildPublicEntityUrl({
-      module: APP_MODULE_SLUGS.business,
-      geographicPath: ctx.geographic_path,
-      slug: ctx.slug,
-    });
+    return buildCanonicalBusinessUrl(ctx);
   }
 
   /**
@@ -382,5 +374,4 @@ export class BusinessUrlService {
       entityType: 'business',
     });
   }
-
 }
