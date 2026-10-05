@@ -39,6 +39,24 @@ function domainLimit(filters: SearchFilters): number {
   return filters.communityId ? getCommunitySearchCandidateLimit() : SEARCH_LIMIT;
 }
 
+function getLinkedIdsForEntityType(
+  linkedIds: CommunityLinkedEntityIds,
+  entityType: SearchLinkedEntityType,
+): ReadonlySet<string> | undefined {
+  switch (entityType) {
+    case "business":
+      return linkedIds.business;
+    case "professional":
+      return linkedIds.professional;
+    case "classified":
+      return linkedIds.classified;
+    case "event":
+      return linkedIds.event;
+    case "post":
+      return linkedIds.post;
+  }
+}
+
 function filterByLinkedEntityIds<T>(
   items: readonly T[],
   linkedIds: CommunityLinkedEntityIds,
@@ -46,7 +64,7 @@ function filterByLinkedEntityIds<T>(
   getEntityId: (item: T) => string | null | undefined,
   requireLinkedEntity: boolean,
 ): T[] {
-  const ids = linkedIds[entityType];
+  const ids = getLinkedIdsForEntityType(linkedIds, entityType);
   if (!ids?.size) return requireLinkedEntity ? [] : [...items].slice(0, SEARCH_LIMIT);
 
   return items
