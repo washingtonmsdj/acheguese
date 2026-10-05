@@ -100,7 +100,7 @@ Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentai
 
 A certificação autenticada de produção já foi comprovada em candidato de `main` com sessão real, Conta e Business, sem fallback de login, bypass de OIDC, relaxamento de RLS ou abertura de acesso direto a Profile.
 
-O incidente anterior do data plane/Auth do Supabase está encerrado como blocker. A causa final encontrada no smoke foi um embed direto da tabela privada `profiles` dentro de uma leitura de Business; a correção moveu essa resolução para o boundary canônico de Profile, e o smoke subsequente ficou verde.
+O blocker #305 está encerrado. A causa final encontrada no smoke foi um embed direto da tabela privada `profiles` dentro de uma leitura de Business; a correção moveu essa resolução para o boundary canônico de Profile, e o smoke subsequente ficou verde.
 
 ### Dependência externa normalizada — Vercel / #445
 
