@@ -79,7 +79,9 @@ async function fillBusinessTerritory(page: Page) {
   });
 }
 
-async function assertDedicatedFixture(client: Awaited<ReturnType<typeof bootstrapFixtureSession>>) {
+async function assertDedicatedFixture(
+  client: Awaited<ReturnType<typeof bootstrapFixtureSession>>,
+) {
   const { data, error } = await client.auth.getUser();
   if (error || !data.user) {
     throw error ?? new Error("Fixture autenticada nao retornou usuario.");
@@ -126,7 +128,10 @@ async function cleanupBusinessFixtures(
   if (error) throw error;
 
   for (const business of businesses ?? []) {
-    if (!business.profile_id || !String(business.business_name).startsWith(BUSINESS_PREFIX)) {
+    if (
+      !business.profile_id ||
+      !String(business.business_name).startsWith(BUSINESS_PREFIX)
+    ) {
       throw new Error("Cleanup recusado para empresa fora do prefixo tecnico G6.");
     }
 
@@ -143,6 +148,14 @@ async function cleanupBusinessFixtures(
     .eq("status", "active");
   if (remainingError) throw remainingError;
   expect(remaining ?? []).toEqual([]);
+}
+
+function businessHeading(page: Page, businessName: string) {
+  return page.getByRole("heading", {
+    name: businessName,
+    exact: true,
+    level: 3,
+  });
 }
 
 test.describe("Business lifecycle — fixture autenticada remota", () => {
@@ -213,8 +226,9 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
         /\/central\/empresas\/[0-9a-f-]{36}(?:\/?|\?.*)$/i,
         { timeout: 40_000 },
       );
-      const profileId =
-        page.url().match(/\/central\/empresas\/([0-9a-f-]{36})(?:\/|\?|$)/i)?.[1];
+      const profileId = page
+        .url()
+        .match(/\/central\/empresas\/([0-9a-f-]{36})(?:\/|\?|$)/i)?.[1];
       expect(profileId).toBeTruthy();
 
       await page.goto(businessManagementRoutes.edit(profileId!), {
@@ -226,17 +240,26 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
 
       await page.locator("#name").fill(renamedName);
       await expect(
-        page.getByRole("heading", { name: "Identidade da empresa", exact: true }),
+        page.getByRole("heading", {
+          name: "Identidade da empresa",
+          exact: true,
+        }),
       ).toBeVisible({ timeout: 20_000 });
       await page.getByRole("button", { name: "Próximo" }).click();
 
       await expect(
-        page.getByRole("heading", { name: "Contato e localização", exact: true }),
+        page.getByRole("heading", {
+          name: "Contato e localização",
+          exact: true,
+        }),
       ).toBeVisible({ timeout: 20_000 });
       await page.getByRole("button", { name: "Próximo" }).click();
 
       await expect(
-        page.getByRole("heading", { name: "Apresentação e detalhes", exact: true }),
+        page.getByRole("heading", {
+          name: "Apresentação e detalhes",
+          exact: true,
+        }),
       ).toBeVisible({ timeout: 20_000 });
       await page.getByRole("button", { name: "Salvar alterações" }).click();
       await page.waitForURL(
@@ -245,30 +268,30 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
       );
 
       await page.goto("/central/empresas", { waitUntil: "domcontentloaded" });
-      const renamedBusinessCard = page
-        .locator(".business-management-card")
-        .filter({ hasText: renamedName });
-      await expect(renamedBusinessCard).toHaveCount(1);
+      await expect(businessHeading(page, renamedName)).toBeVisible({
+        timeout: 30_000,
+      });
       await expect(
-        renamedBusinessCard.getByText(renamedName, { exact: true }),
-      ).toBeVisible({ timeout: 30_000 });
+        page.getByRole("button", { name: "Gerenciar empresa" }),
+      ).toHaveCount(1);
 
-      await renamedBusinessCard
-        .getByRole("button", { name: "Gerenciar empresa" })
-        .click();
+      await page.getByRole("button", { name: "Gerenciar empresa" }).click();
       await expect(page).toHaveURL(
         new RegExp(`/central/empresas/${profileId}(?:/|\\?|$)`),
         { timeout: 30_000 },
       );
-      await expect(page.getByText(renamedName, { exact: true }).first()).toBeVisible({
-        timeout: 30_000,
-      });
+      await expect(
+        page.getByText(renamedName, { exact: true }).first(),
+      ).toBeVisible({ timeout: 30_000 });
 
       await page.goto("/central/empresas", { waitUntil: "domcontentloaded" });
-      await expect(renamedBusinessCard).toHaveCount(1);
-      await renamedBusinessCard
-        .getByRole("button", { name: "Ver página pública" })
-        .click();
+      await expect(businessHeading(page, renamedName)).toBeVisible({
+        timeout: 30_000,
+      });
+      await expect(
+        page.getByRole("button", { name: "Ver página pública" }),
+      ).toHaveCount(1);
+      await page.getByRole("button", { name: "Ver página pública" }).click();
       await expect(page).toHaveURL(/\/empresas\//, { timeout: 30_000 });
       await expect(
         page.getByRole("heading", { name: renamedName }).first(),
