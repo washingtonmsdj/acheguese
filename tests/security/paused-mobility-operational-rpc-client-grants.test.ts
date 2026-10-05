@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { PRODUCT_MODULE_REGISTRY } from "../../src/app/config/productModuleRegistry";
 
 const PAUSE_MIGRATION =
-  "20261005233000_pause_mobility_operational_rpc_client_grants.sql";
+  "20261005222823_pause_mobility_operational_rpc_client_grants.sql";
 
 const CLIENT_RPC_SIGNATURES = [
   "public.append_driver_moderation_event(uuid, text, text, jsonb)",
