@@ -31,11 +31,19 @@ describe("MVP external dependency documentation", () => {
       "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "utf8",
     );
+    const nextSteps = readFileSync(
+      "docs/08-roadmap/NEXT-STEPS.md",
+      "utf8",
+    );
 
     expect(execution).toContain("`exact/equivalent`");
     expect(execution).toContain("Ignored Build Step");
     expect(execution).toContain("fingerprint");
     expect(execution).toContain("deployment `READY` + smoke");
     expect(execution).toContain("regressão de infraestrutura reabre o gate");
+    expect(execution).toContain("somente paths classificados como **skippable**");
+    expect(execution).toContain("incluindo este `EXECUCAO_MAIN_ONLY.md`");
+    expect(nextSteps).toContain("paths explicitamente classificados como skippable");
+    expect(nextSteps).toContain("`EXECUCAO_MAIN_ONLY.md`, exigem nova prova de release");
   });
 });
