@@ -56,9 +56,33 @@ describe('businessPublicUrls', () => {
     ).toBe('/p/cafe-central/produto/espresso');
   });
 
-  it('rejects slugs that would create extra path segments', () => {
-    expect(() => buildBusinessPremiumUrl('loja/extra')).toThrow(
-      /slug premium da empresa/,
-    );
+  it('rejects unsafe public and premium slugs instead of creating ambiguous routes', () => {
+    for (const unsafeSlug of [
+      'loja/extra',
+      'loja\\admin',
+      'loja?next=/admin',
+      'loja#admin',
+      'loja%2Fadmin',
+      'loja%252Fadmin',
+      '..',
+    ]) {
+      expect(() => buildBusinessPremiumUrl(unsafeSlug)).toThrow(
+        /slug premium da empresa/,
+      );
+      expect(() =>
+        buildBusinessPublicUrlFromTerritory(
+          '/br/ba/salvador/pituba',
+          unsafeSlug,
+        ),
+      ).toThrow(/slug de entidade/);
+    }
+  });
+
+  it('rejects unsafe premium child segments', () => {
+    for (const unsafeSegment of ['produto/extra', 'produto\\admin', '%2Fadmin', '..']) {
+      expect(() =>
+        buildBusinessPremiumRoute('cafe-central', [unsafeSegment]),
+      ).toThrow(/segmento da rota premium/);
+    }
   });
 });
