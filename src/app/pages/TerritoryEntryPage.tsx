@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
 import { getStateByCode } from "@/core/location/data/brazilianStates";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
@@ -203,30 +204,30 @@ export default function TerritoryEntryPage() {
 
       <header className="ag-header">
         <div className="ag-container ag-header-inner">
-          <a href="/" className="ag-brand" aria-label="Achegue-se — início">
+          <Link to="/" className="ag-brand" aria-label="Achegue-se — início">
             <BrandMark />
             <span>achegue-se</span>
-          </a>
+          </Link>
 
           <nav className="ag-nav" aria-label="Navegação principal">
             <a href="#descobrir">Por perto</a>
-            <a href="/como-funciona">Como funciona</a>
-            <a href={launchBusinessUrl}>Para negócios</a>
+            <Link to="/como-funciona">Como funciona</Link>
+            <Link to={launchBusinessUrl}>Para negócios</Link>
           </nav>
 
           <div className="ag-header-actions">
-            <a
+            <Link
               className="ag-location-pill"
-              href={launchMapUrl}
+              to={launchMapUrl}
               aria-label={`Abrir mapa de ${LAUNCH_COMMUNITY_NAME}`}
             >
               <PinIcon />
               <span>Território: {LAUNCH_COMMUNITY_NAME}</span>
-            </a>
-            <a className="ag-account-link" href={accountHref}>
+            </Link>
+            <Link className="ag-account-link" to={accountHref}>
               {accountLabel}
               <ArrowIcon />
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -249,10 +250,10 @@ export default function TerritoryEntryPage() {
               </p>
 
               <div className="ag-discovery-action">
-                <a className="ag-explore-cta" href={LAUNCH_URLS.portal}>
+                <Link className="ag-explore-cta" to={LAUNCH_URLS.portal}>
                   Explorar o {LAUNCH_COMMUNITY_DISCOVERY_LABEL}
                   <ArrowIcon />
-                </a>
+                </Link>
                 <p>Conheça primeiro. Nenhum cadastro é necessário para explorar.</p>
               </div>
             </div>
@@ -272,14 +273,14 @@ export default function TerritoryEntryPage() {
                 </p>
               </div>
 
-              <a className="ag-hero-map-card" href={launchMapUrl}>
+              <Link className="ag-hero-map-card" to={launchMapUrl}>
                 <span className="ag-map-icon"><MapIcon /></span>
                 <span>
                   <small>Seu território, ao vivo</small>
                   <strong>Explorar pelo mapa</strong>
                 </span>
                 <ArrowIcon />
-              </a>
+              </Link>
 
               <div className="ag-live-card" aria-label="Comunidade local ativa">
                 <span className="ag-avatar-stack" aria-hidden="true">
@@ -297,15 +298,15 @@ export default function TerritoryEntryPage() {
             <p>Agora em {LAUNCH_COMMUNITY_DISCOVERY_LABEL}</p>
             <div>
               {launchCommunityMembers.map((member, index) => (
-                <a href={launchMapUrl} key={member.id}>
+                <Link to={launchMapUrl} key={member.id}>
                   <span>{String(index + 1).padStart(2, "0")}</span>
                   {getPublicTerritoryLocationLabel(member)}
-                </a>
+                </Link>
               ))}
             </div>
-            <a className="ag-nearby-link" href={launchNearbyUrl}>
+            <Link className="ag-nearby-link" to={launchNearbyUrl}>
               Perto de mim <ArrowIcon />
-            </a>
+            </Link>
           </div>
         </section>
 
@@ -330,9 +331,9 @@ export default function TerritoryEntryPage() {
                   <h3>{module.title}</h3>
                   <div className="ag-module-footer">
                     <span>{module.copy}</span>
-                    <a href={module.href} aria-label={`${module.link}: ${module.title}`}>
+                    <Link to={module.href} aria-label={`${module.link}: ${module.title}`}>
                       {module.link} <ArrowIcon />
-                    </a>
+                    </Link>
                   </div>
                 </article>
               ))}
@@ -349,9 +350,9 @@ export default function TerritoryEntryPage() {
                 Aqui, o território não é um filtro escondido. É o ponto de partida para encontrar
                 informação útil, pessoas próximas e negócios que fazem parte da rotina.
               </p>
-              <a href={launchBusinessUrl} className="ag-text-link">
+              <Link to={launchBusinessUrl} className="ag-text-link">
                 Começar a explorar <ArrowIcon />
-              </a>
+              </Link>
             </div>
 
             <ol className="ag-steps">
@@ -391,9 +392,9 @@ export default function TerritoryEntryPage() {
                 O Achegue-se começa em {LAUNCH_COMMUNITY_NAME} para tornar visível a
                 potência que já existe em cada rua.
               </p>
-              <a href={LAUNCH_URLS.portal}>
+              <Link to={LAUNCH_URLS.portal}>
                 Explorar o território <ArrowIcon />
-              </a>
+              </Link>
             </div>
             <BrandMark />
           </div>
@@ -403,17 +404,17 @@ export default function TerritoryEntryPage() {
       <footer className="ag-footer">
         <div className="ag-container ag-footer-grid">
           <div>
-            <a href="/" className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
+            <Link to="/" className="ag-brand ag-brand-footer" aria-label="Achegue-se — início">
               <BrandMark />
               <span>achegue-se</span>
-            </a>
+            </Link>
             <p>A cidade acontece quando a gente se encontra.</p>
           </div>
           <nav aria-label="Links do rodapé">
-            <a href="/sobre">Sobre</a>
-            <a href="/como-funciona">Como funciona</a>
-            <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
-            <a href={ACCOUNT_PATHS.accessibility}>Acessibilidade</a>
+            <Link to="/sobre">Sobre</Link>
+            <Link to="/como-funciona">Como funciona</Link>
+            <Link to={PRIVACY_POLICY_PATH}>Privacidade</Link>
+            <Link to={ACCOUNT_PATHS.accessibility}>Acessibilidade</Link>
           </nav>
           <p className="ag-footer-place">
             Disponível inicialmente no<br />
