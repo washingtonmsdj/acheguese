@@ -14,81 +14,41 @@ interface IdentityImpactNoticeProps {
   newUrl?: string;
 }
 
-const NOTICE_CONFIG: Record<
-  EntityType,
-  {
-    variant: "info" | "warning";
-    persistentMessage: string;
-    changeMessage: string;
-  }
-> = {
+const NOTICE_CONFIG: Record<EntityType, { variant: "info" | "warning"; persistentMessage: string; changeMessage: string }> = {
   business: {
     variant: "info",
-    persistentMessage:
-      "Seu link público da empresa pode ser alterado. Se isso acontecer, links antigos podem deixar de funcionar.",
+    persistentMessage: "Seu link público da empresa pode ser alterado. Se isso acontecer, links antigos podem deixar de funcionar.",
     changeMessage: "O link público da empresa será alterado. Revise antes de salvar.",
   },
   profile: {
     variant: "warning",
-    persistentMessage:
-      "Atenção: se você mudar seu nome de usuário, links antigos podem parar de funcionar em perfil, bio, QR Code, cartão ou materiais já compartilhados.",
-    changeMessage:
-      "Seu nome de usuário público será alterado. Links antigos podem deixar de funcionar.",
+    persistentMessage: "Atenção: se você mudar seu nome de usuário, links antigos podem parar de funcionar em perfil, bio, QR Code, cartão ou materiais já compartilhados.",
+    changeMessage: "Seu nome de usuário público será alterado. Links antigos podem deixar de funcionar.",
   },
   professional: {
     variant: "warning",
-    persistentMessage:
-      "Atenção: se você mudar o link público profissional, links antigos podem parar de funcionar em cartões, anúncios, QR Codes e materiais já divulgados.",
-    changeMessage:
-      "O link público profissional será alterado. Links antigos podem deixar de funcionar.",
+    persistentMessage: "Atenção: se você mudar o link público profissional, links antigos podem parar de funcionar em cartões, anúncios, QR Codes e materiais já divulgados.",
+    changeMessage: "O link público profissional será alterado. Links antigos podem deixar de funcionar.",
   },
   communication_channel: {
     variant: "warning",
-    persistentMessage:
-      "O link público do canal identifica uma fonte territorial. Alterações devem ser usadas com critério para preservar confiabilidade.",
-    changeMessage:
-      "O link público do canal de comunicação será alterado.",
+    persistentMessage: "O link público do canal identifica uma fonte territorial. Alterações devem ser usadas com critério para preservar confiabilidade.",
+    changeMessage: "O link público do canal de comunicação será alterado.",
   },
 };
 
-export function IdentityImpactNotice({
-  entityType,
-  originalValue,
-  currentValue,
-  originalUrl,
-  newUrl,
-}: IdentityImpactNoticeProps) {
-  const config =
-    entityType === "business"
-      ? NOTICE_CONFIG.business
-      : entityType === "profile"
-        ? NOTICE_CONFIG.profile
-        : entityType === "professional"
-          ? NOTICE_CONFIG.professional
-          : NOTICE_CONFIG.communication_channel;
-
-  const hasChange =
-    !!originalValue &&
-    !!currentValue &&
-    originalValue.trim() !== currentValue.trim();
-
+export function IdentityImpactNotice({ entityType, originalValue, currentValue, originalUrl, newUrl }: IdentityImpactNoticeProps) {
+  const config = entityType === "business" ? NOTICE_CONFIG.business : entityType === "profile" ? NOTICE_CONFIG.profile : entityType === "professional" ? NOTICE_CONFIG.professional : NOTICE_CONFIG.communication_channel;
+  const hasChange = !!originalValue && !!currentValue && originalValue.trim() !== currentValue.trim();
   const isInfo = config.variant === "info";
   const baseClass = isInfo
-    ? "border-blue-200 bg-blue-50 text-blue-800"
-    : "border-amber-200 bg-amber-50 text-amber-800";
+    ? "border-territory-info/20 bg-territory-info/10 text-territory-info"
+    : "border-territory-warning/20 bg-territory-warning/10 text-territory-warning";
   const Icon = isInfo ? Info : AlertTriangle;
 
   return (
-    <div
-      className={`space-y-2 rounded-md border px-3 py-2.5 text-xs ${baseClass}`}
-      role="note"
-      aria-label={hasChange ? config.changeMessage : config.persistentMessage}
-    >
-      <div className="flex items-start gap-2">
-        <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span>{hasChange ? config.changeMessage : config.persistentMessage}</span>
-      </div>
-
+    <div className={`space-y-2 rounded-md border px-3 py-2.5 text-xs ${baseClass}`} role="note" aria-label={hasChange ? config.changeMessage : config.persistentMessage}>
+      <div className="flex items-start gap-2"><Icon className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" /><span>{hasChange ? config.changeMessage : config.persistentMessage}</span></div>
       {hasChange && originalUrl && newUrl && (
         <div className="flex flex-wrap items-center gap-1.5 pl-5 font-mono text-[11px]">
           <span className="opacity-60 line-through">{originalUrl}</span>
