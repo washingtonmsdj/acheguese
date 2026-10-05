@@ -108,7 +108,8 @@ describe("Business Central navigation certification", () => {
       /path="(mensagens|avaliacoes|estatisticas|analytics|planos)"/,
     );
   });
-  it("preserves canonical territory data required by owner public-page actions", () => {
+
+  it("preserves canonical territory data without bypassing the private profile broker", () => {
     const queries = readFileSync(
       "src/core/profiles/services/profile.external-data.queries.ts",
       "utf8",
@@ -122,7 +123,8 @@ describe("Business Central navigation certification", () => {
       "utf8",
     );
 
-    expect(queries).toContain("profiles(name, neighborhood, city)");
+    expect(queries).not.toContain("profiles(name, neighborhood, city)");
+    expect(queries).toContain("ProfileRpcService.getAccessibleProfiles<Profile[]>");
     expect(queries).toContain(
       "location:locations!location_id(geographic_path)",
     );
@@ -156,5 +158,4 @@ describe("Business Central navigation certification", () => {
     expect(ownerWorkspaceQuery).toContain('.neq("status", "deleted")');
     expect(ownerWorkspaceQuery).not.toContain('.eq("status", "active")');
   });
-
 });
