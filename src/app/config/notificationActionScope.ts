@@ -13,19 +13,11 @@ import {
 export const NOTIFICATION_INBOX_PATH = "/notificacoes";
 export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
 
-type NotificationLifecycleSurfaceKey =
-  | ProductModuleKey
-  | PlatformCapabilityKey;
+type NotificationLifecycleSurfaceKey = ProductModuleKey | PlatformCapabilityKey;
 
 type NotificationLifecycleOwner =
-  | {
-      kind: "product";
-      surface: ProductModuleKey;
-    }
-  | {
-      kind: "capability";
-      surface: PlatformCapabilityKey;
-    };
+  | { kind: "product"; surface: ProductModuleKey }
+  | { kind: "capability"; surface: PlatformCapabilityKey };
 
 type NotificationActionRouteRule = NotificationLifecycleOwner & {
   pattern: RegExp;
@@ -34,71 +26,24 @@ type NotificationActionRouteRule = NotificationLifecycleOwner & {
 export interface NotificationActionTarget {
   href: string;
   label: string;
-  isFallback: boolean;
   surface?: NotificationLifecycleSurfaceKey;
 }
 
 const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
-  {
-    pattern: /^\/central\/empresas\/[^/]+\/gastronomia(?:\/|$)/i,
-    kind: "product",
-    surface: "gastronomy",
-  },
-  {
-    pattern: /^\/central\/empresas\/[^/]+\/educacao(?:\/|$)/i,
-    kind: "product",
-    surface: "education",
-  },
-  {
-    pattern: /^\/central\/empresas\/[^/]+\/cupons(?:\/|$)/i,
-    kind: "product",
-    surface: "coupons",
-  },
-  {
-    pattern: /^\/central\/profissional(?:\/|$)/i,
-    kind: "product",
-    surface: "services",
-  },
-  {
-    pattern: /^\/central\/motorista(?:\/|$)/i,
-    kind: "product",
-    surface: "mobility",
-  },
-  {
-    pattern: /^\/central\/motoboy(?:\/|$)/i,
-    kind: "product",
-    surface: "mobility",
-  },
-  {
-    pattern: /^\/central\/empresas(?:\/|$)/i,
-    kind: "product",
-    surface: "business",
-  },
-  {
-    pattern: /^\/(?:planos|checkout)(?:\/|$)/i,
-    kind: "product",
-    surface: "billing",
-  },
-  {
-    pattern: /^\/settings\/subscription(?:\/|$)/i,
-    kind: "product",
-    surface: "billing",
-  },
-  {
-    pattern: /^\/mensagens(?:\/|$)/i,
-    kind: "capability",
-    surface: "messaging",
-  },
-  {
-    pattern: /^\/u(?:\/|$)/i,
-    kind: "capability",
-    surface: "profiles",
-  },
+  { pattern: /^\/central\/empresas\/[^/]+\/gastronomia(?:\/|$)/i, kind: "product", surface: "gastronomy" },
+  { pattern: /^\/central\/empresas\/[^/]+\/educacao(?:\/|$)/i, kind: "product", surface: "education" },
+  { pattern: /^\/central\/empresas\/[^/]+\/cupons(?:\/|$)/i, kind: "product", surface: "coupons" },
+  { pattern: /^\/central\/profissional(?:\/|$)/i, kind: "product", surface: "services" },
+  { pattern: /^\/central\/motorista(?:\/|$)/i, kind: "product", surface: "mobility" },
+  { pattern: /^\/central\/motoboy(?:\/|$)/i, kind: "product", surface: "mobility" },
+  { pattern: /^\/central\/empresas(?:\/|$)/i, kind: "product", surface: "business" },
+  { pattern: /^\/(?:planos|checkout)(?:\/|$)/i, kind: "product", surface: "billing" },
+  { pattern: /^\/settings\/subscription(?:\/|$)/i, kind: "product", surface: "billing" },
+  { pattern: /^\/mensagens(?:\/|$)/i, kind: "capability", surface: "messaging" },
+  { pattern: /^\/u(?:\/|$)/i, kind: "capability", surface: "profiles" },
 ];
 
-const MODULE_ROUTE_OWNERS: Readonly<
-  Partial<Record<AppModuleSlug, NotificationLifecycleOwner>>
-> = {
+const MODULE_ROUTE_OWNERS: Readonly<Partial<Record<AppModuleSlug, NotificationLifecycleOwner>>> = {
   [APP_MODULE_SLUGS.business]: { kind: "product", surface: "business" },
   [APP_MODULE_SLUGS.community]: { kind: "product", surface: "community" },
   [APP_MODULE_SLUGS.gastronomy]: { kind: "product", surface: "gastronomy" },
@@ -118,9 +63,7 @@ const MODULE_ROUTE_OWNERS: Readonly<
   [APP_MODULE_SLUGS.search]: { kind: "capability", surface: "search" },
 };
 
-function getModuleRouteOwner(
-  pathname: string,
-): NotificationLifecycleOwner | undefined {
+function getModuleRouteOwner(pathname: string): NotificationLifecycleOwner | undefined {
   const moduleSlug = getAppModuleSlugFromPath(pathname);
   return moduleSlug ? MODULE_ROUTE_OWNERS[moduleSlug] : undefined;
 }
@@ -132,9 +75,7 @@ function isRetiredModuleFirstTerritorialPath(pathname: string): boolean {
   return /^[a-z]{2}$/i.test(segments[1] ?? "") && Boolean(segments[2]);
 }
 
-const COMMUNITY_CHILD_SURFACES: Readonly<
-  Partial<Record<string, ProductModuleKey>>
-> = {
+const COMMUNITY_CHILD_SURFACES: Readonly<Partial<Record<string, ProductModuleKey>>> = {
   alertas: "communityAlerts",
   problemas: "communityIssues",
   "achados-perdidos": "communityLostFound",
@@ -142,43 +83,28 @@ const COMMUNITY_CHILD_SURFACES: Readonly<
   comunicacao: "communityCommunication",
 };
 
-function getCommunityChildSurface(
-  pathname: string,
-): ProductModuleKey | undefined {
-  const segments = pathname
-    .split("/")
-    .filter(Boolean)
-    .map((segment) => segment.toLocaleLowerCase("pt-BR"));
-
+function getCommunityChildSurface(pathname: string): ProductModuleKey | undefined {
+  const segments = pathname.split("/").filter(Boolean).map((segment) => segment.toLocaleLowerCase("pt-BR"));
   const communityIndex = segments.indexOf(APP_MODULE_SLUGS.community);
   if (communityIndex < 0) return undefined;
-
   for (const segment of segments.slice(communityIndex + 1)) {
     const surface = COMMUNITY_CHILD_SURFACES[segment];
     if (surface) return surface;
   }
-
   return undefined;
 }
 
 function isRetiredCommunityContainerPath(pathname: string): boolean {
-  const segments = pathname
-    .split("/")
-    .filter(Boolean)
-    .map((segment) => segment.toLocaleLowerCase("pt-BR"));
-
+  const segments = pathname.split("/").filter(Boolean).map((segment) => segment.toLocaleLowerCase("pt-BR"));
   const communityIndex = segments.indexOf(APP_MODULE_SLUGS.community);
   if (communityIndex < 0) return false;
-
   return segments.slice(communityIndex + 1).some((segment) => {
     const nestedOwner = MODULE_ROUTE_OWNERS[segment as AppModuleSlug];
     return Boolean(nestedOwner && !COMMUNITY_CHILD_SURFACES[segment]);
   });
 }
 
-function isNotificationRouteOwnerEnabled(
-  owner: NotificationLifecycleOwner,
-): boolean {
+function isNotificationRouteOwnerEnabled(owner: NotificationLifecycleOwner): boolean {
   return owner.kind === "product"
     ? isProductModuleEnabled(owner.surface)
     : isPlatformCapabilityEnabled(owner.surface);
@@ -199,6 +125,14 @@ function getInternalPathname(actionUrl: string): string | null {
   return end === -1 ? actionUrl : actionUrl.slice(0, end);
 }
 
+function fallbackTarget(surface?: NotificationLifecycleSurfaceKey): NotificationActionTarget {
+  return {
+    href: NOTIFICATION_INBOX_PATH,
+    label: NOTIFICATION_FALLBACK_ACTION_LABEL,
+    ...(surface ? { surface } : {}),
+  };
+}
+
 export function resolveNotificationActionTarget(
   actionUrl: string | null | undefined,
   actionLabel: string | null | undefined,
@@ -206,49 +140,25 @@ export function resolveNotificationActionTarget(
   if (!actionUrl || !actionLabel) return null;
 
   const pathname = getInternalPathname(actionUrl);
-  if (!pathname) {
-    return { href: actionUrl, label: actionLabel, isFallback: false };
-  }
+  if (!pathname) return { href: actionUrl, label: actionLabel };
 
   if (
     isRetiredModuleFirstTerritorialPath(pathname) ||
     isRetiredCommunityContainerPath(pathname) ||
     RETIRED_NOTIFICATION_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname))
   ) {
-    return {
-      href: NOTIFICATION_INBOX_PATH,
-      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
-      isFallback: true,
-    };
+    return fallbackTarget();
   }
 
   const communitySurface = getCommunityChildSurface(pathname);
   if (communitySurface && !isProductModuleEnabled(communitySurface)) {
-    return {
-      href: NOTIFICATION_INBOX_PATH,
-      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
-      isFallback: true,
-      surface: communitySurface,
-    };
+    return fallbackTarget(communitySurface);
   }
 
-  const routeOwner =
-    getModuleRouteOwner(pathname) ??
-    ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
-
+  const routeOwner = getModuleRouteOwner(pathname) ?? ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
   if (!routeOwner || isNotificationRouteOwnerEnabled(routeOwner)) {
-    return {
-      href: actionUrl,
-      label: actionLabel,
-      isFallback: false,
-      surface: routeOwner?.surface,
-    };
+    return { href: actionUrl, label: actionLabel, surface: routeOwner?.surface };
   }
 
-  return {
-    href: NOTIFICATION_INBOX_PATH,
-    label: NOTIFICATION_FALLBACK_ACTION_LABEL,
-    isFallback: true,
-    surface: routeOwner.surface,
-  };
+  return fallbackTarget(routeOwner.surface);
 }
