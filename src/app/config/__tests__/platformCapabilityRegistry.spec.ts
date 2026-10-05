@@ -10,7 +10,7 @@ import {
 } from "../lifecycleRegistry";
 
 describe("platformCapabilityRegistry", () => {
-  it("keeps only certified MVP horizontal platform capabilities active", () => {
+  it("keeps certified MVP horizontal platform capabilities active", () => {
     expect(getActivePlatformCapabilities().sort()).toEqual(
       [
         "auth",
@@ -18,20 +18,23 @@ describe("platformCapabilityRegistry", () => {
         "profiles",
         "territory",
         "location",
+        "notifications",
         "central",
         "map",
         "nearby",
         "search",
+        "messaging",
       ].sort(),
     );
   });
 
-  it("keeps post-MVP Notifications versioned but paused", () => {
+  it("keeps Notifications active as a platform capability independent from product modules", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.notifications).toEqual({
-      status: "paused",
+      status: "active",
       dependsOnCapabilities: ["auth"],
     });
-    expect(isPlatformCapabilityEnabled("notifications")).toBe(false);
+    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.dependsOnProductModules).toBeUndefined();
+    expect(isPlatformCapabilityEnabled("notifications")).toBe(true);
   });
 
   it("keeps Nearby horizontal while product providers are lifecycle-scoped separately", () => {
@@ -42,12 +45,13 @@ describe("platformCapabilityRegistry", () => {
     expect(isPlatformCapabilityEnabled("nearby")).toBe(true);
   });
 
-  it("keeps post-MVP Messaging versioned but paused", () => {
+  it("keeps Messaging active as a platform capability independent from product modules", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.messaging).toEqual({
-      status: "paused",
+      status: "active",
       dependsOnCapabilities: ["auth", "profiles"],
     });
-    expect(isPlatformCapabilityEnabled("messaging")).toBe(false);
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.dependsOnProductModules).toBeUndefined();
+    expect(isPlatformCapabilityEnabled("messaging")).toBe(true);
   });
 
   it("references only declared capability dependencies and contains no capability cycle", () => {

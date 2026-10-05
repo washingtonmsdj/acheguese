@@ -9,7 +9,9 @@ import {
   isProductModuleEnabled,
 } from "@/app/config/lifecycleRegistry";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
+import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
@@ -36,9 +38,9 @@ const protectedElement = (element: ReactNode) => (
 /**
  * Active MVP route tree.
  *
- * Paused product modules and platform capabilities are intentionally absent
- * from the rendered graph. Their code stays versioned in its bounded context
- * for post-MVP work, while unmatched public URLs fall through to NotFound.
+ * Paused product modules are absent from the rendered graph. Horizontal
+ * platform capabilities are mounted from their own lifecycle and remain
+ * independent from whichever product modules currently provide data/events.
  */
 export function AppLayoutRoutes() {
   const businessEnabled = isProductModuleEnabled("business");
@@ -48,6 +50,8 @@ export function AppLayoutRoutes() {
 
   const profilesEnabled = isPlatformCapabilityEnabled("profiles");
   const accountEnabled = isPlatformCapabilityEnabled("account");
+  const notificationsEnabled = isPlatformCapabilityEnabled("notifications");
+  const messagingEnabled = isPlatformCapabilityEnabled("messaging");
   const territoryEnabled = isPlatformCapabilityEnabled("territory");
   const mapEnabled = isPlatformCapabilityEnabled("map");
   const nearbyEnabled = isPlatformCapabilityEnabled("nearby");
@@ -82,11 +86,37 @@ export function AppLayoutRoutes() {
               path="/conta/enderecos"
               element={protectedElement(<P.ContaEnderecosPage />)}
             />
+            {notificationsEnabled ? (
+              <Route
+                path={ACCOUNT_PATHS.notifications}
+                element={protectedElement(<P.NotificationPreferencesPage />)}
+              />
+            ) : null}
             <Route
               path="/conta/editar/:profileId"
               element={protectedElement(<P.ContaEditarPerfilPage />)}
             />
             <Route path="/conta" element={protectedElement(<P.ContaPage />)} />
+          </>
+        ) : null}
+
+        {notificationsEnabled ? (
+          <Route
+            path="/notificacoes"
+            element={protectedElement(<P.NotificationsPage />)}
+          />
+        ) : null}
+
+        {messagingEnabled ? (
+          <>
+            <Route
+              path={messagingRoutes.inbox()}
+              element={protectedElement(<P.MessagingInboxPage />)}
+            />
+            <Route
+              path={messagingRoutes.threadPattern()}
+              element={protectedElement(<P.MessagingInboxPage />)}
+            />
           </>
         ) : null}
 

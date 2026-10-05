@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(path, "utf8");
 
 const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const appShell = read("src/app/components/AppLayoutSidebar.tsx");
+const messagingInboxPage = read("src/app/pages/MessagingInboxPage.tsx");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
 const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
@@ -25,9 +27,6 @@ describe("active AppLayout route boundary", () => {
     ).toBe(false);
     expect(existsSync("src/app/routes/launchPausedComponent.ts")).toBe(false);
     expect(existsSync("src/app/pages/LaunchPausedPage.tsx")).toBe(false);
-    expect(existsSync("src/core/navigation/publicHeaderNavigation.ts")).toBe(false);
-    expect(existsSync("src/core/navigation/publicHeaderNavigation.spec.ts")).toBe(false);
-    expect(existsSync("src/core/navigation/PublicHeaderMobileMenu.tsx")).toBe(false);
 
     for (const forbidden of [
       "DIRECT_PAUSED_ROUTES",
@@ -58,8 +57,6 @@ describe("active AppLayout route boundary", () => {
       'path="/achados-perdidos',
       'path="/ranking"',
       'path="/gamificacao"',
-      'path="/notificacoes"',
-      'path="/mensagens"',
     ]) {
       expect(appLayout).not.toContain(pausedPath);
     }
@@ -76,15 +73,11 @@ describe("active AppLayout route boundary", () => {
       "map",
       "nearby",
       "search",
+      "notifications",
+      "messaging",
     ]) {
       expect(appLayout).toContain(
         `isPlatformCapabilityEnabled("${capability}")`,
-      );
-    }
-
-    for (const pausedCapability of ["notifications", "messaging"]) {
-      expect(appLayout).not.toContain(
-        `isPlatformCapabilityEnabled("${pausedCapability}")`,
       );
     }
 
@@ -92,12 +85,25 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('path="/mapa"');
     expect(appLayout).toContain('path="/perto-de-mim"');
     expect(appLayout).toContain('path="/busca"');
-    expect(appLayout).not.toContain("messagingRoutes.inbox()");
-    expect(appLayout).not.toContain("messagingRoutes.threadPattern()");
+    expect(appLayout).toContain('path="/notificacoes"');
+    expect(appLayout).toContain("path={ACCOUNT_PATHS.notifications}");
+    expect(appLayout).toContain("messagingRoutes.inbox()");
+    expect(appLayout).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
   });
 
-  it("keeps prefetch and idle warmup active-surface only", () => {
+  it("keeps Messaging inbox in the app shell while threads use focused conversation mode", () => {
+    expect(appShell).toContain('pathSegments[0] === "mensagens" && pathSegments.length >= 3');
+    expect(appShell).toContain("if (isConversationRoute)");
+    expect(appShell).not.toContain("if (isMessagingRoute)");
+    expect(appShell).toContain("<AppSidebar />");
+    expect(appShell).toContain("<AppTopbar />");
+    expect(messagingInboxPage).toContain("getActiveMessagingProviderIds()");
+    expect(messagingInboxPage).not.toContain("PublicBrandHeader");
+    expect(messagingInboxPage).not.toContain("LAUNCH_URLS");
+  });
+
+  it("keeps prefetch and idle warmup limited to selected active chunks", () => {
     for (const forbidden of [
       "@/modules/professionals",
       "@/modules/classifieds",
@@ -109,8 +115,6 @@ describe("active AppLayout route boundary", () => {
       "APP_MODULE_SLUGS.gastronomy",
       "APP_MODULE_SLUGS.community",
       "APP_MODULE_SLUGS.touristPoints",
-      "@/app/pages/NotificationsPage",
-      "@/app/pages/MessagingInboxPage",
     ]) {
       expect(prefetch).not.toContain(forbidden);
     }
@@ -126,11 +130,12 @@ describe("active AppLayout route boundary", () => {
 
     expect(prefetch).not.toContain("@/app/config/launchScope");
     expect(prefetch).toContain('isProductModuleEnabled("business")');
-    expect(prefetch).not.toContain('isPlatformCapabilityEnabled("notifications")');
-    expect(prefetch).not.toContain('isPlatformCapabilityEnabled("messaging")');
+    // Messaging/Notifications are active, but intentionally not idle-warmed.
+    expect(prefetch).not.toContain('import("@/app/pages/NotificationsPage")');
+    expect(prefetch).not.toContain('import("@/app/pages/MessagingInboxPage")');
   });
 
-  it("keeps the active lazy graph free of post-MVP owners", () => {
+  it("keeps active lazy graph limited to certified owners", () => {
     for (const forbidden of [
       "createLaunchPausedRoute",
       "LaunchPausedPage",
@@ -140,24 +145,23 @@ describe("active AppLayout route boundary", () => {
       "@/modules/community-",
       "@/modules/business/education",
       "@/core/mobility",
-      "NotificationsPage",
-      "MessagingInboxPage",
     ]) {
       expect(activeLazyImports).not.toContain(forbidden);
     }
 
-    expect(activeLazyImports).toContain(
-      'import("@/app/pages/EmpresasLandingPage")',
-    );
-    expect(activeLazyImports).toContain(
-      'import("@/app/pages/MapaPage")',
-    );
-    expect(activeLazyImports).toContain(
-      'import("@/app/pages/NearbyPage")',
-    );
+    for (const activeOwner of [
+      "EmpresasLandingPage",
+      "MapaPage",
+      "NearbyPage",
+      "NotificationsPage",
+      "NotificationPreferencesPage",
+      "MessagingInboxPage",
+    ]) {
+      expect(activeLazyImports).toContain(activeOwner);
+    }
   });
 
-  it("keeps the territorial registry limited to active MVP product/capability owners", () => {
+  it("keeps territorial registry limited to active territorial owners", () => {
     for (const activeId of [
       "business-detail",
       "business-category-city",

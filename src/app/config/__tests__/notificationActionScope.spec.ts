@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { resolveNotificationActionTarget } from "../notificationActionScope";
+import {
+  NOTIFICATION_FALLBACK_ACTION_LABEL,
+  NOTIFICATION_INBOX_PATH,
+  resolveNotificationActionTarget,
+} from "../notificationActionScope";
 
 describe("notification action lifecycle scope", () => {
   it.each([
@@ -9,6 +13,7 @@ describe("notification action lifecycle scope", () => {
     ["/ba/salvador/perto-de-mim", "nearby"],
     ["/ba/salvador/busca?q=cafe", "search"],
     ["/u/washington", "profiles"],
+    ["/mensagens/business/thread-1", "messaging"],
   ])("keeps active surface destination %s", (href, surface) => {
     expect(resolveNotificationActionTarget(href, "Abrir")).toEqual({
       href,
@@ -18,7 +23,6 @@ describe("notification action lifecycle scope", () => {
   });
 
   it.each([
-    ["/mensagens/business/thread-1", "messaging"],
     ["/gastronomia/pedidos/order-1", "gastronomy"],
     ["/central/empresas/business-1/gastronomia/pedidos/order-1", "gastronomy"],
     ["/servicos/orcamentos/lead-1", "services"],
@@ -29,13 +33,15 @@ describe("notification action lifecycle scope", () => {
     ["/classificados/item-1", "classifieds"],
     ["/eventos/event-1", "events"],
     ["/planos", "billing"],
-  ])("suppresses paused surface destination %s (%s)", (href) => {
-    expect(resolveNotificationActionTarget(href, "Abrir")).toBeNull();
+  ])("falls back to Notifications for paused surface destination %s (%s)", (href, surface) => {
+    expect(resolveNotificationActionTarget(href, "Abrir")).toEqual({
+      href: NOTIFICATION_INBOX_PATH,
+      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
+      surface,
+    });
   });
 
   it.each([
-    "/notificacoes",
-    "/conta/notificacoes",
     "/notifications",
     "/settings/notifications",
     "/perfil/editar/profile-1",
@@ -46,9 +52,23 @@ describe("notification action lifecycle scope", () => {
     "/busca/ba/salvador",
     "/ba/salvador/comunidade/eventos/event-1",
     "/ba/salvador/comunidade/empresas",
-  ])("suppresses retired notification destination %s", (href) => {
-    expect(resolveNotificationActionTarget(href, "Abrir")).toBeNull();
+  ])("falls back from retired notification destination %s", (href) => {
+    expect(resolveNotificationActionTarget(href, "Abrir")).toMatchObject({
+      href: NOTIFICATION_INBOX_PATH,
+      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
+    });
   });
+
+  it.each(["/notificacoes", "/conta/notificacoes"])(
+    "keeps canonical Notifications destination %s active",
+    (href) => {
+      expect(resolveNotificationActionTarget(href, "Abrir")).toEqual({
+        href,
+        label: "Abrir",
+        surface: undefined,
+      });
+    },
+  );
 
   it("preserves external HTTPS destinations for SafeLink validation", () => {
     expect(

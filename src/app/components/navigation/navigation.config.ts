@@ -23,6 +23,8 @@ import {
   MapPin,
   GraduationCap,
   LayoutGrid,
+  MessageCircle,
+  Bell,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -32,6 +34,7 @@ import {
 import type { PlatformCapabilityKey } from '@/app/config/platformCapabilityRegistry';
 import type { ProductModuleKey } from '@/app/config/productModuleRegistry';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
+import { messagingRoutes } from '@/core/messaging/routes/messagingRoutes';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 
 type NavigationLifecycle =
@@ -141,8 +144,26 @@ const RAW_NAV_SECTIONS: NavSection[] = [
   },
   {
     id: 'management',
-    label: 'Gestão',
+    label: 'Conta e gestão',
     items: [
+      {
+        id: 'messages',
+        lifecycle: { kind: 'capability', key: 'messaging' },
+        icon: MessageCircle,
+        label: 'Mensagens',
+        href: messagingRoutes.inbox(),
+        description: 'Conversas dos providers ativos',
+        requiresAuth: true,
+      },
+      {
+        id: 'notifications',
+        lifecycle: { kind: 'capability', key: 'notifications' },
+        icon: Bell,
+        label: 'Notificações',
+        href: '/notificacoes',
+        description: 'Atualizações da conta e dos módulos ativos',
+        requiresAuth: true,
+      },
       {
         id: 'central',
         lifecycle: { kind: 'capability', key: 'central' },

@@ -14,7 +14,7 @@ import {
 } from "../launchScope";
 
 describe("launchScope", () => {
-  it("keeps Business active as domain and only certified MVP capabilities active", () => {
+  it("keeps Business active as domain and certified horizontal capabilities active", () => {
     expect(getActiveProductModules()).toEqual(["business"]);
     expect(getActivePlatformCapabilities()).toEqual(
       expect.arrayContaining([
@@ -23,22 +23,21 @@ describe("launchScope", () => {
         "account",
         "territory",
         "location",
+        "notifications",
         "central",
         "map",
         "nearby",
         "search",
+        "messaging",
       ]),
-    );
-    expect(getActivePlatformCapabilities()).not.toEqual(
-      expect.arrayContaining(["notifications", "messaging"]),
     );
 
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
       dependsOnCapabilities: ["map", "location"],
     });
-    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.status).toBe("paused");
-    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("paused");
+    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("active");
     expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
 
     for (const enabled of [
@@ -48,12 +47,12 @@ describe("launchScope", () => {
       "map",
       "nearby",
       "search",
+      "messaging",
     ] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
     }
 
     for (const paused of [
-      "messaging",
       "community",
       "billing",
       "gastronomy",
@@ -107,7 +106,7 @@ describe("launchScope", () => {
     }
   });
 
-  it("exposes territory context only for enabled modules", () => {
+  it("exposes territory context only for enabled territorial modules", () => {
     expect(getContextMessageFromPath("/ba/salvador/empresas")).toBe(
       "Exibindo empresas de",
     );

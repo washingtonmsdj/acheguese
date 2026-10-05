@@ -13,7 +13,6 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 function collectRuntimeSources(directory: string): string[] {
   const absolute = resolve(root, directory);
   if (!existsSync(absolute)) return [];
-
   return readdirSync(absolute).flatMap((entry) => {
     const path = resolve(absolute, entry);
     if (statSync(path).isDirectory()) {
@@ -53,7 +52,6 @@ describe("Notification inbox authority", () => {
         directNotificationCreateOrHardDelete.test(readFileSync(path, "utf8")),
       )
       .map((path) => path.slice(root.length + 1));
-
     expect(offenders).toEqual([]);
   });
 
@@ -65,22 +63,19 @@ describe("Notification inbox authority", () => {
     );
   });
 
-  it("keeps historical notification actions lifecycle-scoped and non-navigable when their owner is paused", () => {
+  it("keeps historical actions lifecycle-scoped and falls paused owners back to the active Inbox", () => {
     expect(notificationItem).toContain("resolveNotificationActionTarget");
     expect(notificationItem).toContain("actionTarget.href");
-    expect(notificationItem).not.toContain(
-      "href={notification.action_url}",
-    );
-    expect(notificationItem).not.toContain("data-notification-action-fallback");
+    expect(notificationItem).not.toContain("href={notification.action_url}");
     expect(notificationActionScope).not.toContain("launchScope");
     expect(notificationActionScope).not.toContain("isLaunchSurfaceEnabled");
     expect(notificationActionScope).toContain("isProductModuleEnabled");
     expect(notificationActionScope).toContain("isPlatformCapabilityEnabled");
     expect(notificationActionScope).toContain('surface: "gastronomy"');
     expect(notificationActionScope).toContain('surface: "mobility"');
-    expect(notificationActionScope).not.toContain("NOTIFICATION_INBOX_PATH");
-    expect(notificationActionScope).not.toContain("NOTIFICATION_FALLBACK_ACTION_LABEL");
-    expect(notificationActionScope).toContain("/^\\/notificacoes");
+    expect(notificationActionScope).toContain("NOTIFICATION_INBOX_PATH");
+    expect(notificationActionScope).toContain("NOTIFICATION_FALLBACK_ACTION_LABEL");
+    expect(notificationActionScope).not.toContain("/^\\/notificacoes(?:\\/|$)/i");
     expect(notificationActionScope).toContain("RETIRED_NOTIFICATION_ROUTE_PATTERNS");
   });
 

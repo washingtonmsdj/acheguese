@@ -2,11 +2,13 @@
 
 Plataforma hiperlocal, territory-first e modular, construída para conectar moradores às empresas e serviços do próprio território.
 
-> **MVP atual — 2026-09-26**
+> **MVP atual — 2026-10-05**
 >
 > **Domínio de produto ativo:** Business / Empresas.
 >
-> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens com provider Business, Auth, Perfis/Conta, Território, Localização, Notificações e Central.
+> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens, Notificações, Auth, Perfis/Conta, Território, Localização e Central.
+>
+> Mensagens e Notificações pertencem à plataforma Achegue-se. Verticais podem fornecer providers/eventos, mas pausar uma vertical não desativa essas capabilities.
 >
 > Community, Classificados, Serviços/Profissionais, Gastronomia, Eventos, Educação, Mobilidade, Billing e demais domínios permanecem pausados até certificação individual.
 
@@ -14,7 +16,7 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 O núcleo público do MVP está funcional e passa pelos gates determinísticos de arquitetura, segurança e E2E público. O bloqueio externo conhecido para a certificação final autenticada é o data plane/Auth do Supabase, acompanhado pelo issue `#305`.
 
-Não há workaround no frontend para mascarar indisponibilidade de infraestrutura. O MVP só recebe `READY` quando o mesmo SHA comprovar Auth/Conta/Business/Mensagens reais, deploy e smoke autenticado.
+Não há workaround no frontend para mascarar indisponibilidade de infraestrutura. O MVP só recebe `READY` quando o mesmo SHA comprovar Auth/Conta/Business/Mensagens/Notificações, deploy e smoke autenticado nas superfícies realmente ativas do lifecycle.
 
 O frontend ativo está em fase final de convergência visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
 
@@ -49,11 +51,12 @@ As autoridades executáveis são:
 Estado do MVP:
 
 - `business: active`;
-- `map`, `nearby`, `search` e `messaging` são capabilities horizontais ativas;
-- Business é o provider de domínio ativo em Mapa/Nearby/Busca/Mensagens conforme seus scopes;
+- `map`, `nearby`, `search`, `messaging` e `notifications` são capabilities horizontais ativas;
+- Mensagens e Notificações não dependem de `business` nem de qualquer outro módulo de produto;
+- Business é apenas o provider de domínio ativo em Mapa/Nearby/Busca/Mensagens quando aplicável;
 - demais domínios de produto: `paused`.
 
-Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider ativo, evento acionável de Notificações nem layer do Mapa.
+Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider ativo, evento acionável, navegação, CTA nem layer do Mapa enquanto estiver `paused`. Pausar um domínio remove apenas suas contribuições; não desativa capabilities horizontais da plataforma.
 
 Contrato completo: [`docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md`](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
 

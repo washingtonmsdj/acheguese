@@ -1,11 +1,11 @@
 # FEATURE-MAP
 
-> **MVP 2026-10-04**
+> **MVP 2026-10-05**
 >
 > **Domínio de produto ativo:** Empresas (`business`).
 >
-> **Capacidades horizontais ativas:** Mapa, Perto de mim, Busca,
-> Auth, Conta/Perfis, Território, Localização e Central.
+> **Capacidades horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens,
+> Auth, Conta/Perfis, Território, Localização, Notificações e Central.
 >
 > Owners executáveis:
 > - `src/app/config/productModuleRegistry.ts`;
@@ -26,8 +26,8 @@ Superfícies ativas do MVP:
 - cadastro de empresa em três etapas;
 - edição de identidade, contato/localização e apresentação;
 - Central da empresa com visão geral, edição, fotos, horários, localização,
-  produtos e serviços, dados e configurações; navegação única certificada e
-  autorizada pelo lifecycle, compartilhada entre desktop e mobile;
+  produtos e serviços, dados e configurações;
+- CTA de Mensagens quando o provider Business está ativo;
 - projeção no Mapa;
 - descoberta em Perto de mim;
 - resultados em Busca.
@@ -40,7 +40,6 @@ Regras:
 - registros sem identidade/slug/território válidos falham fechado;
 - fixtures sintéticas não podem aparecer como conteúdo público;
 - Billing/premium pausado não pode gerar CTA ou rota funcional dentro da Central ativa;
-- Mensagens pausado não pode gerar CTA `Mensagem` no detalhe público;
 - horários alimentam catálogo e detalhe público e devem convergir para o SSOT de Business Hours;
 - localização pessoal só aparece quando existe coordenada real adequada para proximidade.
 
@@ -52,62 +51,42 @@ Projeta geograficamente providers de domínios ativos. No MVP, Business é o ún
 
 ### Perto de mim
 
-Descoberta por proximidade. Depende de:
-
-- capability `map`;
-- capability `location`;
-- módulo `business`.
-
-Distância pessoal só pode ser apresentada com localização real. Fallback territorial não pode ser rotulado como posição do usuário.
-
-A superfície visual do MVP usa a mesma linguagem de Empresas e apresenta separadamente referência territorial e GPS real.
+Descoberta por proximidade. Depende de `map` e `location`; providers de produto são adicionados separadamente pelo lifecycle. No MVP, Business é o provider disponível.
 
 ### Busca
 
 Orquestra providers de domínios ativos. No MVP, Business é o provider público principal. Providers de Community, Serviços, Classificados, Eventos e Vagas permanecem fail-closed.
 
-Busca não possui os dados dos domínios e não reativa módulos pausados. Copy pública não deve expor termos internos como “módulos ativos”, registry ou provider.
-
-## Capacidades horizontais pausadas
-
 ### Mensagens
 
-O owner de Inbox/Chat horizontal permanece versionado, mas está fora do grafo ativo do MVP.
+Inbox/Chat horizontal da plataforma.
 
-No corte atual:
+No MVP:
 
-- `messaging=false`;
-- **Business Direct Messaging** permanece preservado como provider/versionamento, sem registro na Inbox ativa;
-- o CTA `Mensagem` de Empresa não é montado;
-- `/mensagens` e `/mensagens/business/:threadId` não são rotas ativas;
-- Classificados e Community preservam agregados próprios, sem providers ativos;
-- não existe tabela ou `MessagingService` monolítico universal.
-
-Persistência Business Messaging preservada:
-
-- `business_direct_threads`;
-- `business_direct_thread_participants`;
-- `business_direct_messages`;
-- `business_direct_message_reports`;
-- audit metadata-only em schema `private`.
-
-Escritas continuam server-owned por RPC e autorização usa o Profile ativo quando a capability for reativada.
+- `messaging=true`;
+- Inbox canônica: `/mensagens`;
+- thread canônica: `/mensagens/:providerId/:threadId`;
+- Business Direct Messaging é o provider disponível enquanto `business=active`;
+- pausar Business remove esse provider, mas **não desativa Messaging**;
+- futuros providers de Community, Classificados ou outros domínios entram apenas quando seus próprios lifecycles forem ativados;
+- a Inbox não pertence a Community, Business nem Comunicação Territorial.
 
 ### Notificações
 
-O owner e os contratos de materialização permanecem versionados, mas a UI está pausada.
+Capability horizontal da plataforma.
 
-No corte atual:
+No MVP:
 
-- `notifications=false`;
-- `/notificacoes` e `/conta/notificacoes` ficam fora do grafo ativo;
-- rotas legadas `/notifications` e `/settings/notifications` permanecem retiradas;
-- notificações históricas podem permanecer armazenadas, porém ações internas para owners pausados/retirados não expõem CTA navegável;
-- não existe fallback para uma Inbox pausada ou rota 404.
+- `notifications=true`;
+- Inbox canônica: `/notificacoes`;
+- preferências canônicas: `/conta/notificacoes`;
+- rotas legadas `/notifications` e `/settings/notifications` permanecem aposentadas;
+- eventos de verticais passam pelo lifecycle do owner de origem;
+- pausar uma vertical impede novas ações/eventos daquela vertical, mas **não desativa Notifications**.
 
 ## Plataforma ativa
 
-Auth, sessão, Conta/Perfis, Território, Localização, Central, segurança, storage e observabilidade são infraestrutura transversal. Não devem ser modelados como verticais de negócio.
+Auth, sessão, Conta/Perfis, Território, Localização, Mensagens, Notificações, Central, segurança, storage e observabilidade são infraestrutura transversal. Não devem ser modelados como verticais de negócio.
 
 ## Domínios pausados
 
@@ -130,7 +109,7 @@ Permanecem versionados e fail-closed até certificação individual:
 - Safety familiar;
 - Billing.
 
-Código preservado não autoriza rota pública, navegação, prefetch, query, provider de Busca, provider de Mensagens ou layer de Mapa.
+Código preservado não autoriza rota pública, navegação, prefetch, query, provider de Busca, provider de Mensagens, evento acionável de Notificações ou layer de Mapa.
 
 ## Lifecycle
 
@@ -145,4 +124,4 @@ Ativar exige:
 5. E2E/smoke quando aplicável;
 6. alteração no registry correto.
 
-Redirect não é mecanismo de lifecycle.
+**Regra permanente:** capability horizontal não depende de uma vertical apenas por ela ser o provider atual. Redirect não é mecanismo de lifecycle.

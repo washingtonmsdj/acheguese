@@ -1,25 +1,23 @@
 /**
  * Service Worker - Push Notifications + Caching
- * 
+ *
  * Handles:
  * - Push notifications
  * - Asset caching (Cache-First)
  * - API caching (Network-First)
  * - Image caching (Stale-While-Revalidate)
  * - Offline fallback
- * 
- * @version 2.0.8
+ *
+ * @version 2.0.9
  */
 
-// Service Worker version
-const SW_VERSION = '2.0.8';
+const SW_VERSION = '2.0.9';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
   self.location.hostname === '::1';
 const OFFLINE_FALLBACK_URL = '/offline.html';
 
-// Cache names
 const CACHE_NAMES = {
   static: `static-v${SW_VERSION}`,
   images: `images-v${SW_VERSION}`,
@@ -27,15 +25,11 @@ const CACHE_NAMES = {
   fonts: `fonts-v${SW_VERSION}`,
 };
 
-// Cache size limits (in items)
 const CACHE_LIMITS = {
   images: 100,
   api: 50,
 };
 
-// Assets to cache on install. The large sidebar logo is intentionally omitted:
-// image requests are stale-while-revalidate and cache it only when a surface
-// actually renders it.
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -46,7 +40,6 @@ const STATIC_ASSETS = [
   '/badge-72x72.png',
 ];
 
-// Install event
 self.addEventListener('install', (event) => {
   console.log(`[SW ${SW_VERSION}] Installing...`);
 
@@ -54,7 +47,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(self.skipWaiting());
     return;
   }
-  
+
   event.waitUntil(
     caches.open(CACHE_NAMES.static)
       .then((cache) => {
@@ -68,7 +61,6 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event
 self.addEventListener('activate', (event) => {
   console.log(`[SW ${SW_VERSION}] Activating...`);
 
@@ -81,30 +73,24 @@ self.addEventListener('activate', (event) => {
     );
     return;
   }
-  
+
   event.waitUntil(
     Promise.all([
-      // Clean up old caches
       caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames
-            .filter((name) => {
-              // Delete caches that don't match current version
-              return !Object.values(CACHE_NAMES).includes(name);
-            })
+            .filter((name) => !Object.values(CACHE_NAMES).includes(name))
             .map((name) => {
               console.log('[SW] Deleting old cache:', name);
               return caches.delete(name);
             })
         );
       }),
-      // Claim clients
       self.clients.claim(),
     ])
   );
 });
 
-// Push event
 self.addEventListener('push', (event) => {
   console.log('[SW] Push received:', event);
 
@@ -131,146 +117,111 @@ self.addEventListener('push', (event) => {
       timestamp: Date.now(),
     };
 
-    event.waitUntil(
-      self.registration.showNotification(title, options)
-    );
+    event.waitUntil(self.registration.showNotification(title, options));
   } catch (error) {
     console.error('[SW] Error processing push:', error);
   }
 });
 
-// Notification click event
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Notification clicked:', event);
-
   event.notification.close();
 
-  // Handle action clicks
   if (event.action) {
     console.log('[SW] Action clicked:', event.action);
-    
-    // Handle specific actions
     const actionUrl = getActionUrl(event.action, event.notification.data);
-    if (actionUrl) {
-      event.waitUntil(
-        clients.openWindow(actionUrl)
-      );
-    }
+    if (actionUrl) event.waitUntil(clients.openWindow(actionUrl));
     return;
   }
 
-  // Handle notification click (no action)
   const urlToOpen = getNotificationUrl(event.notification.data);
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Check if there's already a window open
         for (const client of clientList) {
-          if (client.url === urlToOpen && 'focus' in client) {
-            return client.focus();
-          }
+          if (client.url === urlToOpen && 'focus' in client) return client.focus();
         }
-        // Open new window if possible
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
+        if (clients.openWindow) return clients.openWindow(urlToOpen);
       })
   );
 });
 
-// Notification close event
 self.addEventListener('notificationclose', (event) => {
   console.log('[SW] Notification closed:', event);
-  
-  // Track notification dismissal (optional)
   const data = event.notification.data;
   if (data && data.trackDismissal) {
-    // Could send analytics here
     console.log('[SW] Tracking dismissal for:', data);
   }
 });
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
 /**
- * Get URL for notification click based on notification data.
- * Push payloads can outlive a product release, so stale destinations must fail
- * closed against the current MVP instead of reopening paused surfaces.
+ * Push payloads can outlive a product release. Messaging and Notifications are
+ * horizontal platform capabilities and must remain reachable independently of
+ * product verticals. Destinations owned by paused product modules fail closed
+ * to the active Notifications inbox instead of reopening those modules.
  */
 const PAUSED_NOTIFICATION_ROUTE_PATTERN =
-  /^\/(?:notificacoes|mensagens|community|comunidade|gastronomia|servicos|services|classificados|classifieds|pontos-turisticos|tourist-points|educacao|education|vagas|jobs|eventos|events|comunicacao|communication|mobility|mobilidade|track|cupons|coupons|ranking|gamificacao|gamification|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/conta\/notificacoes(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
+  /^\/(?:community|comunidade|gastronomia|servicos|services|classificados|classifieds|pontos-turisticos|tourist-points|educacao|education|vagas|jobs|eventos|events|comunicacao|communication|mobility|mobilidade|track|cupons|coupons|ranking|gamificacao|gamification|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
 
-function getLaunchSafeNotificationUrl(url, fallback = '/') {
+function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes') {
   if (!url) return fallback;
   const value = String(url);
   return PAUSED_NOTIFICATION_ROUTE_PATTERN.test(value) ? fallback : value;
 }
 
 function getNotificationUrl(data) {
-  if (!data) return '/';
+  if (!data) return '/notificacoes';
 
-  // Handle different notification types
   switch (data.type) {
     case 'message':
-      return '/';
-    
+      return getLaunchSafeNotificationUrl(data.url, '/mensagens');
+
     case 'ride':
-      return getLaunchSafeNotificationUrl('/mobilidade', '/');
-    
+      return getLaunchSafeNotificationUrl('/mobilidade');
+
     case 'order':
       return getLaunchSafeNotificationUrl(
-        `/gastronomia/pedidos/${data.orderId || ''}`,
-        '/'
+        `/gastronomia/pedidos/${data.orderId || ''}`
       );
-    
+
     case 'payment':
       return getLaunchSafeNotificationUrl('/settings/subscription');
-    
+
     case 'security':
       return '/conta/seguranca';
-    
+
     case 'social':
-      return getLaunchSafeNotificationUrl(data.url);
-    
     case 'system':
       return getLaunchSafeNotificationUrl(data.url);
-    
+
     default:
       return getLaunchSafeNotificationUrl(data.url);
   }
 }
 
-/**
- * Get URL for action click
- */
 function getActionUrl(action, data) {
   switch (action) {
     case 'view':
       return getNotificationUrl(data);
-    
+
     case 'reply':
-      return '/';
-    
+      return getLaunchSafeNotificationUrl(data?.url, '/mensagens');
+
     case 'accept':
-      return getLaunchSafeNotificationUrl(data.acceptUrl, '/');
-    
+      return getLaunchSafeNotificationUrl(data.acceptUrl);
+
     case 'decline':
-      return getLaunchSafeNotificationUrl(data.declineUrl, '/');
-    
+      return getLaunchSafeNotificationUrl(data.declineUrl);
+
     case 'settings':
-      return '/conta';
-    
+      return '/conta/notificacoes';
+
     default:
-      return '/';
+      return '/notificacoes';
   }
 }
 
-/**
- * Send message to all clients
- */
 function sendMessageToClients(message) {
   return self.clients.matchAll({ includeUncontrolled: true, type: 'window' })
     .then((clients) => {
@@ -280,10 +231,8 @@ function sendMessageToClients(message) {
     });
 }
 
-// Background sync (optional - for offline support)
 self.addEventListener('sync', (event) => {
   console.log('[SW] Sync event:', event.tag);
-  
   if (event.tag === 'sync-notifications') {
     event.waitUntil(syncNotifications());
   }
@@ -291,13 +240,10 @@ self.addEventListener('sync', (event) => {
 
 async function syncNotifications() {
   console.log('[SW] Syncing notifications...');
-  // Could fetch missed notifications here
 }
 
-// Periodic sync (optional - requires permission)
 self.addEventListener('periodicsync', (event) => {
   console.log('[SW] Periodic sync event:', event.tag);
-  
   if (event.tag === 'check-notifications') {
     event.waitUntil(checkForNewNotifications());
   }
@@ -305,39 +251,19 @@ self.addEventListener('periodicsync', (event) => {
 
 async function checkForNewNotifications() {
   console.log('[SW] Checking for new notifications...');
-  // Could check for new notifications here
 }
 
 console.log(`[SW ${SW_VERSION}] Loaded`);
 
-// ============================================================================
-// FETCH HANDLER - CACHING STRATEGIES
-// ============================================================================
-
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
-    return;
-  }
 
-  // Skip chrome-extension and other non-http(s) requests
-  if (!url.protocol.startsWith('http')) {
-    return;
-  }
+  if (request.method !== 'GET') return;
+  if (!url.protocol.startsWith('http')) return;
+  if (IS_LOCALHOST) return;
+  if (url.origin !== self.location.origin) return;
 
-  // Never cache/intercept in local dev (avoids breaking Vite HMR/WebSocket)
-  if (IS_LOCALHOST) {
-    return;
-  }
-
-  // Never intercept third-party requests (ads, analytics, CDN, etc.)
-  if (url.origin !== self.location.origin) {
-    return;
-  }
-
-  // Skip Vite/HMR internals defensively
   if (
     url.pathname.startsWith('/@vite') ||
     url.pathname.startsWith('/@react-refresh') ||
@@ -347,34 +273,19 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Choose caching strategy based on request type
   if (isStaticAsset(url)) {
-    // Cache-First for static assets (JS, CSS, fonts)
     event.respondWith(cacheFirst(request, CACHE_NAMES.static));
   } else if (isImage(url)) {
-    // Stale-While-Revalidate for images
     event.respondWith(staleWhileRevalidate(request, CACHE_NAMES.images));
   } else if (isFont(url)) {
-    // Cache-First for fonts
     event.respondWith(cacheFirst(request, CACHE_NAMES.fonts));
   } else if (isApiRequest(url)) {
-    // Network-First for API requests
     event.respondWith(networkFirst(request, CACHE_NAMES.api));
   } else {
-    // Network-First for everything else
     event.respondWith(networkFirst(request, CACHE_NAMES.static));
   }
 });
 
-// ============================================================================
-// CACHING STRATEGIES
-// ============================================================================
-
-/**
- * Cache-First Strategy
- * Try cache first, fallback to network
- * Good for: Static assets that rarely change
- */
 async function cacheFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
@@ -387,12 +298,7 @@ async function cacheFirst(request, cacheName) {
   console.log('[SW] Cache miss, fetching:', request.url);
   try {
     const response = await fetch(request);
-    
-    // Cache successful responses
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    
+    if (response.ok) cache.put(request, response.clone());
     return response;
   } catch (error) {
     console.error('[SW] Fetch failed:', error);
@@ -400,72 +306,43 @@ async function cacheFirst(request, cacheName) {
   }
 }
 
-/**
- * Network-First Strategy
- * Try network first, fallback to cache
- * Good for: API requests, dynamic content
- */
 async function networkFirst(request, cacheName) {
   const cache = await caches.open(cacheName);
 
   try {
     const response = await fetch(request);
-    
-    // Cache successful responses
-    if (response.ok) {
-      cache.put(request, response.clone());
-    }
-    
+    if (response.ok) cache.put(request, response.clone());
     return response;
   } catch (error) {
     console.log('[SW] Network failed, trying cache:', request.url);
     const cached = await cache.match(request);
-    
-    if (cached) {
-      return cached;
-    }
+    if (cached) return cached;
 
     if (request.mode === 'navigate') {
       const offlineFallback = await caches.match(OFFLINE_FALLBACK_URL);
-
-      if (offlineFallback) {
-        return offlineFallback;
-      }
+      if (offlineFallback) return offlineFallback;
     }
-    
+
     return new Response('Offline', { status: 503 });
   }
 }
 
-/**
- * Stale-While-Revalidate Strategy
- * Return cached version immediately, update cache in background
- * Good for: Images, avatars, non-critical assets
- */
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
 
-  // Fetch in background
   const fetchPromise = fetch(request)
     .then((response) => {
       if (response.ok) {
         cache.put(request, response.clone());
-
-        // Enforce cache size limit
         limitCacheSize(cacheName, CACHE_LIMITS.images);
       }
       return response;
     })
     .catch(() => cached || new Response('Offline', { status: 503 }));
 
-  // Return cached version immediately if available
   return cached || fetchPromise;
 }
-
-// ============================================================================
-// HELPER FUNCTIONS - REQUEST TYPE DETECTION
-// ============================================================================
 
 function isStaticAsset(url) {
   return /\.(js|css|woff2?|ttf|otf)$/i.test(url.pathname);
@@ -480,21 +357,17 @@ function isFont(url) {
 }
 
 function isApiRequest(url) {
-  return url.pathname.startsWith('/api/') || 
+  return url.pathname.startsWith('/api/') ||
          url.hostname.includes('supabase.co') ||
          url.hostname.includes('supabase.in');
 }
 
-/**
- * Limit cache size by removing oldest entries
- */
 async function limitCacheSize(cacheName, maxItems) {
   const cache = await caches.open(cacheName);
   const keys = await cache.keys();
 
   if (keys.length > maxItems) {
     console.log(`[SW] Cache ${cacheName} exceeded limit, cleaning up`);
-    // Delete oldest entries (first in array)
     const toDelete = keys.slice(0, keys.length - maxItems);
     await Promise.all(toDelete.map((key) => cache.delete(key)));
   }

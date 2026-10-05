@@ -10,8 +10,8 @@ describe("adminSurfaceScope", () => {
     expect(isAdminSurfaceEnabled("dashboard")).toBe(true);
     expect(isAdminSurfaceEnabled("empresas")).toBe(true);
     expect(isAdminSurfaceEnabled("mapa")).toBe(true);
+    expect(isAdminSurfaceEnabled("notifications")).toBe(true);
 
-    expect(isAdminSurfaceEnabled("notifications")).toBe(false);
     expect(isAdminSurfaceEnabled("gastronomia")).toBe(false);
     expect(isAdminSurfaceEnabled("services")).toBe(false);
     expect(isAdminSurfaceEnabled("classificados")).toBe(false);
@@ -34,9 +34,9 @@ describe("adminSurfaceScope", () => {
     expect(visibleIds).toContain("dashboard");
     expect(visibleIds).toContain("empresas");
     expect(visibleIds).toContain("mapa");
+    expect(visibleIds).toContain("notifications");
 
     for (const pausedId of [
-      "notifications",
       "gastronomia",
       "services",
       "classificados",

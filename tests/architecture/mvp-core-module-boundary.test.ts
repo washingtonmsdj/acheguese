@@ -106,8 +106,10 @@ describe("MVP core module boundary", () => {
       platformRegistry.match(/\n  messaging: \{[\s\S]*?\n  \},/)?.[0] ?? "";
     const notificationsBlock =
       platformRegistry.match(/\n  notifications: \{[\s\S]*?\n  \},/)?.[0] ?? "";
-    expect(messagingBlock).toContain('status: "paused"');
-    expect(notificationsBlock).toContain('status: "paused"');
+    expect(messagingBlock).toContain('status: "active"');
+    expect(notificationsBlock).toContain('status: "active"');
+    expect(messagingBlock).not.toContain("dependsOnProductModules");
+    expect(notificationsBlock).not.toContain("dependsOnProductModules");
     expect(platformRegistry).toContain('dependsOnCapabilities: ["map", "location"]');
     expect(nearbyProviderScope).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(nearbyProviderScope).toContain("isProductModuleEnabled(productModule)");
@@ -415,32 +417,28 @@ describe("MVP core module boundary", () => {
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("map")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("search")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("notifications")');
 
     expect(appRoutes).toContain('path="/empresas"');
     expect(appRoutes).toContain('path="/empresas/cadastrar"');
     expect(appRoutes).toContain('path="/mapa"');
     expect(appRoutes).toContain('path="/perto-de-mim"');
     expect(appRoutes).toContain('path="/busca"');
+    expect(appRoutes).toContain("messagingRoutes.inbox()");
+    expect(appRoutes).toContain("messagingRoutes.threadPattern()");
+    expect(appRoutes).toContain('path="/notificacoes"');
+    expect(appRoutes).toContain("P.NotificationsPage");
+    expect(appRoutes).toContain("P.NotificationPreferencesPage");
 
-    for (const pausedRouteOwner of [
-      "messagingRoutes.inbox()",
-      "messagingRoutes.threadPattern()",
-      'path="/notificacoes"',
-      'path="/conta/notificacoes"',
-      "P.NotificationsPage",
-      "P.NotificationPreferencesPage",
-      "P.MensagensPage",
-    ]) {
-      expect(appRoutes).not.toContain(pausedRouteOwner);
-    }
-    for (const pausedLazyOwner of [
+    for (const activeLazyOwner of [
       "NotificationsPage",
       "NotificationPreferencesPage",
-      "EmailLogsPage",
-      "MensagensPage",
+      "MessagingInboxPage",
     ]) {
-      expect(activeLazyImports).not.toContain(pausedLazyOwner);
+      expect(activeLazyImports).toContain(activeLazyOwner);
     }
+    expect(activeLazyImports).not.toContain("EmailLogsPage");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
     expect(messagingRoutes).toContain(
       'threadPattern: () => "/mensagens/:providerId/:threadId"',

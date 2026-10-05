@@ -4,9 +4,9 @@
  * Layout global unificado da aplicação autenticada e das superfícies públicas
  * que ainda não possuem shell territorial próprio.
  *
- * Capabilities pausadas, como Mensagens e Notificações, permanecem versionadas
- * em seus owners, mas não são anunciadas por esta shell enquanto estiverem fora
- * do lifecycle ativo do MVP.
+ * Mensagens e Notificações são capabilities horizontais ativas e participam
+ * deste shell independentemente das verticais que forneçam providers/eventos.
+ * Domínios pausados permanecem fora da navegação e do grafo ativo.
  */
 
 import { useEffect } from "react";
@@ -103,9 +103,10 @@ export function AppLayoutSidebar() {
     isConversationRoute ||
     isBusinessRegistrationRoute;
 
-  const isMessagingRoute = pathSegments[0] === "mensagens";
-
-  if (isMessagingRoute) {
+  // Threads use a focused conversation shell. The Inbox itself remains inside
+  // the normal authenticated app shell so navigation does not disappear when
+  // the user enters Messaging from Sidebar/Topbar.
+  if (isConversationRoute) {
     return (
       <div className="min-h-[100dvh] w-full bg-territory-canvas">
         <Outlet />

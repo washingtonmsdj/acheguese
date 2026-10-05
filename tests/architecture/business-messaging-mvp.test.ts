@@ -15,18 +15,14 @@ const service = read(
 const provider = read(
   "src/core/messaging/providers/BusinessMessagingProvider.ts",
 );
-const messagingRoutes = read(
-  "src/core/messaging/routes/messagingRoutes.ts",
-);
+const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
 const businessEntry = read(
   "src/core/messaging/services/openBusinessDirectConversation.ts",
 );
 const providerRegistry = read(
   "src/core/messaging/providers/messagingProviderRegistry.ts",
 );
-const providerScope = read(
-  "src/app/config/messagingProviderScope.ts",
-);
+const providerScope = read("src/app/config/messagingProviderScope.ts");
 const inboxWrapper = read("src/app/pages/MessagingInboxPage.tsx");
 const inbox = read("src/modules/messaging/pages/MensagensPage.tsx");
 const cta = read(
@@ -35,16 +31,10 @@ const cta = read(
 const companyPage = read("src/app/pages/EmpresaDetailLandingPage.tsx");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
-const platformRegistry = read(
-  "src/app/config/platformCapabilityRegistry.ts",
-);
-const realtimeRegistry = read(
-  "src/core/realtime/config/realtimeRegistry.ts",
-);
+const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
+const realtimeRegistry = read("src/core/realtime/config/realtimeRegistry.ts");
 const advisorResidualRegister = JSON.parse(
-  read(
-    "docs/09-reference/governance/security/SUPABASE_ADVISOR_RESIDUALS.json",
-  ),
+  read("docs/09-reference/governance/security/SUPABASE_ADVISOR_RESIDUALS.json"),
 ) as {
   residuals: Array<{
     cacheKey: string;
@@ -87,14 +77,12 @@ describe("Business Messaging boundary", () => {
   });
 
   it("keeps authenticated clients read-only on messaging tables and anon outside RPC execution", () => {
-    const tables = [
+    for (const table of [
       "business_direct_threads",
       "business_direct_thread_participants",
       "business_direct_messages",
       "business_direct_message_reports",
-    ];
-
-    for (const table of tables) {
+    ]) {
       expect(normalizedMigration).toContain(
         `REVOKE ALL ON TABLE public.${table} FROM PUBLIC, anon, authenticated;`,
       );
@@ -107,7 +95,7 @@ describe("Business Messaging boundary", () => {
       /GRANT (?:INSERT|UPDATE|DELETE|ALL) ON TABLE public\.business_direct_(?:threads|thread_participants|messages|message_reports) TO authenticated;/,
     );
 
-    const rpcSignatures = [
+    for (const signature of [
       "create_business_direct_thread(UUID, UUID)",
       "list_business_direct_thread_previews( UUID, INTEGER, TIMESTAMPTZ, UUID, TEXT )",
       "list_business_direct_messages( UUID, UUID, INTEGER, TIMESTAMPTZ, UUID )",
@@ -115,9 +103,7 @@ describe("Business Messaging boundary", () => {
       "mark_business_direct_thread_read(UUID, UUID)",
       "set_business_direct_thread_blocked( UUID, UUID, BOOLEAN, TEXT )",
       "report_business_direct_thread( UUID, UUID, UUID, TEXT, TEXT )",
-    ];
-
-    for (const signature of rpcSignatures) {
+    ]) {
       expect(normalizedMigration).toContain(
         `REVOKE ALL ON FUNCTION public.${signature} FROM PUBLIC, anon;`,
       );
@@ -142,7 +128,6 @@ describe("Business Messaging boundary", () => {
       const residual = advisorResidualRegister.residuals.find(
         (entry) => entry.cacheKey === cacheKey,
       );
-
       expect(residual).toMatchObject({
         cacheKey,
         callerClass: "authenticated_user_endpoint",
@@ -152,26 +137,28 @@ describe("Business Messaging boundary", () => {
   });
 
   it("keeps the browser service on RPC + Realtime owners only", () => {
-    expect(service).toContain('supabase.rpc(');
+    expect(service).toContain("supabase.rpc(");
     expect(service).toContain("subscribeToBusinessDirectMessages");
     expect(service).not.toContain('.from("business_direct_');
     expect(service).not.toContain(".channel(");
-    expect(realtimeRegistry).toContain(
-      '"messaging.business-thread-messages"',
-    );
+    expect(realtimeRegistry).toContain('"messaging.business-thread-messages"');
     expect(realtimeRegistry).toContain('table: "business_direct_messages"');
   });
 
-  it("keeps Business Messaging versioned but outside the certified MVP graph", () => {
-    expect(platformRegistry).toContain('messaging: {');
-    expect(platformRegistry).toContain('status: "paused"');
-    expect(platformRegistry).toContain('dependsOnCapabilities: ["auth", "profiles"]');
+  it("keeps Messaging active as platform capability with Business lifecycle-scoped as one provider", () => {
+    const messagingBlock =
+      platformRegistry.match(/\n  messaging: \{[\s\S]*?\n  \},/)?.[0] ?? "";
+    expect(messagingBlock).toContain('status: "active"');
+    expect(messagingBlock).toContain(
+      'dependsOnCapabilities: ["auth", "profiles"]',
+    );
+    expect(messagingBlock).not.toContain("dependsOnProductModules");
 
     expect(providerRegistry).toContain("businessMessagingProvider");
     expect(providerRegistry).not.toContain("@/app/");
     expect(providerScope).toContain('isPlatformCapabilityEnabled("messaging")');
-    expect(providerScope).toContain('isProductModuleEnabled(productModule)');
-    expect(providerScope).toContain('getMessagingProvider(providerId) !== null');
+    expect(providerScope).toContain("isProductModuleEnabled(productModule)");
+    expect(providerScope).toContain("getMessagingProvider(providerId) !== null");
     expect(inboxWrapper).toContain("getActiveMessagingProviderIds()");
     expect(provider).toContain('providerId: "business"');
     expect(inbox).toContain("providerIds");
@@ -182,17 +169,19 @@ describe("Business Messaging boundary", () => {
     expect(inbox).toContain("messagingRoutes.thread(");
     expect(inbox).toContain("messagingRoutes.inbox()");
 
-    expect(appRoutes).not.toContain('isPlatformCapabilityEnabled("messaging")');
-    expect(appRoutes).not.toContain("messagingRoutes.inbox()");
-    expect(appRoutes).not.toContain("messagingRoutes.threadPattern()");
-    expect(activeLazyImports).not.toContain("MessagingInboxPage");
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(appRoutes).toContain("messagingRoutes.inbox()");
+    expect(appRoutes).toContain("messagingRoutes.threadPattern()");
+    expect(activeLazyImports).toContain("MessagingInboxPage");
     expect(inbox).not.toContain("/mensagens/${thread.providerId}/${thread.threadId}");
   });
 
-  it("keeps the Business message CTA implementation lifecycle-scoped for later activation", () => {
+  it("keeps the Business message CTA provider lifecycle-scoped without owning the Inbox", () => {
     expect(cta).toContain('label="Mensagem"');
     expect(companyPage).toContain('isPlatformCapabilityEnabled("messaging")');
-    expect(companyPage).toContain("messagingEnabled && activeProfile?.id !== business.profile_id");
+    expect(companyPage).toContain(
+      "messagingEnabled && activeProfile?.id !== business.profile_id",
+    );
     expect(companyPage).toContain("openBusinessDirectConversation");
     expect(companyPage).toContain("institutionalBusinessDataId");
     expect(companyPage).toContain("buildLoginPath(returnTo)");

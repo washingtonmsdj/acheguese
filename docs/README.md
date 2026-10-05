@@ -9,7 +9,8 @@ Achegue-se é uma plataforma hiperlocal, territory-first e modular. A unidade te
 No corte atual do MVP:
 
 - **domínio de produto ativo:** Business / Empresas;
-- **capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens com provider Business, Notificações, Auth, Perfis/Conta, Território, Localização e Central;
+- **capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens, Notificações, Auth, Perfis/Conta, Território, Localização e Central;
+- Mensagens e Notificações pertencem à plataforma; verticais apenas contribuem com providers/eventos autorizados pelo próprio lifecycle;
 - Community, Gastronomia, Serviços/Profissionais, Classificados, Pontos Turísticos, Educação, Vagas, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Safety familiar, Billing e demais domínios permanecem `paused`.
 
 A ativação real é executável e pertence a:
@@ -18,7 +19,7 @@ A ativação real é executável e pertence a:
 - `src/app/config/platformCapabilityRegistry.ts`;
 - `src/app/config/lifecycleRegistry.ts`.
 
-Documentação não pode reativar domínio pausado nem criar uma autoridade paralela.
+Documentação não pode reativar domínio ou capability pausado nem criar uma autoridade paralela. Pausar um domínio também não pode desligar uma capability horizontal ativa.
 
 ## Leitura recomendada para inspeção técnica ou societária
 

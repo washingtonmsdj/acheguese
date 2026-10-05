@@ -24,15 +24,15 @@ const communityMessaging = read(
 );
 
 describe("account and horizontal messaging real-data boundary", () => {
-  it("keeps Account active while Messaging stays versioned but outside the MVP route graph", () => {
+  it("keeps Account and Messaging active as independent platform surfaces", () => {
     expect(routes).not.toContain("conceptMessagesPreview");
     expect(routes).not.toContain("conceptAccountPreview");
     expect(routes).not.toContain('get("concept-mock")');
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain("protectedElement(<P.ContaPage />)");
-    expect(routes).not.toContain("messagingRoutes.inbox()");
-    expect(routes).not.toContain("messagingRoutes.threadPattern()");
-    expect(routes).not.toContain("<P.MensagensPage />");
+    expect(routes).toContain("messagingRoutes.inbox()");
+    expect(routes).toContain("messagingRoutes.threadPattern()");
+    expect(routes).toContain("<P.MessagingInboxPage />");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
     expect(messagingRoutes).toContain(
       'threadPattern: () => "/mensagens/:providerId/:threadId"',
@@ -44,10 +44,11 @@ describe("account and horizontal messaging real-data boundary", () => {
 
     const messagingBlock =
       platformRegistry.match(/\n  messaging: \{[\s\S]*?\n  \},/)?.[0] ?? "";
-    expect(messagingBlock).toContain('status: "paused"');
+    expect(messagingBlock).toContain('status: "active"');
+    expect(messagingBlock).not.toContain("dependsOnProductModules");
   });
 
-  it("keeps the active Account overview on live profile data without paused capability CTAs", () => {
+  it("keeps Account overview on live profile data without owning Messaging or Notifications", () => {
     expect(account).not.toContain("concept-mock");
     expect(account).not.toContain("AccountConceptPreviewPage");
     expect(account).not.toContain("conceptManagedProfiles");
@@ -56,18 +57,11 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(account).toContain(
       "const resolvedProfile = data.profile ?? data.activeProfile ?? null",
     );
-    expect(account).toContain("if (data.loading && !resolvedProfile)");
     expect(account).toContain("profile={resolvedProfile}");
-    expect(account).not.toContain("if (data.loading) {");
     expect(account).toContain("data.allProfiles");
-    expect(account).not.toContain('title="Mensagens"');
-    expect(account).not.toContain("navigate(data.appUrls.messages)");
-    expect(account).not.toContain('title="Notificações"');
-    expect(account).not.toContain("navigate(data.appUrls.profile.notifications)");
-    expect(account).not.toContain("data.appUrls.auth.login");
   });
 
-  it("keeps the global Messaging action lifecycle-owned for later reactivation", () => {
+  it("keeps the global Messaging action lifecycle-owned", () => {
     expect(appTopbar).toContain(
       'const showMessages = isPlatformCapabilityEnabled("messaging")',
     );
@@ -76,7 +70,7 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(appTopbar).toContain("to={appUrls.messages}");
   });
 
-  it("keeps the preserved global Inbox provider-based instead of Community-owned", () => {
+  it("keeps the active global Inbox provider-based instead of Business-owned", () => {
     expect(inbox).toContain("providerIds");
     expect(inbox).toContain("providerIds.map");
     expect(inbox).toContain("getMessagingProvider");
@@ -89,15 +83,15 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(providerRegistry).toContain("businessMessagingProvider");
     expect(providerRegistry).not.toContain("@/app/");
     expect(providerScope).toContain('isPlatformCapabilityEnabled("messaging")');
-    expect(providerScope).toContain('isProductModuleEnabled(productModule)');
-    expect(providerScope).toContain('getMessagingProvider(providerId) !== null');
+    expect(providerScope).toContain("isProductModuleEnabled(productModule)");
+    expect(providerScope).toContain("getMessagingProvider(providerId) !== null");
 
     expect(businessProvider).toContain("businessDirectMessagingService");
     expect(businessProvider).not.toContain("community");
     expect(businessProvider).not.toContain("classified");
   });
 
-  it("preserves Community Direct Messaging as a separate post-MVP domain UI", () => {
+  it("preserves Community Direct Messaging as a separate paused-domain UI", () => {
     expect(communityMessaging).toContain("useCommunityDirectMessages()");
     expect(communityMessaging).toContain("useSessionContext()");
     expect(inbox).not.toContain("CommunityDirectMessagesPage");
