@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import { getCurrentUserBusinessFavorites } from "@/core/favorites/services/favorites.queries";
 import type { ProfileRow as Profile } from "./types";
 import type { BusinessRow } from "./profile.service.types";
+import { ProfileRpcService } from "./ProfileRpcService";
 
 interface QueryError {
   message?: string | null;
@@ -33,6 +34,7 @@ interface ProfileExternalDataDbClient {
 }
 
 const profileExternalDataDb = supabase as unknown as ProfileExternalDataDbClient;
+const PROFILE_BROKER_BATCH_SIZE = 100;
 
 type BusinessProfileRelation = {
   name?: string | null;
@@ -46,7 +48,6 @@ type BusinessLocationRelation = {
 
 type BusinessQueryRow = Omit<BusinessRow, "profiles" | "geographic_path"> & {
   created_at?: string | null;
-  profiles?: BusinessProfileRelation | BusinessProfileRelation[] | null;
   location?: BusinessLocationRelation | BusinessLocationRelation[] | null;
 };
 
@@ -55,14 +56,56 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | null {
   return value ?? null;
 }
 
-function normalizeBusinessQueryRows(
+function toBusinessProfileRelation(profile: Profile): BusinessProfileRelation {
+  return {
+    name: profile.name ?? profile.display_name ?? null,
+    neighborhood: profile.neighborhood ?? null,
+    city: profile.city ?? null,
+  };
+}
+
+async function getAccessibleBusinessProfiles(
+  profileIds: readonly string[],
+): Promise<Profile[]> {
+  const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
+  const profiles: Profile[] = [];
+
+  for (
+    let offset = 0;
+    offset < uniqueProfileIds.length;
+    offset += PROFILE_BROKER_BATCH_SIZE
+  ) {
+    const batch = uniqueProfileIds.slice(
+      offset,
+      offset + PROFILE_BROKER_BATCH_SIZE,
+    );
+    const accessible = await ProfileRpcService.getAccessibleProfiles<Profile[]>({
+      profileIds: batch,
+    });
+    profiles.push(...accessible);
+  }
+
+  return profiles;
+}
+
+async function normalizeBusinessQueryRows(
   rows: readonly BusinessQueryRow[],
-): BusinessRow[] {
+): Promise<BusinessRow[]> {
+  const accessibleProfiles = await getAccessibleBusinessProfiles(
+    rows.map((row) => row.profile_id),
+  );
+  const profilesById = new Map(
+    accessibleProfiles.map((profile) => [
+      profile.id,
+      toBusinessProfileRelation(profile),
+    ]),
+  );
+
   return rows.map((row) => {
-    const { location, profiles, ...business } = row;
+    const { location, ...business } = row;
     return {
       ...business,
-      profiles: firstRelation(profiles),
+      profiles: profilesById.get(row.profile_id) ?? null,
       geographic_path: firstRelation(location)?.geographic_path ?? null,
     };
   });
@@ -88,7 +131,6 @@ export async function getUserBusinessesByProfilesQuery(
       slug,
       description,
       created_at,
-      profiles(name, neighborhood, city),
       location:locations!location_id(geographic_path)
     `,
     )
@@ -117,8 +159,7 @@ export async function getUserBusinessesQuery(profileId: string): Promise<Busines
       is_verified,
       is_premium,
       description,
-      created_at,
-      profiles(name, neighborhood, city)
+      created_at
     `,
     )
     .eq("profile_id", profileId)
@@ -166,8 +207,7 @@ export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessR
       slug,
       is_verified,
       is_premium,
-      description,
-      profiles(name, neighborhood, city)
+      description
     `,
     )
     .in("profile_id", businessIds)
