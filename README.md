@@ -14,9 +14,9 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 ## Estado de entrega
 
-O núcleo público do MVP está funcional e passa pelos gates determinísticos de arquitetura, segurança e E2E público. O bloqueio externo conhecido para a certificação final autenticada é o data plane/Auth do Supabase, acompanhado pelo issue `#305`.
+O núcleo público do MVP está funcional e passa pelos gates determinísticos de arquitetura, segurança e E2E público. A certificação autenticada de produção também foi comprovada no candidato vigente, com sessão real, Conta e Business no runtime implantado, sem fallback de login, bypass de OIDC ou relaxamento de RLS.
 
-Não há workaround no frontend para mascarar indisponibilidade de infraestrutura. O MVP só recebe `READY` quando o mesmo SHA comprovar Auth/Conta/Business/Mensagens/Notificações, deploy e smoke autenticado nas superfícies realmente ativas do lifecycle.
+Não há workaround no frontend para mascarar indisponibilidade de infraestrutura. Qualquer novo delta deployável só preserva o estado de release quando o conteúdo de runtime correspondente volta a comprovar Auth/Conta/Business/Mensagens/Notificações, deployment `READY` e smoke nas superfícies realmente ativas do lifecycle.
 
 O frontend ativo está em fase final de convergência visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
 
