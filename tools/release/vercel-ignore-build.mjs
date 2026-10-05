@@ -13,10 +13,6 @@ const CRITICAL_DOC_FILES = new Set([
   "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
 ]);
 
-const NON_DEPLOY_RELEASE_FILES = new Set([
-  "tools/release/run-messaging-authenticated.mjs",
-]);
-
 const PRODUCTION_GIT_BRANCH = "main";
 
 function normalizePath(filePath) {
@@ -33,7 +29,6 @@ export function isSkippableVercelPath(filePath) {
   if (normalized.startsWith(".github/")) return true;
   if (normalized.startsWith("tests/")) return true;
   if (normalized.startsWith("e2e/")) return true;
-  if (NON_DEPLOY_RELEASE_FILES.has(normalized)) return true;
 
   if (normalized.startsWith("docs/")) {
     if (CRITICAL_DOC_FILES.has(normalized)) return false;
