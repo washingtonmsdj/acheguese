@@ -84,7 +84,7 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('path="/perto-de-mim"');
     expect(appLayout).toContain('path="/busca"');
     expect(appLayout).toContain('path="/notificacoes"');
-    expect(appLayout).toContain('path="/conta/notificacoes"');
+    expect(appLayout).toContain("path={ACCOUNT_PATHS.notifications}");
     expect(appLayout).toContain("messagingRoutes.inbox()");
     expect(appLayout).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
