@@ -56,6 +56,37 @@ describe("edgeFunctionBroker", () => {
     });
   });
 
+  it("passes a bounded AbortSignal when a caller opts into a timeout", async () => {
+    invokeMock.mockResolvedValue({
+      data: { data: { ok: true } },
+      error: null,
+    });
+
+    await invokeSupabaseBroker<{ ok: boolean }, "probe">({
+      action: "probe",
+      functionName: "probe-rpc",
+      serviceName: "ProbeService",
+      timeoutMs: 5_000,
+    });
+
+    const options = invokeMock.mock.calls[0]?.[1];
+    expect(options?.body).toEqual({ action: "probe", params: {} });
+    expect(options?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("rejects invalid timeout values before invoking the remote broker", async () => {
+    await expect(
+      invokeSupabaseBroker<unknown, "probe">({
+        action: "probe",
+        functionName: "probe-rpc",
+        serviceName: "ProbeService",
+        timeoutMs: 0,
+      }),
+    ).rejects.toThrow("Supabase broker timeoutMs must be a positive finite number");
+
+    expect(invokeMock).not.toHaveBeenCalled();
+  });
+
   it("preserves structured Edge HTTP errors instead of replacing them with the SDK message", async () => {
     const httpError = { message: "Edge Function returned a non-2xx status code" };
     invokeMock.mockResolvedValue({
