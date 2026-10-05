@@ -1,6 +1,6 @@
 {
   "schemaVersion": "supabase-advisor-residuals/v1",
-  "updatedAt": "2026-09-21",
+  "updatedAt": "2026-10-05",
   "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
   "residuals": [
     {
@@ -119,12 +119,6 @@
       "callerClass": "public_endpoint"
     },
     {
-      "cacheKey": "anon_security_definer_function_executable_public_get_shared_ride_safety_data_p_share_token text",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Public Safety read model authorized by high-entropy share token.",
-      "callerClass": "public_endpoint"
-    },
-    {
       "cacheKey": "authenticated_security_definer_function_executable_public_apply_trust_admin_actions_p_event_ids uuid[], p_action_type text, p_reason text, p_notes text, p_duration_days integer",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Admin-only atomic Trust command with internal authorization.",
@@ -212,12 +206,6 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_get_ride_rating_summary_p_profile_id uuid",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Public aggregate ride rating read model with no private rows.",
-      "callerClass": "public_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_get_shared_ride_safety_data_p_share_token text",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Safety read model authorized by high-entropy share token.",
       "callerClass": "public_endpoint"
     },
     {
@@ -352,18 +340,6 @@
       "callerClass": "authenticated_admin_endpoint"
     },
     {
-      "cacheKey": "authenticated_security_definer_function_executable_public_create_safety_ride_share_p_ride_id uuid, p_created_by uuid, p_expires_in_hours integer",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Safety share creation command bound to authenticated owned active Profile, ride participation, active ride state and bounded expiration; bearer token remains server-generated.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_revoke_safety_ride_share_p_share_id uuid",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Safety share revocation command validating ownership.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
       "cacheKey": "authenticated_security_definer_function_executable_public_send_classified_message_p_conversation_id uuid, p_text text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Participant-only Classified message command.",
@@ -430,18 +406,6 @@
       "callerClass": "authenticated_user_endpoint"
     },
     {
-      "cacheKey": "authenticated_security_definer_function_executable_public_update_safety_emergency_alert_status_p_alert_id uuid, p_status text, p_actor_profile_id uuid",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Safety alert transition with actor authorization.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_update_safety_incident_status_p_incident_id uuid, p_status text, p_actor_profile_id uuid",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Safety incident transition with actor authorization.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
       "cacheKey": "authenticated_security_definer_function_executable_public_upsert_profile_review_p_reviewed_profile_id uuid, p_reviewer_profile_id uuid, p_rating integer, p_comment text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Profile Review command validating owned actor and completed engagement.",
@@ -505,36 +469,6 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_verify_operational_pin_p_ride_id uuid, p_pin text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Assigned-driver-only PIN verification command with server-owned attempts, expiry, terminal-state guard and session-derived verified_by.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_create_safety_emergency_alert_p_profile_id uuid, p_ride_id uuid, p_alert_type text, p_description text, p_latitude double precision, p_longitude double precision, p_accuracy double precision, p_metadata jsonb",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Active-Profile-bound Safety emergency creation command with server-owned initial status/timestamps, bounded payload and canonical audit/notification triggers.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_create_safety_incident_p_reported_by uuid, p_ride_id uuid, p_incident_type text, p_severity text, p_description text, p_latitude double precision, p_longitude double precision",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Active-Profile-bound Safety incident creation command with server-owned reported state/timestamps, ride-participant validation and canonical audit/notification triggers.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_register_safety_evidence_p_incident_id uuid, p_evidence_type text, p_object_path text, p_file_name text, p_metadata jsonb",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Incident-reporter-only Safety evidence registration bound to an existing private Storage object owned by the authenticated user; reference, byte size, MIME and uploader are server-derived.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_create_emergency_contact_p_profile_id uuid, p_name text, p_email text, p_phone text, p_relationship text, p_is_primary boolean",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Owned-active-Profile emergency contact creation command with server-owned lifecycle, metadata and timestamps; active-primary uniqueness is enforced by database index.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
-      "cacheKey": "authenticated_security_definer_function_executable_public_patch_emergency_contact_p_contact_id uuid, p_updates jsonb",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Owned emergency-contact patch command with strict mutable-field allowlist; profile, metadata and creation provenance are immutable to browser clients.",
       "callerClass": "authenticated_user_endpoint"
     },
     {
@@ -635,12 +569,14 @@
     }
   ],
   "snapshotEvidence": {
-    "advisorObservedAt": "2026-09-19T23:58:36.141Z",
-    "observedAnonymousSecurityDefinerCount": 9,
+    "advisorObservedAt": "2026-10-05T22:12:46.381Z",
+    "observedAnonymousSecurityDefinerCount": 8,
     "observedAuthenticatedSecurityDefinerCountBeforeCp001": 85,
     "cp001": "20260918115346_retire_browser_notification_creation_cp001",
     "observedAuthenticatedSecurityDefinerCountAfterCp001": 84,
-    "liveRecheckStatus": "verified_live_2026-09-19",
-    "note": "Live Supabase Security Advisor rechecked on 2026-09-19. All 99 non-INFO live findings are covered by the canonical residual register; two stale authenticated SECURITY DEFINER entries resolved from the live Advisor were removed. Any unknown live finding must fail validation."
+    "latestHardening": "20261005221222_pause_safety_rpc_client_grants",
+    "observedAuthenticatedSecurityDefinerCountCurrent": 81,
+    "liveRecheckStatus": "verified_live_2026-10-05",
+    "note": "Live Supabase Security Advisor rechecked after #598 rollout on 2026-10-05. Safety/Mobility client EXECUTE grants were closed while those modules remain paused: anon SECURITY DEFINER findings fell from 9 to 8 and authenticated findings fell from 91 to 81. The 11 resolved Safety findings were removed from this canonical residual register; any unknown live finding must fail validation."
   }
 }
