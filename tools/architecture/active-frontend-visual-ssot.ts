@@ -51,11 +51,15 @@ function normalizeRelativePath(absolutePath: string, root: string): string {
 }
 
 function isExcludedFromActiveGraph(relativePath: string): boolean {
-  return ACTIVE_GRAPH_EXCLUDED_PREFIXES.some(
-    (prefix) =>
+  return ACTIVE_GRAPH_EXCLUDED_PREFIXES.some((prefix) => {
+    if (prefix.endsWith("/")) return relativePath.startsWith(prefix);
+
+    return (
       relativePath === prefix ||
-      relativePath.startsWith(prefix.endsWith("/") ? prefix : `${prefix}/`),
-  );
+      relativePath.startsWith(`${prefix}.`) ||
+      relativePath.startsWith(`${prefix}/`)
+    );
+  });
 }
 
 function isIgnoredSourceFile(relativePath: string): boolean {
@@ -157,7 +161,11 @@ export function collectActiveFrontendSourceFiles(root: string): string[] {
     visited.add(relative);
 
     const extension = path.extname(relative);
-    if (!LOCAL_SOURCE_EXTENSIONS.includes(extension as (typeof LOCAL_SOURCE_EXTENSIONS)[number])) {
+    if (
+      !LOCAL_SOURCE_EXTENSIONS.includes(
+        extension as (typeof LOCAL_SOURCE_EXTENSIONS)[number],
+      )
+    ) {
       continue;
     }
 
