@@ -139,9 +139,11 @@ describe("MVP Business public flow", () => {
   });
 
   it("keeps personal proximity owned by Perto de mim", () => {
+    expect(filtersSection).toContain('value: "distance", label: "Mais próximas"');
     expect(filtersSection).toContain(
-      '.filter(([value]) => value !== "distance")',
+      'SORT_OPTIONS.filter(\n  (option) => option.value !== "distance",',
     );
+    expect(filtersSection).not.toContain('<SelectItem value="distance"');
     expect(page).not.toContain('["distance", "Mais proximas"]');
     expect(page).not.toContain("useSpatialSearchHybrid");
     expect(page).not.toContain("useRobustGeolocation");
