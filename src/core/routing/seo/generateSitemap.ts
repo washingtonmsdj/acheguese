@@ -172,6 +172,8 @@ export function isTransientSitemapSourceError(error: unknown): boolean {
   return (
     /\b(?:408|429|502|503|504|520|521|522|523|524)\b/.test(message) ||
     /\b(?:econnreset|econnrefused|etimedout|enotfound|eai_again)\b/.test(message) ||
+    /\bpgrst002\b/.test(message) ||
+    message.includes('could not query the database for the schema cache') ||
     message.includes('connection timed out') ||
     message.includes('connection timeout') ||
     message.includes('gateway timeout') ||
