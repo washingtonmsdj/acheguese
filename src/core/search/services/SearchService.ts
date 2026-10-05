@@ -85,6 +85,71 @@ const SEARCH_SUGGESTION_BUCKET_ORDER = [
   "posts",
 ] as const satisfies readonly SearchBucket[];
 
+function getSearchSuggestionsForBucket(bucket: SearchBucket): readonly string[] {
+  switch (bucket) {
+    case "communities":
+      return SEARCH_SUGGESTIONS_BY_BUCKET.communities;
+    case "businesses":
+      return SEARCH_SUGGESTIONS_BY_BUCKET.businesses;
+    case "professionals":
+      return SEARCH_SUGGESTIONS_BY_BUCKET.professionals;
+    case "opportunities":
+      return SEARCH_SUGGESTIONS_BY_BUCKET.opportunities;
+    case "classifieds":
+      return SEARCH_SUGGESTIONS_BY_BUCKET.classifieds;
+    case "events":
+      return SEARCH_SUGGESTIONS_BY_BUCKET.events;
+    case "posts":
+      return SEARCH_SUGGESTIONS_BY_BUCKET.posts;
+  }
+}
+
+function isAllowedLinkedEntityType(
+  value: string,
+  allowedTypes: readonly SearchLinkedEntityType[],
+): value is SearchLinkedEntityType {
+  return allowedTypes.some((type) => type === value);
+}
+
+function appendLinkedEntityId(
+  grouped: Partial<Record<SearchLinkedEntityType, Set<string>>>,
+  type: SearchLinkedEntityType,
+  entityId: string,
+): void {
+  switch (type) {
+    case "business": {
+      const ids = grouped.business ?? new Set<string>();
+      ids.add(entityId);
+      grouped.business = ids;
+      return;
+    }
+    case "professional": {
+      const ids = grouped.professional ?? new Set<string>();
+      ids.add(entityId);
+      grouped.professional = ids;
+      return;
+    }
+    case "classified": {
+      const ids = grouped.classified ?? new Set<string>();
+      ids.add(entityId);
+      grouped.classified = ids;
+      return;
+    }
+    case "event": {
+      const ids = grouped.event ?? new Set<string>();
+      ids.add(entityId);
+      grouped.event = ids;
+      return;
+    }
+    case "post": {
+      const ids = grouped.post ?? new Set<string>();
+      ids.add(entityId);
+      grouped.post = ids;
+      return;
+    }
+  }
+}
+
 export class SearchService {
   private static readonly SLOW_SEARCH_THRESHOLD_MS = 450;
 
@@ -212,10 +277,8 @@ export class SearchService {
   ): CommunityLinkedEntityIds {
     const grouped: Partial<Record<SearchLinkedEntityType, Set<string>>> = {};
     for (const link of links) {
-      if (!allowedTypes.includes(link.entity_type as SearchLinkedEntityType)) continue;
-      const type = link.entity_type as SearchLinkedEntityType;
-      grouped[type] ??= new Set<string>();
-      grouped[type]?.add(link.entity_id);
+      if (!isAllowedLinkedEntityType(link.entity_type, allowedTypes)) continue;
+      appendLinkedEntityId(grouped, link.entity_type, link.entity_id);
     }
     return grouped;
   }
@@ -253,7 +316,7 @@ export class SearchService {
     const authorizedBuckets = new Set(providerBuckets);
     return SEARCH_SUGGESTION_BUCKET_ORDER.flatMap((bucket) =>
       authorizedBuckets.has(bucket)
-        ? [...SEARCH_SUGGESTIONS_BY_BUCKET[bucket]]
+        ? [...getSearchSuggestionsForBucket(bucket)]
         : [],
     );
   }
