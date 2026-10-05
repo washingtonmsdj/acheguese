@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { ArrowLeftRight, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { filterActiveTerritoryNavigationModes } from "@/app/config/territoryNavigationScope";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import {
   buildTerritoryNavigationModes,
@@ -37,12 +38,14 @@ export function TerritoryAdaptiveNavigation({
     active,
     fallbackBaseUrl,
   );
-  const navigationModes = buildTerritoryNavigationModes({
-    pathname,
-    fallback: active,
-    fallbackBaseUrl,
-    authenticated: Boolean(user),
-  });
+  const navigationModes = filterActiveTerritoryNavigationModes(
+    buildTerritoryNavigationModes({
+      pathname,
+      fallback: active,
+      fallbackBaseUrl,
+      authenticated: Boolean(user),
+    }),
+  );
 
   return (
     <>
