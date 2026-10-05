@@ -23,6 +23,8 @@ interface StandaloneFooterProps {
 }
 
 export default function StandaloneFooter({ business }: StandaloneFooterProps) {
+  const phoneUrl = buildTelUrl(business.phone);
+  const emailUrl = buildMailtoUrl(business.email);
   const instagramUrl = buildInstagramUrl(business.instagram);
   const facebookUrl = buildFacebookUrl(business.facebook);
   const websiteUrl = buildWebsiteUrl(business.website);
@@ -61,24 +63,34 @@ export default function StandaloneFooter({ business }: StandaloneFooterProps) {
             <div className="space-y-4">
               <h4 className="font-semibold">Contato</h4>
               <div className="space-y-2 text-sm">
-                {business.phone && (
-                  <a
-                    href={buildTelUrl(business.phone) ?? undefined}
+                {phoneUrl ? (
+                  <SafeLink
+                    href={phoneUrl}
                     className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Phone className="h-4 w-4" />
                     {business.phone}
-                  </a>
-                )}
-                {business.email && (
-                  <a
-                    href={buildMailtoUrl(business.email) ?? undefined}
+                  </SafeLink>
+                ) : business.phone ? (
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4" />
+                    {business.phone}
+                  </span>
+                ) : null}
+                {emailUrl ? (
+                  <SafeLink
+                    href={emailUrl}
                     className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Mail className="h-4 w-4" />
                     {business.email}
-                  </a>
-                )}
+                  </SafeLink>
+                ) : business.email ? (
+                  <span className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4" />
+                    {business.email}
+                  </span>
+                ) : null}
                 {business.address && (
                   <div className="flex items-start gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
