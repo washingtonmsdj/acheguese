@@ -1,80 +1,62 @@
 # SCREEN-MAP
 
-> **MVP atual — atualizado em 2026-10-04:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim e Busca** são capabilities horizontais públicas ativas.
+> **MVP atual — atualizado em 2026-10-05:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca, Mensagens e Notificações** são capabilities horizontais ativas.
 >
-> Lifecycle canônico: `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é compatibilidade de superfície.
+> Lifecycle canônico: `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é projeção de superfície.
 >
-> Flags efetivas do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=false`, `notifications=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
+> Flags efetivas do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `messaging=true`, `notifications=true`; verticais pós-MVP permanecem `false/paused`.
 
-## Superfícies públicas ativas
+## Superfícies ativas
 
 | Superfície | Rotas principais | Owner | Estado |
 | --- | --- | --- | --- |
-| Empresas | `/empresas` (entrada geral), `/:uf/:cidade[/:territorio]/empresas`, detalhe `.../empresas/:slug` | `core/business` + `EmpresasLandingPage` | ativo; o território é o contêiner canônico |
-| Mapa | `/mapa` (mapa geral), `/:uf/:cidade[/:territorio]/mapa` | `core/maps` | ativo; contexto territorial fica antes do módulo |
-| Perto de mim | `/perto-de-mim` (entrada geral), `/:uf/:cidade[/:territorio]/perto-de-mim` | `core/nearby` | ativo; capability depende de Mapa + Localização; Business é provider MVP lifecycle-scoped |
-| Busca | `/busca`, `/buscar` (entradas gerais), `/:uf/:cidade[/:territorio]/busca` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; buckets autorizados por `app/config/searchProviderScope.ts`; Business-only no MVP |
+| Empresas | `/empresas`, `/:uf/:cidade[/:territorio]/empresas`, detalhe `.../empresas/:slug` | `core/business` | ativo |
+| Mapa | `/mapa`, `/:uf/:cidade[/:territorio]/mapa` | `core/maps` | ativo |
+| Perto de mim | `/perto-de-mim`, `/:uf/:cidade[/:territorio]/perto-de-mim` | `core/nearby` | ativo |
+| Busca | `/busca`, `/buscar`, `/:uf/:cidade[/:territorio]/busca` | `core/search` | ativo |
+| Mensagens | `/mensagens`, `/mensagens/:providerId/:threadId` | `core/messaging` + `modules/messaging` | ativo; providers lifecycle-scoped |
+| Notificações | `/notificacoes`, `/conta/notificacoes` | `core/notifications` | ativo; eventos lifecycle-scoped |
 
-### Contrato de integração
+## Contrato de integração
 
-- Mapa é capability horizontal. O boundary `mapLayerProviderScope.ts` seleciona apenas layers de domínios ativos; no MVP, Business é a única layer de domínio. `MapaPageV4` recebe providers já autorizados e não decide lifecycle.
-- Perto de mim é owner horizontal. No MVP, o provider Business consulta proximidade e projeta as mesmas URLs canônicas de Empresas; providers futuros entram pelo registry/scope sem tomar ownership da capability. Em grupos territoriais, `activeMemberIds` é derivado dos rollout owners dos providers ativos e agregado por união; não existe mais `nearby -> Business` hardcoded no layout. Em rota territorial, o território resolvido pela URL prevalece sobre estado global lembrado; GPS real continua sendo a única fonte de distância pessoal.
-- Busca é capability horizontal. `SearchService` não decide lifecycle; `BuscaPage` recebe de `searchProviderScope.ts` os buckets autorizados e os injeta no core. No corte atual, somente Business participa; ausência de buckets é fail-closed.
-- Em grupos territoriais, Mapa agrega `activeMemberIds` pelos rollout owners das layers ativas; não existe mais `mapa -> Business` hardcoded no `TerritorialLayout`.
+- Mapa, Nearby, Busca, Mensagens e Notificações são capabilities horizontais e não pertencem a Business.
+- Business é hoje provider de domínio para as capabilities aplicáveis, mas nenhuma delas possui dependência estrutural de `business`.
+- Se Business for pausado, suas layers, buckets, provider de mensagens e eventos deixam de participar; as capabilities horizontais continuam ativas para outros providers/eventos autorizados.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
-- Registros históricos de notificações podem permanecer armazenados, mas `notificationActionScope.ts` não expõe ação interna para owner pausado, rota retirada ou Inbox pausada. Não existe fallback para `/notificacoes`.
-- Nenhum módulo ou capability pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, owner `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.
+- `notificationActionScope.ts` mantém ações de owners pausados fail-closed e pode usar a Inbox de Notificações como fallback seguro; isso não reativa a vertical de origem.
+- Nenhum domínio pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central, Mensagens, Notificações ou Admin.
 
 ## Infraestrutura pública e privada ativa
-
-Estas superfícies/capabilities suportam o domínio Business e **não são domínios adicionais**:
 
 | Superfície | Objetivo |
 | --- | --- |
 | `/`, `/:uf/:cidade[/:territorio]` | resolução e contexto territorial |
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
-| Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status; conteúdo deve refletir somente o lifecycle ativo e pode mencionar módulos pausados apenas como futuros/indisponíveis |
-| Central | `/central/empresas`, criação, gestão, dados, configurações e edição de Business; nenhuma vertical pausada é montada |
-| Admin | operação interna/RBAC estritamente necessária; superfícies são derivadas de `adminSurfaceScope.ts` e não reativam módulo pausado |
+| Mensagens | Inbox horizontal do produto |
+| Notificações | Inbox e preferências horizontais do produto |
+| Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status |
+| Central | `/central/empresas/*` para gestão de Business |
+| Admin | operação interna/RBAC das superfícies autorizadas |
 
-### Fluxo privado de Business no MVP
+## Fluxo privado de Business no MVP
 
-A Central usa uma única árvore canônica em `/central/empresas/*`:
+A Central usa uma única árvore canônica em `/central/empresas/*` para lista, criação, visão geral, edição, fotos, horários, localização, produtos/serviços, dados e configurações.
 
-- lista/hub de empresas do perfil autorizado;
-- criação de empresa em três etapas: **Identidade → Contato e local → Apresentação**;
-- visão geral da empresa;
-- dados da empresa;
-- configurações;
-- edição canônica pelo `businessId` autorizado.
-
-Seções certificadas da empresa: visão geral, editar, fotos, horários, localização,
-produtos e serviços, dados e configurações. Desktop e mobile consomem
-`businessManagementNavigation.ts`, autorizado no boundary da aplicação por
-`businessManagementSurfaceScope.ts`. A gestão de uma empresa usa um único
-shell e header autenticado, sem a sidebar do hub duplicada.
-
-Mensagens e Notificações permanecem versionadas como capabilities pausadas. `/mensagens`, `/mensagens/business/:threadId`, `/notificacoes` e `/conta/notificacoes` ficam fora da árvore ativa e não são subseções da empresa.
-
-Criação e edição compartilham a mesma linguagem visual e os mesmos contratos de validação do domínio. Billing/premium pausado não pode introduzir CTA ou rota funcional no shell ativo.
+**Mensagens e Notificações não são subseções da empresa.** Suas rotas permanecem próprias e continuam existindo se Business for pausado. Apenas o provider/eventos originados de Business saem do grafo.
 
 ## Módulos pós-MVP
 
 Permanecem versionados e isolados até certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
-Capabilities horizontais pausadas: Mensagens e Notificações. Seus owners, contratos e dados permanecem preservados, mas sua reativação também exige lifecycle + testes + rotas certificadas; código preservado não autoriza navegação.
-
-Ativar um módulo exige alterar o lifecycle no registry, satisfazer suas dependências e só então conectar seus owners ao barrel/registry ativo. O mesmo vale para sua superfície Admin: rota e navegação são derivadas de `adminSurfaceScope.ts`. Não é permitido reativar um módulo criando rota paralela, redirect, item manual de sidebar ou exceção local.
+Ativar um domínio exige alterar seu lifecycle, satisfazer dependências e conectar seus providers/rotas pelos owners canônicos. Não é permitido reativar criando rota paralela, redirect, item manual de sidebar ou exceção local.
 
 ### Boundary da Central privada
 
-`CentralRoutes.tsx` importa somente `activeCentralLazyImports.ts`. No MVP, a Central monta hub, gestão canônica de Business/Empresas, edição/dados/configurações e infraestrutura de acesso. Eventos, Comunicação, Gastronomia, Educação, Serviços/Profissional, Mobilidade, Billing, Cupons e Analytics permanecem fora da árvore ativa. URL privada sem owner ativo cai no `NotFound` canônico, sem `LaunchPausedPage`, redirect ou alias.
-
-O shell de gestão Business também não pode consultar Billing/Gastronomia/verticais pausadas apenas para ocultar UI. Extensões pós-MVP permanecem preservadas nos seus bounded contexts fora do grafo ativo. O antigo `centralLazyImports.ts` não é autoridade de preservação e foi aposentado após ficar sem caller runtime.
+`CentralRoutes.tsx` monta apenas owners ativos. Eventos, Comunicação, Gastronomia, Educação, Serviços/Profissional, Mobilidade, Billing, Cupons e Analytics permanecem fora da árvore ativa enquanto pausados.
 
 ### Boundary do shell público
 
-`AppLayoutRoutes.tsx` importa somente `activeLazyImports.ts`. O antigo `lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx` foram aposentados após censo provar ausência de caller runtime. Código pós-MVP permanece nos bounded contexts/owners preservados, fora do grafo público ativo. O boundary territorial ativo é `ActiveTerritorialModulePages.tsx`; URL sem owner ativo cai naturalmente no `NotFound` canônico, sem placeholder, redirect ou fallback de módulo pausado. O `AppLayoutSidebar` não aplica shells especiais de Community/Services/Gastronomy/Groups a URLs pausadas; somente superfícies ativas influenciam o layout.
+`AppLayoutRoutes.tsx` monta apenas domínios e capabilities ativos pelo lifecycle. Código pós-MVP permanece nos bounded contexts, fora do grafo público ativo. URL sem owner ativo cai no `NotFound` canônico.
 
 ## Contrato territorial de rotas
 
@@ -89,22 +71,14 @@ A hierarquia pública é **território primeiro, módulo depois**:
 /:uf/:cidade/:territorio/busca
 ```
 
-Quando Community for reativada, seguirá o mesmo contrato: `/:uf/:cidade/:territorio/comunidade`.
+Quando outra vertical for reativada, seguirá o mesmo contrato territorial quando aplicável.
 
-Rotas territoriais no formato `/modulo/:uf/:cidade/...` não fazem parte da aplicação e não recebem redirect ou alias de compatibilidade.
+## Rotas legadas
 
-## Rotas legadas e owners pausados
-
-- `/splash` foi removida após censo comprovar ausência de caller real. Não existe redirect de compatibilidade.
-- `/empresas-landing` foi removida. Não existe redirect de compatibilidade.
-- `/conta/profissional` foi removida do shell público enquanto Serviços está pausado.
-- `/perfil/*` foi aposentado como alias privado. Conta usa somente `/conta/*`; perfil público usa somente `/u/:username`.
-- edição de perfil usa somente `/conta/editar/:profileId`; `/conta/editar` sem identidade explícita foi removida.
-- `/settings/notifications` e `/notifications` foram retiradas e não recebem redirect.
-- `/conta/notificacoes` e `/notificacoes` pertencem ao owner preservado de Notificações, mas ficam fora do grafo ativo enquanto `notifications=false`.
-- `/mensagens` e `/mensagens/business/:threadId` pertencem ao owner preservado de Mensagens, mas ficam fora do grafo ativo enquanto `messaging=false`.
-- `/conta/preferencias?tab=...` não redireciona para outras telas. Os destinos canônicos possuem URL própria.
+- `/settings/notifications` e `/notifications` continuam aposentadas, sem redirect.
+- Rotas canônicas de Notificações são `/notificacoes` e `/conta/notificacoes`.
+- Rotas canônicas de Mensagens são `/mensagens` e `/mensagens/:providerId/:threadId`.
+- `/perfil/*`, `/create-business`, `/edit-business/:profileId` e `/dashboard/business/:profileId` permanecem aposentadas.
 - rota desconhecida renderiza 404; não existe catch-all para `/`.
-- gestão de Business não possui raízes paralelas: `/create-business`, `/edit-business/:profileId` e `/dashboard/business/:profileId` foram aposentadas; criação/gestão/edição usam somente `/central/empresas/*`.
 
-Redirect de compatibilidade não é mecanismo de limpeza arquitetural. Guards de autenticação/autorização podem navegar para login ou para a superfície obrigatória correspondente porque isso representa controle de acesso, não alias legado.
+Redirect de compatibilidade não é mecanismo de lifecycle.
