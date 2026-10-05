@@ -90,7 +90,7 @@ describe("active AppLayout route boundary", () => {
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
   });
 
-  it("prefetches active communication chunks by intent without idle-warming them", () => {
+  it("keeps prefetch and idle warmup limited to selected active chunks", () => {
     for (const forbidden of [
       "@/modules/professionals",
       "@/modules/classifieds",
@@ -111,20 +111,15 @@ describe("active AppLayout route boundary", () => {
       "@/app/pages/MapaPage",
       "@/app/pages/NearbyPage",
       "@/app/pages/BuscaPage",
-      "@/app/pages/NotificationsPage",
-      "@/app/pages/NotificationPreferencesPage",
-      "@/app/pages/MessagingInboxPage",
     ]) {
       expect(prefetch).toContain(activeOwner);
     }
 
     expect(prefetch).not.toContain("@/app/config/launchScope");
     expect(prefetch).toContain('isProductModuleEnabled("business")');
-    expect(prefetch).toContain('isPlatformCapabilityEnabled("notifications")');
-    expect(prefetch).toContain('isPlatformCapabilityEnabled("messaging")');
-    expect(prefetch).toContain(
-      "Rotas autenticadas como Mensagens/Notificações são prefetched apenas por",
-    );
+    // Messaging/Notifications are active, but intentionally not idle-warmed.
+    expect(prefetch).not.toContain('import("@/app/pages/NotificationsPage")');
+    expect(prefetch).not.toContain('import("@/app/pages/MessagingInboxPage")');
   });
 
   it("keeps active lazy graph limited to certified owners", () => {
