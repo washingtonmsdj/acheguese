@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-08-28",
+  "updatedAt": "2026-10-05",
   "authorityRule": "A frontend capability preview only controls visibility. Every protected command is independently enforced by RLS, an RPC, or an Edge Function.",
   "remoteAudit": "tests/security/authorization-enforcement-remote-audit.sql",
   "actions": [
@@ -10,9 +10,7 @@
       "commandOwner": "src/core/posts/services/posts.mutations.ts",
       "coverage": "verified",
       "enforcement": ["rls:community_posts_verified_insert"],
-      "evidence": [
-        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
-      ]
+      "evidence": ["supabase/migrations/20260713090000_harden_community_social_runtime.sql"]
     },
     {
       "action": "editPost",
@@ -20,9 +18,7 @@
       "commandOwner": "src/core/posts/services/posts.mutations.ts",
       "coverage": "verified",
       "enforcement": ["rls:community_posts_owner_or_admin_update"],
-      "evidence": [
-        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
-      ]
+      "evidence": ["supabase/migrations/20260713090000_harden_community_social_runtime.sql"]
     },
     {
       "action": "deletePost",
@@ -30,9 +26,7 @@
       "commandOwner": "src/core/posts/services/posts.mutations.ts",
       "coverage": "verified",
       "enforcement": ["rls:community_posts_owner_or_admin_delete"],
-      "evidence": [
-        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
-      ]
+      "evidence": ["supabase/migrations/20260713090000_harden_community_social_runtime.sql"]
     },
     {
       "action": "createComment",
@@ -40,9 +34,7 @@
       "commandOwner": "src/core/comments/services/comments.mutations.ts",
       "coverage": "verified",
       "enforcement": ["rls:community_comments_verified_insert"],
-      "evidence": [
-        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
-      ]
+      "evidence": ["supabase/migrations/20260713090000_harden_community_social_runtime.sql"]
     },
     {
       "action": "editComment",
@@ -50,9 +42,7 @@
       "commandOwner": "src/core/comments/services/comments.mutations.ts",
       "coverage": "verified",
       "enforcement": ["rls:community_comments_owner_or_admin_update"],
-      "evidence": [
-        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
-      ]
+      "evidence": ["supabase/migrations/20260713090000_harden_community_social_runtime.sql"]
     },
     {
       "action": "deleteComment",
@@ -60,9 +50,7 @@
       "commandOwner": "src/core/comments/services/comments.mutations.ts",
       "coverage": "verified",
       "enforcement": ["rls:community_comments_owner_or_admin_delete"],
-      "evidence": [
-        "supabase/migrations/20260713090000_harden_community_social_runtime.sql"
-      ]
+      "evidence": ["supabase/migrations/20260713090000_harden_community_social_runtime.sql"]
     },
     {
       "action": "createMessage",
@@ -178,10 +166,16 @@
       "commandOwner": "src/core/business/services/business.mutations.ts",
       "coverage": "verified",
       "enforcement": [
-        "rls:Owners manage own business",
-        "rls:Profile members manage business"
+        "edge-function:profile-rpc",
+        "service-role-only-rpc:profile_rpc_create_business",
+        "actor-binding:authenticated-user"
       ],
-      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+      "evidence": [
+        "supabase/functions/profile-rpc/index.ts",
+        "supabase/migrations/20260909232757_broker_owned_business_lifecycle_g36.sql",
+        "tests/security/business-data-grants-security.test.ts",
+        "tests/security/profile-rpc-security.test.ts"
+      ]
     },
     {
       "action": "editBusiness",
@@ -189,10 +183,16 @@
       "commandOwner": "src/core/business/services/business.mutations.ts",
       "coverage": "verified",
       "enforcement": [
-        "rls:Owners manage own business",
-        "rls:Managers can modify business data"
+        "edge-function:profile-rpc",
+        "service-role-only-rpc:profile_rpc_update_business",
+        "actor-binding:authenticated-user"
       ],
-      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+      "evidence": [
+        "supabase/functions/profile-rpc/index.ts",
+        "supabase/migrations/20260909232757_broker_owned_business_lifecycle_g36.sql",
+        "tests/security/business-data-grants-security.test.ts",
+        "tests/security/profile-rpc-security.test.ts"
+      ]
     },
     {
       "action": "deleteBusiness",
@@ -200,10 +200,16 @@
       "commandOwner": "src/core/business/services/business.mutations.ts",
       "coverage": "verified",
       "enforcement": [
-        "rls:Owners manage own business",
-        "rls:Managers can modify business data"
+        "edge-function:profile-rpc",
+        "service-role-only-rpc:profile_rpc_deactivate_business",
+        "actor-binding:authenticated-user"
       ],
-      "evidence": ["tests/security/authorization-enforcement-remote-audit.sql"]
+      "evidence": [
+        "supabase/functions/profile-rpc/index.ts",
+        "supabase/migrations/20260909232757_broker_owned_business_lifecycle_g36.sql",
+        "tests/security/business-data-grants-security.test.ts",
+        "tests/security/profile-rpc-security.test.ts"
+      ]
     },
     {
       "action": "moderateContent",
