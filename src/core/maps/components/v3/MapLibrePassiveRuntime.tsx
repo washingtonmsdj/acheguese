@@ -41,7 +41,11 @@ function reportPassiveMapIssue(
 ): void {
   void import("@/shared/utils/logger")
     .then(({ logger }) => {
-      logger[level](message, context);
+      if (level === "warn") {
+        logger.warn(message, context);
+        return;
+      }
+      logger.debug(message, context);
     })
     .catch(() => undefined);
 }
