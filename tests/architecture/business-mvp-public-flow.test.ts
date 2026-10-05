@@ -171,9 +171,16 @@ describe("MVP Business public flow", () => {
     expect(territoryBusinessDetail).toContain("onRoute?: () => void;");
     expect(territoryBusinessDetail).toContain("{onRoute ? (");
     expect(territoryBusinessDetail).toContain('className="bd-route-button"');
-    expect(territoryBusinessDetail).toContain("{phone || whatsappHref || onMessage ? (");
-    expect(territoryBusinessDetail).toContain("const whatsappHref = whatsappUrl(whatsapp)");
     expect(territoryBusinessDetail).toContain("const phone = institutional.phone || business.phone");
+    expect(territoryBusinessDetail).toContain("const phoneHref = buildTelUrl(phone);");
+    expect(territoryBusinessDetail).toContain("const whatsappHref = buildWhatsAppUrl(whatsapp);");
+    expect(territoryBusinessDetail).toContain("{phoneHref || whatsappHref || onMessage ? (");
+    expect(territoryBusinessDetail).toContain('<SafeLink className="bd-phone" href={phoneHref}>');
+    expect(territoryBusinessDetail).toContain(
+      '<SafeLink className="bd-order-button" href={whatsappHref} target="_blank">',
+    );
+    expect(territoryBusinessDetail).not.toContain("window.open(whatsappHref");
+    expect(territoryBusinessDetail).not.toContain('<a href={whatsappHref}');
   });
 
   it("keeps Business CTAs inside the active MVP module set", () => {
