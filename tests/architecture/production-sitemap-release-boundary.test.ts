@@ -72,8 +72,15 @@ describe("production sitemap release boundary", () => {
     const releaseIdentityStep = workflow.indexOf(
       "Wait for deployed runtime identity",
     );
-    expect(deploymentStatusStep).toBeGreaterThanOrEqual(0);
-    expect(releaseIdentityStep).toBeGreaterThan(deploymentStatusStep);
+    expect(releaseIdentityStep).toBeGreaterThanOrEqual(0);
+    expect(deploymentStatusStep).toBeGreaterThan(releaseIdentityStep);
+    const providerStep =
+      workflow.match(
+        /- name: Check production deployment status[\s\S]*?(?=\n      - name:)/,
+      )?.[0] ?? "";
+    expect(providerStep).toContain(
+      "if: steps.release_identity.outputs.mode == 'exact'",
+    );
     const normalizedWorkflow = workflow.replace(/\r\n/g, "\n");
     const pushBlock =
       normalizedWorkflow.match(/\n  push:\n[\s\S]*?(?=\n  pull_request:)/)?.[0] ?? "";
