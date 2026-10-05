@@ -33,7 +33,10 @@ export function BusinessCoverageBadge({
   return hasCoverage ? (
     <Badge
       variant="secondary"
-      className={cn('border-emerald-500/25 bg-emerald-500/15 text-emerald-100', className)}
+      className={cn(
+        'border-territory-success/25 bg-territory-success/15 text-territory-success',
+        className,
+      )}
     >
       <CheckCircle2 className="mr-1 h-3 w-3" aria-hidden="true" />
       Atende sua regiao
@@ -41,7 +44,10 @@ export function BusinessCoverageBadge({
   ) : (
     <Badge
       variant="outline"
-      className={cn('border-amber-400/25 bg-amber-400/10 text-amber-100', className)}
+      className={cn(
+        'border-territory-warning/25 bg-territory-warning/10 text-territory-warning',
+        className,
+      )}
     >
       <MapPinOff className="mr-1 h-3 w-3" aria-hidden="true" />
       Fora da cobertura
