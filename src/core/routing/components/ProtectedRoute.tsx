@@ -11,6 +11,7 @@ export interface ProtectedRouteProps {
 }
 
 const PRIVACY_ACCOUNT_PATH = "/conta/privacidade";
+export const DELETION_STATUS_GATE_TIMEOUT_MS = 15_000;
 const RESTRICTED_DELETION_STATUSES = new Set([
   "scheduled",
   "processing",
@@ -33,12 +34,35 @@ function AccessLoading({ label }: { label: string }) {
   );
 }
 
+async function getDeletionStatusWithinGate(userId: string) {
+  let timeoutId: ReturnType<typeof globalThis.setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = globalThis.setTimeout(() => {
+      reject(new Error("deletion_status_gate_timeout"));
+    }, DELETION_STATUS_GATE_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([
+      PrivacySettingsService.getDeletionStatus(userId),
+      timeout,
+    ]);
+  } finally {
+    if (timeoutId !== undefined) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
+}
+
 /**
  * Authentication and operational-account boundary for client-side routes.
  *
  * Accounts with a pending deletion lifecycle may remain authenticated only to
  * reach the privacy recovery surface. Every other protected route waits for a
  * fresh status response and fails closed when that authority is unavailable.
+ * The fresh authority check is bounded so a stalled broker cannot leave an
+ * authenticated route indefinitely on the loading surface; timeout follows
+ * the same fail-closed path as any other authority failure.
  * Database access is independently enforced by RLS and the server-side
  * operational-account boundaries.
  */
@@ -53,7 +77,7 @@ export function ProtectedRoute({
 
   const deletionStatusQuery = useQuery({
     queryKey: ["deletion-status", user?.id],
-    queryFn: () => PrivacySettingsService.getDeletionStatus(user!.id),
+    queryFn: () => getDeletionStatusWithinGate(user!.id),
     enabled: Boolean(user?.id) && !isLoading && !isPrivacySurface,
     retry: false,
     staleTime: 0,
