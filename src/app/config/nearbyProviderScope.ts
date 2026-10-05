@@ -18,11 +18,25 @@ const PROVIDER_ROLLOUT_MODULE: Record<NearbyProviderId, ModuleKey> = {
   business: ModuleKey.BUSINESS,
 };
 
+function getProviderProductModule(providerId: NearbyProviderId): ProductModuleKey {
+  switch (providerId) {
+    case "business":
+      return PROVIDER_PRODUCT_MODULE.business;
+  }
+}
+
+function getProviderRolloutModule(providerId: NearbyProviderId): ModuleKey {
+  switch (providerId) {
+    case "business":
+      return PROVIDER_ROLLOUT_MODULE.business;
+  }
+}
+
 export function getActiveNearbyProviderIds(): NearbyProviderId[] {
   if (!isPlatformCapabilityEnabled("nearby")) return [];
 
   return NEARBY_PROVIDER_ORDER.filter((providerId) => {
-    const productModule = PROVIDER_PRODUCT_MODULE[providerId];
+    const productModule = getProviderProductModule(providerId);
     return (
       isProductModuleEnabled(productModule) &&
       getNearbyProvider(providerId) !== null
@@ -33,9 +47,7 @@ export function getActiveNearbyProviderIds(): NearbyProviderId[] {
 export function getActiveNearbyProviderRolloutModuleKeys(): ModuleKey[] {
   return [
     ...new Set(
-      getActiveNearbyProviderIds().map(
-        (providerId) => PROVIDER_ROLLOUT_MODULE[providerId],
-      ),
+      getActiveNearbyProviderIds().map(getProviderRolloutModule),
     ),
   ];
 }
