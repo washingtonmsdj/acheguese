@@ -15,51 +15,55 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - Central de Empresas, Perto de mim e fluxo Criar/Editar convergidos visualmente com o MVP;
 - Busca pública sem copy de arquitetura interna;
 - horários que atravessam meia-noite tratados no catálogo;
-- detalhe público de Empresa passou a usar `BusinessHoursService` como autoridade de aberto/fechado;
+- detalhe público de Empresa usa `BusinessHoursService` como autoridade de aberto/fechado;
 - teste arquitetural impede retorno da aritmética manual de horários no detalhe;
 - handoff CP-016 concluído arquivado;
 - `RECOVERY-ROADMAP.md` supersedido removido da árvore viva;
 - especificações antigas de Feed/Post retiradas da UX ativa porque Community permanece pausado;
-- `docs/README.md` e `docs/08-roadmap/README.md` agora separam claramente SSOT vivo, planos futuros e histórico;
-- **#445 — Vercel** encerrado após normalização do provider, deployment `READY` do runtime deploy-relevante e smoke público HTTP 200;
-- **#305 — Supabase** encerrado após smoke autenticado real no runtime de produção, com sessão, Conta e Business comprovados sem fallback, bypass de OIDC ou relaxamento de RLS;
-- a leitura privada de Profile usada por Business foi corrigida para passar pelo boundary canônico de broker, sem reabrir grants diretos.
+- **#305 — Supabase** encerrado após smoke autenticado real no runtime de produção, sem fallback, bypass de OIDC ou relaxamento de RLS;
+- leitura privada de Profile usada por Business corrigida para o boundary canônico de broker;
+- release identity passou a reconhecer corretamente runtime `exact` ou `equivalent` antes de consultar status do provider;
+- cleanup técnico de Business E2E passou a usar `profile-rpc/deactivateBusiness`, sem escrita direta em `profiles`/`business_data`.
+
+## Blocker atual de release
+
+- **#445 — Vercel / certificação de produção permanece aberto.**
+- O runtime Production atual é aceito como `equivalent` quando o fingerprint deploy-relevant é idêntico; nesse caso o status Vercel do commit não-deploy é corretamente ignorado.
+- O broker OIDC e Conta autenticada já passam.
+- O gate ainda precisa completar **Business lifecycle + Business Messaging** no mesmo smoke autenticado.
+- A falha mais recente é de harness: o job autenticado fornecia `E2E_SUPABASE_*`, mas o novo processo Playwright de Business exigia também `VITE_SUPABASE_*`. A correção deve manter ambos apontando para o mesmo endpoint/key públicos e não pode adicionar service-role key.
 
 ## Agora
 
-1. finalizar o acabamento de frontend sem ampliar escopo:
-   - alinhar o shell geral de Criar/Editar;
-   - fazer a última revisão responsiva e de consistência em Empresas, Busca, Mapa e Perto de mim;
-   - corrigir somente problemas objetivos encontrados nessa revisão;
+1. fechar #445 com evidência, não com bypass:
+   - corrigir o env público do smoke autenticado;
+   - provar release identity `exact` ou `equivalent`;
+   - provar Conta;
+   - provar Business lifecycle;
+   - provar Business Messaging;
+   - exigir `All Tests Passed` no push da `main`;
 
-2. continuar a higiene final do repositório:
-   - remover código órfão somente com prova de não uso;
-   - arquivar documento concluído/supersedido em vez de mantê-lo como backlog vivo;
-   - preservar manifests, baselines e documentos consumidos por tooling;
-   - manter histórico em checkpoints/archive/Git;
+2. finalizar o acabamento de frontend sem ampliar escopo:
+   - revisar shell de Criar/Editar e consistência em Empresas, Busca, Mapa e Perto de mim;
+   - corrigir somente problemas objetivos encontrados;
 
-3. manter a certificação do candidato vigente:
-   - qualquer delta deployável exige novo deployment `READY` e smoke correspondente;
-   - mudanças exclusivas de teste/documentação podem usar o `Ignored Build Step` apenas quando a política canônica comprovar que os bytes de runtime não mudaram;
-   - Auth/Conta/Business/Mensagens/Notificações continuam parte do gate do conteúdo de runtime ativo;
+3. continuar hardening sem transformar dívida controlada em blocker artificial:
+   - priorizar drift live comprovado nas superfícies ativas;
+   - preservar gates fail-closed de LGPD;
+   - não reabrir módulos pós-MVP para justificar arquitetura;
 
-4. continuar hardening sem transformar dívida controlada em blocker artificial:
-   - priorizar somente drift live comprovado nas superfícies ativas;
-   - preservar os gates fail-closed de LGPD até certificação própria;
-   - não reabrir módulos pós-MVP para “provar” arquitetura;
-
-5. declarar MVP READY somente se Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth continuarem certificados para o conteúdo de runtime candidato e todo delta deployável tiver deployment `READY` + smoke.
+4. declarar MVP READY somente quando Business + Mapa + Nearby + Busca + Mensagens + Notificações + Conta/Auth estiverem certificados para o conteúdo de runtime candidato.
 
 ## Proibições
 
 - sem redirects de compatibilidade;
 - sem fallback para esconder falha;
-- sem feature flag local paralela ao lifecycle;
+- sem feature flag paralela ao lifecycle;
 - sem mock tratado como dado real;
 - sem consulta a domínio pausado para montar UI oculta;
 - sem novo owner para responsabilidade já existente;
-- sem documento vivo com snapshot antigo de PR/SHA tratado como estado atual;
-- sem apagar histórico necessário para auditoria ou proveniência;
-- sem commit artificial de runtime para contornar `Ignored Build Step` quando a política canônica de Vercel comprovar mudança exclusiva de teste/documentação.
+- sem documento vivo com snapshot antigo de SHA tratado como estado atual;
+- sem commit artificial de runtime para contornar `Ignored Build Step`;
+- sem relaxar release identity `exact/equivalent`, Auth, RLS ou grants para fazer #445 passar.
 
 Detalhes e critérios completos: `EXECUCAO_MAIN_ONLY.md`.
