@@ -10,6 +10,9 @@ import {
   type AppModuleSlug,
 } from "@/shared/config/moduleSlugs";
 
+export const NOTIFICATION_INBOX_PATH = "/notificacoes";
+export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
+
 type NotificationLifecycleSurfaceKey =
   | ProductModuleKey
   | PlatformCapabilityKey;
@@ -31,11 +34,11 @@ type NotificationActionRouteRule = NotificationLifecycleOwner & {
 export interface NotificationActionTarget {
   href: string;
   label: string;
+  isFallback: boolean;
   surface?: NotificationLifecycleSurfaceKey;
 }
 
 const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
-  // Nested/private owners must be evaluated before their broader parent.
   {
     pattern: /^\/central\/empresas\/[^/]+\/gastronomia(?:\/|$)/i,
     kind: "product",
@@ -96,74 +99,23 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
 const MODULE_ROUTE_OWNERS: Readonly<
   Partial<Record<AppModuleSlug, NotificationLifecycleOwner>>
 > = {
-  [APP_MODULE_SLUGS.business]: {
-    kind: "product",
-    surface: "business",
-  },
-  [APP_MODULE_SLUGS.community]: {
-    kind: "product",
-    surface: "community",
-  },
-  [APP_MODULE_SLUGS.gastronomy]: {
-    kind: "product",
-    surface: "gastronomy",
-  },
-  [APP_MODULE_SLUGS.services]: {
-    kind: "product",
-    surface: "services",
-  },
-  [APP_MODULE_SLUGS.classifieds]: {
-    kind: "product",
-    surface: "classifieds",
-  },
-  [APP_MODULE_SLUGS.touristPoints]: {
-    kind: "product",
-    surface: "touristPoints",
-  },
-  [APP_MODULE_SLUGS.education]: {
-    kind: "product",
-    surface: "education",
-  },
-  [APP_MODULE_SLUGS.jobs]: {
-    kind: "product",
-    surface: "jobs",
-  },
-  [APP_MODULE_SLUGS.events]: {
-    kind: "product",
-    surface: "events",
-  },
-  [APP_MODULE_SLUGS.mobility]: {
-    kind: "product",
-    surface: "mobility",
-  },
-  [APP_MODULE_SLUGS.ranking]: {
-    kind: "product",
-    surface: "gamification",
-  },
-  [APP_MODULE_SLUGS.communityAlerts]: {
-    kind: "product",
-    surface: "communityAlerts",
-  },
-  [APP_MODULE_SLUGS.communityIssues]: {
-    kind: "product",
-    surface: "communityIssues",
-  },
-  [APP_MODULE_SLUGS.communityLostFound]: {
-    kind: "product",
-    surface: "communityLostFound",
-  },
-  [APP_MODULE_SLUGS.map]: {
-    kind: "capability",
-    surface: "map",
-  },
-  [APP_MODULE_SLUGS.nearby]: {
-    kind: "capability",
-    surface: "nearby",
-  },
-  [APP_MODULE_SLUGS.search]: {
-    kind: "capability",
-    surface: "search",
-  },
+  [APP_MODULE_SLUGS.business]: { kind: "product", surface: "business" },
+  [APP_MODULE_SLUGS.community]: { kind: "product", surface: "community" },
+  [APP_MODULE_SLUGS.gastronomy]: { kind: "product", surface: "gastronomy" },
+  [APP_MODULE_SLUGS.services]: { kind: "product", surface: "services" },
+  [APP_MODULE_SLUGS.classifieds]: { kind: "product", surface: "classifieds" },
+  [APP_MODULE_SLUGS.touristPoints]: { kind: "product", surface: "touristPoints" },
+  [APP_MODULE_SLUGS.education]: { kind: "product", surface: "education" },
+  [APP_MODULE_SLUGS.jobs]: { kind: "product", surface: "jobs" },
+  [APP_MODULE_SLUGS.events]: { kind: "product", surface: "events" },
+  [APP_MODULE_SLUGS.mobility]: { kind: "product", surface: "mobility" },
+  [APP_MODULE_SLUGS.ranking]: { kind: "product", surface: "gamification" },
+  [APP_MODULE_SLUGS.communityAlerts]: { kind: "product", surface: "communityAlerts" },
+  [APP_MODULE_SLUGS.communityIssues]: { kind: "product", surface: "communityIssues" },
+  [APP_MODULE_SLUGS.communityLostFound]: { kind: "product", surface: "communityLostFound" },
+  [APP_MODULE_SLUGS.map]: { kind: "capability", surface: "map" },
+  [APP_MODULE_SLUGS.nearby]: { kind: "capability", surface: "nearby" },
+  [APP_MODULE_SLUGS.search]: { kind: "capability", surface: "search" },
 };
 
 function getModuleRouteOwner(
@@ -233,8 +185,6 @@ function isNotificationRouteOwnerEnabled(
 }
 
 const RETIRED_NOTIFICATION_ROUTE_PATTERNS: readonly RegExp[] = [
-  /^\/notificacoes(?:\/|$)/i,
-  /^\/conta\/notificacoes(?:\/|$)/i,
   /^\/notifications(?:\/|$)/i,
   /^\/settings\/notifications(?:\/|$)/i,
   /^\/perfil(?:\/|$)/i,
@@ -257,38 +207,48 @@ export function resolveNotificationActionTarget(
 
   const pathname = getInternalPathname(actionUrl);
   if (!pathname) {
-    return {
-      href: actionUrl,
-      label: actionLabel,
-    };
+    return { href: actionUrl, label: actionLabel, isFallback: false };
   }
 
   if (
     isRetiredModuleFirstTerritorialPath(pathname) ||
     isRetiredCommunityContainerPath(pathname) ||
-    RETIRED_NOTIFICATION_ROUTE_PATTERNS.some((pattern) =>
-      pattern.test(pathname),
-    )
+    RETIRED_NOTIFICATION_ROUTE_PATTERNS.some((pattern) => pattern.test(pathname))
   ) {
-    return null;
+    return {
+      href: NOTIFICATION_INBOX_PATH,
+      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
+      isFallback: true,
+    };
   }
 
   const communitySurface = getCommunityChildSurface(pathname);
   if (communitySurface && !isProductModuleEnabled(communitySurface)) {
-    return null;
+    return {
+      href: NOTIFICATION_INBOX_PATH,
+      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
+      isFallback: true,
+      surface: communitySurface,
+    };
   }
 
   const routeOwner =
     getModuleRouteOwner(pathname) ??
     ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
 
-  if (routeOwner && !isNotificationRouteOwnerEnabled(routeOwner)) {
-    return null;
+  if (!routeOwner || isNotificationRouteOwnerEnabled(routeOwner)) {
+    return {
+      href: actionUrl,
+      label: actionLabel,
+      isFallback: false,
+      surface: routeOwner?.surface,
+    };
   }
 
   return {
-    href: actionUrl,
-    label: actionLabel,
-    surface: routeOwner?.surface,
+    href: NOTIFICATION_INBOX_PATH,
+    label: NOTIFICATION_FALLBACK_ACTION_LABEL,
+    isFallback: true,
+    surface: routeOwner.surface,
   };
 }
