@@ -34,6 +34,21 @@ describe("normalizePublicTerritoryPath", () => {
       "/ba/salvador/pituba",
     );
   });
+
+  it("rejeita query, hash, backslash, traversal e separadores codificados no territorio", () => {
+    for (const unsafePath of [
+      "/br/ba/salvador/pituba?next=/admin",
+      "/br/ba/salvador/pituba#admin",
+      "/br/ba/salvador/pituba\\admin",
+      "/br/ba/salvador/%2fadmin",
+      "/br/ba/salvador/%252fadmin",
+      "/br/ba/salvador/..",
+    ]) {
+      expect(() => normalizePublicTerritoryPath(unsafePath)).toThrow(
+        "segmento territorial",
+      );
+    }
+  });
 });
 
 describe("buildPublicTerritoryBaseUrlFromInput", () => {
@@ -106,27 +121,33 @@ describe("territory-first module urls", () => {
   });
 
   it("rejeita slug de entidade vazio ou com separadores de rota", () => {
+    for (const unsafeSlug of [
+      "",
+      "cafe/extra",
+      "cafe?tab=menu",
+      "cafe\\admin",
+      "cafe%2Fadmin",
+      "cafe%252Fadmin",
+      "..",
+    ]) {
+      expect(() =>
+        buildModuleTerritoryEntityUrl(
+          MODULE_SLUGS.business,
+          "/ba/salvador/pituba",
+          unsafeSlug,
+        ),
+      ).toThrow("segmento de URL seguro");
+    }
+  });
+
+  it("rejeita slug territorial de grupo que tenta alterar a estrutura da rota", () => {
     expect(() =>
-      buildModuleTerritoryEntityUrl(
+      buildGroupModuleUrl(
+        { slug: "../admin" } as never,
+        "/br/ba/salvador",
         MODULE_SLUGS.business,
-        "/ba/salvador/pituba",
-        "",
       ),
-    ).toThrow("segmento unico");
-    expect(() =>
-      buildModuleTerritoryEntityUrl(
-        MODULE_SLUGS.business,
-        "/ba/salvador/pituba",
-        "cafe/extra",
-      ),
-    ).toThrow("segmento unico");
-    expect(() =>
-      buildModuleTerritoryEntityUrl(
-        MODULE_SLUGS.business,
-        "/ba/salvador/pituba",
-        "cafe?tab=menu",
-      ),
-    ).toThrow("segmento unico");
+    ).toThrow("slug do grupo territorial");
   });
 
   it("mantem builders especializados alinhados ao territorio primeiro", () => {
@@ -202,7 +223,7 @@ describe("community territory urls", () => {
         "/ba/salvador/nordeste-de-amaralina/comunidade",
         "feed?tab=x",
       ),
-    ).toThrow("segmento de URL");
+    ).toThrow("segmento de URL seguro");
   });
 
   it("extrai o territorio sem confundir o modulo comunidade com o slug", () => {
