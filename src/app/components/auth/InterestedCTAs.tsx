@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { Bell, Building2, Handshake, Heart, ArrowRight } from "lucide-react";
+import { SafeLink } from "@/shared/components/security";
+import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 
 /**
  * InterestedCTAs
@@ -18,6 +20,14 @@ type CTAItem = {
   icon: typeof Bell;
   tone: "primary" | "business" | "partner" | "support";
 };
+
+const contactEmail = import.meta.env.VITE_CONTACT_EMAIL ?? "";
+const partnerMailtoUrl = buildMailtoUrl(contactEmail, {
+  subject: "Quero ser parceiro do Achegue-se",
+});
+const supportMailtoUrl = buildMailtoUrl(contactEmail, {
+  subject: "Quero apoiar o Achegue-se",
+});
 
 const ITEMS: CTAItem[] = [
   {
@@ -40,8 +50,8 @@ const ITEMS: CTAItem[] = [
     id: "parceiro",
     title: "Quero ser parceiro",
     description: "Vamos crescer juntos em bairros e cidades.",
-    href: "mailto:parcerias@achegue-se.com.br?subject=Quero%20ser%20parceiro%20do%20Achegue-se",
-    external: true,
+    href: partnerMailtoUrl ?? "/contato",
+    external: Boolean(partnerMailtoUrl),
     icon: Handshake,
     tone: "partner",
   },
@@ -49,8 +59,8 @@ const ITEMS: CTAItem[] = [
     id: "apoiar",
     title: "Quero apoiar o projeto",
     description: "Sou investidor ou padrinho do movimento local.",
-    href: "mailto:contato@achegue-se.com.br?subject=Quero%20apoiar%20o%20Achegue-se",
-    external: true,
+    href: supportMailtoUrl ?? "/contato",
+    external: Boolean(supportMailtoUrl),
     icon: Heart,
     tone: "support",
   },
@@ -117,9 +127,9 @@ export function InterestedCTAs() {
           return (
             <li key={item.id}>
               {item.external ? (
-                <a href={item.href} className={className}>
+                <SafeLink href={item.href} className={className}>
                   {content}
-                </a>
+                </SafeLink>
               ) : (
                 <Link to={item.href} className={className}>
                   {content}
