@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { resolveSafeHttpUrl, resolveSafeInternalPath } from "../safeRedirect";
+import {
+  resolveOptionalSafeInternalPath,
+  resolveSafeHttpUrl,
+  resolveSafeInternalPath,
+} from "../safeRedirect";
 
 describe("resolveSafeInternalPath", () => {
   it("keeps relative application paths", () => {
@@ -15,6 +19,26 @@ describe("resolveSafeInternalPath", () => {
   it("blocks external and protocol-relative redirects", () => {
     expect(resolveSafeInternalPath("https://example.com/phishing")).toBe("/");
     expect(resolveSafeInternalPath("//example.com/phishing")).toBe("/");
+  });
+});
+
+describe("resolveOptionalSafeInternalPath", () => {
+  it("returns safe internal routes without inventing a fallback", () => {
+    expect(resolveOptionalSafeInternalPath("/mapa?lat=-12.9&lng=-38.5#resultado")).toBe(
+      "/mapa?lat=-12.9&lng=-38.5#resultado",
+    );
+    expect(
+      resolveOptionalSafeInternalPath(`${window.location.origin}/empresas/padaria-central`),
+    ).toBe("/empresas/padaria-central");
+  });
+
+  it("fails closed for unsafe, external or malformed routes", () => {
+    expect(resolveOptionalSafeInternalPath("https://example.com/phishing")).toBeNull();
+    expect(resolveOptionalSafeInternalPath("//example.com/phishing")).toBeNull();
+    expect(resolveOptionalSafeInternalPath("javascript:alert(1)")).toBeNull();
+    expect(resolveOptionalSafeInternalPath("/%2f%2fevil.example/path")).toBeNull();
+    expect(resolveOptionalSafeInternalPath("/safe\\evil")).toBeNull();
+    expect(resolveOptionalSafeInternalPath(null)).toBeNull();
   });
 });
 

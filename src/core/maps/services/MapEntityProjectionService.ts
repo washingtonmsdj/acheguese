@@ -16,6 +16,7 @@
  * @module core/maps/services
  */
 import { logger } from '@/shared/utils/logger';
+import { resolveOptionalSafeInternalPath } from '@/shared/utils/safeRedirect';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { ProfessionalUrlService } from '@/core/professional/services/ProfessionalUrlService';
@@ -87,11 +88,16 @@ export class MapEntityProjectionService {
       marker.subtitle = (entity.subtitle || entity.description) as string;
     }
 
-    // Adicionar URL se disponível
-    if (entity.url) {
-      marker.url = entity.url as string;
+    // Adicionar somente rota interna validada. Um valor explícito inválido
+    // falha fechado e, quando possível, cai para a rota canônica por slug.
+    const explicitUrl = resolveOptionalSafeInternalPath(entity.url);
+    if (explicitUrl) {
+      marker.url = explicitUrl;
     } else if (entity.slug && options.baseUrl) {
-      marker.url = `${options.baseUrl}/${entity.slug}`;
+      const canonicalUrl = resolveOptionalSafeInternalPath(
+        `${options.baseUrl}/${encodeURIComponent(entity.slug)}`,
+      );
+      if (canonicalUrl) marker.url = canonicalUrl;
     }
 
     // Adicionar premium flag
