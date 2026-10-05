@@ -6,7 +6,6 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { prefetchRouteByHref } from "@/app/routes/prefetch";
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
@@ -64,9 +63,6 @@ export function AppTopbar() {
           <Link
             to={appUrls.notifications}
             aria-label="Notificações"
-            onMouseEnter={() => prefetchRouteByHref(appUrls.notifications)}
-            onFocus={() => prefetchRouteByHref(appUrls.notifications)}
-            onTouchStart={() => prefetchRouteByHref(appUrls.notifications)}
             className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
           >
             <Bell className="h-5 w-5" />
@@ -76,9 +72,6 @@ export function AppTopbar() {
           <Link
             to={appUrls.messages}
             aria-label="Mensagens"
-            onMouseEnter={() => prefetchRouteByHref(appUrls.messages)}
-            onFocus={() => prefetchRouteByHref(appUrls.messages)}
-            onTouchStart={() => prefetchRouteByHref(appUrls.messages)}
             className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink"
           >
             <MessageCircle className="h-5 w-5" />
