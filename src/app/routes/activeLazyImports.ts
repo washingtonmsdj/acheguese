@@ -1,9 +1,9 @@
 /**
  * Lazy imports reachable from the active AppLayout runtime only.
  *
- * Post-MVP modules and paused platform capabilities deliberately do not belong
- * here. Their code remains in the repository for future certification, but
- * inactive owners must not enter the active route module graph.
+ * Post-MVP product modules deliberately do not belong here. Active horizontal
+ * platform capabilities do, even when their current provider set is limited
+ * to one product module.
  */
 import { lazy } from "react";
 
@@ -14,6 +14,15 @@ export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
 export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
+export const MessagingInboxPage = lazy(
+  () => import("@/app/pages/MessagingInboxPage"),
+);
+export const NotificationsPage = lazy(
+  () => import("@/app/pages/NotificationsPage"),
+);
+export const NotificationPreferencesPage = lazy(
+  () => import("@/app/pages/NotificationPreferencesPage"),
+);
 
 export const StateLandingPage = lazy(() =>
   import("@/app/routes/territorial/ActiveTerritorialModulePages").then(
