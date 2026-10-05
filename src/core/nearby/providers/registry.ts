@@ -5,11 +5,9 @@ export interface NearbyProviderDefinition {
   label: string;
 }
 
-const NEARBY_PROVIDERS: Record<NearbyProviderId, NearbyProviderDefinition> = {
-  business: {
-    id: "business",
-    label: "Empresas",
-  },
+const businessNearbyProviderDefinition: NearbyProviderDefinition = {
+  id: "business",
+  label: "Empresas",
 };
 
 export const NEARBY_PROVIDER_ORDER: readonly NearbyProviderId[] = ["business"];
@@ -17,5 +15,8 @@ export const NEARBY_PROVIDER_ORDER: readonly NearbyProviderId[] = ["business"];
 export function getNearbyProvider(
   providerId: NearbyProviderId,
 ): NearbyProviderDefinition | null {
-  return NEARBY_PROVIDERS[providerId] ?? null;
+  switch (providerId) {
+    case "business":
+      return businessNearbyProviderDefinition;
+  }
 }
