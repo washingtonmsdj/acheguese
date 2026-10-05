@@ -29,13 +29,13 @@ export function ContactCard({
         </p>
         <div className="space-y-2.5">
           {emailUrl ? (
-            <a
+            <SafeLink
               href={emailUrl}
               className="flex items-center gap-3 rounded-2xl border border-territory-on-image/8 bg-territory-image-overlay/20 px-3 py-2.5 text-sm font-medium text-territory-on-image transition-colors hover:border-territory-brand/25 hover:text-territory-brand"
             >
               <Mail className="h-4 w-4 shrink-0 text-territory-brand" />
               <span className="min-w-0 truncate">{business.email}</span>
-            </a>
+            </SafeLink>
           ) : null}
 
           {websiteUrl ? (
@@ -90,12 +90,12 @@ export function ContactCard({
           <div className="mt-3 border-t border-territory-on-image/8 pt-3">
             <div className="flex items-center gap-3 rounded-2xl border border-territory-on-image/8 bg-territory-image-overlay/20 px-3 py-2.5">
               <Phone className="h-4 w-4 shrink-0 text-territory-brand" />
-              <a
+              <SafeLink
                 href={phoneUrl}
                 className="min-w-0 flex-1 text-sm font-medium text-territory-on-image transition-colors hover:text-territory-brand"
               >
                 {business.phone}
-              </a>
+              </SafeLink>
               <button
                 type="button"
                 onClick={onCopyPhone}
