@@ -43,9 +43,7 @@ export function OfflineIndicator() {
     window.addEventListener(DRIVER_STATUS.ONLINE, handleOnline);
     window.addEventListener(DRIVER_STATUS.OFFLINE, handleOffline);
 
-    if (!isNavigatorOnline()) {
-      setShowIndicator(true);
-    }
+    if (!isNavigatorOnline()) setShowIndicator(true);
 
     return () => {
       clearHideTimeout();
@@ -58,8 +56,8 @@ export function OfflineIndicator() {
 
   return (
     <div
-      className={`fixed top-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-white shadow-lg transition-[opacity,transform] duration-200 ${
-        isOnline ? "bg-green-500" : "bg-red-500"
+      className={`fixed left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-territory-on-image shadow-lg transition-[opacity,transform] duration-200 ${
+        isOnline ? "bg-territory-success" : "bg-territory-error"
       }`}
       role="status"
       aria-live="polite"
@@ -98,17 +96,17 @@ export function OfflineBanner() {
   if (isOnline) return null;
 
   return (
-    <div className="border-b border-yellow-500/30 bg-yellow-500/10 px-4 py-2">
+    <div className="border-b border-territory-warning/30 bg-territory-warning/10 px-4 py-2">
       <div className="mx-auto flex max-w-7xl items-center justify-between">
         <div className="flex items-center gap-2">
-          <WifiOff className="h-4 w-4 text-yellow-500" />
-          <span className="text-sm font-medium text-yellow-500">
+          <WifiOff className="h-4 w-4 text-territory-warning" />
+          <span className="text-sm font-medium text-territory-warning">
             Modo Offline - Alguns recursos podem estar limitados
           </span>
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="text-xs text-yellow-500 underline hover:text-yellow-400"
+          className="text-xs text-territory-warning underline hover:opacity-80"
         >
           Tentar reconectar
         </button>
@@ -154,13 +152,7 @@ export function OfflineDataStatus() {
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
       <Download className="h-4 w-4" />
-      <span>
-        {hasCachedData ? (
-          <>Dados offline: {cacheSize}</>
-        ) : (
-          <>Nenhum dado offline salvo</>
-        )}
-      </span>
+      <span>{hasCachedData ? <>Dados offline: {cacheSize}</> : <>Nenhum dado offline salvo</>}</span>
     </div>
   );
 }
