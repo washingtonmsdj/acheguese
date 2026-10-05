@@ -34,6 +34,10 @@ function titleCaseSlug(slug: string): string {
  * Não busca nem confia em texto arbitrário da URL; rotas desconhecidas usam um
  * fallback neutro. Assim Login e Primeiro acesso podem explicar para onde a
  * pessoa voltará sem transformar query string em conteúdo de interface.
+ *
+ * Contextos específicos de verticais só devem ser reconhecidos enquanto a
+ * vertical fizer parte do grafo ativo. Verticais pausadas continuam com suas
+ * rotas/código preservados, mas degradam para o fallback neutro na UX de Auth.
  */
 export function getAuthReturnContext(path: string): AuthReturnContext {
   const pathname = path.split(/[?#]/, 1)[0] || "/";
@@ -44,10 +48,6 @@ export function getAuthReturnContext(path: string): AuthReturnContext {
 
   if (/^\/conta(?:\/|$)/.test(pathname)) {
     return { label: "Minha conta", kind: "account" };
-  }
-
-  if (/^\/comunidade(?:\/|$)/.test(pathname)) {
-    return { label: "Comunidade", kind: "community" };
   }
 
   if (pathname === "/empresas/cadastrar") {
