@@ -34,6 +34,7 @@ interface ProfileExternalDataDbClient {
 }
 
 const profileExternalDataDb = supabase as unknown as ProfileExternalDataDbClient;
+const PROFILE_BROKER_BATCH_SIZE = 100;
 
 type BusinessProfileRelation = {
   name?: string | null;
@@ -63,15 +64,36 @@ function toBusinessProfileRelation(profile: Profile): BusinessProfileRelation {
   };
 }
 
+async function getAccessibleBusinessProfiles(
+  profileIds: readonly string[],
+): Promise<Profile[]> {
+  const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
+  const profiles: Profile[] = [];
+
+  for (
+    let offset = 0;
+    offset < uniqueProfileIds.length;
+    offset += PROFILE_BROKER_BATCH_SIZE
+  ) {
+    const batch = uniqueProfileIds.slice(
+      offset,
+      offset + PROFILE_BROKER_BATCH_SIZE,
+    );
+    const accessible = await ProfileRpcService.getAccessibleProfiles<Profile[]>({
+      profileIds: batch,
+    });
+    profiles.push(...accessible);
+  }
+
+  return profiles;
+}
+
 async function normalizeBusinessQueryRows(
   rows: readonly BusinessQueryRow[],
 ): Promise<BusinessRow[]> {
-  const profileIds = [
-    ...new Set(rows.map((row) => row.profile_id).filter(Boolean)),
-  ];
-  const accessibleProfiles = profileIds.length
-    ? await ProfileRpcService.getAccessibleProfiles<Profile[]>({ profileIds })
-    : [];
+  const accessibleProfiles = await getAccessibleBusinessProfiles(
+    rows.map((row) => row.profile_id),
+  );
   const profilesById = new Map(
     accessibleProfiles.map((profile) => [
       profile.id,
