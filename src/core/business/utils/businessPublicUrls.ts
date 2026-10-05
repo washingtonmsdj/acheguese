@@ -2,6 +2,7 @@ import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 import {
   buildModuleTerritoryEntityUrl,
   buildModuleTerritoryUrl,
+  cleanPublicRouteSegment,
 } from '@/core/routing/utils/territoryUrls';
 
 export const BUSINESS_PREMIUM_ROUTE_SEGMENT = 'p';
@@ -31,14 +32,6 @@ export interface BusinessPublicUrlSegments extends Required<BusinessPublicTerrit
   readonly slug: string;
 }
 
-function cleanPathSegment(value: string, label: string): string {
-  const segment = value.trim().replace(/^\/+|\/+$/g, '');
-  if (!segment || /[/?#]/.test(segment)) {
-    throw new Error(`${label} deve ser um unico segmento de URL.`);
-  }
-  return segment;
-}
-
 function buildTerritoryPathFromSegments({
   state,
   city,
@@ -46,7 +39,7 @@ function buildTerritoryPathFromSegments({
 }: BusinessPublicTerritorySegments): string {
   const segments = [state, city, territorySlug]
     .filter((segment): segment is string => Boolean(segment))
-    .map((segment) => cleanPathSegment(segment, 'segmento territorial'));
+    .map((segment) => cleanPublicRouteSegment(segment, 'segmento territorial'));
 
   return `/${segments.join('/')}`;
 }
@@ -58,7 +51,7 @@ export function buildBusinessPublicUrlFromTerritory(
   return buildModuleTerritoryEntityUrl(
     APP_MODULE_SLUGS.business,
     territoryBaseUrl,
-    cleanPathSegment(slug, 'slug publico da empresa'),
+    slug,
   );
 }
 
@@ -83,7 +76,10 @@ export function buildBusinessPublicUrlPreview(slug: string): string {
 }
 
 export function buildBusinessPremiumUrl(slug: string): string {
-  return `/${BUSINESS_PREMIUM_ROUTE_SEGMENT}/${cleanPathSegment(slug, 'slug premium da empresa')}`;
+  return `/${BUSINESS_PREMIUM_ROUTE_SEGMENT}/${cleanPublicRouteSegment(
+    slug,
+    'slug premium da empresa',
+  )}`;
 }
 
 export function buildBusinessPremiumUrlPreview(slug: string): string {
@@ -98,7 +94,7 @@ export function buildBusinessPremiumRoute(
   if (!suffixSegments.length) return base;
 
   const suffix = suffixSegments
-    .map((segment) => cleanPathSegment(segment, 'segmento da rota premium'))
+    .map((segment) => cleanPublicRouteSegment(segment, 'segmento da rota premium'))
     .join('/');
 
   return `${base}/${suffix}`;
