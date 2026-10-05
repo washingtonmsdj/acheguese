@@ -1,8 +1,8 @@
 # HOME-INVENTORY
 
-> **MVP atual:** **Empresas + Mapa + Perto de mim + Busca**.
+> **MVP atual:** **Empresas + Mapa + Perto de mim + Busca**, com **Mensagens + Notificações** como capabilities horizontais ativas da plataforma.
 >
-> Flags do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=false`, `notifications=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
+> Flags do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `messaging=true`, `notifications=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
 ## Papel da Home
 
@@ -17,7 +17,7 @@ A Home deve ser pequena e derivada do lifecycle. Ela pode:
 - oferecer CTA para **Busca**;
 - expor estados de loading/empty/error reais.
 
-Ela não deve consultar, contar, destacar ou anunciar módulos ou capabilities pausados.
+Mensagens e Notificações não pertencem à Home nem à vertical Empresas; podem aparecer na navegação global autenticada quando apropriado.
 
 ## Conteúdo permitido no MVP
 
@@ -28,12 +28,14 @@ Ela não deve consultar, contar, destacar ou anunciar módulos ou capabilities p
 | visualização territorial | Maps owner | Mapa |
 | proximidade | Nearby owner + localização | Perto de mim |
 | busca textual | Search owner + providers habilitados | Busca |
+| conversas | Messaging owner + providers ativos | Mensagens |
+| avisos | Notifications owner + eventos autorizados | Notificações |
 
 ## Conteúdo proibido enquanto pausado
 
-Não renderizar previews, contadores ou CTAs de Comunidade, Gastronomia, Serviços, Classificados, Turismo, Educação, Vagas, Eventos, Mobilidade, Cupons, Analytics, Gamificação, Mensagens ou Notificações.
+Não renderizar previews, contadores ou CTAs que reativem Comunidade, Gastronomia, Serviços, Classificados, Turismo, Educação, Vagas, Eventos, Mobilidade, Cupons, Analytics ou Gamificação.
 
-Os owners de Mensagens e Notificações permanecem versionados para reativação futura, mas não podem criar navegação, Inbox, preferência ou CTA no corte atual.
+Pausar uma vertical remove apenas suas próprias contribuições. Mensagens e Notificações permanecem ativas como owners horizontais da plataforma.
 
 ## Regras de dados
 
