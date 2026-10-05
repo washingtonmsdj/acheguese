@@ -4,18 +4,13 @@ import type {
   MapLayerProviderRuntime,
 } from "./types";
 
-const MAP_LAYER_PROVIDERS: Record<
-  MapLayerProviderId,
-  MapLayerProviderDefinition
-> = {
-  business: {
-    id: "business",
-    layerKey: "businesses",
-    label: "Empresas",
-    load: async () => {
-      const module = await import("./businessMapLayerProvider");
-      return module.businessMapLayerProvider;
-    },
+const businessMapLayerProviderDefinition: MapLayerProviderDefinition = {
+  id: "business",
+  layerKey: "businesses",
+  label: "Empresas",
+  load: async () => {
+    const module = await import("./businessMapLayerProvider");
+    return module.businessMapLayerProvider;
   },
 };
 
@@ -26,7 +21,10 @@ export const MAP_LAYER_PROVIDER_ORDER: readonly MapLayerProviderId[] = [
 export function getMapLayerProviderDefinition(
   providerId: MapLayerProviderId,
 ): MapLayerProviderDefinition | null {
-  return MAP_LAYER_PROVIDERS[providerId] ?? null;
+  switch (providerId) {
+    case "business":
+      return businessMapLayerProviderDefinition;
+  }
 }
 
 export async function loadMapLayerProvider(
