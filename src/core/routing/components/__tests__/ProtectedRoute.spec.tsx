@@ -1,11 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrivacySettingsService } from "@/core/privacy/services/PrivacySettingsService";
 import { useSessionContext } from "@/core/session";
-import { ProtectedRoute } from "../ProtectedRoute";
+import {
+  DELETION_STATUS_GATE_TIMEOUT_MS,
+  ProtectedRoute,
+} from "../ProtectedRoute";
 
 vi.mock("@/core/session", () => ({
   useSessionContext: vi.fn(),
@@ -102,6 +105,10 @@ describe("ProtectedRoute", () => {
     mockedGetDeletionStatus.mockResolvedValue(null);
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("waits for the session and supports a contextual loading label", () => {
     mockedUseSessionContext.mockReturnValue({
       user: null,
@@ -188,13 +195,21 @@ describe("ProtectedRoute", () => {
     expect(screen.queryByText("private content")).not.toBeInTheDocument();
   });
 
-  it("does not render private content while deletion status is unresolved", () => {
+  it("blocks while deletion status is unresolved, then fails closed on timeout", async () => {
+    vi.useFakeTimers();
     mockAuthenticatedSession();
     mockedGetDeletionStatus.mockReturnValue(new Promise(() => {}));
 
     renderProtectedRoute("/private");
 
     expect(screen.getByRole("status")).toHaveTextContent("Verificando acesso...");
+    expect(screen.queryByText("private content")).not.toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(DELETION_STATUS_GATE_TIMEOUT_MS);
+    });
+
+    expect(screen.getByText("privacy content")).toBeInTheDocument();
     expect(screen.queryByText("private content")).not.toBeInTheDocument();
   });
 
