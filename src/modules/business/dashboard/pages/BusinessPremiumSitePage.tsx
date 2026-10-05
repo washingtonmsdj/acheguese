@@ -7,6 +7,10 @@ import { Button } from "@/shared/components/ui/button";
 import { QrImageGenerator } from "@/core/qr";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import {
+  openSafeUrlInNewTab,
+  resolveSafeRedirectUrl,
+} from "@/shared/utils/safeRedirect";
 
 export default function BusinessPremiumSitePage() {
   const { business, premiumUrl, publicUrl, entitlements } = useBusinessDashboardContext();
@@ -16,15 +20,27 @@ export default function BusinessPremiumSitePage() {
   const showBilling = isLaunchSurfaceEnabled("billing");
 
   const getAbsolutePremiumUrl = (): string | null => {
-    if (!premiumUrl) return null;
-    return new URL(premiumUrl, window.location.origin).toString();
+    if (!premiumUrl || typeof window === "undefined") return null;
+
+    const safeUrl = resolveSafeRedirectUrl(premiumUrl, {
+      allowRelative: true,
+      allowedOrigins: [window.location.origin],
+      context: "business-premium-site",
+    });
+    if (!safeUrl) return null;
+
+    return new URL(safeUrl, window.location.origin).toString();
   };
 
   const handlePreview = () => {
     const url = getAbsolutePremiumUrl();
-    if (!url) return;
+    if (!url || typeof window === "undefined") return;
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    openSafeUrlInNewTab(url, {
+      allowRelative: false,
+      allowedOrigins: [window.location.origin],
+      context: "business-premium-preview",
+    });
   };
 
   const handleGenerateQr = async () => {
