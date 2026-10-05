@@ -58,6 +58,6 @@
   "notes": [
     "Source coverage is complete, but source coverage alone does not certify release.",
     "This contract does not authorize deployment or changing LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE.",
-    "The authenticated production smoke blocker in issue #305 must not be bypassed to promote export rollout."
+    "Export rollout must remain fail-closed until this contract's own integration, probe, redaction and same-runtime evidence is complete; the status of an unrelated release blocker cannot substitute for these gates."
   ]
 }
