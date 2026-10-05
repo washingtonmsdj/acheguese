@@ -4,6 +4,7 @@
  */
 
 import { Map } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 
@@ -26,7 +27,13 @@ export function ViewOnMapButton({
   variant = 'outline',
   className,
 }: ViewOnMapButtonProps) {
-  if (!latitude || !longitude) return null;
+  const hasValidCoordinates =
+    typeof latitude === 'number' &&
+    Number.isFinite(latitude) &&
+    typeof longitude === 'number' &&
+    Number.isFinite(longitude);
+
+  if (!hasValidCoordinates) return null;
 
   const mapUrl = `/mapa?lat=${latitude}&lng=${longitude}&zoom=16${itemName ? `&highlight=${encodeURIComponent(itemName)}` : ''}`;
 
@@ -37,10 +44,10 @@ export function ViewOnMapButton({
       variant={variant}
       className={cn('gap-1.5', className)}
     >
-      <a href={mapUrl}>
+      <Link to={mapUrl}>
         <Map className="h-3.5 w-3.5" />
         Ver no Mapa
-      </a>
+      </Link>
     </Button>
   );
 }
