@@ -3,6 +3,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { collectActiveFrontendVisualSsotViolations } from "./active-frontend-visual-ssot";
+
 const ROOT = process.cwd();
 
 const CANONICAL_BRAND_TOKENS = [
@@ -276,6 +278,7 @@ function validateApprovedFontWeights(
 
 function main(): void {
   const violations: string[] = [];
+  violations.push(...collectActiveFrontendVisualSsotViolations(ROOT));
 
   const indexCss = readRequired('src/index.css', violations);
   requireIncludes('src/index.css', indexCss, CANONICAL_BRAND_TOKENS, violations);
@@ -524,7 +527,7 @@ function main(): void {
   }
 
   console.log(
-    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, theme bootstrap and high-contrast contracts are protected, migrated auth, community, mobility and admin surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
+    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, the active MVP frontend import graph is automatically covered, theme bootstrap and high-contrast contracts are protected, migrated auth, community, mobility and admin surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
   );
 }
 
