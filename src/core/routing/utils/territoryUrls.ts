@@ -38,7 +38,7 @@ export type CommunityCanonicalSuffixSegment = (typeof COMMUNITY_CANONICAL_SUFFIX
 
 const COMMUNITY_CANONICAL_SUFFIX_SET = new Set<string>(COMMUNITY_CANONICAL_SUFFIX_SEGMENTS);
 
-function cleanUrlSegment(value: string, label: string): string {
+export function cleanPublicRouteSegment(value: string, label: string): string {
   const segment = value.trim().replace(/^\/+|\/+$/g, '');
   const safeSegmentPath = segment ? resolveOptionalSafeInternalPath(`/${segment}`) : null;
 
@@ -90,7 +90,9 @@ export function normalizePublicTerritoryPath(path: string): string {
   const parts = path.split('/').filter(Boolean);
   if (!parts.length) return '/';
 
-  const cleanedParts = parts.map((part) => cleanUrlSegment(part, 'segmento territorial'));
+  const cleanedParts = parts.map((part) =>
+    cleanPublicRouteSegment(part, 'segmento territorial'),
+  );
   const normalizedParts = cleanedParts[0] === 'br' ? cleanedParts.slice(1) : cleanedParts;
   return '/' + normalizedParts.join('/');
 }
@@ -154,7 +156,7 @@ export function buildLocationBaseUrl(location: Location): string {
 
 export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): string {
   const publicCity = buildCityTerritoryBaseUrl(cityPath);
-  return `${publicCity}/${cleanUrlSegment(group.slug, 'slug do grupo territorial')}`;
+  return `${publicCity}/${cleanPublicRouteSegment(group.slug, 'slug do grupo territorial')}`;
 }
 
 export function buildLocationModuleUrl(location: Location, module: ModuleSlug): string {
@@ -208,7 +210,7 @@ export function buildModuleTerritoryEntityUrl(
   territoryBaseUrl: string,
   entitySlug: string,
 ): string {
-  const normalizedSlug = cleanUrlSegment(entitySlug, 'slug de entidade');
+  const normalizedSlug = cleanPublicRouteSegment(entitySlug, 'slug de entidade');
   return `${buildModuleTerritoryUrl(module, territoryBaseUrl)}/${normalizedSlug}`;
 }
 
@@ -227,7 +229,7 @@ export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): 
   const suffixSegments = suffix
     .split('/')
     .filter(Boolean)
-    .map((segment) => cleanUrlSegment(segment, 'sufixo da comunidade'));
+    .map((segment) => cleanPublicRouteSegment(segment, 'sufixo da comunidade'));
 
   if (!suffixSegments.length) return cleanBase;
 
