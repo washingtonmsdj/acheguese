@@ -73,7 +73,7 @@ function resolveModuleKeysFromSlug(
 
 function PartialCoverageBanner({ activeCount, totalCount }: { activeCount: number; totalCount: number }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
+    <div className="flex items-center gap-2 border-b border-territory-warning/20 bg-territory-warning/10 px-4 py-2 text-xs text-territory-warning">
       <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
       <span>
         Cobertura parcial: {activeCount} de {totalCount} bairros disponíveis neste módulo.
@@ -84,7 +84,7 @@ function PartialCoverageBanner({ activeCount, totalCount }: { activeCount: numbe
 
 function UnavailableModuleBanner() {
   return (
-    <div className="flex items-center gap-2 px-4 py-3 bg-muted/60 border-b border-border text-xs text-muted-foreground">
+    <div className="flex items-center gap-2 border-b border-territory-border bg-territory-raised px-4 py-3 text-xs text-territory-muted">
       <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
       <span>Este módulo ainda não está disponível neste território.</span>
     </div>
@@ -131,25 +131,25 @@ function TerritoryStatusMessage({
   city?: string;
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-full p-4">
-        <AlertTriangle className="h-12 w-12 text-amber-600 dark:text-amber-500" />
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
+      <div className="rounded-full border border-territory-warning/20 bg-territory-warning/10 p-4">
+        <AlertTriangle className="h-12 w-12 text-territory-warning" />
       </div>
-      <div className="space-y-2 max-w-md">
-        <p className="text-xl font-semibold text-foreground">{title}</p>
-        <p className="text-sm text-muted-foreground leading-relaxed">{message}</p>
+      <div className="max-w-md space-y-2">
+        <p className="text-xl font-semibold text-territory-ink">{title}</p>
+        <p className="text-sm leading-relaxed text-territory-muted">{message}</p>
       </div>
       <div className="mt-4 flex w-full max-w-sm flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
         <button
           onClick={() => window.history.back()}
-          className="w-full rounded-lg border border-border px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground sm:w-auto"
+          className="w-full rounded-lg border border-territory-border px-4 py-2 text-sm font-medium text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink sm:w-auto"
         >
           Voltar
         </button>
         {showCityButton && state && city && (
           <Link
             to={`/${state}/${city}`}
-            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto"
+            className="w-full rounded-lg bg-territory-brand px-4 py-2 text-sm font-medium text-territory-on-image transition-colors hover:bg-territory-brand/90 sm:w-auto"
           >
             Ver cidade
           </Link>
@@ -201,8 +201,8 @@ export function TerritorialLayout({
 
   if (status === "idle" || status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-territory-brand" />
       </div>
     );
   }
@@ -251,8 +251,8 @@ export function TerritorialLayout({
     !preserveOutletDuringModuleLoading
   ) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-territory-brand" />
       </div>
     );
   }
