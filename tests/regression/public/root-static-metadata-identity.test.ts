@@ -6,6 +6,12 @@ const ROOT = process.cwd();
 const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
+function readRootDescription(html: string): string {
+  const match = html.match(/<meta\s+name="description"\s+content="([^"]+)"/);
+  if (!match?.[1]) throw new Error("Root meta description not found");
+  return match[1];
+}
+
 describe("public root static metadata identity", () => {
   it("keeps crawler metadata aligned with the approved root concept", () => {
     const html = read("index.html");
@@ -21,6 +27,9 @@ describe("public root static metadata identity", () => {
       'name="twitter:title" content="Achegue-se | Seu lugar, mais perto."',
     );
     expect(html).toContain('property="og:url" content="https://acheguese.com.br/"');
+    expect(readRootDescription(html)).toContain("empresas locais");
+    expect(readRootDescription(html)).toContain("explore o mapa");
+    expect(readRootDescription(html)).toContain("veja o que está perto");
 
     // index.html serves every SPA route: never publish a root canonical there.
     expect(html).not.toContain('rel="canonical"');
@@ -30,12 +39,14 @@ describe("public root static metadata identity", () => {
     expect(main).toContain('canonical.dataset.publicRootCanonical = "true"');
   });
 
-  it("keeps browser and PWA chrome on the canonical visual identity", () => {
+  it("keeps browser and PWA chrome on the canonical visual identity and MVP scope", () => {
     const html = read("index.html");
     const manifest = JSON.parse(read("public/manifest.json")) as {
       theme_color?: string;
       background_color?: string;
       description?: string;
+      categories?: string[];
+      shortcuts?: Array<{ url?: string }>;
     };
     const identity = read("docs/04-design/ACHEGUE-SE-VISUAL-IDENTITY.md");
     const css = read("src/index.css");
@@ -47,6 +58,20 @@ describe("public root static metadata identity", () => {
     expect(html).toContain('name="theme-color" content="#123E3D"');
     expect(manifest.theme_color).toBe("#123E3D");
     expect(manifest.background_color).toBe("#FAFBF7");
-    expect(manifest.description).toContain("Seu lugar, mais perto.");
+    expect(manifest.description).toBe(readRootDescription(html));
+    expect(manifest.categories).toEqual(["business", "navigation"]);
+
+    const shortcutUrls = manifest.shortcuts?.map(({ url }) => url) ?? [];
+    expect(shortcutUrls).toEqual(["/ba/salvador", "/empresas"]);
+    expect(shortcutUrls).not.toEqual(
+      expect.arrayContaining([
+        "/comunidade",
+        "/servicos",
+        "/gastronomia",
+        "/eventos",
+        "/classificados",
+        "/vagas",
+      ]),
+    );
   });
 });
