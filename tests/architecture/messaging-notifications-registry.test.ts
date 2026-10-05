@@ -9,9 +9,6 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
-const coreMessagingReadme = read("src/core/messaging/README.md");
-const messagingUiReadme = read("src/modules/messaging/README.md");
-const notificationsReadme = read("src/core/notifications/README.md");
 
 describe("Messaging and Notifications architecture ownership", () => {
   it("keeps horizontal owners distinct in the architecture registry", () => {
@@ -39,36 +36,33 @@ describe("Messaging and Notifications architecture ownership", () => {
     expect(notifications?.routePrefixes).not.toContain("/mensagens");
   });
 
-  it("keeps both capabilities paused outside the certified MVP route graph", () => {
-    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("paused");
-    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.status).toBe("paused");
+  it("keeps both platform capabilities active without product-module dependencies", () => {
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.dependsOnProductModules).toBeUndefined();
+    expect(PLATFORM_CAPABILITY_REGISTRY.notifications.dependsOnProductModules).toBeUndefined();
 
-    expect(appRoutes).not.toContain('path="/mensagens"');
-    expect(appRoutes).not.toContain('path="/notificacoes"');
-    expect(appRoutes).not.toContain('path="/conta/notificacoes"');
-    expect(activeLazyImports).not.toContain("MessagingInboxPage");
-    expect(activeLazyImports).not.toContain("NotificationsPage");
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("notifications")');
+    expect(appRoutes).toContain("messagingRoutes.inbox()");
+    expect(appRoutes).toContain('path="/notificacoes"');
+    expect(appRoutes).toContain("ACCOUNT_PATHS.notifications");
+    expect(activeLazyImports).toContain("MessagingInboxPage");
+    expect(activeLazyImports).toContain("NotificationsPage");
+    expect(activeLazyImports).toContain("NotificationPreferencesPage");
   });
 
-  it("keeps living owner documentation aligned with the paused lifecycle", () => {
-    expect(coreMessagingReadme).toContain("PAUSADA NO MVP");
-    expect(coreMessagingReadme).toContain("`messaging=false`");
-    expect(coreMessagingReadme).toContain(
-      "Rotas canônicas versionadas para futura reativação",
-    );
-    expect(coreMessagingReadme).not.toContain("ATIVO NO MVP");
+  it("keeps platform ownership independent from Business", () => {
+    const messagingBlock =
+      read("src/app/config/platformCapabilityRegistry.ts").match(
+        /\n  messaging: \{[\s\S]*?\n  \},/,
+      )?.[0] ?? "";
+    const notificationsBlock =
+      read("src/app/config/platformCapabilityRegistry.ts").match(
+        /\n  notifications: \{[\s\S]*?\n  \},/,
+      )?.[0] ?? "";
 
-    expect(messagingUiReadme).toContain("pausado no MVP");
-    expect(messagingUiReadme).toContain("`messaging=false`");
-    expect(messagingUiReadme).not.toContain("active in the MVP");
-
-    expect(notificationsReadme).toContain("INBOX/UI PAUSADA NO MVP");
-    expect(notificationsReadme).toContain("`notifications=false`");
-    expect(notificationsReadme).toContain(
-      "Messaging e Notifications possuem owners, rotas e lifecycle distintos",
-    );
-    expect(notificationsReadme).not.toContain(
-      "CAPABILITY HORIZONTAL ATIVA NO MVP",
-    );
+    expect(messagingBlock).not.toContain("business");
+    expect(notificationsBlock).not.toContain("business");
   });
 });
