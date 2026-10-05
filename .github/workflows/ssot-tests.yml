@@ -176,12 +176,6 @@ jobs:
           node-version: "24"
           cache: npm
 
-      - name: Check production deployment status
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          RELEASE_DEPLOYMENT_STATUS_CONTEXT: Vercel
-        run: node tools/release/check-production-deployment-status.mjs
-
       - name: Wait for deployed runtime identity
         id: release_identity
         env:
@@ -189,6 +183,13 @@ jobs:
           RELEASE_WAIT_TIMEOUT_MS: "600000"
           RELEASE_WAIT_INTERVAL_MS: "5000"
         run: node tools/release/wait-for-production-release.mjs
+
+      - name: Check production deployment status
+        if: steps.release_identity.outputs.mode == 'exact'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_DEPLOYMENT_STATUS_CONTEXT: Vercel
+        run: node tools/release/check-production-deployment-status.mjs
 
       - name: Install dependencies
         run: npm ci
