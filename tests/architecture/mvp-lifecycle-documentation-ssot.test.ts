@@ -17,34 +17,29 @@ const canonicalDocs = [
 describe("MVP lifecycle documentation SSOT", () => {
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
 
-  it("keeps messaging and notifications paused in the executable authority", () => {
+  it("keeps messaging and notifications active and independent from product modules", () => {
     for (const capability of ["messaging", "notifications"]) {
       const block =
         platformRegistry.match(
           new RegExp(`\\n  ${capability}: \\{[\\s\\S]*?\\n  \\},`),
         )?.[0] ?? "";
-      expect(block).toContain('status: "paused"');
+      expect(block).toContain('status: "active"');
+      expect(block).not.toContain("dependsOnProductModules");
     }
   });
 
-  it("keeps canonical living docs aligned with the active MVP surfaces", () => {
-    for (const path of canonicalDocs) {
-      const document = read(path);
-      expect(document).not.toMatch(
-        /capabilit(?:y|ies) horizontais ativas[^\n]*(mensagens|notifica)/i,
-      );
-      expect(document).not.toMatch(/`messaging=true`/i);
-      expect(document).not.toMatch(/`notifications=true`/i);
-    }
+  it("keeps canonical living docs aligned with active platform ownership", () => {
+    const combined = canonicalDocs.map(read).join("\n");
+    expect(combined).not.toContain("`messaging=false`");
+    expect(combined).not.toContain("`notifications=false`");
+    expect(combined).not.toMatch(/Mensagens e Notificações[^\n]*pausad/i);
+    expect(combined).toContain("Mensagens");
+    expect(combined).toContain("Notificações");
   });
 
-  it("documents preservation instead of deletion for paused future surfaces", () => {
+  it("documents that pausing a vertical cannot disable platform capabilities", () => {
     const rootReadme = read("README.md");
-    const docsReadme = read("docs/README.md");
-    const homeSpec = read("docs/05-ux/HOME-SPEC.md");
-
-    expect(rootReadme).toContain("permanecem capabilities horizontais `paused`");
-    expect(docsReadme).toContain("preservadas em código/contratos para reativação futura");
-    expect(homeSpec).toContain("não é removido por estar pausado");
+    expect(rootReadme).toContain("Pausar um domínio remove apenas suas contribuições");
+    expect(rootReadme).toContain("não desativa capabilities horizontais da plataforma");
   });
 });
