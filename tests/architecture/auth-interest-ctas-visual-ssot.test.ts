@@ -34,10 +34,15 @@ describe("auth interest CTAs visual SSOT", () => {
     }
   });
 
-  it("preserves the existing entry destinations", () => {
+  it("preserves entry routes and centralizes institutional contact", () => {
     expect(source).toContain('href: "/interesse"');
     expect(source).toContain('href: "/empresas/nova"');
-    expect(source).toContain("parcerias@achegue-se.com.br");
-    expect(source).toContain("contato@achegue-se.com.br");
+    expect(source).toContain("VITE_CONTACT_EMAIL");
+    expect(source).toContain("buildMailtoUrl(contactEmail");
+    expect(source).toContain("<SafeLink href={item.href}");
+    expect(source).toContain('?? "/contato"');
+    expect(source).not.toContain("parcerias@achegue-se.com.br");
+    expect(source).not.toContain("contato@achegue-se.com.br");
+    expect(source).not.toContain("<a href={item.href}");
   });
 });
