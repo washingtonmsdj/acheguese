@@ -49,11 +49,28 @@ describe("authenticated release Messaging certification", () => {
     expect(messagingE2e).toContain(
       '"/rest/v1/rpc/list_business_direct_thread_previews"',
     );
-    expect(messagingE2e).toContain(
-      "businessPreviewStatuses.every((status) => status >= 200 && status < 300)",
+    expect(messagingE2e).toMatch(
+      /businessPreviewStatuses\.every\(\s*\(status\)\s*=>\s*status\s*>=\s*200\s*&&\s*status\s*<\s*300,?\s*\)/,
     );
     expect(messagingE2e).not.toContain("sendMessage(");
     expect(messagingE2e).not.toContain("insert(");
     expect(messagingE2e).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+  });
+
+  it("keeps the horizontal Notifications Inbox in the authenticated release proof without mutations", () => {
+    expect(messagingE2e).toContain(
+      'test("abre a Inbox horizontal de Notificações sob RLS sem mutar estado"',
+    );
+    expect(messagingE2e).toContain('page.goto("/notificacoes"');
+    expect(messagingE2e).toContain(
+      'response.request().method() === "GET"',
+    );
+    expect(messagingE2e).toContain(
+      'response.url().includes("/rest/v1/notifications")',
+    );
+    expect(messagingE2e).toContain("notificationReadStatuses.every(");
+    expect(messagingE2e).not.toContain("markAsRead(");
+    expect(messagingE2e).not.toContain("markAllAsRead(");
+    expect(messagingE2e).not.toContain("deleteNotification(");
   });
 });

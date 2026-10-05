@@ -48,7 +48,7 @@ test.describe("Mensagens autenticadas — provider Business", () => {
     ]);
 
     try {
-        const businessPreviewStatuses: number[] = [];
+      const businessPreviewStatuses: number[] = [];
       page.on("response", (response) => {
         if (
           response.request().method() === "POST" &&
@@ -85,9 +85,11 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       await expect
         .poll(() => businessPreviewStatuses.length, { timeout: 30_000 })
         .toBeGreaterThan(0);
-      expect(businessPreviewStatuses.every((status) => status >= 200 && status < 300)).toBe(
-        true,
-      );
+      expect(
+        businessPreviewStatuses.every(
+          (status) => status >= 200 && status < 300,
+        ),
+      ).toBe(true);
 
       await expect(page.locator("body")).not.toContainText(
         /não foi possível carregar suas conversas/i,
@@ -97,9 +99,90 @@ test.describe("Mensagens autenticadas — provider Business", () => {
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
       }));
-        expect(dimensions.scrollWidth).toBeLessThanOrEqual(
-          dimensions.clientWidth + 1,
-        );
+      expect(dimensions.scrollWidth).toBeLessThanOrEqual(
+        dimensions.clientWidth + 1,
+      );
+    } finally {
+      await page.unrouteAll({ behavior: "ignoreErrors" });
+    }
+  });
+
+  test("abre a Inbox horizontal de Notificações sob RLS sem mutar estado", async ({
+    page,
+  }) => {
+    const credentials = requireE2EUserCredentials();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.context().clearCookies();
+    await bootstrapProtectedPreviewAccess(page);
+
+    await page.goto("/notificacoes", {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
+    try {
+      await expect(page).toHaveURL(/\/login\?redirect=%2Fnotificacoes$/, {
+        timeout: 30_000,
+      });
+    } catch (error) {
+      await logRuntimeBootstrapDiagnostics(page, "notifications");
+      throw error;
+    }
+
+    await Promise.all([
+      installPrivacyRpcPreviewBridge(page),
+      installSessionProfilePreviewBridges(page),
+    ]);
+
+    try {
+      const notificationReadStatuses: number[] = [];
+      page.on("response", (response) => {
+        if (
+          response.request().method() === "GET" &&
+          response.url().includes("/rest/v1/notifications")
+        ) {
+          notificationReadStatuses.push(response.status());
+        }
+      });
+
+      const client = await bootstrapFixtureSession(
+        page,
+        credentials.email,
+        credentials.password,
+      );
+      await ensureFixtureCurrentTermsAcceptance(client);
+
+      await page.goto("/notificacoes", {
+        waitUntil: "domcontentloaded",
+        timeout: 60_000,
+      });
+
+      await expect(page).toHaveURL(/\/notificacoes(?:\?|$)/, {
+        timeout: 30_000,
+      });
+      await expect(
+        page.getByRole("heading", { name: "Notificações" }).first(),
+      ).toBeVisible({ timeout: 30_000 });
+      await expect(
+        page.getByRole("button", { name: "Preferências" }),
+      ).toBeVisible();
+
+      await expect
+        .poll(() => notificationReadStatuses.length, { timeout: 30_000 })
+        .toBeGreaterThan(0);
+      expect(
+        notificationReadStatuses.every(
+          (status) => status >= 200 && status < 300,
+        ),
+      ).toBe(true);
+
+      const dimensions = await page.evaluate(() => ({
+        clientWidth: document.documentElement.clientWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+      }));
+      expect(dimensions.scrollWidth).toBeLessThanOrEqual(
+        dimensions.clientWidth + 1,
+      );
     } finally {
       await page.unrouteAll({ behavior: "ignoreErrors" });
     }
