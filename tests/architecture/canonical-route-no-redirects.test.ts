@@ -8,12 +8,14 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 describe("MVP canonical routing without compatibility redirects", () => {
   it("keeps private Profile routes canonical under /conta", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+    const accountPaths = read("src/core/routing/config/account.ts");
     const registry = read("tools/architecture/architecture-registry.ts");
     const audit = read("tools/architecture/generate-architecture-audit.ts");
 
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain('path="/conta/editar/:profileId"');
-    expect(routes).toContain('path="/conta/notificacoes"');
+    expect(routes).toContain("path={ACCOUNT_PATHS.notifications}");
+    expect(accountPaths).toContain('notifications: "/conta/notificacoes"');
 
     expect(routes).not.toContain('path="/perfil"');
     expect(routes).not.toContain('path="/perfil/');
@@ -45,6 +47,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
 
   it("keeps canonical Notifications active while retired aliases stay dead", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+    const accountPaths = read("src/core/routing/config/account.ts");
     const notifications = read("src/app/pages/NotificationsPage.tsx");
     const preferences = read("src/app/pages/NotificationPreferencesPage.tsx");
     const prefetch = read("src/app/routes/prefetch.ts");
@@ -57,7 +60,8 @@ describe("MVP canonical routing without compatibility redirects", () => {
     );
 
     expect(routes).toContain('path="/notificacoes"');
-    expect(routes).toContain('path="/conta/notificacoes"');
+    expect(routes).toContain("path={ACCOUNT_PATHS.notifications}");
+    expect(accountPaths).toContain('notifications: "/conta/notificacoes"');
     expect(routes).not.toContain('path="/notifications"');
     expect(routes).not.toContain('path="/settings/notifications"');
 
