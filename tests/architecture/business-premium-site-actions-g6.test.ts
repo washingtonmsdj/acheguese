@@ -16,10 +16,9 @@ describe("Business premium site actions (G6)", () => {
     );
 
     expect(page).toContain('import { QrImageGenerator } from "@/core/qr"');
-    expect(page).toContain(
-      'new URL(premiumUrl, window.location.origin).toString()',
-    );
-    expect(page).toContain('window.open(url, "_blank", "noopener,noreferrer")');
+    expect(page).toContain("resolveSafeRedirectUrl(premiumUrl");
+    expect(page).toContain("openSafeUrlInNewTab(url");
+    expect(page).not.toContain('window.open(url, "_blank", "noopener,noreferrer")');
     expect(page).toContain("QrImageGenerator.generatePNG(url");
     expect(page).toContain("QrImageGenerator.downloadImage(");
     expect(page).toContain("QrImageGenerator.copyToClipboard(url)");
