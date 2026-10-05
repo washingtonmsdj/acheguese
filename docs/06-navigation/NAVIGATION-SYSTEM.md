@@ -1,6 +1,6 @@
 # Navigation System — Achegue-se
 
-Status: **ATIVO / MVP 2026-09-21**
+Status: **ATIVO / MVP 2026-10-05**
 
 Este documento descreve a navegação vigente. O lifecycle executável é dividido
 entre `productModuleRegistry.ts` (domínios), `platformCapabilityRegistry.ts`
@@ -14,8 +14,15 @@ uma segunda decisão manual em cada renderer.
 
 ## Navegação primária do MVP
 
-O registry de apresentação é
-`src/core/navigation/territoryNavigationModes.ts`.
+O registry puro de apresentação é
+`src/core/navigation/territoryNavigationModes.ts`. Ele descreve os modos e suas
+URLs, mas **não possui autoridade de lifecycle**.
+
+A composição executável é
+`src/app/config/territoryNavigationScope.ts`. Ela traduz o lifecycle canônico
+para os modos realmente visíveis antes da renderização. Assim, pausar Business,
+Mapa, Nearby, Search ou Account remove automaticamente o destino correspondente
+sem importar `app/config` para `core/navigation` ou para módulos de domínio.
 
 Destinos vigentes:
 
@@ -39,8 +46,11 @@ Home e Conta são plataforma, não módulos adicionais do produto.
   Educação, Mobilidade e demais módulos pós-MVP não aparecem na navegação;
 - Search aparece como destino ativo, mas somente providers de superfícies ativas podem responder;
 - um módulo `paused` também fica fora de rota funcional, prefetch/warmup,
-  discovery e layers públicas;
+  discovery, navegação e layers públicas;
 - renderer não cria exceção local para lifecycle;
+- `BottomNav` recebe os IDs já autorizados pela composição e não conhece os registries do app;
+- `TerritoryAdaptiveNavigation` aplica o mesmo scope da camada `app` para mobile, tablet e desktop;
+- Central recebe os IDs ativos por props a partir de `CentralRoutes`, preservando a direção `app -> module/core`;
 - redirect não é mecanismo de ativação nem de pausa.
 
 ## Mobile
@@ -68,6 +78,8 @@ O shell pode mostrar:
 - Busca;
 - Conta/Entrar;
 - infraestrutura autenticada estritamente necessária.
+
+Todos esses destinos continuam condicionados ao lifecycle na composição da app.
 
 ## Território
 
@@ -105,6 +117,8 @@ Regras:
 - Business é provider ativo no corte atual;
 - Community, Serviços, Classificados, Eventos, Vagas e demais providers pausados permanecem desligados;
 - filtros/coleções de módulos pausados não aparecem na UI;
+- `/busca` permanece a busca federada canônica;
+- `/buscar` permanece a busca assistida deliberada, com intents filtradas por `aiSearchIntentScope.ts`;
 - páginas de resultado de busca continuam fora do sitemap quando parametrizadas, mesmo com Search ativa.
 
 ## Evolução pós-MVP
@@ -132,6 +146,7 @@ hipótese de evolução, não o contrato vigente. Qualquer retomada deve:
 - `src/app/config/productModuleRegistry.ts`;
 - `src/app/config/platformCapabilityRegistry.ts`;
 - `src/app/config/lifecycleRegistry.ts`;
+- `src/app/config/territoryNavigationScope.ts`;
 - `src/core/navigation/territoryNavigationModes.ts`;
 - `docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md`;
 - `docs/05-ux/HOME-SPEC.md`;
