@@ -537,6 +537,18 @@ durante a estabilização atual do data plane.
   preservando entitlement/cache como caminho canônico de acesso.
 - Ratchet arquitetural impede o retorno de `queries: educationQueries`.
 
+## Tranche adicional — superfície mínima de assinatura
+
+- O adapter `EducationSubscriptionService` deixou de expor wrappers
+  `canUsePremiumPublicPage`, `canUseShortPremiumLink`, `canUseAnalytics`
+  e `canExportData` sem callers runtime.
+- Consumidores usam o único snapshot canônico retornado por
+  `getSubscriptionStatus`: `planTier`, `isActive`, `entitlements` e
+  `expiresAt`.
+- A vertical deixa de reconsultar Billing por helpers paralelos e reduz a API
+  pública do adapter sem bridge de compatibilidade.
+- Ratchet arquitetural impede o retorno dos wrappers removidos.
+
 ## Tranche adicional — remoção do alias planType
 
 - `planType` foi removido de `EducationSubscriptionStatus`, do hook de
