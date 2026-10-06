@@ -809,6 +809,17 @@ describe("Education module hardening ratchet", () => {
     );
   });
 
+  it("keeps Education profile statuses owned by core", () => {
+    const statusContract = read("src/core/education/profileStatus.ts");
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
+
+    expect(statusContract).toContain("EDUCATION_PROFILE_STATUSES_CANONICAL");
+    expect(mutations).toContain("isEducationProfileStatus");
+    expect(mutations).not.toContain("const validStatuses");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
