@@ -820,6 +820,17 @@ describe("Education module hardening ratchet", () => {
     expect(mutations).not.toContain("const validStatuses");
   });
 
+  it("does not keep a second Education UI limits authority", () => {
+    const constants = read(
+      "src/modules/business/education/constants/index.ts",
+    );
+
+    expect(constants).not.toContain("UI_LIMITS");
+    expect(constants).not.toContain("MAX_PROGRAMS_PER_PROFILE");
+    expect(constants).not.toContain("MAX_LEADS_PER_PAGE");
+    expect(constants).not.toContain("MAX_EVENTS_PER_PROFILE");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
