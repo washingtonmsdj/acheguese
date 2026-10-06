@@ -638,11 +638,6 @@ export const EducationService = {
     return getRecordValue(EDUCATION_PROFILE_STATUS, status)?.color ?? 'gray';
   },
 
-  /** Verifica se programa está disponível (ativo e com vagas) */
-  isProgramAvailable(program: EducationProgram): boolean {
-    return program.is_active && (program.available_slots ?? 0) > 0;
-  },
-
   /** Formata preço do programa */
   formatProgramPrice(price: number | null): string {
     if (price === null || price === undefined) return 'Consultar';
