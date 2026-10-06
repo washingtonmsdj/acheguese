@@ -6,9 +6,9 @@
  */
 
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users } from 'lucide-react';
+import { ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
 import { useEducationProfile } from '../hooks/useEducationProfile';
@@ -16,6 +16,7 @@ import { useEducationLeads } from '../hooks/useEducationLeads';
 import { useLeadPipeline } from '../hooks/useLeadPipeline';
 import { EducationPipelineView } from '../components/EducationPipelineView';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import { EducationUrlService } from '../services/EducationUrlService';
 import type { EducationLeadStatus } from '@/core/education';
 
 export function EducationLeadsPage() {
@@ -28,6 +29,9 @@ export function EducationLeadsPage() {
     refetch: refetchProfile,
   } = useEducationProfile(businessId);
   const profileId = profile?.id;
+  const dashboardUrl = businessId
+    ? EducationUrlService.buildAdminDashboardUrl(businessId)
+    : null;
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
@@ -77,8 +81,17 @@ export function EducationLeadsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 flex items-center justify-between"
       >
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand text-territory-on-image shadow-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          {dashboardUrl ? (
+            <Link
+              to={dashboardUrl}
+              aria-label="Voltar para a gestão de Educação"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-territory-muted transition hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          ) : null}
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand text-territory-on-image shadow-sm">
             <Users className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
