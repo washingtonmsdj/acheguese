@@ -533,6 +533,17 @@ durante a estabilização atual do data plane.
 - O import local de `PlanTier` deixou de ser necessário no hook.
 - Ratchet arquitetural impede o retorno desses aliases.
 
+## Tranche adicional — limites do formulário público de interesse
+
+- Campos de nome do contato/responsável/aluno foram alinhados ao broker
+  `education-lead-rpc`: máximo de `160` caracteres.
+- E-mail (`254`), telefone (`32`, com validação de 10–15 dígitos),
+  observações (`1000`) e etapa manual (`120`) permanecem coerentes com a
+  autoridade final.
+- A UI deixa de rejeitar nomes entre 121 e 160 caracteres que o broker
+  validava como legítimos.
+- Ratchet arquitetural protege os limites principais do intake público.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
