@@ -456,6 +456,8 @@ durante a estabilização atual do data plane.
   de mascarar divergências quando existe dado legado com cronologia inválida.
 - A lista já mostrava badge **Revisar data**; agora o resumo também torna esse
   estado observável sem alterar a regra de domínio nem bloquear edição.
+- Timestamps impossíveis não vazam mais `Invalid Date` do runtime para o
+  administrador; a apresentação usa **Data inválida**.
 - Ratchet arquitetural protege a contagem de eventos inválidos.
 
 ### Gates comprovados e gates ainda pendentes
