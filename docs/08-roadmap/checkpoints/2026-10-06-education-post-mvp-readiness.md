@@ -210,6 +210,9 @@ durante a estabilização atual do data plane.
 
 - Dashboard, Explorer, detalhe público, Programas, Eventos, Leads, Planos e
   cabeçalho do Setup respeitam `prefers-reduced-motion`.
+- CTAs do detalhe público também respeitam redução de movimento ao rolar/focar
+  o formulário de interesse; scroll suave só é usado quando permitido pelo
+  sistema.
 - Animações de entrada deixam de ser requisito para compreender ou operar a
   interface quando redução de movimento está ativa.
 - Ratchet arquitetural protege as superfícies administrativas restantes.
