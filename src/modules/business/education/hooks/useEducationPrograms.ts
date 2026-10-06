@@ -60,7 +60,7 @@ export function useEducationPrograms(
       payload,
     }: {
       programId: string;
-      payload: Partial<EducationProgram>;
+      payload: EducationProgramAdminPatch;
     }) => {
       const updated = await EducationService.updateProgram(programId, payload);
       if (!updated) throw new Error('Falha ao atualizar programa');
