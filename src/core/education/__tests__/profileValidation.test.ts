@@ -39,6 +39,32 @@ describe('Education profile setup validation', () => {
     });
   });
 
+  it('accepts only absolute http or https provenance URLs', () => {
+    expect(
+      getEducationProfileSetupValidationErrors({
+        schoolSourceUrl: 'https://educacao.gov.br/escola',
+      }),
+    ).toEqual([]);
+
+    expect(
+      getEducationProfileSetupValidationErrors({
+        schoolSourceUrl: 'javascript:alert(1)',
+      }),
+    ).toContainEqual({
+      field: 'school_source_url',
+      message: 'A fonte pública deve ser uma URL http ou https válida.',
+    });
+
+    expect(
+      getEducationProfileSetupValidationErrors({
+        schoolSourceUrl: '/fonte-relativa',
+      }),
+    ).toContainEqual({
+      field: 'school_source_url',
+      message: 'A fonte pública deve ser uma URL http ou https válida.',
+    });
+  });
+
   it('rejects non-canonical INEP codes and accepts blank optional values', () => {
     expect(
       getEducationProfileSetupValidationErrors({ schoolInepCode: '1234' }),
