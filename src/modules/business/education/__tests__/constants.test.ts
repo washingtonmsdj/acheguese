@@ -3,8 +3,10 @@ import {
   EDUCATION_PROFILE_STATUS,
   EDUCATION_LEAD_STATUS,
   EDUCATION_SUPPORT_LEVELS,
+  EDUCATION_LEVEL_OPTIONS,
   EDUCATION_PROGRAM_MODALITY_OPTIONS,
   EDUCATION_PROGRAM_SHIFT_OPTIONS,
+  getEducationLevelLabel,
   getEducationProgramModalityLabel,
   getEducationProgramShiftLabel,
   UI_LIMITS,
@@ -48,6 +50,26 @@ describe('Education Constants', () => {
         expect(previous).toBeDefined();
         expect(current?.order).toBeGreaterThan(previous?.order ?? -1);
       }
+    });
+  });
+
+  describe('education level labels', () => {
+    it('maps canonical education level codes to pt-BR labels', () => {
+      expect(getEducationLevelLabel('early_childhood')).toBe('Educação Infantil');
+      expect(getEducationLevelLabel('elementary_2')).toBe(
+        'Ensino Fundamental - Anos Finais',
+      );
+      expect(getEducationLevelLabel('youth_adult_education')).toBe(
+        'EJA - Educação de Jovens e Adultos',
+      );
+      expect(getEducationLevelLabel('unknown_level')).toBeNull();
+    });
+
+    it('keeps setup options derived from the same owner', () => {
+      expect(EDUCATION_LEVEL_OPTIONS).toContainEqual({
+        key: 'high_school',
+        label: 'Ensino Médio',
+      });
     });
   });
 
