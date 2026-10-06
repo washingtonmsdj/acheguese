@@ -268,6 +268,8 @@ describe("Education module hardening ratchet", () => {
     expect(events).toContain("getTemporalState(event) === 'invalid'");
     expect(events).toContain(">Revisar<");
     expect(events).toContain("{invalidEvents.length}");
+    expect(events).toContain("Number.isNaN(date.getTime())");
+    expect(events).toContain("'Data inválida'");
   });
 
   it("keeps Education admin empty states distinct from missing profile setup", () => {
