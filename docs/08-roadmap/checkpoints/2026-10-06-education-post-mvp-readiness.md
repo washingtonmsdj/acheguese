@@ -305,6 +305,9 @@ durante a estabilização atual do data plane.
 - As tabs fixas do detalhe público agora navegam de fato até a seção
   correspondente, respeitam `prefers-reduced-motion` e expõem
   `aria-controls`, `aria-current="location"` e foco visível por teclado.
+- Breadcrumb, favorito e compartilhar no hero também expõem foco visível
+  consistente; o breadcrumb ganhou rótulo de navegação para tecnologias
+  assistivas.
 - O detalhe público também evita `institution_type` como fallback visível:
   usa o nome do nicho ou **Instituição educacional**.
 - Badge de escola pública exibe somente o identificador **INEP**, sem sugerir
