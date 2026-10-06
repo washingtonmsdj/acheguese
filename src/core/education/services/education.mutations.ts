@@ -172,6 +172,9 @@ export async function createEducationProfile(
 ): Promise<MutationResult<EducationProfile>> {
   payload.school_inep_code = payload.school_inep_code?.trim() || null;
   payload.school_source_url = payload.school_source_url?.trim() || null;
+  payload.school_source_updated_at = payload.school_source_url
+    ? payload.school_source_updated_at ?? new Date().toISOString()
+    : null;
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
     return { data: null, error: handleValidationErrors(errors) };
@@ -225,7 +228,37 @@ export async function updateEducationProfile(
     payload.school_inep_code = payload.school_inep_code?.trim() || null;
   }
   if (payload.school_source_url !== undefined) {
-    payload.school_source_url = payload.school_source_url?.trim() || null;
+    const { data: currentSource, error: currentSourceError } = await supabase
+      .from('education_profiles')
+      .select('school_source_url,school_source_updated_at')
+      .eq('id', id)
+      .single();
+
+    if (currentSourceError || !currentSource) {
+      logger.error(
+        '[EducationMutations] Error loading profile source provenance:',
+        currentSourceError,
+      );
+      return {
+        data: null,
+        error: new Error(
+          currentSourceError?.message ?? 'Perfil de educacao nao encontrado',
+        ),
+      };
+    }
+
+    const normalizedSourceUrl = payload.school_source_url?.trim() || null;
+    const currentSourceUrl = currentSource.school_source_url?.trim() || null;
+    payload.school_source_url = normalizedSourceUrl;
+
+    if (normalizedSourceUrl !== currentSourceUrl) {
+      payload.school_source_updated_at = normalizedSourceUrl
+        ? new Date().toISOString()
+        : null;
+    } else {
+      payload.school_source_updated_at =
+        currentSource.school_source_updated_at ?? null;
+    }
   }
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
