@@ -107,3 +107,9 @@ export {
 } from "@/core/education/leadValidation";
 
 export { EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT } from "@/core/education/publicLeadIntakeContract";
+
+export {
+  getEducationInstitutionTypeForNiche,
+  isEducationInstitutionTypeForNiche,
+} from "@/core/education/profileIdentity";
+export type { EducationInstitutionType } from "@/core/education/profileIdentity";
