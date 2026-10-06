@@ -2,6 +2,8 @@ import type {
   EducationLevel,
   EducationNicheKey,
   resolveEducationInstitutionTypeForNiche,
+  isEducationSchoolNetworkCompatible,
+  normalizeEducationSchoolNetwork,
   SchoolAccessibilityFeatureKey,
   SchoolBasicResourceKey,
   SchoolEquipmentFeatureKey,
@@ -176,22 +178,28 @@ export const SCHOOL_NETWORKS = [
 ];
 
 export function getSchoolNetworkOptions(schoolType: string) {
-  if (schoolType === 'public') {
-    return SCHOOL_NETWORKS.filter((network) => network.value !== 'private');
-  }
-  if (schoolType === 'private') {
-    return SCHOOL_NETWORKS.filter((network) => network.value === 'private');
-  }
-  return SCHOOL_NETWORKS;
+  return SCHOOL_NETWORKS.filter((network) => {
+    if (
+      schoolType !== 'public' &&
+      schoolType !== 'private' &&
+      schoolType !== 'community' &&
+      schoolType !== 'charter'
+    ) {
+      return true;
+    }
+
+    return isEducationSchoolNetworkCompatible(
+      schoolType,
+      network.value as SchoolNetwork,
+    );
+  });
 }
 
 export function normalizeSchoolNetworkForType(
   schoolType: string,
   schoolNetwork: string,
 ): string {
-  if (schoolType === 'private') return 'private';
-  if (schoolType === 'public' && schoolNetwork === 'private') return '';
-  return schoolNetwork;
+  return normalizeEducationSchoolNetwork(schoolType, schoolNetwork);
 }
 
 export { EDUCATION_LEVEL_OPTIONS } from '../constants';
