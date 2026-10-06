@@ -86,6 +86,10 @@ durante a estabilização atual do data plane.
   Analytics com permissões reais, falha, revogação e métricas positivas.
 - Ratchet de erros privados alinhado ao componente atual que sanitiza
   mensagens técnicas.
+- `enrollment_open = null` permanece **não informado** no read model de
+  Analytics; não é mais convertido em `false`/“fechado”.
+- Na exportação CSV, estado de matrícula desconhecido produz célula vazia,
+  preservando a diferença entre ausência de informação e valor negativo.
 
 ## Tranche adicional — Programas, Eventos e Leads
 
