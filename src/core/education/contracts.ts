@@ -303,7 +303,7 @@ export interface EducationAnalyticsData {
     enrollmentFairCount?: number;
   };
   schoolMetrics?: {
-    enrollmentWindowOpen: boolean;
+    enrollmentWindowOpen: boolean | null;
     mostRequestedGrade: string | null;
     mostRequestedShift: string | null;
   };
