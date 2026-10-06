@@ -79,6 +79,11 @@ durante a estabilização atual do data plane.
   Nenhuma resposta ausente é apresentada como cartões de contagem zero.
 - Planos distingue erro de assinatura e erro do catálogo: não escolhe mais o
   primeiro plano do catálogo como se fosse o plano atual do usuário.
+- O checkout é serializado por plano: enquanto uma sessão está sendo aberta,
+  novas tentativas ficam bloqueadas e o botão mostra **Abrindo checkout...**.
+- `expiresAt = null` não é mais exibido como “Sem data de expiração”; a UI
+  diferencia assinatura ativa sem data de renovação informada de assinatura
+  sem período ativo.
 - Analytics ganhou navegação de retorno para o dashboard canônico, foco
   visível por teclado, espaçamento responsivo e identificação explícita
   do relatório CSV.
