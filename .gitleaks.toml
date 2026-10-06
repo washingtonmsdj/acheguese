@@ -27,10 +27,1119 @@ tags = ["key", "supabase", "medium"]
 [[rules.allowlists]]
 description = "Supabase publishable keys are public client identifiers in tracked frontend env/build outputs"
 paths = [
-    '''^\.env$''',
-    '''^\.env\.production$''',
-    '''^\.env\.development$''',
+    '''^\.env
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules.allowlists]]
+description = "Runtime-composed Supabase DB URL uses an env-sourced password, never a tracked literal"
+condition = "AND"
+paths = [
+    '''^\.github/workflows/supabase-types-sync\.yml
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.env\.production
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.env\.development
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
     '''^dist/''',
+    '''^\.github/workflows/certify-heavy\.yml
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.github/workflows/ssot-tests\.yml
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^tests/architecture/mvp-core-module-boundary\.test\.ts
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^tests/ssot-authenticated-release-public-env\.test\.ts
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+]
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+]
+regexes = [
+    '''postgresql://postgres\.\$projectRef.*\$encodedPassword.*\$poolerHost''',
+]
+
+[[rules.allowlists]]
+description = "Education INEP stager tests use the literal word secret only as parser fixtures"
+condition = "AND"
+paths = [
+    '''^tests/scripts/public-education-inep-stager\.test\.ts
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.env\.production
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.env\.development
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^dist/''',
+    '''^\.github/workflows/certify-heavy\.yml
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.github/workflows/ssot-tests\.yml
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^tests/architecture/mvp-core-module-boundary\.test\.ts
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^tests/ssot-authenticated-release-public-env\.test\.ts
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+]
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+]
+regexes = [
+    '''postgresql://[^:]+:secret@''',
+]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.env\.production
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.env\.development
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^dist/''',
+    '''^\.github/workflows/certify-heavy\.yml
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^\.github/workflows/ssot-tests\.yml
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^tests/architecture/mvp-core-module-boundary\.test\.ts
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
+    '''^tests/ssot-authenticated-release-public-env\.test\.ts
+
+[[rules]]
+id = "postgresql-connection-string"
+description = "PostgreSQL connection string with password"
+regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
+tags = ["database", "connection-string", "critical"]
+
+[[rules]]
+id = "supabase-anon-key-hardcoded"
+description = "Supabase Anon Key hardcoded em scripts (formato JWT legado)"
+regex = '''(const|let|var)\s+\w+\s*=\s*['"]eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ii4{20,}Iiwicm9sZSI6ImFub24i'''
+tags = ["key", "supabase", "medium"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)['"]?(api[_-]?key|apikey|api[_-]?secret)['"]?\s*[:=]\s*['"][a-zA-Z0-9_\-]{20,}['"]'''
+tags = ["key", "api"]
+
+[[rules]]
+id = "test-runner-user-api-key"
+description = "User-scoped test runner API key"
+regex = '''sk-user-[A-Za-z0-9_\-]{20,}'''
+tags = ["key", "api", "critical"]
+
+[allowlist]
+description = "Allowlist for false positives"
+paths = [
+    '''^\.env\.example$''',
+    '''^\.env\.remote\.example$''',
+    '''^\.env\.local\.example$''',
+    '''\.md$''',
+    '''gitleaks\.toml$''',
+    '''scripts/security/validate-security\.mjs$''',
+]
+
+regexes = [
+    '''your_.*_key_here''',
+    '''\[YOUR.*\]''',
+    '''\[PASSWORD\]''',
+    '''example\.com''',
+    '''PROJECT_REF''',
+    # Placeholders explícitos nos arquivos de exemplo
+    '''sb_publishable_your''',
+    '''sb_secret_your''',
+]
+'',
 ]
 
 [[rules]]
