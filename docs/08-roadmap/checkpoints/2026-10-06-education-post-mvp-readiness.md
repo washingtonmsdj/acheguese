@@ -245,6 +245,17 @@ durante a estabilização atual do data plane.
 - Timestamp de proveniência aparece como **Referência atualizada em**, sem
   afirmar uma revisão humana que o dado não comprova.
 
+## Tranche adicional — owners compartilhados de contato
+
+- `EducationUrlService.buildWhatsAppLink` permanece apenas como adapter de
+  compatibilidade e delega a construção/normalização ao
+  `src/shared/utils/contactLinks.ts`.
+- A vertical não mantém mais uma segunda implementação de `wa.me`; telefones
+  sem dígitos utilizáveis retornam `null` e números locais seguem a
+  normalização compartilhada do produto.
+- Ratchet visual impede a reintrodução de URL WhatsApp montada manualmente no
+  service Education.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
