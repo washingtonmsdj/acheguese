@@ -298,6 +298,8 @@ describe("Education module hardening ratchet", () => {
     expect(analyticsHook).not.toContain("getConversionFunnel");
     expect(analyticsHook).not.toContain("guardianVsStudentRatio");
     expect(analyticsHook).not.toContain("avgDaysToConversion");
+    expect(analyticsHook).toContain("profile?.enrollment_open ?? null");
+    expect(analyticsHook).not.toContain("profile?.enrollment_open ?? false");
     expect(page).toContain("canExportAnalytics = canExport && nicheAllowsExport");
     expect(page).toContain("buildEducationAnalyticsCsv(data)");
     expect(page).toContain("onClick={handleExport}");
