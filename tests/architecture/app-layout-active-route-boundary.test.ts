@@ -94,7 +94,13 @@ describe("active AppLayout route boundary", () => {
   });
 
   it("keeps Messaging inbox in the app shell while threads use focused conversation mode", () => {
-    expect(appShell).toContain('pathSegments[0] === "mensagens" && pathSegments.length >= 3');
+    expect(appShell).toContain(
+      "const MESSAGING_INBOX_PATH = messagingRoutes.inbox();",
+    );
+    expect(appShell).toContain(
+      "pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3",
+    );
+    expect(appShell).not.toContain('pathSegments[0] === "mensagens"');
     expect(appShell).toContain("if (isConversationRoute)");
     expect(appShell).not.toContain("if (isMessagingRoute)");
     expect(appShell).toContain(
