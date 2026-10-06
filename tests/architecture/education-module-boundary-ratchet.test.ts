@@ -153,6 +153,20 @@ describe("Education module hardening ratchet", () => {
     expect(form).toContain('maxLength={1000}');
   });
 
+  it("keeps the Education dashboard truthful before and after setup", () => {
+    const dashboard = read(
+      "src/modules/business/education/pages/EducationDashboardPage.tsx",
+    );
+
+    expect(dashboard).toContain("EducationStatusBadge");
+    expect(dashboard).toContain("profile || item.key === 'setup'");
+    expect(dashboard).toContain("'Não informado'");
+    expect(dashboard).toContain("formatInfrastructureCount");
+    expect(dashboard).toContain("useReducedMotion");
+    expect(dashboard).not.toContain("{profile.status}");
+    expect(dashboard).not.toContain("profile.institution_type ??");
+  });
+
   it("keeps Education admin empty states distinct from missing profile setup", () => {
     const programs = read(
       "src/modules/business/education/pages/EducationProgramsPage.tsx",
