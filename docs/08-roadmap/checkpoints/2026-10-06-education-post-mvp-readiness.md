@@ -704,6 +704,16 @@ durante a estabilização atual do data plane.
 - Ratchet arquitetural protege o caráter read-only, o requisito de Business
   pago explícito e a ausência de service-role.
 
+## Tranche adicional — identidade institucional canônica
+
+- A relação entre `niche_key` e `institution_type` saiu do model da página
+  de Setup e passou para `src/core/education/profileIdentity.ts`.
+- Setup consome o mesmo owner canônico usado pelo domínio.
+- O write model rejeita combinações incompatíveis de tipo institucional e
+  nicho, impedindo persistência válida apenas pela UI.
+- Teste unitário e ratchet arquitetural protegem o mapeamento e a ausência de
+  uma tabela paralela no frontend.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
