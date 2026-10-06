@@ -190,7 +190,7 @@ export function EducationLeadForm({
                 onChange={handleChange}
                 placeholder="Quando diferente do nome acima"
                 autoComplete="name"
-                maxLength={120}
+                maxLength={160}
                 className={cn(FIELD_CLASS_NAME, 'pl-10')}
               />
             </div>
@@ -214,7 +214,7 @@ export function EducationLeadForm({
               placeholder="Seu nome"
               autoComplete="name"
               minLength={2}
-              maxLength={120}
+              maxLength={160}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
@@ -281,7 +281,7 @@ export function EducationLeadForm({
               value={isSchoolContext ? (formData.studentName ?? '') : (formData.childName ?? '')}
               onChange={handleChange}
               placeholder="Primeiro nome"
-              maxLength={120}
+              maxLength={160}
               className={cn(FIELD_CLASS_NAME, 'mt-1')}
             />
           </div>
