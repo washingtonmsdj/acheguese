@@ -105,6 +105,8 @@ durante a estabilização atual do data plane.
   representam participação atual por status, não taxa de passagem entre etapas.
 - Skeletons dos cards de Analytics usam animação apenas com
   `motion-safe`.
+- Taxa média de ocupação de programas é `null` quando não existe capacidade
+  conhecida; o CSV mantém célula vazia em vez de inventar `0%`.
 
 ## Tranche adicional — Programas, Eventos e Leads
 
