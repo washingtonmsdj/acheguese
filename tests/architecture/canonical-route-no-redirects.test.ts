@@ -49,6 +49,9 @@ describe("MVP canonical routing without compatibility redirects", () => {
   it("keeps canonical Notifications active while retired aliases stay dead", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
     const accountPaths = read("src/core/routing/config/account.ts");
+    const notificationRoutes = read(
+      "src/core/notifications/routes/notificationRoutes.ts",
+    );
     const notifications = read("src/app/pages/NotificationsPage.tsx");
     const preferences = read("src/app/pages/NotificationPreferencesPage.tsx");
     const prefetch = read("src/app/routes/prefetch.ts");
@@ -60,9 +63,11 @@ describe("MVP canonical routing without compatibility redirects", () => {
       "src/app/config/notificationActionScope.ts",
     );
 
-    expect(routes).toContain('path="/notificacoes"');
+    expect(routes).toContain("path={notificationRoutes.inbox()}");
+    expect(notificationRoutes).toContain('inbox: () => "/notificacoes"');
     expect(routes).toContain("path={ACCOUNT_PATHS.notifications}");
     expect(accountPaths).toContain('notifications: "/conta/notificacoes"');
+    expect(routes).not.toContain('path="/notificacoes"');
     expect(routes).not.toContain('path="/notifications"');
     expect(routes).not.toContain('path="/settings/notifications"');
 
