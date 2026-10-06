@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Mail, Phone, Calendar } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
@@ -6,10 +6,15 @@ import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import type { EducationLead, EducationLeadStatus } from '@/core/education';
 import { EducationStatusBadge } from './EducationStatusBadge';
+import { EducationLeadLostDialog } from './EducationLeadLostDialog';
 
 export interface EducationPipelineViewProps {
   leads: EducationLead[];
-  onMoveLead?: (leadId: string, toStatus: EducationLeadStatus) => Promise<void> | void;
+  onMoveLead?: (
+    leadId: string,
+    toStatus: EducationLeadStatus,
+    lostReason?: string,
+  ) => Promise<boolean> | boolean;
   statusCounts?: Partial<Record<EducationLeadStatus, number>>;
   isMoving?: boolean;
   className?: string;
@@ -36,6 +41,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
   className,
 }: EducationPipelineViewProps) {
   const prefersReducedMotion = useReducedMotion();
+  const [lostLead, setLostLead] = useState<EducationLead | null>(null);
   const leadsByStage = (status: EducationLeadStatus) =>
     leads.filter((lead) => lead.status === status);
 
@@ -89,7 +95,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                     key={lead.id}
                     className="rounded-xl border border-territory-border bg-territory-surface p-3 shadow-sm"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-territory-ink">
                           {lead.full_name}
@@ -117,21 +123,32 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                       {onMoveLead &&
                       lead.status !== 'enrolled' &&
                       lead.status !== 'lost' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 shrink-0 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
-                          disabled={isMoving}
-                          onClick={() =>
-                            void onMoveLead(
-                              lead.id,
-                              PIPELINE_STAGES[index + 1].status,
-                            )
-                          }
-                        >
-                          {isMoving ? 'Atualizando...' : 'Avançar'}
-                          <ArrowRight className="ml-1 h-3 w-3" aria-hidden="true" />
-                        </Button>
+                        <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-xs text-territory-error hover:bg-territory-error/10 hover:text-territory-error"
+                            disabled={isMoving}
+                            onClick={() => setLostLead(lead)}
+                          >
+                            Perdido
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
+                            disabled={isMoving}
+                            onClick={() =>
+                              void onMoveLead(
+                                lead.id,
+                                PIPELINE_STAGES[index + 1].status,
+                              )
+                            }
+                          >
+                            {isMoving ? 'Atualizando...' : 'Avançar'}
+                            <ArrowRight className="ml-1 h-3 w-3" aria-hidden="true" />
+                          </Button>
+                        </div>
                       ) : null}
                     </div>
 
@@ -155,6 +172,21 @@ export const EducationPipelineView = memo(function EducationPipelineView({
           </motion.section>
         );
       })}
+
+      <EducationLeadLostDialog
+        open={Boolean(lostLead)}
+        leadName={lostLead?.full_name}
+        isSubmitting={isMoving}
+        onOpenChange={(open) => {
+          if (!open) setLostLead(null);
+        }}
+        onConfirm={async (reason) => {
+          if (!lostLead || !onMoveLead) return false;
+          const moved = await onMoveLead(lostLead.id, 'lost', reason);
+          if (moved) setLostLead(null);
+          return moved;
+        }}
+      />
     </div>
   );
 });
