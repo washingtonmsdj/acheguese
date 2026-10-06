@@ -739,6 +739,18 @@ durante a estabilização atual do data plane.
 - Teste unitário e ratchet arquitetural protegem a enumeração e evitam drift
   entre frontend e persistência.
 
+## Tranche adicional — identidade escolar canônica
+
+- Tipos de escola, redes administrativas e compatibilidade entre ambos passaram
+  para `src/core/education/schoolIdentity.ts`.
+- Setup preserva o comportamento atual, mas delega filtro/normalização de rede
+  ao core.
+- O write model rejeita combinações incompatíveis como
+  `public + private` e `private + municipal`.
+- Updates parciais de `school_type` ou `school_network` combinam o patch com
+  o estado persistido antes da validação, impedindo drift fora da UI.
+- Teste unitário e ratchet arquitetural protegem o contrato.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
