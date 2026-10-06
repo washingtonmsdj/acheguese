@@ -361,7 +361,7 @@ export async function updateEducationProgram(
 ): Promise<MutationResult<EducationProgram>> {
   const { data: existingProgram, error: existingProgramError } = await supabase
     .from('education_programs')
-    .select('education_profile_id')
+    .select('education_profile_id,max_capacity,current_enrollment')
     .eq('id', id)
     .single();
 
@@ -382,9 +382,22 @@ export async function updateEducationProgram(
     payload.name = payload.name.trim();
   }
 
+  const capacityTouched =
+    payload.max_capacity !== undefined ||
+    payload.current_enrollment !== undefined;
   const numericError = getEducationProgramNumericValidationError({
     availableSlots: payload.available_slots,
     priceFrom: payload.price_from,
+    maxCapacity: capacityTouched
+      ? payload.max_capacity === undefined
+        ? existingProgram.max_capacity
+        : payload.max_capacity
+      : undefined,
+    currentEnrollment: capacityTouched
+      ? payload.current_enrollment === undefined
+        ? existingProgram.current_enrollment
+        : payload.current_enrollment
+      : undefined,
   });
   if (numericError) {
     return { data: null, error: new Error(numericError) };
