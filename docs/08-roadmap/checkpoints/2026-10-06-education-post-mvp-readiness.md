@@ -537,6 +537,15 @@ durante a estabilização atual do data plane.
   preservando entitlement/cache como caminho canônico de acesso.
 - Ratchet arquitetural impede o retorno de `queries: educationQueries`.
 
+## Tranche adicional — remoção do alias planType
+
+- `planType` foi removido de `EducationSubscriptionStatus`, do hook de
+  assinatura, do hook de Analytics e dos mocks de Billing.
+- Education usa somente `planTier` canônico para identificar o plano; a
+  vertical não mantém mais a taxonomia paralela `free/basic/premium`.
+- `resolvePlanType` deixou de existir no adapter Education.
+- Ratchet arquitetural impede o retorno do alias deprecated.
+
 ## Tranche adicional — API de assinatura
 
 - `useEducationSubscription` deixou de expor um objeto local `permissions`
