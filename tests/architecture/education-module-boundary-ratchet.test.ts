@@ -443,6 +443,8 @@ describe("Education module hardening ratchet", () => {
     expect(service).not.toContain("validateProgramPayload(");
     expect(service).not.toContain("validateLeadPayload(");
     expect(service).not.toContain("validateEventPayload(");
+    expect(service).not.toContain("Program name too short");
+    expect(service).not.toContain("Event title too short");
   });
 
   it("keeps Education domain contracts owned by core", () => {
