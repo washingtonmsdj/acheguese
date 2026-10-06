@@ -111,15 +111,16 @@ function validateProfilePayload(payload: Partial<EducationProfile>): ValidationE
     ageRangeMin: payload.age_range_min,
     ageRangeMax: payload.age_range_max,
     schoolInepCode: payload.school_inep_code,
+    schoolSourceUrl: payload.school_source_url,
   });
   errors.push(...setupErrors);
 
 
-  if (payload.whatsapp_number !== undefined && payload.whatsapp_number.length > 20) {
+  if (payload.whatsapp_number != null && payload.whatsapp_number.length > 20) {
     errors.push({ field: 'whatsapp_number', message: 'Maximo 20 caracteres' });
   }
 
-  if (payload.summary !== undefined && payload.summary.length > 500) {
+  if (payload.summary != null && payload.summary.length > 500) {
     errors.push({ field: 'summary', message: 'Maximo 500 caracteres' });
   }
 
@@ -165,6 +166,7 @@ export async function createEducationProfile(
   payload: Omit<EducationProfile, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationProfile>> {
   payload.school_inep_code = payload.school_inep_code?.trim() || null;
+  payload.school_source_url = payload.school_source_url?.trim() || null;
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
     return { data: null, error: handleValidationErrors(errors) };
@@ -216,6 +218,9 @@ export async function updateEducationProfile(
 ): Promise<MutationResult<EducationProfile>> {
   if (payload.school_inep_code !== undefined) {
     payload.school_inep_code = payload.school_inep_code?.trim() || null;
+  }
+  if (payload.school_source_url !== undefined) {
+    payload.school_source_url = payload.school_source_url?.trim() || null;
   }
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
