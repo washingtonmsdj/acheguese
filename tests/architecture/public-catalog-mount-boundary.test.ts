@@ -76,6 +76,6 @@ describe("public catalog mount boundary", () => {
     expect(security).not.toContain("CATALOG_API");
     expect(security).not.toContain("tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev");
     expect(security).toContain("'connect-src': [");
-    expect(security).toContain(""'self'"");
+    expect(security).toContain("\"'self'\"");
   });
 });
