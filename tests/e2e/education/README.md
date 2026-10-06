@@ -72,7 +72,7 @@ esperado deixar de funcionar.
 2. **Programas**
    - lifecycle autenticado já prova criação, edição, reativação e exclusão com confirmação;
    - a exclusão é verificada pelo mesmo `program.id` no backend;
-   - preço `0` e vagas `0` já são preservados; ainda falta uma prova E2E explícita de valor ausente versus zero;
+   - preço/vagas `0` são preservados e campos limpos são persistidos como `null`, provando zero versus ausente;
    - entitlement FREE real é usado para a criação, sem falsificar plano;
    - ainda falta matriz mobile do diálogo no candidato de release.
 
