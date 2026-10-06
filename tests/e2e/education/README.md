@@ -102,6 +102,7 @@ esperado deixar de funcionar.
    - teste dedicado prova que falhas de identidade Business, assinatura e catálogo não viram plano Free sintético;
    - ausência de policy no catálogo usa baseline somente do mesmo tier canônico;
    - plano atual e entitlements continuam vindo das autoridades de Billing;
+   - falha ao resolver owner/gestor tem estado de erro próprio com retry e não é apresentada como gestor read-only;
    - ainda faltam E2E de release para owner versus gestor, checkout único e falhas reais de catálogo/checkout;
    - nenhum desses cenários deve ser produzido adulterando plano/entitlement da fixture.
 
