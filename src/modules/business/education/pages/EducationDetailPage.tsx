@@ -458,7 +458,7 @@ export function EducationDetailPage() {
                     onClick={() => void toggleFavorite()}
                     disabled={favoriteLoading}
                     className={cn(
-                      'inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 backdrop-blur-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand disabled:cursor-not-allowed disabled:opacity-60',
+                      'inline-flex h-11 w-11 items-center justify-center rounded-full border border-territory-on-image/30 backdrop-blur-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand disabled:cursor-not-allowed disabled:opacity-60',
                       isFavorite
                         ? 'bg-territory-on-image text-territory-brand'
                         : 'bg-territory-on-image/15 hover:bg-territory-on-image/25',
@@ -480,7 +480,7 @@ export function EducationDetailPage() {
                 <button
                   type="button"
                   onClick={() => void handleShare()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 bg-territory-on-image/15 backdrop-blur-sm transition hover:bg-territory-on-image/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-territory-on-image/30 bg-territory-on-image/15 backdrop-blur-sm transition hover:bg-territory-on-image/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
                   aria-label="Compartilhar"
                 >
                   <Share2 className="h-4 w-4" aria-hidden="true" />
