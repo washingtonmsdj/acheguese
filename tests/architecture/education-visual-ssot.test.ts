@@ -245,6 +245,15 @@ describe("education visual SSOT", () => {
     );
   });
 
+  it("keeps Education Explorer card CTAs uniquely named", () => {
+    const cards = readSource(
+      "src/modules/business/education/pages/explorerCards.tsx",
+    );
+
+    expect(cards).toContain("Ver detalhes de ${institutionName}");
+    expect(cards).toContain("Abrir WhatsApp de ${institutionName}");
+  });
+
   it("keeps Education Explorer filters keyboard and screen-reader visible", () => {
     const explorer = readSource(
       "src/modules/business/education/pages/EducationExplorerPage.tsx",
