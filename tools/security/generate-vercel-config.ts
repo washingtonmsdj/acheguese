@@ -41,14 +41,18 @@ const VERCEL_CONFIG_TEMPLATE = {
     "node tools/release/validate-package-lock-consistency.mjs && npm ci",
   framework: "vite",
 
+  redirects: [
+    {
+      source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: true,
+    },
+  ],
+
   rewrites: [
     {
       source: `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*`,
       destination: `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*`,
-    },
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
-      destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/`,
     },
     {
       source: `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*`,
@@ -110,6 +114,7 @@ function generateVercelConfig() {
     ignoreCommand?: string;
     buildCommand?: string;
     installCommand?: string;
+    redirects?: Array<{ source?: string; destination?: string; permanent?: boolean }>;
     rewrites?: Array<{ source?: string; destination?: string }>;
     headers?: Array<{
       source?: string;
@@ -146,13 +151,15 @@ function generateVercelConfig() {
     throw new Error("Install command drifted from lockfile consistency guard");
   }
 
-  const [catalogApiRewrite, catalogIndexRewrite, catalogNestedRewrite, spaRewrite] =
+  const catalogRedirect = generated.redirects?.[0];
+  const [catalogApiRewrite, catalogNestedRewrite, spaRewrite] =
     generated.rewrites ?? [];
   if (
+    catalogRedirect?.source !== PUBLIC_EXTERNAL_APPS.catalog.mountPath ||
+    catalogRedirect?.destination !== PUBLIC_EXTERNAL_APPS.catalog.publicPath ||
+    catalogRedirect?.permanent !== true ||
     catalogApiRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*` ||
     catalogApiRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*` ||
-    catalogIndexRewrite?.source !== PUBLIC_EXTERNAL_APPS.catalog.mountPath ||
-    catalogIndexRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/` ||
     catalogNestedRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*` ||
     catalogNestedRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/:path*` ||
     spaRewrite?.source !== "/(.*)" ||
