@@ -95,7 +95,7 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
       payload,
     }: {
       leadId: string;
-      payload: Partial<EducationLead>;
+      payload: Partial<Omit<EducationLead, 'status'>>;
     }) => {
       const updated = await EducationService.updateLead(leadId, payload);
       if (!updated) throw new Error('Falha ao atualizar lead');
