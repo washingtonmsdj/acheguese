@@ -245,6 +245,21 @@ describe("education visual SSOT", () => {
     );
   });
 
+  it("keeps Education Explorer filters keyboard and screen-reader visible", () => {
+    const explorer = readSource(
+      "src/modules/business/education/pages/EducationExplorerPage.tsx",
+    );
+    const nicheChip = readSource(
+      "src/modules/business/education/pages/explorerNicheChip.tsx",
+    );
+
+    expect(explorer).toContain('aria-label="Buscar instituições de Educação"');
+    expect(explorer).toContain('role="status"');
+    expect(explorer).toContain('aria-live="polite"');
+    expect(nicheChip).toContain("aria-pressed={Boolean(active)}");
+    expect(nicheChip).toContain("focus-visible:ring-2");
+  });
+
   it("keeps Education favorites and map links on canonical shared owners", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
