@@ -12,10 +12,6 @@
       "destination": "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev/:path*"
     },
     {
-      "source": "/catalogo",
-      "destination": "https://washingtonmsdj.github.io/catalogo/"
-    },
-    {
       "source": "/catalogo/:path*",
       "destination": "https://washingtonmsdj.github.io/catalogo/:path*"
     },
@@ -168,5 +164,12 @@
       "**": false,
       "main": true
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/catalogo",
+      "destination": "/catalogo/",
+      "permanent": true
+    }
+  ]
 }
