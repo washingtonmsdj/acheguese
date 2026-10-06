@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { EducationSubscriptionService } from '../services/education-subscription.service';
+import { useEducationSubscription } from './useEducationSubscription';
 import * as educationQueries from '@/core/education/services/education.queries';
 import { logger } from '@/shared/utils/logger';
 import type { EducationAnalyticsData } from '@/core/education';
@@ -30,21 +30,24 @@ export interface UseEducationAnalyticsOptions {
 
 export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
   const { businessId, profileId, enabled = true, nicheKey } = options;
+  // Todos os consumidores usam a mesma query canônica de assinatura.
+  // Um erro de leitura nunca deve ser tratado como plano gratuito ou upgrade.
+  const subscription = useEducationSubscription({
+    businessId,
+    enabled: enabled && Boolean(businessId),
+  });
+  const canAccessAnalytics = Boolean(
+    subscription.status?.isActive && subscription.entitlements?.canUseAnalytics,
+  );
+  const canExport = Boolean(
+    subscription.status?.isActive && subscription.entitlements?.canExportData,
+  );
 
   const analyticsQuery = useQuery({
     queryKey: ['education', 'analytics', businessId, profileId, nicheKey],
-    queryFn: async (): Promise<EducationAnalyticsData | null> => {
-      // Verifica entitlement
-      const canAccess = await EducationSubscriptionService.canUseAnalytics(businessId);
-
-      if (!canAccess) {
-        logger.warn('[useEducationAnalytics] Analytics not available for business:', businessId);
-        return null;
-      }
-
+    queryFn: async (): Promise<EducationAnalyticsData> => {
       if (!profileId) {
-        logger.warn('[useEducationAnalytics] No profileId provided');
-        return null;
+        throw new Error('Perfil Education obrigatório para consultar analytics');
       }
 
       try {
@@ -150,33 +153,32 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
         throw error;
       }
     },
-    enabled: enabled && Boolean(businessId) && Boolean(profileId),
+    enabled: enabled && Boolean(businessId) && Boolean(profileId) &&
+      canAccessAnalytics && !subscription.isError,
     staleTime: 5 * 60 * 1000, // 5 minutos
-  });
-
-  const entitlementQuery = useQuery({
-    queryKey: ['education', 'entitlements', businessId],
-    queryFn: () => EducationSubscriptionService.getSubscriptionStatus(businessId),
-    enabled: enabled && Boolean(businessId),
-    staleTime: 10 * 60 * 1000, // 10 minutos
   });
 
   return {
     // Analytics data
     data: analyticsQuery.data,
-    isLoading: analyticsQuery.isLoading || analyticsQuery.isFetching,
+    isLoading: analyticsQuery.isLoading,
+    isRefreshing: analyticsQuery.isFetching && !analyticsQuery.isLoading,
     isError: analyticsQuery.isError,
     error: analyticsQuery.error,
     refetch: analyticsQuery.refetch,
 
     // Entitlements
-    entitlements: entitlementQuery.data?.entitlements,
-    planType: entitlementQuery.data?.planType,
-    isActive: entitlementQuery.data?.isActive,
+    entitlements: subscription.entitlements,
+    planType: subscription.status?.planType,
+    isActive: subscription.status?.isActive,
+    isEntitlementLoading: subscription.isLoading,
+    isEntitlementError: subscription.isError,
+    entitlementError: subscription.error,
+    refetchEntitlement: subscription.refetch,
 
     // Permission checks
-    canAccessAnalytics: entitlementQuery.data?.entitlements.canUseAnalytics ?? false,
-    canExport: entitlementQuery.data?.entitlements.canExportData ?? false,
+    canAccessAnalytics,
+    canExport,
 
     // Raw queries para uso avançado
     queries: educationQueries,
