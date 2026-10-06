@@ -1,9 +1,7 @@
 import type React from "react";
-import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { cn } from "@/shared/utils/cn";
+import { motion, useReducedMotion } from "framer-motion";
+ import { Badge } from "@/shared/components/ui/badge";
+ import { cn } from "@/shared/utils/cn";
 import type { EducationProgram } from "@/core/education";
 import {
   formatPrice,
@@ -50,13 +48,14 @@ export function StickyTabs({
 
 export function ProgramCard({
   program,
-  onClick,
+  onVisible,
   showPrice = true,
 }: {
   program: EducationProgram;
-  onClick?: () => void;
+  onVisible?: () => void;
   showPrice?: boolean;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   const hasKnownSlots = program.available_slots !== null;
   const isSchoolProgram = Boolean(program.grade || program.class_name);
   const vacancyRate =
@@ -66,11 +65,12 @@ export function ProgramCard({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 8 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="group flex cursor-pointer flex-col rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink transition-all hover:-translate-y-0.5 hover:border-territory-brand/30 hover:shadow-md"
-      onClick={onClick}
+      viewport={{ once: true, amount: 0.5 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
+      onViewportEnter={onVisible}
+      className="flex flex-col rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -187,26 +187,23 @@ export function ProgramCard({
         )}
       </dl>
 
-      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-        {showPrice && program.price_from ? (
-          <div>
-            <div className="text-[11px] text-territory-muted">A partir de</div>
-            <div className="text-base font-bold text-territory-ink">
-              {formatPrice(program.price_from)}
+      {showPrice && program.price_from != null ? (
+        <div className="mt-auto pt-4">
+          <div className="text-[11px] text-territory-muted">
+            {program.price_from === 0 ? 'Valor informado' : 'A partir de'}
+          </div>
+          <div className="text-base font-bold text-territory-ink">
+            {program.price_from === 0
+              ? 'Gratuito'
+              : formatPrice(program.price_from)}
+            {program.price_from > 0 ? (
               <span className="ml-1 text-xs font-normal text-territory-muted">
                 /mês
               </span>
-            </div>
+            ) : null}
           </div>
-        ) : null}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="rounded-full text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
-        >
-          Ver detalhes <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
-        </Button>
-      </div>
+        </div>
+      ) : null}
     </motion.article>
   );
 }
