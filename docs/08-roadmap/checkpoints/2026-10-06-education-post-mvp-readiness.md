@@ -296,6 +296,9 @@ durante a estabilização atual do data plane.
 - Chips de nicho também expõem `aria-pressed`; a busca principal ganhou
   rótulo acessível persistente e a contagem de resultados é anunciada com
   `role="status"`/`aria-live="polite"`.
+- CTAs repetidos dos cards usam nome acessível contextualizado pela instituição
+  (**Ver detalhes de …** / **Abrir WhatsApp de …**), evitando listas de links
+  indistinguíveis em leitores de tela.
 - Cards destacados e seções de marketing respeitam `prefers-reduced-motion`.
 - O bloco que apenas mostra uma amostra dos primeiros resultados deixou de se
   apresentar como **curadoria/destaque** não comprovado.
