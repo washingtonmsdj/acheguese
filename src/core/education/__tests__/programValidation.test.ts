@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS,
+  EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH,
   EDUCATION_PROGRAM_NAME_MAX_LENGTH,
+  getEducationProgramCurriculumValidationError,
   getEducationProgramNameValidationError,
   getEducationProgramNumericValidationError,
+  normalizeEducationProgramCurriculumTopics,
 } from '../programValidation';
 
 describe('Education program validation', () => {
@@ -19,6 +23,41 @@ describe('Education program validation', () => {
         'x'.repeat(EDUCATION_PROGRAM_NAME_MAX_LENGTH + 1),
       ),
     ).toContain('no máximo');
+  });
+
+  it('normalizes curriculum topics before validation', () => {
+    expect(
+      normalizeEducationProgramCurriculumTopics([
+        ' Matemática ',
+        'Matemática',
+        '  Ciências   Naturais ',
+        '',
+      ]),
+    ).toEqual(['Matemática', 'Ciências Naturais']);
+  });
+
+  it('rejects curriculum topics outside the canonical limits', () => {
+    expect(
+      getEducationProgramCurriculumValidationError(
+        Array.from(
+          { length: EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS + 1 },
+          (_, index) => `Tema ${index}`,
+        ),
+      ),
+    ).toContain('no máximo');
+
+    expect(
+      getEducationProgramCurriculumValidationError([
+        'x'.repeat(EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH + 1),
+      ]),
+    ).toContain('caracteres');
+
+    expect(
+      getEducationProgramCurriculumValidationError([
+        'Português',
+        'Matemática',
+      ]),
+    ).toBeNull();
   });
 
   it('rejects negative or non-finite numeric values', () => {
