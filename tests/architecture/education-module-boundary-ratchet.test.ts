@@ -103,6 +103,38 @@ describe("Education module hardening ratchet", () => {
     );
   });
 
+  it("keeps Education analytics null and read-error semantics behaviorally tested", () => {
+    const pipelineMetricsTest = read(
+      "src/core/education/services/__tests__/educationLeadPipelineMetrics.test.ts",
+    );
+    const exportTest = read(
+      "src/core/education/services/__tests__/educationAnalyticsExport.test.ts",
+    );
+
+    expect(pipelineMetricsTest).toContain(
+      "returns null for average first-contact time when there is no valid sample",
+    );
+    expect(pipelineMetricsTest).toContain(
+      "propagates analytics read failures instead of returning synthetic zeros",
+    );
+    expect(pipelineMetricsTest).toContain(
+      "averages only valid non-negative first-contact samples",
+    );
+
+    expect(exportTest).toContain(
+      "keeps a missing first-contact average empty instead of exporting zero",
+    );
+    expect(exportTest).toContain(
+      "keeps an unmeasurable program occupancy rate empty",
+    );
+    expect(exportTest).toContain(
+      "preserves an unknown enrollment window as an empty CSV value",
+    );
+    expect(exportTest).toContain(
+      "neutralizes spreadsheet formulas in text dimensions",
+    );
+  });
+
   it("keeps Education billing offer and operational limits on separate SSOTs", () => {
     const subscription = read(
       "src/modules/business/education/services/education-subscription.service.ts",
