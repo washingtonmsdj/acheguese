@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const hook = read("src/core/notifications/useUnifiedNotifications.ts");
 const center = read("src/app/components/notifications/NotificationCenter.tsx");
+const item = read("src/app/components/notifications/NotificationItem.tsx");
 
 describe("notifications mutation feedback SSOT", () => {
   it("keeps mark-all failure distinct from a valid zero-update result", () => {
@@ -41,5 +42,16 @@ describe("notifications mutation feedback SSOT", () => {
     expect(center).toContain("bg-territory-error/10");
     expect(center).toContain("text-territory-error");
     expect(center).toContain("enableToast: false");
+  });
+
+  it("keeps inbox action controls at the canonical mobile touch-target size", () => {
+    expect(item).toContain(
+      'className="h-11 w-11 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"',
+    );
+    expect(item).not.toContain(
+      'className="h-8 w-8 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"',
+    );
+    expect(item).toContain('aria-label="Marcar notificação como lida"');
+    expect(item).toContain('aria-label="Remover notificação"');
   });
 });
