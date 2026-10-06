@@ -492,9 +492,11 @@ export function EducationEventsPage() {
             .map((event, index) => (
               <motion.div
                 key={event.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={
+                  prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }
+                }
               >
                 <Card
                   className={`border-territory-border bg-territory-surface shadow-sm ${
