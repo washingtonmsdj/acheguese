@@ -12,9 +12,10 @@ describe("MVP canonical routing without compatibility redirects", () => {
     const registry = read("tools/architecture/architecture-registry.ts");
     const audit = read("tools/architecture/generate-architecture-audit.ts");
 
-    expect(routes).toContain('path="/conta"');
+    expect(routes).toContain("path={ACCOUNT_PATHS.home}");
     expect(routes).toContain('path="/conta/editar/:profileId"');
     expect(routes).toContain("path={ACCOUNT_PATHS.notifications}");
+    expect(accountPaths).toContain('home: "/conta"');
     expect(accountPaths).toContain('notifications: "/conta/notificacoes"');
 
     expect(routes).not.toContain('path="/perfil"');
