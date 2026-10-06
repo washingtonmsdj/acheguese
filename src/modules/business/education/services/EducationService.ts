@@ -19,9 +19,11 @@ import {
 import type {
   EducationProfile,
   EducationProgram,
+  EducationProgramAdminPatch,
   EducationLead,
   EducationLeadAdminPatch,
   EducationEvent,
+  EducationEventAdminPatch,
   EducationLeadStatus,
   SchoolType,
   SchoolNetwork,
@@ -253,7 +255,7 @@ export const EducationService = {
 
   async updateProgram(
     programId: string,
-    payload: Partial<EducationProgram>,
+    payload: EducationProgramAdminPatch,
   ): Promise<EducationProgram | null> {
     const { data, error } = await mutations.updateEducationProgram(programId, payload);
     if (error) {
@@ -472,7 +474,7 @@ export const EducationService = {
 
   async updateEvent(
     eventId: string,
-    payload: Partial<EducationEvent>,
+    payload: EducationEventAdminPatch,
   ): Promise<EducationEvent | null> {
     const { data, error } = await mutations.updateEducationEvent(eventId, payload);
     if (error) {
