@@ -188,7 +188,7 @@
         "resource:\\s*[\"']ci-auth-fixture-session[\"']"
       ]
     },
-    "education-lead-rpc": {
+    "education-lead-intake": {
       "kind": "public-registration-broker",
       "label": "public authoritative Education lead intake broker",
       "requiredPatterns": [
@@ -742,7 +742,17 @@
         "auth\\.getUser\\s*\\("
       ]
     },
-    "education-lead-rpc": {
+    "business-network-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated transactional Business network broker",
+      "requiredPatterns": [
+        "auth\\.getUser\\s*\\(",
+        "requireOperationalAccount\\s*\\(",
+        "business_network_rpc_"
+      ]
+    },
+    "education-lead-intake": {
       "kind": "public-registration-broker",
       "risk": "Critical",
       "label": "public authoritative Education lead service_role broker",
@@ -757,16 +767,6 @@
         "getTrustedClientIp\\s*\\(",
         "body\\.honeypot",
         "body\\.turnstileToken"
-      ]
-    },
-    "business-network-rpc": {
-      "kind": "authenticated-broker",
-      "risk": "Critical",
-      "label": "authenticated transactional Business network broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\(",
-        "requireOperationalAccount\\s*\\(",
-        "business_network_rpc_"
       ]
     }
   },
