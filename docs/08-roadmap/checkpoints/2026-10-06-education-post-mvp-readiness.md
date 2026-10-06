@@ -67,6 +67,9 @@ durante a estabilização atual do data plane.
 - `EducationSubscriptionService.getSubscriptionStatus` passou a propagar falhas de
   resolução de Business, assinatura e catálogo: erro de infraestrutura não deve
   virar `PlanTier.FREE` sintético.
+- `useEducationSubscription` também preserva estado desconhecido: enquanto
+  não existe status canônico resolvido, `planTier`, `planType` e
+  `isActive` permanecem indefinidos em vez de assumir Free/inativo.
 - `useEducationSubscription` expõe `refetch` canônico para retry de leitura.
 - `useEducationAnalytics` reutiliza a mesma assinatura cacheada da vertical,
   sem uma segunda consulta de entitlement; métricas só são lidas quando a
