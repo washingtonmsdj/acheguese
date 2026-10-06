@@ -176,6 +176,8 @@ describe("education visual SSOT", () => {
     expect(presentation).toContain("getEducationProgramModalityLabel");
     expect(presentation).toContain("getEducationProgramShiftLabel");
     expect(presentation).toContain("program.current_enrollment != null");
+    expect(presentation).not.toContain("program.current_enrollment ?? 0");
+    expect(presentation).toContain("program.max_capacity} alunos");
     expect(presentation).not.toContain('program.modality ?? "Presencial"');
     expect(presentation).not.toContain("Ver detalhes");
     expect(presentation).not.toContain("cursor-pointer");
