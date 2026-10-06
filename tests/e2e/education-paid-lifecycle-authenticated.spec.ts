@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Download, type Page } from "@playwright/test";
 import {
   E2E_AUTH_FIXTURE_MARKER,
   bootstrapFixtureSession,
@@ -77,7 +77,7 @@ async function authenticatePaidFixture(page: Page) {
   return { businessId };
 }
 
-async function readDownloadText(download: Awaited<ReturnType<Page["waitForEvent"]>>) {
+async function readDownloadText(download: Download) {
   const stream = await download.createReadStream();
   if (!stream) throw new Error("CSV download stream unavailable.");
 
