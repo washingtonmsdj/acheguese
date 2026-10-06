@@ -50,8 +50,6 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
     refetch: statusQuery.refetch,
     entitlements,
     planTier,
-    /** @deprecated Compatibilidade de apresentação. Prefira planTier para regras. */
-    planType: status?.planType,
     isActive: status?.isActive,
     expiresAt: status?.expiresAt,
     refresh: refreshMutation.mutate,
