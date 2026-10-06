@@ -141,8 +141,8 @@ export function EducationProgramsPage() {
     ageGroup: '',
     shift: '',
     modality: '',
-    availableSlots: 0,
-    priceFrom: 0,
+    availableSlots: null as number | null,
+    priceFrom: null as number | null,
     isActive: true,
     gradeOption: '',
     customGrade: '',
@@ -246,8 +246,8 @@ export function EducationProgramsPage() {
         ageGroup: formData.ageGroup,
         shift: formData.shift,
         modality: formData.modality,
-        availableSlots: formData.availableSlots,
-        priceFrom: isPublicSchool ? undefined : formData.priceFrom,
+        availableSlots: formData.availableSlots ?? undefined,
+        priceFrom: isPublicSchool ? undefined : formData.priceFrom ?? undefined,
         grade: stage.grade,
         educationLevel: stage.educationLevel,
         curriculumTopics: parseCurriculumTopics(formData.curriculumTopics),
@@ -302,8 +302,8 @@ export function EducationProgramsPage() {
           age_group: formData.ageGroup || null,
           shift: formData.shift || null,
           modality: formData.modality || null,
-          available_slots: formData.availableSlots || null,
-          price_from: isPublicSchool ? null : formData.priceFrom || null,
+          available_slots: formData.availableSlots,
+          price_from: isPublicSchool ? null : formData.priceFrom,
           curriculum_topics: parseCurriculumTopics(formData.curriculumTopics),
           is_active: formData.isActive,
         } as Partial<EducationProgram>,
@@ -357,8 +357,8 @@ export function EducationProgramsPage() {
       ageGroup: program.age_group || '',
       shift: program.shift || '',
       modality: program.modality || '',
-      availableSlots: program.available_slots || 0,
-      priceFrom: isPublicSchool ? 0 : program.price_from || 0,
+      availableSlots: program.available_slots,
+      priceFrom: isPublicSchool ? null : program.price_from,
       isActive: program.is_active,
       gradeOption: '',
       customGrade: '',
@@ -389,8 +389,8 @@ export function EducationProgramsPage() {
       ageGroup: '',
       shift: '',
       modality: '',
-      availableSlots: 0,
-      priceFrom: 0,
+      availableSlots: null,
+      priceFrom: null,
       isActive: true,
       gradeOption: '',
       customGrade: '',
@@ -620,13 +620,15 @@ export function EducationProgramsPage() {
                           program.shift}
                       </Badge>
                     )}
-                    {!isPublicSchool && program.price_from && (
+                    {!isPublicSchool && program.price_from != null && (
                       <Badge
                         variant="outline"
                         className="gap-1 border-territory-border text-territory-muted"
                       >
                         <DollarSign className="h-3 w-3" />
-                        A partir de {formatBrl(program.price_from)}
+                        {program.price_from === 0
+                          ? 'Gratuito'
+                          : `A partir de ${formatBrl(program.price_from)}`}
                       </Badge>
                     )}
                   </div>
@@ -821,11 +823,12 @@ export function EducationProgramsPage() {
                   id="availableSlots"
                   type="number"
                   min="0"
-                  value={formData.availableSlots}
+                  value={formData.availableSlots ?? ''}
                   onChange={(event) =>
                     setFormData({
                       ...formData,
-                      availableSlots: parseInt(event.target.value, 10) || 0,
+                      availableSlots:
+                        event.target.value === '' ? null : Number(event.target.value),
                     })
                   }
                 />
@@ -856,11 +859,12 @@ export function EducationProgramsPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.priceFrom}
+                  value={formData.priceFrom ?? ''}
                   onChange={(event) =>
                     setFormData({
                       ...formData,
-                      priceFrom: parseFloat(event.target.value) || 0,
+                      priceFrom:
+                        event.target.value === '' ? null : Number(event.target.value),
                     })
                   }
                 />
