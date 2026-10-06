@@ -101,15 +101,6 @@ export function getEducationLevelLabel(
 
 export const EDUCATION_SUPPORT_LEVELS = EDUCATION_SUPPORT_LEVELS_CANONICAL;
 
-export const UI_LIMITS = {
-  MAX_PROGRAMS_PER_PROFILE: 50,
-  MAX_LEADS_PER_PAGE: 25,
-  MAX_EVENTS_PER_PROFILE: 100,
-  MAX_SUMMARY_LENGTH: 500,
-  MAX_PROGRAM_NAME_LENGTH: 100,
-  MAX_NOTE_LENGTH: 1000,
-} as const;
-
 
 export const EDUCATION_PROGRAM_MODALITY_OPTIONS = [
   { value: 'in_person', label: 'Presencial' },
