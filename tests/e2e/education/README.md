@@ -60,9 +60,10 @@ esperado deixar de funcionar.
 ## Gaps E2E obrigatórios antes da ativação
 
 1. **Setup**
-   - manter a suite operacional;
-   - provar validação de INEP, fonte pública e faixa etária contra o write model;
-   - provar compensação/rollback quando criação parcial falha.
+   - a suite autenticada já prova formato inválido de INEP no formulário;
+   - URL pública não-http(s) e faixa etária invertida são rejeitadas antes da persistência;
+   - após cada tentativa inválida, a suite confirma ausência de `education_profile`;
+   - ainda falta provar compensação/rollback quando uma criação parcial falha.
 
 2. **Programas**
    - CRUD determinístico;
