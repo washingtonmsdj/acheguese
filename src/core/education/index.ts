@@ -93,3 +93,15 @@ export type {
   EducationEventTemporalInput,
   EducationEventTemporalState,
 } from "@/core/education/eventTemporalState";
+
+export {
+  EDUCATION_LEAD_EMAIL_MAX_LENGTH,
+  EDUCATION_LEAD_GRADE_MAX_LENGTH,
+  EDUCATION_LEAD_MAX_AGE,
+  EDUCATION_LEAD_MIN_AGE,
+  EDUCATION_LEAD_NAME_MAX_LENGTH,
+  EDUCATION_LEAD_NOTE_MAX_LENGTH,
+  EDUCATION_LEAD_PHONE_MAX_LENGTH,
+  getEducationLeadContactValidationError,
+  normalizeEducationLeadAdminPatch,
+} from "@/core/education/leadValidation";
