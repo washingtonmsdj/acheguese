@@ -7,7 +7,7 @@
 import { useEffect, useRef } from 'react';
 import type { Map as MapLibreMap, Marker as MapLibreMarker, Popup as MapLibrePopup } from "maplibre-gl";
 import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
-import { DEFAULT_TILE_STYLE } from '@/shared/config/mapDefaults';
+import { DEFAULT_TILE_STYLE, MINI_MAP_VISUALS } from '@/shared/config/mapDefaults';
 import { createMapPopupContent } from '@/shared/components/maps/mapPopupContent';
 
 export interface MiniMapProps {
@@ -42,12 +42,12 @@ export function MiniMap({
   description,
   zoom = 15,
   height = '280px',
-  markerColor = '#10b981',
+  markerColor = MINI_MAP_VISUALS.marker.defaultColor,
   markerIcon = '',
   routeCoordinates,
-  routeColor = '#0f766e',
-  routeStartColor = '#fbbf24',
-  routeEndColor = '#064e3b',
+  routeColor = MINI_MAP_VISUALS.route.defaultColor,
+  routeStartColor = MINI_MAP_VISUALS.route.startColor,
+  routeEndColor = MINI_MAP_VISUALS.route.endColor,
   className = '',
   showControls = true,
   interactive = true,
@@ -125,7 +125,7 @@ export function MiniMap({
       innerCircle.setAttribute('cy', '20');
       innerCircle.setAttribute('r', '12');
       innerCircle.setAttribute('fill', markerColor);
-      innerCircle.setAttribute('stroke', 'white');
+      innerCircle.setAttribute('stroke', MINI_MAP_VISUALS.marker.outlineColor);
       innerCircle.setAttribute('stroke-width', '3');
 
       svg.appendChild(outerCircle);
@@ -136,7 +136,7 @@ export function MiniMap({
         text.setAttribute('y', '24');
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('font-size', '16');
-        text.setAttribute('fill', 'white');
+        text.setAttribute('fill', MINI_MAP_VISUALS.marker.outlineColor);
         text.textContent = markerIcon;
         svg.appendChild(text);
       }
@@ -175,7 +175,7 @@ export function MiniMap({
           id: 'mini-map-route-casing',
           type: 'line',
           source: 'mini-map-route',
-          paint: { 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.9 },
+          paint: { 'line-color': MINI_MAP_VISUALS.route.casingColor, 'line-width': 7, 'line-opacity': 0.9 },
         });
         map.addLayer({
           id: 'mini-map-route-line',
@@ -190,9 +190,9 @@ export function MiniMap({
             'width: 24px',
             'height: 24px',
             `background: ${color}`,
-            'border: 3px solid white',
+            `border: ${MINI_MAP_VISUALS.route.endpointBorder}`,
             'border-radius: 999px',
-            'box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25)',
+            `box-shadow: ${MINI_MAP_VISUALS.route.endpointShadow}`,
           ].join(';');
           return endpoint;
         };
