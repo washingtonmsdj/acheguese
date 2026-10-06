@@ -72,8 +72,8 @@ durante a estabilização atual do data plane.
   catálogo pode usar baseline de entitlements apenas para o **mesmo tier
   canônico**.
 - `useEducationSubscription` também preserva estado desconhecido: enquanto
-  não existe status canônico resolvido, `planTier`, `planType` e
-  `isActive` permanecem indefinidos em vez de assumir Free/inativo.
+  não existe status canônico resolvido, `planTier` e `isActive` permanecem
+  indefinidos em vez de assumir Free/inativo.
 - `useEducationSubscription` expõe `refetch` canônico para retry de leitura.
 - `useEducationAnalytics` reutiliza a mesma assinatura cacheada da vertical,
   sem uma segunda consulta de entitlement; métricas só são lidas quando a
