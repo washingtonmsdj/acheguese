@@ -259,6 +259,17 @@ describe("Education module hardening ratchet", () => {
     expect(events).not.toContain("Conflito de agenda impede");
   });
 
+  it("keeps invalid Education events visible to administrators", () => {
+    const events = read(
+      "src/modules/business/education/pages/EducationEventsPage.tsx",
+    );
+
+    expect(events).toContain("const invalidEvents = events.filter");
+    expect(events).toContain("getTemporalState(event) === 'invalid'");
+    expect(events).toContain(">Revisar<");
+    expect(events).toContain("{invalidEvents.length}");
+  });
+
   it("keeps Education admin empty states distinct from missing profile setup", () => {
     const programs = read(
       "src/modules/business/education/pages/EducationProgramsPage.tsx",
