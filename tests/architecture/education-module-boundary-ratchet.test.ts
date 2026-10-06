@@ -167,6 +167,35 @@ describe("Education module hardening ratchet", () => {
     expect(dashboard).not.toContain("profile.institution_type ??");
   });
 
+  it("keeps Education lead loss explicit, privacy-minimized, and paginated", () => {
+    const leadsPage = read(
+      "src/modules/business/education/pages/EducationLeadsPage.tsx",
+    );
+    const pipeline = read(
+      "src/modules/business/education/components/EducationPipelineView.tsx",
+    );
+    const lostDialog = read(
+      "src/modules/business/education/components/EducationLeadLostDialog.tsx",
+    );
+    const leadsHook = read(
+      "src/modules/business/education/hooks/useEducationLeads.ts",
+    );
+
+    expect(pipeline).toContain("EducationLeadLostDialog");
+    expect(pipeline).toContain("setLostLead(lead)");
+    expect(pipeline).toContain("'lost', reason");
+    expect(leadsPage).toContain("lostReason?: string");
+    expect(leadsPage).toContain("await moveLead({ leadId, toStatus, lostReason })");
+    expect(lostDialog).toContain("Motivo operacional *");
+    expect(lostDialog).toContain("Não inclua CPF");
+    expect(lostDialog).toContain("maxLength={500}");
+    expect(leadsHook).toContain(
+      "queryKey: ['education', 'leads', profileId, status, page, pageSize]",
+    );
+    expect(leadsPage).toContain("Página {page} de {totalPages}");
+    expect(leadsPage).toContain("As contagens por etapa consideram todo o pipeline.");
+  });
+
   it("keeps Education admin empty states distinct from missing profile setup", () => {
     const programs = read(
       "src/modules/business/education/pages/EducationProgramsPage.tsx",
