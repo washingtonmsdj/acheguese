@@ -22,6 +22,7 @@ import type {
   SchoolAccessibilityFeatureKey,
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
+  getEducationProfileSetupValidationErrors,
 } from '@/core/education';
 import {
   INITIAL_EDUCATION_SETUP_FORM,
@@ -177,6 +178,24 @@ export function EducationSetupPage() {
       formData.schoolType,
       formData.schoolNetwork,
     );
+    const ageRangeMin =
+      formData.ageRangeMin === '' ? null : Number(formData.ageRangeMin);
+    const ageRangeMax =
+      formData.ageRangeMax === '' ? null : Number(formData.ageRangeMax);
+    const setupValidationErrors = getEducationProfileSetupValidationErrors({
+      ageRangeMin,
+      ageRangeMax,
+      schoolInepCode: supportsSchoolIdentity ? formData.schoolInepCode : null,
+    });
+
+    if (setupValidationErrors.length > 0) {
+      toast({
+        title: 'Revise os dados da instituição',
+        description: setupValidationErrors[0].message,
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -191,7 +210,7 @@ export function EducationSetupPage() {
           ? ((normalizedNetwork || undefined) as SchoolNetwork | undefined)
           : undefined,
         schoolInepCode: supportsSchoolIdentity
-          ? formData.schoolInepCode || undefined
+          ? formData.schoolInepCode.trim() || undefined
           : undefined,
         schoolSourceUrl: supportsSchoolIdentity
           ? formData.schoolSourceUrl || undefined
@@ -200,12 +219,8 @@ export function EducationSetupPage() {
           ? formData.educationLevels
           : undefined,
         shifts: formData.shifts,
-        ageRangeMin: formData.ageRangeMin
-          ? Number(formData.ageRangeMin)
-          : undefined,
-        ageRangeMax: formData.ageRangeMax
-          ? Number(formData.ageRangeMax)
-          : undefined,
+        ageRangeMin: ageRangeMin ?? undefined,
+        ageRangeMax: ageRangeMax ?? undefined,
         enrollmentOpen: formData.enrollmentOpen,
         schoolBasicResources: formData.schoolBasicResources,
         schoolAccessibilityFeatures: formData.schoolAccessibilityFeatures,
@@ -320,7 +335,6 @@ export function EducationSetupPage() {
           <EducationSetupActions
             isSaving={isSaving}
             onCancel={handleBack}
-            onSave={() => void saveSetup()}
           />
         </div>
       </form>
