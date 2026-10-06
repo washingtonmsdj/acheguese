@@ -136,3 +136,8 @@ export {
   isEducationSchoolType,
   normalizeEducationSchoolNetwork,
 } from "@/core/education/schoolIdentity";
+
+export {
+  EDUCATION_PROFILE_STATUSES_CANONICAL,
+  isEducationProfileStatus,
+} from "@/core/education/profileStatus";
