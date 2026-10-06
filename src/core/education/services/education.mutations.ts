@@ -530,13 +530,6 @@ async function persistEducationLeadUpdate(
 ): Promise<MutationResult<EducationLead>> {
   const updatePayload: Partial<EducationLead> = { ...payload };
 
-  if (
-    updatePayload.status === 'contacted' &&
-    !updatePayload.first_contact_at
-  ) {
-    updatePayload.first_contact_at = new Date().toISOString();
-  }
-
   const { data, error } = await supabase
     .from('education_leads')
     .update(updatePayload)
@@ -614,6 +607,10 @@ export async function moveLeadToStatus(
   }
 
   const updatePayload: Partial<EducationLead> = { status: newStatus };
+
+  if (newStatus === 'contacted' && currentStatus !== 'contacted') {
+    updatePayload.first_contact_at = new Date().toISOString();
+  }
 
   if (newStatus === 'lost') {
     const lostReasonError = getEducationLeadLostReasonValidationError(
