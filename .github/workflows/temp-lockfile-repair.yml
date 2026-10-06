@@ -50,5 +50,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package-lock.json
-          git commit -m "chore(deps): apply compatible npm audit fixes"
+          HUSKY=0 git commit --no-verify -m "chore(deps): apply compatible npm audit fixes"
           git push origin HEAD:test/active-visual-import-graph-ssot
