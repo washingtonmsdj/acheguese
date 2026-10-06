@@ -460,6 +460,14 @@ durante a estabilização atual do data plane.
   administrador; a apresentação usa **Data inválida**.
 - Ratchet arquitetural protege a contagem de eventos inválidos.
 
+## Tranche adicional — disponibilidade administrativa de Programas
+
+- O card administrativo de Programa deixa de apresentar `0 vagas` como
+  **“0 vagas disponíveis”**.
+- `available_slots = 0` agora aparece como **Sem vagas**, alinhando o admin ao
+  detalhe público e preservando a diferença entre zero e valor não informado.
+- Ratchet arquitetural protege essa semântica.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
