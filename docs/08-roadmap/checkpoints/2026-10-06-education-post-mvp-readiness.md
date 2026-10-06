@@ -207,9 +207,12 @@ durante a estabilização atual do data plane.
   registra mais `enrolled` como se fosse o status anterior.
 - Retry idempotente `enrolled → enrolled` não dispara uma segunda conversão,
   evitando inflação de analytics por repetição da mesma mutation.
-- `updateEducationLead` não aceita mais `status` no contrato genérico e ainda
-  rejeita essa chave em runtime; toda transição passa exclusivamente por
-  `moveLeadToStatus`, preservando regras, motivo de perda e auditoria.
+- `updateEducationLead` usa o contrato canônico
+  `EducationLeadAdminPatch`, que expõe apenas campos administrativos
+  editáveis e exclui status, IDs, timestamps, origem, primeiro contato e motivo
+  de perda; a guarda runtime continua rejeitando `status`.
+- Toda transição passa exclusivamente por `moveLeadToStatus`, preservando
+  regras, motivo de perda e auditoria.
 - `first_contact_at` só é preenchido na transição real para `contacted`;
   retry idempotente `contacted → contacted` não renova o timestamp do primeiro
   contato.
