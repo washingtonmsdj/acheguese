@@ -44,6 +44,22 @@
         "getSupabaseAdminClient\\s*\\("
       ]
     },
+    "education-lead-rpc": {
+      "kind": "public-registration-broker",
+      "label": "public authoritative Education lead intake broker",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "isOriginAllowed\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "readJsonBody<RequestBody>\\s*\\(",
+        "getRequiredEnv\\s*\\(\\s*[\"']TURNSTILE_SECRET_KEY[\"']\\s*\\)",
+        "verifyTurnstileToken\\s*\\(",
+        "requireLeadEligibleProfile\\s*\\(",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "education_leads",
+        "public_directory_form"
+      ]
+    },
     "create-professional-lead": {
       "kind": "public-registration-broker",
       "label": "public authoritative Professional lead intake broker",
