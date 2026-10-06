@@ -70,11 +70,11 @@ esperado deixar de funcionar.
      qualquer prova remota adicional deve usar mecanismo explicitamente seguro.
 
 2. **Programas**
-   - lifecycle autenticado já prova criação, edição, reativação e exclusão com confirmação;
+   - lifecycle autenticado prova criação, edição, reativação e exclusão com confirmação;
    - a exclusão é verificada pelo mesmo `program.id` no backend;
    - preço/vagas `0` são preservados e campos limpos são persistidos como `null`, provando zero versus ausente;
    - entitlement FREE real é usado para a criação, sem falsificar plano;
-   - ainda falta matriz mobile do diálogo no candidato de release.
+   - o mesmo lifecycle abre o diálogo em `390×844`, verifica dimensões e ações visíveis e fecha sem persistir dados extras.
 
 3. **Leads**
    - paginação;
