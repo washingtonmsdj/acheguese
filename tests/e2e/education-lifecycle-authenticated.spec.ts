@@ -240,6 +240,12 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
         .getByTestId("education-summary")
         .fill("Escola técnica E2E configurada pelo owner autenticado.");
       await page.getByTestId("education-whatsapp").fill("+5571999999999");
+      await page.getByTestId("education-school-inep").fill("29193559");
+      await page
+        .getByTestId("education-school-source-url")
+        .fill("https://example.com/education-e2e");
+      await page.getByTestId("education-age-min").fill("0");
+      await page.getByTestId("education-age-max").fill("17");
       await page.getByTestId("education-save-setup").click();
 
       await expect(page).toHaveURL(
@@ -252,7 +258,9 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
       const { data: educationProfile, error: educationProfileError } =
         await client
           .from("education_profiles")
-          .select("id, niche_key, institution_type, status")
+          .select(
+            "id, niche_key, institution_type, status, school_inep_code, school_source_url, age_range_min, age_range_max",
+          )
           .eq("business_id", businessProfileId!)
           .single();
 
@@ -260,6 +268,12 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
       expect(educationProfile?.niche_key).toBe("regular_school");
       expect(educationProfile?.institution_type).toBe("school");
       expect(educationProfile?.status).toBe("draft");
+      expect(educationProfile?.school_inep_code).toBe("29193559");
+      expect(educationProfile?.school_source_url).toBe(
+        "https://example.com/education-e2e",
+      );
+      expect(educationProfile?.age_range_min).toBe(0);
+      expect(educationProfile?.age_range_max).toBe(17);
 
       await page.goto(
         `/central/empresas/${businessProfileId}/educacao/programas`,
@@ -302,8 +316,10 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
         name: "Programa ativo",
       });
       await expect(activeSwitch).toBeChecked();
+      await page.locator("#availableSlots").fill("0");
+      await page.locator("#priceFrom").fill("0");
       await activeSwitch.click();
-      await page.getByRole("button", { name: "Salvar Alterações" }).click();
+      await page.getByRole("button", { name: /Salvar alterações/i }).click();
 
       await expect(page.getByText("Inativo", { exact: true })).toBeVisible({
         timeout: 30_000,
@@ -311,17 +327,19 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
 
       const { data: inactiveProgram, error: inactiveError } = await client
         .from("education_programs")
-        .select("is_active")
+        .select("is_active, available_slots, price_from")
         .eq("id", program!.id)
         .single();
       expect(inactiveError).toBeNull();
       expect(inactiveProgram?.is_active).toBe(false);
+      expect(inactiveProgram?.available_slots).toBe(0);
+      expect(Number(inactiveProgram?.price_from)).toBe(0);
 
       await actions.click();
       await page.getByRole("menuitem", { name: "Editar" }).click();
       await expect(activeSwitch).not.toBeChecked();
       await activeSwitch.click();
-      await page.getByRole("button", { name: "Salvar Alterações" }).click();
+      await page.getByRole("button", { name: /Salvar alterações/i }).click();
       await expect(page.getByText("Inativo", { exact: true })).toHaveCount(0);
 
       await page.goto(
