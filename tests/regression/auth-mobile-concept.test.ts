@@ -46,9 +46,6 @@ describe("mobile account concept composition", () => {
     );
 
     expect(googleCopy).toBeGreaterThanOrEqual(0);
-    // O último bloco desktop-only é o cabeçalho do card, bem antes da ação Google.
-    // Se Google for movido para dentro de um wrapper lg-only, a distância cai e o
-    // contrato acusa a regressão da prancha mobile de Entrar.
     expect(googleCopy - nearestDesktopOnlyWrapper).toBeGreaterThan(2_000);
     expect(login).toContain("max-w-[245px]");
     expect(login).toContain('name="chevron-right"');
@@ -78,8 +75,9 @@ describe("mobile account concept composition", () => {
     expect(iconCss).toContain(".auth-concept-icon--chevron-right");
     expect(iconCss).toContain(".auth-concept-icon--shield-filled");
     expect(iconCss).toContain("clip-path:polygon(50% 0,94% 17%,88% 68%,50% 100%,12% 68%,6% 17%)");
-    expect(iconCss).toContain("border-left:2px solid #fff");
-    expect(iconCss).toContain("border-bottom:2px solid #fff");
+    expect(iconCss).toContain("border-left:2px solid hsl(var(--territory-action-on-image))");
+    expect(iconCss).toContain("border-bottom:2px solid hsl(var(--territory-action-on-image))");
+    expect(iconCss).not.toContain("#fff");
   });
 
   it("keeps the Google provider artwork on one shared owner", () => {
@@ -87,15 +85,21 @@ describe("mobile account concept composition", () => {
     const iconComponent = read("src/app/components/auth/AuthConceptIcon.tsx");
     const googleMark = read("src/shared/components/branding/GoogleProviderMark.tsx");
     const googleMarkCss = read("src/shared/components/branding/google-provider-mark.css");
+    const providerTokens = read("src/shared/components/branding/provider-brand-tokens.css");
 
     expect(iconComponent).toContain("GoogleProviderMark");
     expect(iconComponent).toContain('if (name === "google")');
     expect(googleMark).toContain("google-provider-mark");
+    expect(googleMarkCss).toContain('import "./provider-brand-tokens.css"');
     expect(googleMarkCss).toContain("conic-gradient");
-    expect(googleMarkCss).toContain("#4285f4");
-    expect(googleMarkCss).toContain("#34a853");
-    expect(googleMarkCss).toContain("#fbbc05");
-    expect(googleMarkCss).toContain("#ea4335");
+    expect(googleMarkCss).toContain("var(--provider-google-blue)");
+    expect(googleMarkCss).toContain("var(--provider-google-green)");
+    expect(googleMarkCss).toContain("var(--provider-google-yellow)");
+    expect(googleMarkCss).toContain("var(--provider-google-red)");
+    expect(providerTokens).toContain("--provider-google-blue:");
+    expect(providerTokens).toContain("--provider-google-green:");
+    expect(providerTokens).toContain("--provider-google-yellow:");
+    expect(providerTokens).toContain("--provider-google-red:");
     expect(iconCss).not.toContain("auth-concept-icon--google");
   });
 });
