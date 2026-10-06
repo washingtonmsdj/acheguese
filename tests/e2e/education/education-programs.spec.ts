@@ -1,192 +1,153 @@
 /**
- * E2E Tests - Education Module: Programs Management
+ * E2E smoke operacional — Education Programs
  *
- * Suite legada de smoke para Programas.
- *
- * Não constitui certificação CRUD completa: contém skips condicionais,
- * esperas temporais e asserts permissivos que ainda precisam ser substituídos
- * por provas determinísticas antes da ativação pós-MVP.
+ * Esta suite nao certifica criacao de programa pela UI: o entitlement da
+ * fixture pode bloquear a criacao. A fixture tecnica apenas semeia dados
+ * autorizados; leitura, edicao e exclusao passam pela UI autenticada.
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
-  ensureEducationProfileExists,
-  createTestProgram,
+  admin,
+  authenticateAsBusinessOwner,
   cleanupEducationData,
+  createTestProgram,
+  ensureEducationProfileExists,
+  hasAdminClient,
+  hasE2ECredentials,
 } from '../../helpers/education-setup';
 
 const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
 const programsUrl = `/central/empresas/${businessId}/educacao/programas`;
 
-async function gotoAndWait(page: import('@playwright/test').Page, url: string) {
-  // Navegar para a URL e aguardar carregamento completo
-  await page.goto(url, { waitUntil: 'domcontentloaded' });
-  // Aguardar que o app carregue e as requisições do Supabase completem
-  await page.waitForTimeout(5000);
-  const acceptBtn = page.getByRole('button', { name: /aceitar|accept/i }).first();
-  if (await acceptBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await acceptBtn.click();
-    await page.waitForTimeout(500);
-  }
-}
-
-test.describe('Education Programs Management', () => {
+test.describe('Education Programs Management — operational smoke', () => {
   test.beforeEach(async ({ page }) => {
-    // Login via UI e navegar diretamente para a URL de destino
-    const email = process.env.E2E_EDUCATION_OWNER_EMAIL;
-    const password = process.env.E2E_EDUCATION_OWNER_PASSWORD;
-    
-    if (!email || !password) {
-      test.skip(true, 'Credenciais E2E não configuradas');
-    }
+    test.skip(
+      !hasAdminClient() || !hasE2ECredentials(),
+      'Education Programs smoke exige fixture admin e credencial E2E autorizada.',
+    );
 
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
-    const acceptBtn = page.getByRole('button', { name: /aceitar|accept/i }).first();
-    if (await acceptBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await acceptBtn.click();
-    }
-    await page.locator('#login-identifier').fill(email!);
-    await page.locator('#login-password').fill(password!);
-    await page.getByRole('button', { name: 'Entrar' }).click();
-    await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 20000 });
-    
-    // Aguardar que o SessionService carregue completamente
-    // Verificar que o usuário está logado (perfil carregado)
-    await page.waitForFunction(() => {
-      // Verificar se há algum elemento que indica que o usuário está logado
-      const body = document.body.innerText;
-      return body.includes('@e2ecadastro') || body.includes('Empresas') || body.includes('Perfil');
-    }, { timeout: 15000 }).catch(() => {
-      console.log('[beforeEach] Warning: Session may not be fully loaded');
-    });
-    
-    // Aguardar mais um pouco para garantir
-    await page.waitForTimeout(2000);
-    
+    await authenticateAsBusinessOwner(page, businessId);
     await ensureEducationProfileExists(businessId);
-  });
-
-  test.afterEach(async () => {
     await cleanupEducationData(businessId);
   });
 
-  test('should load programs page without error', async ({ page }) => {
-    await gotoAndWait(page, programsUrl);
-
-    const currentUrl = page.url();
-    console.log('Current URL:', currentUrl);
-
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
-  });
-
-  test('should show some content on programs page', async ({ page }) => {
-    await gotoAndWait(page, programsUrl);
-
-    const hasHeading = await page.getByRole('heading').first().isVisible({ timeout: 5000 }).catch(() => false);
-    const hasText = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-
-    expect(hasHeading || hasText).toBe(true);
-  });
-
-  test('should show program when program exists', async ({ page }) => {
-    await createTestProgram(businessId, { name: 'Programa Visível' });
-
-    await gotoAndWait(page, programsUrl);
-
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
-  });
-
-  test('should open create program form if button exists', async ({ page }) => {
-    await gotoAndWait(page, programsUrl);
-
-    // Log page content for debugging
-    const bodyText = await page.locator('body').evaluate(el => el.innerText.substring(0, 500));
-    console.log('[debug] Page text:', bodyText.substring(0, 200));
-    
-    const buttons = await page.getByRole('button').allTextContents();
-    console.log('[debug] Buttons:', buttons);
-
-    const addBtn = page.getByRole('button', { name: /novo programa|adicionar|criar/i }).first();
-    if (!(await addBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
-      test.skip(true, 'Botão de criar programa não encontrado na página atual');
+  test.afterEach(async () => {
+    if (hasAdminClient()) {
+      await cleanupEducationData(businessId);
     }
+  });
 
-    await addBtn.click();
+  test('renders a seeded program with truthful zero-slot state', async ({
+    page,
+  }) => {
+    const title = 'Programa E2E Sem Vagas';
+    const programId = await createTestProgram(businessId, {
+      name: title,
+      available_spots: 0,
+    });
+    expect(programId).toBeTruthy();
+
+    await page.goto(programsUrl, { waitUntil: 'domcontentloaded' });
 
     await expect(
-      page.getByRole('dialog').or(page.getByLabel(/nome/i).first())
-    ).toBeVisible({ timeout: 5000 });
+      page.getByRole('heading', { name: 'Programas e turmas' }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(title, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText('Sem vagas', { exact: true })).toBeVisible();
   });
 
-  test('should create a new program if form is accessible', async ({ page }) => {
-    await gotoAndWait(page, programsUrl);
+  test('edits a seeded program through the authenticated UI', async ({
+    page,
+  }) => {
+    const originalTitle = 'Programa E2E Editar';
+    const programId = await createTestProgram(businessId, {
+      name: originalTitle,
+      available_spots: 12,
+    });
+    expect(programId).toBeTruthy();
 
-    const addBtn = page.getByRole('button', { name: /novo programa|adicionar|criar/i }).first();
-    if (!(await addBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
-      test.skip(true, 'Botão de criar programa não encontrado');
+    await page.goto(programsUrl, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText(originalTitle, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page
+      .getByRole('button', { name: `Ações do programa ${originalTitle}` })
+      .click();
+    await page.getByRole('menuitem', { name: 'Editar' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+
+    const customGrade = page.locator('#customGrade');
+    if (await customGrade.isVisible().catch(() => false)) {
+      await customGrade.fill('Programa E2E Atualizado');
+    } else {
+      await page.locator('#name').fill('Programa E2E Atualizado');
     }
 
-    await addBtn.click();
+    await page.locator('#availableSlots').fill('0');
 
-    const nameField = page.getByLabel(/nome/i).first();
-    if (!(await nameField.isVisible({ timeout: 3000 }).catch(() => false))) {
-      test.skip(true, 'Campo de nome não encontrado');
-    }
+    const activeSwitch = page.getByRole('switch', { name: 'Programa ativo' });
+    await expect(activeSwitch).toBeChecked();
+    await activeSwitch.click();
 
-    await nameField.fill('Ensino Fundamental I');
-
-    const descField = page.getByLabel(/descrição/i).first();
-    if (await descField.isVisible()) {
-      await descField.fill('Programa de ensino fundamental para crianças de 6 a 10 anos.');
-    }
-
-    await page.getByRole('button', { name: /salvar|criar|confirmar/i }).last().click();
+    await page.getByRole('button', { name: 'Salvar alterações' }).click();
 
     await expect(
-      page.getByText(/criado|salvo|sucesso/i).or(page.getByText('Ensino Fundamental I'))
-    ).toBeVisible({ timeout: 8000 });
+      page.getByText('Programa E2E Atualizado', { exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Sem vagas', { exact: true })).toBeVisible();
+    await expect(page.getByText('Inativo', { exact: true })).toBeVisible();
+
+    const { data, error } = await admin!
+      .from('education_programs')
+      .select('name,available_slots,is_active')
+      .eq('id', programId!)
+      .single();
+
+    expect(error).toBeNull();
+    expect(data?.name).toBe('Programa E2E Atualizado');
+    expect(data?.available_slots).toBe(0);
+    expect(data?.is_active).toBe(false);
   });
 
-  test('should validate required fields when creating program', async ({ page }) => {
-    await gotoAndWait(page, programsUrl);
+  test('deletes a seeded program only after explicit confirmation', async ({
+    page,
+  }) => {
+    const title = 'Programa E2E Excluir';
+    const programId = await createTestProgram(businessId, { name: title });
+    expect(programId).toBeTruthy();
 
-    const addBtn = page.getByRole('button', { name: /novo programa|adicionar|criar/i }).first();
-    if (!(await addBtn.isVisible({ timeout: 5000 }).catch(() => false))) {
-      test.skip(true, 'Botão de criar programa não encontrado');
-    }
+    await page.goto(programsUrl, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText(title, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
 
-    await addBtn.click();
-
-    await page.getByRole('button', { name: /salvar|criar|confirmar/i }).last().click();
+    await page
+      .getByRole('button', { name: `Ações do programa ${title}` })
+      .click();
+    await page.getByRole('menuitem', { name: 'Excluir' }).click();
 
     await expect(
-      page.getByText(/obrigatório|required|preencha/i).first()
-    ).toBeVisible({ timeout: 5000 });
-  });
+      page.getByRole('heading', { name: 'Excluir programa' }),
+    ).toBeVisible();
+    await page.getByRole('button', { name: 'Excluir', exact: true }).click();
 
-  test('should show program details when program exists', async ({ page }) => {
-    await createTestProgram(businessId, { name: 'Programa Detalhes' });
+    await expect(page.getByText(title, { exact: true })).toHaveCount(0, {
+      timeout: 30_000,
+    });
 
-    await gotoAndWait(page, programsUrl);
+    const { data, error } = await admin!
+      .from('education_programs')
+      .select('id')
+      .eq('id', programId!)
+      .maybeSingle();
 
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
-  });
-
-  test('should search programs by name if search exists', async ({ page }) => {
-    await createTestProgram(businessId, { name: 'Programa Busca Especial' });
-
-    await gotoAndWait(page, programsUrl);
-
-    const searchInput = page.getByPlaceholder(/buscar|pesquisar|search/i).first();
-    if (!(await searchInput.isVisible({ timeout: 3000 }).catch(() => false))) {
-      test.skip(true, 'Campo de busca não encontrado');
-    }
-
-    await searchInput.fill('Busca Especial');
-    await page.waitForTimeout(1000);
-    await expect(page.getByText('Programa Busca Especial')).toBeVisible({ timeout: 5000 });
+    expect(error).toBeNull();
+    expect(data).toBeNull();
   });
 });
