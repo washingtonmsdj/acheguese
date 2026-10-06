@@ -290,6 +290,15 @@ describe("Education module hardening ratchet", () => {
     expect(leads).toContain("Não foi possível atualizar o lead");
   });
 
+  it("does not collapse unknown program vacancies into unavailable", () => {
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+
+    expect(service).not.toContain("isProgramAvailable");
+    expect(service).not.toContain("(program.available_slots ?? 0) > 0");
+  });
+
   it("does not expose synthetic Education lead conversion probability", () => {
     const service = read(
       "src/modules/business/education/services/EducationService.ts",
