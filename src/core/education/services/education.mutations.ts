@@ -10,7 +10,10 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getEducationEventValidationError } from '../eventValidation';
-import { getEducationLeadLostReasonValidationError } from '../leadPipelineValidation';
+import {
+  canMoveEducationLeadToStatus,
+  getEducationLeadLostReasonValidationError,
+} from '../leadPipelineValidation';
 import { getEducationProfileSetupValidationErrors } from '../profileValidation';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
@@ -593,7 +596,7 @@ export async function moveLeadToStatus(
   }
 
   const currentStatus = currentLead.status as EducationLeadStatus;
-  if (!isAllowedLeadTransition(currentStatus, newStatus)) {
+  if (!canMoveEducationLeadToStatus(currentStatus, newStatus)) {
     return {
       data: null,
       error: new Error(
