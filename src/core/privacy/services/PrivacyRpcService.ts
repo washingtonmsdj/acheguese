@@ -1,9 +1,9 @@
 import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
+import { supabase } from "@/integrations/supabase";
 import { TIMEOUTS } from "@/shared/constants";
 
 type PrivacyRpcAction =
   | "recordConsent"
-  | "getDeletionStatus"
   | "requestAccountDeletion"
   | "cancelAccountDeletion";
 
@@ -15,6 +15,24 @@ interface CancelAccountDeletionBrokerData {
   cancelled: boolean;
 }
 
+interface CurrentDeletionStatusRpcResult {
+  data: unknown;
+  error: { message: string } | null;
+}
+
+interface CurrentDeletionStatusRpcCall {
+  abortSignal: (signal: AbortSignal) => Promise<CurrentDeletionStatusRpcResult>;
+}
+
+interface CurrentDeletionStatusRpcClient {
+  rpc: (
+    functionName: "get_current_account_deletion_status",
+  ) => CurrentDeletionStatusRpcCall;
+}
+
+const currentDeletionStatusRpcClient =
+  supabase as unknown as CurrentDeletionStatusRpcClient;
+
 export type AccountDeletionStatus =
   | "scheduled"
   | "cancelled"
@@ -22,12 +40,16 @@ export type AccountDeletionStatus =
   | "completed"
   | "failed";
 
-export interface AccountDeletionStatusBrokerData {
-  requestId: string;
+export interface AccountDeletionStatusReadData {
   status: AccountDeletionStatus;
-  requestedAt: string;
   scheduledPurgeAt: string;
   daysRemaining: number;
+}
+
+export interface AccountDeletionStatusBrokerData
+  extends AccountDeletionStatusReadData {
+  requestId: string;
+  requestedAt: string;
   exportRequested: boolean;
 }
 
@@ -78,33 +100,46 @@ function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === "number" && Number.isSafeInteger(value) && value >= 0;
 }
 
-function parseDeletionStatus(
-  value: unknown,
-): AccountDeletionStatusBrokerData {
+function parseDeletionStatusRead(value: unknown): AccountDeletionStatusReadData {
   if (!isRecord(value)) {
-    throw new Error("Privacy broker returned invalid deletion status");
+    throw new Error("Privacy authority returned invalid deletion status");
   }
 
   const status = value.status;
   if (
-    typeof value.requestId !== "string" ||
-    !UUID_PATTERN.test(value.requestId) ||
     typeof status !== "string" ||
     !DELETION_STATUSES.has(status as AccountDeletionStatus) ||
-    !isIsoTimestamp(value.requestedAt) ||
     !isIsoTimestamp(value.scheduledPurgeAt) ||
-    !isNonNegativeInteger(value.daysRemaining) ||
+    !isNonNegativeInteger(value.daysRemaining)
+  ) {
+    throw new Error("Privacy authority returned invalid deletion status");
+  }
+
+  return {
+    status: status as AccountDeletionStatus,
+    scheduledPurgeAt: value.scheduledPurgeAt,
+    daysRemaining: value.daysRemaining,
+  };
+}
+
+function parseDeletionStatusReceipt(
+  value: unknown,
+): AccountDeletionStatusBrokerData {
+  const base = parseDeletionStatusRead(value);
+  if (
+    !isRecord(value) ||
+    typeof value.requestId !== "string" ||
+    !UUID_PATTERN.test(value.requestId) ||
+    !isIsoTimestamp(value.requestedAt) ||
     typeof value.exportRequested !== "boolean"
   ) {
     throw new Error("Privacy broker returned invalid deletion status");
   }
 
   return {
+    ...base,
     requestId: value.requestId,
-    status: status as AccountDeletionStatus,
     requestedAt: value.requestedAt,
-    scheduledPurgeAt: value.scheduledPurgeAt,
-    daysRemaining: value.daysRemaining,
     exportRequested: value.exportRequested,
   };
 }
@@ -112,7 +147,7 @@ function parseDeletionStatus(
 function parseDeletionRequest(
   value: unknown,
 ): RequestAccountDeletionBrokerData {
-  const base = parseDeletionStatus(value);
+  const base = parseDeletionStatusReceipt(value);
   if (
     !isRecord(value) ||
     !isNonNegativeInteger(value.daysUntilPurge) ||
@@ -134,7 +169,6 @@ export class PrivacyRpcService {
   private static async invoke<T>(
     action: PrivacyRpcAction,
     params: Record<string, unknown> = {},
-    options: { timeoutMs?: number } = {},
   ): Promise<T> {
     return invokeSupabaseBroker<T, PrivacyRpcAction>({
       action,
@@ -142,7 +176,6 @@ export class PrivacyRpcService {
       noDataMessage: "Privacy broker returned no data",
       params,
       serviceName: SERVICE_NAME,
-      timeoutMs: options.timeoutMs,
     });
   }
 
@@ -166,14 +199,16 @@ export class PrivacyRpcService {
     return result.consentId;
   }
 
-  static async getDeletionStatus(): Promise<AccountDeletionStatusBrokerData | null> {
-    const result = await this.invoke<unknown>(
-      "getDeletionStatus",
-      {},
-      { timeoutMs: TIMEOUTS.PRIVACY_ACCESS_GATE },
-    );
-    if (result === null) return null;
-    return parseDeletionStatus(result);
+  static async getDeletionStatus(): Promise<AccountDeletionStatusReadData | null> {
+    const { data, error } = await currentDeletionStatusRpcClient
+      .rpc("get_current_account_deletion_status")
+      .abortSignal(AbortSignal.timeout(TIMEOUTS.PRIVACY_ACCESS_GATE));
+
+    if (error) {
+      throw new Error(`Privacy deletion status query failed: ${error.message}`);
+    }
+    if (data === null) return null;
+    return parseDeletionStatusRead(data);
   }
 
   static async requestAccountDeletion(
