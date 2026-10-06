@@ -26,6 +26,7 @@ import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBan
 import { useEducationProfile } from '../hooks/useEducationProfile';
 import { buildEducationAnalyticsCsv } from '@/core/education/services/educationAnalyticsExport';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
 import type { UpgradeReason } from '../niches/components/EducationUpgradeBanner';
 
 function toUpgradeReason(reason: string): UpgradeReason {
@@ -71,6 +72,10 @@ export function EducationAnalyticsPage() {
     refetch: refetchAnalytics,
     canAccessAnalytics,
     canExport,
+    isEntitlementLoading,
+    isEntitlementError,
+    entitlementError,
+    refetchEntitlement,
   } = useEducationAnalytics({
     businessId: businessId || '',
     profileId: profile?.id,
@@ -87,7 +92,7 @@ export function EducationAnalyticsPage() {
   const canViewAnalytics = nicheBilling.can('analytics_basic');
   const nicheAllowsExport =
     nicheBilling.niche.config?.entitlements.allowsExport ?? false;
-  const canExportAnalytics = canExport && nicheAllowsExport;
+  const canExportAnalytics = canExport && nicheAllowsExport && canViewAnalytics.allowed;
 
   const handleExport = () => {
     if (!businessId || !data || !canExportAnalytics) {
@@ -107,7 +112,7 @@ export function EducationAnalyticsPage() {
     });
   };
 
-  if (isProfileLoading || nicheBilling.isLoading) {
+  if (isProfileLoading) {
     return (
       <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
         <Skeleton className="mb-6 h-8 w-48 bg-territory-raised" />
@@ -126,16 +131,41 @@ export function EducationAnalyticsPage() {
     );
   }
 
-  if (isAnalyticsError) {
+  if (!profile || !profile.niche_key) {
+    return (
+      <EducationProfileRequiredState
+        businessId={businessId}
+        title="Configure o perfil de Educação para acessar Analytics"
+        description="O painel depende de um perfil educacional com nicho configurado. Conclua a configuração da instituição antes de consultar métricas."
+      />
+    );
+  }
+
+  if (isEntitlementLoading || nicheBilling.isLoading) {
+    return (
+      <div className="container mx-auto max-w-6xl p-6 text-territory-ink" role="status" aria-label="Verificando acesso ao Analytics">
+        <Skeleton className="mb-6 h-8 w-48 bg-territory-raised" />
+        <Skeleton className="h-64 w-full rounded-xl bg-territory-raised" />
+      </div>
+    );
+  }
+
+  if (isEntitlementError || nicheBilling.subscription.isError) {
     return (
       <EducationAdminReadError
-        title="Não foi possível carregar o Analytics"
-        error={
-          analyticsError instanceof Error
-            ? analyticsError
-            : new Error('A leitura das métricas falhou. Nenhum zero artificial foi exibido.')
-        }
-        onRetry={() => void refetchAnalytics()}
+        title="Não foi possível verificar o acesso ao Analytics"
+        error={entitlementError ?? nicheBilling.subscription.error}
+        onRetry={() => void refetchEntitlement()}
+      />
+    );
+  }
+
+  if (nicheBilling.hasErrors) {
+    return (
+      <EducationAdminReadError
+        title="Configuração educacional indisponível"
+        error={new Error('Não foi possível resolver as capacidades do nicho educacional.')}
+        onRetry={() => void refetchEntitlement()}
       />
     );
   }
@@ -163,6 +193,37 @@ export function EducationAnalyticsPage() {
     );
   }
 
+  if (isAnalyticsError) {
+    return (
+      <EducationAdminReadError
+        title="Não foi possível carregar o Analytics"
+        error={analyticsError}
+        onRetry={() => void refetchAnalytics()}
+      />
+    );
+  }
+
+  if (isAnalyticsLoading) {
+    return (
+      <div className="container mx-auto max-w-6xl p-6 text-territory-ink" role="status" aria-label="Carregando métricas de Educação">
+        <Skeleton className="mb-6 h-8 w-48 bg-territory-raised" />
+        <Skeleton className="h-64 w-full rounded-xl bg-territory-raised" />
+      </div>
+    );
+  }
+
+  // Uma consulta permitida deve devolver métricas reais. Ausência de dados
+  // não pode produzir cartões zerados nem ser apresentada como ausência de leads.
+  if (!data) {
+    return (
+      <EducationAdminReadError
+        title="Métricas de Educação indisponíveis"
+        error={new Error('Consulta concluída sem dados de Analytics.')}
+        onRetry={() => void refetchAnalytics()}
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -176,7 +237,7 @@ export function EducationAnalyticsPage() {
             variant="outline"
             size="sm"
             onClick={handleExport}
-            disabled={!data || isAnalyticsLoading}
+            disabled={isAnalyticsLoading}
             className="gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised hover:text-territory-ink"
           >
             <Download className="h-4 w-4" aria-hidden="true" />
@@ -196,18 +257,18 @@ export function EducationAnalyticsPage() {
       <div className="mb-6">
         <EducationAnalyticsOverviewCard
           leads={{
-            total: data?.leads.total ?? 0,
-            new: data?.leads.new ?? 0,
-            enrolled: data?.leads.enrolled ?? 0,
-            conversionRate: data?.leads.conversionRate ?? 0,
+            total: data.leads.total,
+            new: data.leads.new,
+            enrolled: data.leads.enrolled,
+            conversionRate: data.leads.conversionRate,
           }}
           programs={{
-            total: data?.programs.total ?? 0,
-            active: data?.programs.active ?? 0,
+            total: data.programs.total,
+            active: data.programs.active,
           }}
           events={{
-            total: data?.events.total ?? 0,
-            upcoming: data?.events.upcoming ?? 0,
+            total: data.events.total,
+            upcoming: data.events.upcoming,
           }}
           isLoading={isAnalyticsLoading}
         />
@@ -216,15 +277,15 @@ export function EducationAnalyticsPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <EducationAnalyticsConversionCard
           pipeline={{
-            new: data?.leads.new ?? 0,
-            contacted: data?.leads.contacted ?? 0,
-            visitScheduled: data?.leads.visitScheduled ?? 0,
-            proposalSent: data?.leads.proposalSent ?? 0,
-            enrolled: data?.leads.enrolled ?? 0,
-            lost: data?.leads.lost ?? 0,
+            new: data.leads.new,
+            contacted: data.leads.contacted,
+            visitScheduled: data.leads.visitScheduled,
+            proposalSent: data.leads.proposalSent,
+            enrolled: data.leads.enrolled,
+            lost: data.leads.lost,
           }}
-          conversionRate={data?.leads.conversionRate ?? 0}
-          avgDaysToFirstContact={data?.leads.avgDaysToFirstContact ?? 0}
+          conversionRate={data.leads.conversionRate}
+          avgDaysToFirstContact={data.leads.avgDaysToFirstContact}
           isLoading={isAnalyticsLoading}
         />
       </div>
