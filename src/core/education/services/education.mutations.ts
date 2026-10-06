@@ -10,6 +10,19 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getEducationEventValidationError } from '../eventValidation';
+import { isEducationNicheKey } from '../nicheKey';
+import {
+  getEducationProfileIdentityPatchError,
+  isEducationInstitutionTypeForNiche,
+} from '../profileIdentity';
+import { isEducationProfileStatus } from '../profileStatus';
+import {
+  getEducationSchoolIdentityPatchError,
+  isEducationSchoolNetwork,
+  isEducationSchoolNetworkCompatible,
+  isEducationSchoolType,
+} from '../schoolIdentity';
+import { isEducationSupportLevel } from '../supportLevel';
 import {
   canMoveEducationLeadToStatus,
   getEducationLeadLostReasonValidationError,
@@ -44,9 +57,8 @@ import type {
   EducationEventAdminPatch,
   EducationLeadStatus,
   EducationNicheKey,
-  SchoolNetwork,
-  SchoolType,
 } from '../types';
+import type { SchoolNetwork, SchoolType } from '../contracts';
 
 // ============================================================
 // TIPOS INTERNOS
