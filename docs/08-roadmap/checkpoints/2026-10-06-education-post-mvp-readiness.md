@@ -225,6 +225,9 @@ durante a estabilização atual do data plane.
 - Respostas deduplicadas do broker (`created: false`) não disparam
   `trackLeadSubmitted`, evitando inflar conversões com reenvios do mesmo lead.
 - Ratchet arquitetural protege essas semânticas e a minimização de dados.
+- Estado de sucesso é anunciado com `role="status"`/`aria-live`, o formulário
+  expõe `aria-busy` durante o envio e mensagens de erro antigas são removidas
+  assim que o usuário volta a editar os campos.
 
 ## Tranche adicional — Explorer/vitrine pública
 
