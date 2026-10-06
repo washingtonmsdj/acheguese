@@ -121,6 +121,18 @@ durante a estabilização atual do data plane.
   normalizado com `trim()` antes da persistência.
 - Testes unitários e ratchet arquitetural protegem essas invariantes.
 
+## Tranche adicional — detalhe público e métricas de leitura
+
+- Cards de programas deixaram de anunciar a ação inexistente **Ver detalhes** e
+  perderam cursor/hover de elemento navegável quando não há rota de detalhe.
+- `program_view` e `event_view` passam a representar impressão real do
+  conteúdo em viewport, com deduplicação por item durante a sessão da página,
+  em vez de depender de clique sem destino.
+- O card de programa respeita `prefers-reduced-motion`.
+- Preço `0` é preservado na página pública e apresentado como **Gratuito**;
+  ausência de preço continua sendo ausência de informação.
+- Ratchet visual impede o retorno da falsa affordance.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
