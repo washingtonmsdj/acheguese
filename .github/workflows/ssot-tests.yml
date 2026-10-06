@@ -8,6 +8,11 @@ on:
         required: false
         type: boolean
         default: false
+      run_education_paid_lifecycle:
+        description: "Run read-only Education paid Analytics/Billing certification against the exact deployed SHA"
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
     # Documentation-only changes are validated by focused SSOT/docs workflows.
@@ -174,6 +179,7 @@ jobs:
       E2E_AUTH_TRANSPORT: github-oidc-broker
       E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
       E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+      E2E_EDUCATION_PAID_BUSINESS_ID: ${{ secrets.E2E_EDUCATION_PAID_BUSINESS_ID }}
 
     steps:
       - uses: actions/checkout@v6
@@ -218,6 +224,10 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.run_education_lifecycle
         run: npm run test:e2e:education-lifecycle-authenticated
 
+      - name: Run authenticated Education paid read-only E2E
+        if: github.event_name == 'workflow_dispatch' && inputs.run_education_paid_lifecycle
+        run: npm run test:e2e:education-paid-lifecycle-authenticated
+
       - name: Record authenticated fixture contract
         if: always()
         shell: bash
@@ -233,6 +243,7 @@ jobs:
           echo "Business lifecycle mutations are limited to the dedicated account-authenticated-e2e fixture and cleaned through owner RLS; Messaging certification is read-only." >> "$GITHUB_STEP_SUMMARY"
           echo "Fixture Auth transport: GitHub OIDC -> Supabase Edge broker; no service-role key is exposed to the browser job." >> "$GITHUB_STEP_SUMMARY"
           echo "Education lifecycle requested: ${{ github.event_name == 'workflow_dispatch' && inputs.run_education_lifecycle }}. It never runs automatically on pull_request or push." >> "$GITHUB_STEP_SUMMARY"
+          echo "Education paid read-only certification requested: ${{ github.event_name == 'workflow_dispatch' && inputs.run_education_paid_lifecycle }}. It requires E2E_EDUCATION_PAID_BUSINESS_ID and never changes subscription state." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload authenticated E2E report (non-gating transport)
         if: always()
