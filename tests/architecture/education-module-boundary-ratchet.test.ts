@@ -151,6 +151,11 @@ describe("Education module hardening ratchet", () => {
     expect(form).toContain("Primeiro nome do aluno (opcional)");
     expect(form).toContain("grid grid-cols-1 gap-3 sm:grid-cols-2");
     expect(form).toContain('maxLength={1000}');
+    expect(form).toContain("useReducedMotion");
+    expect(form).toContain("onlyDigits(formData.phone)");
+    expect(form).toContain("phoneDigits.length < 10 || phoneDigits.length > 15");
+    expect(form).toContain("EDUCATION_PROGRAM_SHIFT_OPTIONS");
+    expect(form).toContain("Este envio não confirma matrícula, vaga ou prazo de resposta.");
   });
 
   it("keeps Education administrative motion accessible", () => {
@@ -168,6 +173,15 @@ describe("Education module hardening ratchet", () => {
       expect(source).toContain("useReducedMotion");
       expect(source).toContain("prefersReducedMotion");
     }
+  });
+
+  it("counts only newly created public Education leads", () => {
+    const detail = read(
+      "src/modules/business/education/pages/EducationDetailPage.tsx",
+    );
+
+    expect(detail).toContain("if (lead.created)");
+    expect(detail).not.toContain("if (lead) {\n      trackLeadSubmitted");
   });
 
   it("keeps the Education dashboard truthful before and after setup", () => {
