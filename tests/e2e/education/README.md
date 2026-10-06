@@ -77,13 +77,13 @@ esperado deixar de funcionar.
    - o mesmo lifecycle abre o diálogo em `390×844`, verifica dimensões, rolagem interna e ações alcançáveis no viewport, fechando sem persistir dados extras.
 
 3. **Leads**
-   - paginação;
-   - avanço válido de estágio;
-   - bloqueio de salto/backward;
-   - `lost` com motivo obrigatório;
-   - feedback de falha de mutation;
-   - idade `0`;
-   - contagens do pipeline inteiro.
+   - smoke operacional prova paginação 25/26 e mantém a contagem global da etapa nas duas páginas;
+   - prova `new → contacted` com `first_contact_at` persistido;
+   - prova ausência de salto/backward e ausência de ações em `enrolled`;
+   - `lost` exige motivo operacional e persiste `lost_reason`;
+   - falha simulada somente no `PATCH` do navegador produz feedback e mantém o lead `new` no backend;
+   - idade `0` permanece visível como `0 anos`;
+   - esta fatia não tem gap funcional conhecido no source; ainda precisa executar no ambiente autorizado do candidato de release.
 
 4. **Eventos**
    - helper técnico alinhado às colunas canônicas `starts_at/ends_at`;
