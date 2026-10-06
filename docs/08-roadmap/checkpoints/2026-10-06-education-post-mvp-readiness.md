@@ -157,6 +157,23 @@ durante a estabilização atual do data plane.
   informação e zero itens.
 - Animações do Dashboard respeitam `prefers-reduced-motion`.
 
+## Tranche adicional — Pipeline de Leads
+
+- A etapa **Perdido** deixou de ser apenas visual: o painel agora expõe uma
+  transição explícita para `lost`, já permitida pelo domínio canônico.
+- Marcar um lead como perdido exige motivo operacional no frontend e encaminha
+  `lostReason` pela mutation existente, preservando auditoria e sem criar uma
+  segunda regra de transição fora do core.
+- O diálogo orienta explicitamente a não registrar CPF, documentos,
+  diagnóstico, prontuário ou outros dados sensíveis no motivo da perda.
+- O pipeline bloqueia ações concorrentes enquanto uma mutation está em curso.
+- Leads administrativos têm paginação explícita de 25 itens; as contagens por
+  etapa continuam refletindo o pipeline inteiro.
+- A identidade da query inclui `pageSize`, evitando reaproveitamento incorreto
+  de cache quando o tamanho da página variar.
+- Ratchet arquitetural protege o motivo operacional, a minimização de dados e
+  a paginação.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
