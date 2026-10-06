@@ -36,3 +36,18 @@ export function isEducationInstitutionTypeForNiche(
 ): institutionType is EducationInstitutionType {
   return institutionType === getEducationInstitutionTypeForNiche(nicheKey);
 }
+
+export function getEducationProfileIdentityPatchError(input: {
+  currentInstitutionType: string;
+  currentNicheKey: EducationNicheKey;
+  nextInstitutionType?: string;
+  nextNicheKey?: EducationNicheKey;
+}): string | null {
+  const institutionType =
+    input.nextInstitutionType ?? input.currentInstitutionType;
+  const nicheKey = input.nextNicheKey ?? input.currentNicheKey;
+
+  return isEducationInstitutionTypeForNiche(institutionType, nicheKey)
+    ? null
+    : 'Tipo de instituicao incompativel com o nicho';
+}
