@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Skeleton } from '@/shared/components/ui/skeleton';
@@ -23,6 +23,7 @@ import type { EducationLeadStatus } from '@/core/education';
 
 export function EducationLeadsPage() {
   const { businessId } = useParams<{ businessId: string }>();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const {
     data: profile,
@@ -105,8 +106,9 @@ export function EducationLeadsPage() {
   return (
     <div className="container mx-auto p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8 flex items-center justify-between"
       >
         <div className="flex min-w-0 items-center gap-3">
