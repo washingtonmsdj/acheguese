@@ -478,6 +478,24 @@ describe("Education module hardening ratchet", () => {
     expect(service).not.toContain("sortProgramsByDisplayOrder");
   });
 
+  it("keeps public lead intake on the canonical broker", () => {
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+    const hook = read(
+      "src/modules/business/education/hooks/useEducationLeads.ts",
+    );
+
+    expect(service).not.toContain("CreateLeadPayload");
+    expect(service).not.toContain("async createLead(");
+    expect(service).not.toContain("function validateEmail(");
+    expect(service).not.toContain("function validatePhone(");
+    expect(service).not.toContain("trackLeadCreated");
+    expect(hook).toContain("PublicEducationLeadService.create");
+    expect(hook).not.toContain("const createMutation =");
+    expect(hook).not.toContain("create: createMutation.mutateAsync");
+  });
+
   it("keeps Education validation out of the business facade", () => {
     const service = read(
       "src/modules/business/education/services/EducationService.ts",
