@@ -132,21 +132,20 @@ function validateProfilePayload(payload: Partial<EducationProfile>): ValidationE
     errors.push({ field: 'summary', message: 'Maximo 500 caracteres' });
   }
 
-  const validNiches = [
-    'regular_school', 'daycare', 'language_school', 'prep_course',
-    'technical_school', 'tutoring_center', 'music_school', 'sports_school',
-  ];
-  if (payload.niche_key !== undefined && !validNiches.includes(payload.niche_key)) {
+  if (
+    payload.niche_key !== undefined &&
+    !isEducationNicheKey(payload.niche_key)
+  ) {
     errors.push({ field: 'niche_key', message: 'Nicho invalido' });
   }
 
   if (
     payload.niche_key !== undefined &&
-    validNiches.includes(payload.niche_key) &&
+    isEducationNicheKey(payload.niche_key) &&
     payload.institution_type !== undefined &&
     !isEducationInstitutionTypeForNiche(
       payload.institution_type,
-      payload.niche_key as EducationNicheKey,
+      payload.niche_key,
     )
   ) {
     errors.push({
