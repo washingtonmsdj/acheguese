@@ -748,6 +748,8 @@ describe("Education module hardening ratchet", () => {
     expect(setupModel).toContain("getEducationInstitutionTypeForNiche");
     expect(setupModel).not.toContain("const INSTITUTION_TYPE_BY_NICHE");
     expect(mutations).toContain("isEducationInstitutionTypeForNiche");
+    expect(mutations).toContain("getEducationProfileIdentityPatchError");
+    expect(mutations).toContain("institution_type,niche_key");
     expect(mutations).toContain(
       "Tipo de instituicao incompativel com o nicho",
     );
