@@ -205,6 +205,8 @@ durante a estabilização atual do data plane.
 - Conversão para **Matriculado** preserva o status anterior já lido pelo write
   model e o reutiliza no evento `education_lead_converted`; a métrica não
   registra mais `enrolled` como se fosse o status anterior.
+- Retry idempotente `enrolled → enrolled` não dispara uma segunda conversão,
+  evitando inflação de analytics por repetição da mesma mutation.
 
 ## Tranche adicional — Acessibilidade de movimento
 
