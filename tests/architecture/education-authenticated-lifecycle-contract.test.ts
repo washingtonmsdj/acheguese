@@ -42,6 +42,9 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(spec).toContain('getByRole("heading", { name: "Excluir programa" })');
     expect(spec).toContain("deletedProgramError");
     expect(spec).toContain("expect(deletedProgram).toBeNull()");
+    expect(spec).toContain("page.setViewportSize({ width: 390, height: 844 })");
+    expect(spec).toContain("mobileProgramDialog.boundingBox()");
+    expect(spec).toContain("mobileProgramDialogBox!.height").toBeTruthy();
     expect(spec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(spec).not.toContain("createOptionalOperationalAdminClient");
 
