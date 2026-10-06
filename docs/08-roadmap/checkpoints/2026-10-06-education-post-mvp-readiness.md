@@ -120,6 +120,13 @@ durante a estabilização atual do data plane.
 - Código INEP, quando informado, precisa conter exatamente 8 dígitos e é
   normalizado com `trim()` antes da persistência.
 - Testes unitários e ratchet arquitetural protegem essas invariantes.
+- Fonte pública, quando informada, precisa ser uma URL absoluta `http` ou
+  `https` válida e é normalizada antes da persistência.
+- Validação do write model ficou null-safe para `summary` e
+  `whatsapp_number`; campos opcionais nulos não podem provocar exceção.
+- Setup reforça semântica de entrada com INEP numérico de 8 dígitos, URL de
+  proveniência tipada e WhatsApp como telefone, mantendo o core como autoridade
+  final.
 
 ## Tranche adicional — detalhe público e métricas de leitura
 
