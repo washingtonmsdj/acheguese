@@ -570,7 +570,7 @@ durante a estabilização atual do data plane.
 ## Tranche adicional — limites do formulário público de interesse
 
 - Campos de nome do contato/responsável/aluno foram alinhados ao broker
-  `education-lead-rpc`: máximo de `160` caracteres.
+  `education-lead-intake`: máximo de `160` caracteres.
 - E-mail (`254`), telefone (`32`, com validação de 10–15 dígitos),
   observações (`1000`) e etapa manual (`120`) permanecem coerentes com a
   autoridade final.
@@ -736,7 +736,7 @@ Ainda são obrigatórios antes de qualquer despausa:
   compartilhado do produto, com action canônica `education-lead`.
 - O client envia `turnstileToken` e honeypot pelo
   `PublicEducationLeadService`; o token não é persistido na tabela de Leads.
-- O broker `education-lead-rpc` valida origem permitida, rate limit, honeypot,
+- O broker `education-lead-intake` valida origem permitida, rate limit, honeypot,
   Turnstile action/hostname e IP confiável antes de consultar elegibilidade ou
   gravar PII.
 - Falha de Turnstile/configuração é fail-closed e retorna mensagem pública
@@ -744,6 +744,10 @@ Ainda são obrigatórios antes de qualquer despausa:
 - `verify_jwt=false` fica explícito porque o endpoint é intake público e
   auto-protegido, no mesmo modelo dos brokers públicos já canônicos; escrita
   continua exclusivamente server-side por service role.
+- O broker foi renomeado de `education-lead-rpc` para
+  `education-lead-intake`: o sufixo `-rpc` é reservado pela governance para
+  funções JWT-authenticated e não pode receber exceção no-JWT. A migration que
+  cita o nome anterior permanece intocada como registro histórico.
 - `EDGE_FUNCTION_AUTH_POLICY.json` passou a ratchear origin, rate limit,
   Turnstile, honeypot, token e service-role do broker.
 - O teste `public-education-lead-intake-g6.test.ts` protege o contrato
