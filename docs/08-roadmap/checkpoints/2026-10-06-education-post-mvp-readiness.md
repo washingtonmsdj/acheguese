@@ -314,6 +314,9 @@ durante a estabilização atual do data plane.
 - Breadcrumb, favorito e compartilhar no hero também expõem foco visível
   consistente; o breadcrumb ganhou rótulo de navegação para tecnologias
   assistivas.
+- Tabs do detalhe, favorito/compartilhar, chips de nicho e botão móvel de
+  filtros usam alvo de toque mínimo de 44 px nas superfícies públicas
+  principais.
 - O detalhe público também evita `institution_type` como fallback visível:
   usa o nome do nicho ou **Instituição educacional**.
 - Badge de escola pública exibe somente o identificador **INEP**, sem sugerir
