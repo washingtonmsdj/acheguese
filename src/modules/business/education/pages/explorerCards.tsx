@@ -143,7 +143,10 @@ export function EditorialCard({
               asChild
               className="w-full justify-between rounded-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
             >
-              <Link to={detailHref}>
+              <Link
+                to={detailHref}
+                aria-label={`Ver detalhes de ${institutionName}`}
+              >
                 Ver detalhes
                 <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
               </Link>
@@ -165,7 +168,11 @@ export function EditorialCard({
               className={`w-full justify-between rounded-full ${outlineActionClassName}`}
               asChild
             >
-              <SafeLink href={whatsappHref} target="_blank">
+              <SafeLink
+                href={whatsappHref}
+                target="_blank"
+                aria-label={`Abrir WhatsApp de ${institutionName}`}
+              >
                 WhatsApp
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
               </SafeLink>
@@ -258,7 +265,10 @@ export function EditorialCard({
               asChild
               className="h-8 flex-1 rounded-full bg-territory-brand px-3 text-xs text-territory-on-image hover:bg-territory-brand/90"
             >
-              <Link to={detailHref}>
+              <Link
+                to={detailHref}
+                aria-label={`Ver detalhes de ${institutionName}`}
+              >
                 Detalhes
                 <ChevronRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
               </Link>
