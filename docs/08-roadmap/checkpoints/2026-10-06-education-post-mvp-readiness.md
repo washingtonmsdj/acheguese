@@ -105,6 +105,12 @@ durante a estabilização atual do data plane.
 - Média de dias até o primeiro contato agora é `null` quando não existe
   nenhuma amostra válida, em vez de inventar `0 dias`; a UI mostra
   **Sem contatos medidos** e o CSV mantém a célula vazia.
+- Teste direto de `getLeadPipelineMetrics` prova `null` sem amostra válida,
+  média apenas de timestamps não negativos, propagação de erro de leitura e
+  rejeição de profile ID inválido antes da query.
+- A exportação CSV já tem testes para células vazias em métricas desconhecidas e
+  neutralização de fórmulas; a pendência restante é a prova de browser com
+  entitlement pago real no candidato de release.
 - O card foi renomeado para **Distribuição do pipeline**, pois seus percentuais
   representam participação atual por status, não taxa de passagem entre etapas.
 - Skeletons dos cards de Analytics usam animação apenas com
