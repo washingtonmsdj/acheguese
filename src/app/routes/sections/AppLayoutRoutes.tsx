@@ -10,6 +10,7 @@ import {
 } from "@/app/config/lifecycleRegistry";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
+import { notificationRoutes } from "@/core/notifications/routes/notificationRoutes";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { OFFLINE_SETTINGS_PATH } from "@/core/routing/config/platformSettings";
@@ -114,7 +115,7 @@ export function AppLayoutRoutes() {
 
         {notificationsEnabled ? (
           <Route
-            path="/notificacoes"
+            path={notificationRoutes.inbox()}
             element={protectedElement(<P.NotificationsPage />)}
           />
         ) : null}
