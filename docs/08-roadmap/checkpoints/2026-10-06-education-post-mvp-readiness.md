@@ -62,6 +62,35 @@ durante a estabilização atual do data plane.
 - não duplicar services de `src/core/education` dentro do módulo;
 - não considerar UI renderizando como prova de readiness de produção.
 
+## Tranche adicional — assinatura, Analytics e frontend
+
+- `EducationSubscriptionService.getSubscriptionStatus` passou a propagar falhas de
+  resolução de Business, assinatura e catálogo: erro de infraestrutura não deve
+  virar `PlanTier.FREE` sintético.
+- `useEducationSubscription` expõe `refetch` canônico para retry de leitura.
+- `useEducationAnalytics` reutiliza a mesma assinatura cacheada da vertical,
+  sem uma segunda consulta de entitlement; métricas só são lidas quando a
+  assinatura ativa autoriza analytics.
+- Analytics distingue configuração pendente, consulta de assinatura falha,
+  acesso legítimo negado, consulta de métricas falha e dados reais carregados.
+  Nenhuma resposta ausente é apresentada como cartões de contagem zero.
+- Planos distingue erro de assinatura e erro do catálogo: não escolhe mais o
+  primeiro plano do catálogo como se fosse o plano atual do usuário.
+- Analytics ganhou navegação de retorno para o dashboard canônico, foco
+  visível por teclado, espaçamento responsivo e identificação explícita
+  do relatório CSV.
+- Testes novos: leitura de assinatura sem fallback fictício e hook de
+  Analytics com permissões reais, falha, revogação e métricas positivas.
+- Ratchet de erros privados alinhado ao componente atual que sanitiza
+  mensagens técnicas.
+
+### Gates ainda pendentes
+
+Os commits desta tranche **não** ativam Educação. São necessários typecheck,
+lint, testes direcionados e E2E da branch; certificação de auth/RLS/schema,
+probes remotos e deployment no mesmo SHA só após a liberação do data plane.
+Não declarar `ready` apenas por alteração de código ou CI parcial.
+
 ## Próximas etapas
 
 1. executar typecheck, lint e testes Education/arquitetura no SHA da branch;
