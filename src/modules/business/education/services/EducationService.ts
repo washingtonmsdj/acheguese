@@ -19,6 +19,10 @@ import {
   trackProfilePublished,
   trackEducationError,
 } from '@/core/education/services/EducationObservabilityService';
+import {
+  canMoveEducationLeadToStatus,
+  getEducationLeadNextStatuses,
+} from '@/core/education';
 import type {
   EducationProfile,
   EducationProgram,
@@ -667,30 +671,16 @@ export const EducationService = {
   },
 
   /** Verifica se transição de status é válida */
-  canMoveLeadToStatus(from: EducationLeadStatus, to: EducationLeadStatus): boolean {
-    if (from === to) return true;
-    if (from === 'enrolled' || from === 'lost') return false;
-    if (to === 'lost') return true;
-
-    const pipeline: EducationLeadStatus[] = [
-      'new',
-      'contacted',
-      'visit_scheduled',
-      'proposal_sent',
-      'enrolled',
-    ];
-    const fromIndex = pipeline.indexOf(from);
-    const toIndex = pipeline.indexOf(to);
-
-    return fromIndex >= 0 && toIndex === fromIndex + 1;
+  canMoveLeadToStatus(
+    from: EducationLeadStatus,
+    to: EducationLeadStatus,
+  ): boolean {
+    return canMoveEducationLeadToStatus(from, to);
   },
 
   /** Retorna próximos passos possíveis no pipeline */
   getNextPipelineSteps(current: EducationLeadStatus): EducationLeadStatus[] {
-    const pipeline: EducationLeadStatus[] = ['new', 'contacted', 'visit_scheduled', 'proposal_sent', 'enrolled'];
-    const index = pipeline.indexOf(current);
-    if (index === -1 || index === pipeline.length - 1) return ['lost'];
-    return [pipeline[index + 1], 'lost'];
+    return getEducationLeadNextStatuses(current);
   },
 
   /** Formata info de contato do lead */
