@@ -42,6 +42,8 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
       studentAge?: number;
       desiredGrade?: string;
       desiredShift?: SchoolShift;
+      honeypot: string;
+      turnstileToken: string;
     }) => {
       if (!hasValidProfileId || !profileId) {
         throw new Error('Valid profile ID required');
