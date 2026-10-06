@@ -1,0 +1,84 @@
+# Education — readiness pós-MVP
+
+Data: 2026-10-06  
+Branch de trabalho: `education/post-mvp-readiness`  
+Status: **hardening pós-MVP; módulo permanece pausado no lançamento**
+
+## Objetivo
+
+Preparar a vertical Education para entrar depois do MVP sem reativar rotas,
+sem criar um segundo owner de domínio e sem introduzir mudanças de banco
+durante a estabilização atual do data plane.
+
+## Baseline confirmado
+
+- `education` continua `paused` em `productModuleRegistry.ts`;
+- rotas públicas e privadas Education continuam fora dos grafos ativos;
+- contratos, queries, mutations, tracking e observabilidade canônicos pertencem
+  a `src/core/education`;
+- a camada `src/modules/business/education` permanece sem acesso direto ao
+  Supabase;
+- o frontend preservado já possui Explorer, detalhe público, dashboard, setup,
+  programas, leads, eventos, analytics e planos;
+- nenhuma migration nova faz parte desta frente.
+
+## Problemas encontrados na primeira auditoria
+
+1. O componente de erro administrativo mostrava `error.message` bruto, podendo
+   expor detalhes internos de SQL, RLS ou provider no frontend.
+2. O dashboard não distinguia bem o estado de instituição ainda sem perfil
+   Education configurado.
+3. A página de Leads não oferecia retorno consistente ao dashboard da vertical.
+4. O formulário público coletava campos opcionais de aluno sem uma orientação
+   explícita de minimização de dados e tinha pares de campos apertados em telas
+   pequenas.
+5. A proteção de privacidade desses campos não estava registrada como ratchet
+   arquitetural.
+
+## Correções desta tranche
+
+- mensagens administrativas agora passam por vocabulário seguro e não exibem
+  o erro bruto de infraestrutura;
+- estado de erro ganhou semântica `role=alert` e mensagem acionável;
+- dashboard ganhou onboarding explícito quando o perfil Education ainda não
+  existe;
+- Leads ganhou navegação canônica de retorno para a gestão Education;
+- formulário público passou a orientar que CPF, documentos, diagnóstico,
+  prontuário e outros dados sensíveis de aluno não sejam enviados;
+- nome de aluno foi apresentado como **primeiro nome opcional**;
+- limites de tamanho e autocomplete foram reforçados nos campos públicos;
+- pares de campos passaram a empilhar no mobile;
+- testes protegem sanitização de erro e minimização de dados.
+
+## Restrições desta frente
+
+- não mudar `education.status` para ativo;
+- não adicionar Education aos lazy imports ativos;
+- não criar migrations/DDL enquanto a reconciliação do data plane não estiver
+  liberada;
+- não duplicar services de `src/core/education` dentro do módulo;
+- não considerar UI renderizando como prova de readiness de produção.
+
+## Próximas etapas
+
+1. executar typecheck, lint e testes Education/arquitetura no SHA da branch;
+2. consolidar o shell administrativo de Education para cabeçalhos, navegação,
+   loading, empty e error states consistentes;
+3. revisar Programs e Events para validação de formulário, conflitos de data,
+   limites e estados de mutation;
+4. revisar Leads para minimização operacional, transições de pipeline e
+   feedback de mutation;
+5. revisar Analytics para estados sem dados, exportação e semântica das
+   métricas;
+6. validar Explorer e Detail em mobile, teclado, leitura por screen reader e
+   reduced-motion;
+7. somente após liberação do data plane, reconciliar schema/RLS/RPCs e rodar
+   probes remotos;
+8. fechar com E2E completo e deployment do mesmo SHA antes de qualquer
+   despausa.
+
+## Definition of Done para entrada pós-MVP
+
+Education só poderá ser candidata a ativação quando frontend, contratos,
+autorização, banco reconciliado, E2E, responsividade, acessibilidade e
+deployment estiverem comprovados juntos no mesmo SHA.
