@@ -12,7 +12,6 @@ import { BusinessService } from '@/core/business/services/BusinessService';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
 import {
   EducationObservabilityService,
-  trackLeadCreated,
   trackLeadConverted,
   trackProfilePublished,
   trackEducationError,
@@ -63,22 +62,6 @@ export interface EducationSetupPayload {
   schoolFacilityFeatures?: SchoolFacilityFeatureKey[];
 }
 
-export interface CreateLeadPayload {
-  educationProfileId: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  childName?: string;
-  childAge?: number;
-  interestNote?: string;
-  sourceChannel?: string;
-  // Campos específicos para matrícula escolar
-  guardianName?: string;
-  studentName?: string;
-  studentAge?: number;
-  desiredGrade?: string;
-  desiredShift?: SchoolShift;
-}
 
 export interface LeadPipelineMove {
   leadId: string;
@@ -102,15 +85,6 @@ export interface EducationEventsListOptions {
 // ============================================================
 // VALIDACAO
 // ============================================================
-
-function validateEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone: string): boolean {
-  // Aceita formatos: +5588999999999, (88) 99999-9999, etc
-  return /^(\+?\d{10,15}|\(\d{2}\)\s?\d{4,5}-?\d{4})$/.test(phone);
-}
 
 function nullIfEmpty<T>(values: T[] | undefined): T[] | null {
   return values && values.length > 0 ? values : null;
@@ -371,71 +345,6 @@ export const EducationService = {
   // ==========================================================
   // LEADS
   // ==========================================================
-
-  /**
-   * Cria lead com validacao completa
-   */
-  async createLead(payload: CreateLeadPayload): Promise<EducationLead | null> {
-    try {
-      // Validacao
-      if (!validateEmail(payload.email)) {
-        logger.error('[EducationService] Invalid email:', payload.email);
-        throw new Error('Email invalido');
-      }
-
-      if (!validatePhone(payload.phone)) {
-        logger.error('[EducationService] Invalid phone:', payload.phone);
-        throw new Error('Telefone invalido');
-      }
-
-      const { data, error } = await mutations.createEducationLead({
-        education_profile_id: payload.educationProfileId,
-        full_name: payload.fullName,
-        email: payload.email,
-        phone: payload.phone,
-        child_name: payload.childName ?? null,
-        child_age: payload.childAge ?? null,
-        interest_note: payload.interestNote ?? null,
-        source_channel: payload.sourceChannel ?? 'website',
-        status: 'new',
-        owner_user_id: null,
-        first_contact_at: null,
-        lost_reason: null,
-        guardian_name: payload.guardianName ?? null,
-        student_name: payload.studentName ?? null,
-        student_age: payload.studentAge ?? null,
-        desired_grade: payload.desiredGrade ?? null,
-        desired_shift: payload.desiredShift ?? null,
-      });
-
-      if (error) {
-        logger.error('[EducationService] Error creating lead:', error);
-        await trackEducationError('education_lead_save_failed', new Error(error.message), {
-          profileId: payload.educationProfileId,
-        });
-        return null;
-      }
-
-      // Track successful lead creation
-      if (data) {
-        // Get profile to get niche_key
-        const profile = await queries.getEducationProfileById(payload.educationProfileId);
-        if (profile) {
-          await trackLeadCreated(payload.educationProfileId, data.id, profile.niche_key, {
-            sourceChannel: payload.sourceChannel,
-          });
-        }
-      }
-
-      return data;
-    } catch (error) {
-      logger.error('[EducationService] Exception creating lead:', error);
-      await trackEducationError('education_lead_save_failed', error as Error, {
-        profileId: payload.educationProfileId,
-      });
-      return null;
-    }
-  },
 
   /**
    * Move lead no pipeline
