@@ -201,7 +201,10 @@
         "requireLeadEligibleProfile\\s*\\(",
         "SUPABASE_SERVICE_ROLE_KEY",
         "education_leads",
-        "public_directory_form"
+        "public_directory_form",
+        "getTrustedClientIp\\s*\\(",
+        "body\\.honeypot",
+        "body\\.turnstileToken"
       ]
     }
   },
@@ -750,7 +753,10 @@
         "requireLeadEligibleProfile\\s*\\(",
         "SUPABASE_SERVICE_ROLE_KEY",
         "education_leads",
-        "public_directory_form"
+        "public_directory_form",
+        "getTrustedClientIp\\s*\\(",
+        "body\\.honeypot",
+        "body\\.turnstileToken"
       ]
     },
     "business-network-rpc": {
