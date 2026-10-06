@@ -37,6 +37,7 @@ import type {
 } from '@/core/education';
 import * as queries from '@/core/education/services/education.queries';
 import * as mutations from '@/core/education/services/education.mutations';
+import { getNicheByKey } from '../niches/registry';
 
 // ============================================================
 // TIPOS
@@ -134,6 +135,15 @@ export const EducationService = {
    * Salva configuracao inicial de educacao (create/update profile)
    */
   async saveSetupProfile(payload: EducationSetupPayload): Promise<EducationProfile | null> {
+    const nicheConfig = getNicheByKey(payload.nicheKey);
+    if (!nicheConfig) {
+      logger.error(
+        '[EducationService] Invalid niche key during setup:',
+        payload.nicheKey,
+      );
+      return null;
+    }
+
     let profile = await queries.getEducationProfileByBusinessId(payload.businessId);
     let createdDuringSetup = false;
 
@@ -166,7 +176,7 @@ export const EducationService = {
       school_accessibility_features: nullIfEmpty(payload.schoolAccessibilityFeatures),
       school_equipment_features: nullIfEmpty(payload.schoolEquipmentFeatures),
       school_facility_features: nullIfEmpty(payload.schoolFacilityFeatures),
-      support_level: 'basic_enabled',
+      support_level: nicheConfig.supportLevel,
     });
 
     if (error) {
