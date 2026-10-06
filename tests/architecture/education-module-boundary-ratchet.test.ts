@@ -227,6 +227,9 @@ describe("Education module hardening ratchet", () => {
     );
 
     expect(pipeline).toContain("EducationLeadLostDialog");
+    expect(pipeline).toContain("lead.student_name ?? lead.child_name");
+    expect(pipeline).toContain("lead.student_age ?? lead.child_age");
+    expect(pipeline).toContain("studentAge != null");
     expect(pipeline).toContain("setLostLead(lead)");
     expect(pipeline).toContain("'lost', reason");
     expect(leadsPage).toContain("lostReason?: string");
