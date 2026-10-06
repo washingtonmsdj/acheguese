@@ -639,6 +639,19 @@ durante a estabilização atual do data plane.
 - Não resta gap funcional conhecido nessa fatia de source/teste; a execução em
   ambiente autorizado no SHA candidato continua obrigatória.
 
+## Tranche adicional — fechamento operacional de Eventos
+
+- A suíte operacional de Eventos agora rejeita término igual ao início pelo
+  validador canônico e confirma que `starts_at/ends_at` persistidos permanecem
+  inalterados após a tentativa inválida.
+- Leitura, edição público→privado, aviso consultivo de sobreposição e exclusão
+  com confirmação já possuem prova operacional autenticada.
+- Datas locais impossíveis permanecem cobertas pelos testes canônicos do parser
+  e do core; o E2E não manipula controles nativos para fabricar valores que o
+  navegador não aceita.
+- Criação de evento pela UI continua deliberadamente pendente de entitlement
+  pago real; a fixture FREE não tem plano adulterado para produzir um verde.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
