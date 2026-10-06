@@ -291,7 +291,7 @@ export interface EducationAnalyticsData {
   programs: {
     total: number;
     active: number;
-    avgEnrollmentRate?: number;
+    avgEnrollmentRate?: number | null;
     totalVacancies?: number;
     filledVacancies?: number;
   };
