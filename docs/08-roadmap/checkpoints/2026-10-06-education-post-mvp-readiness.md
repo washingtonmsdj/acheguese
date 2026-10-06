@@ -327,6 +327,15 @@ durante a estabilização atual do data plane.
   evidência; o frontend não força HTTPS sobre uma fonte `http` válida.
 - A vertical não introduz parser próprio nem reduz as validações centrais.
 
+## Tranche adicional — ownership de validação
+
+- Validadores legados de perfil, programa, lead e evento foram removidos do
+  `EducationService`; eles não tinham callers reais além dos próprios testes e
+  duplicavam regras já pertencentes ao core/write model.
+- O facade volta a orquestrar operações sem manter uma segunda autoridade de
+  validação.
+- Ratchet arquitetural impede o retorno desses quatro validadores locais.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
