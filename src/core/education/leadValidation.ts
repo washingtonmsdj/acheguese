@@ -1,6 +1,7 @@
 import type {
   EducationLead,
   EducationLeadAdminPatch,
+  SchoolShift,
 } from './contracts';
 
 export const EDUCATION_LEAD_NAME_MAX_LENGTH = 160;
@@ -14,6 +15,12 @@ export const EDUCATION_LEAD_MAX_AGE = 120;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EDUCATION_LEAD_SHIFTS: readonly SchoolShift[] = [
+  'morning',
+  'afternoon',
+  'evening',
+  'full_day',
+];
 
 type EducationLeadValidationInput = Pick<
   EducationLead,
@@ -137,6 +144,14 @@ export function getEducationLeadContactValidationError(
     !UUID_PATTERN.test(input.owner_user_id)
   ) {
     return 'O responsável interno do lead é inválido.';
+  }
+
+  if (
+    input.desired_shift !== undefined &&
+    input.desired_shift !== null &&
+    !EDUCATION_LEAD_SHIFTS.includes(input.desired_shift)
+  ) {
+    return 'O turno desejado é inválido.';
   }
 
   return null;
