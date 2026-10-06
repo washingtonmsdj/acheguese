@@ -67,6 +67,10 @@ durante a estabilização atual do data plane.
 - `EducationSubscriptionService.getSubscriptionStatus` passou a propagar falhas de
   resolução de Business, assinatura e catálogo: erro de infraestrutura não deve
   virar `PlanTier.FREE` sintético.
+- Teste comportamental dedicado prova falha de identidade Business, falha de
+  assinatura e falha de catálogo sem fallback para Free; ausência de policy no
+  catálogo pode usar baseline de entitlements apenas para o **mesmo tier
+  canônico**.
 - `useEducationSubscription` também preserva estado desconhecido: enquanto
   não existe status canônico resolvido, `planTier`, `planType` e
   `isActive` permanecem indefinidos em vez de assumir Free/inativo.
