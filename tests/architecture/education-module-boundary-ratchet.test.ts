@@ -81,6 +81,28 @@ describe("Education module hardening ratchet", () => {
     expect(centralRoutes).not.toContain("launchElement");
   });
 
+  it("keeps Education subscription failures distinct from a real Free plan", () => {
+    const subscriptionTest = read(
+      "src/modules/business/education/services/__tests__/education-subscription.service.test.ts",
+    );
+
+    expect(subscriptionTest).toContain(
+      "propagates subscription read failures instead of inventing a Free plan",
+    );
+    expect(subscriptionTest).toContain(
+      "propagates catalog failures instead of replacing the canonical tier",
+    );
+    expect(subscriptionTest).toContain(
+      "uses baseline entitlements for the same canonical tier",
+    );
+    expect(subscriptionTest).toContain(
+      "reports Free only when the canonical Business subscription is actually Free",
+    );
+    expect(subscriptionTest).toContain(
+      "expect(mocks.getAll).toHaveBeenCalledWith(PlanTier.PRO)",
+    );
+  });
+
   it("keeps Education billing offer and operational limits on separate SSOTs", () => {
     const subscription = read(
       "src/modules/business/education/services/education-subscription.service.ts",
