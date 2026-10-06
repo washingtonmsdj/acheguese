@@ -275,6 +275,7 @@ export function EducationExplorerPage() {
                     }))
                   }
                   placeholder="Buscar por curso, escola, professor ou serviço..."
+                  aria-label="Buscar instituições de Educação"
                   className="border-0 bg-transparent text-territory-ink shadow-none focus-visible:ring-0"
                 />
                 <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
@@ -406,7 +407,11 @@ export function EducationExplorerPage() {
       <section className="container mx-auto px-4 py-10">
         <div>
           <div className="mb-5 flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-territory-border bg-territory-surface px-4 py-1.5 text-sm shadow-sm">
+            <div
+              role="status"
+              aria-live="polite"
+              className="inline-flex items-center gap-2 rounded-full border border-territory-border bg-territory-surface px-4 py-1.5 text-sm shadow-sm"
+            >
               <Building2 className="h-4 w-4 text-territory-muted" aria-hidden="true" />
               <strong className="text-territory-ink">{totalCount}</strong>
               <span className="text-territory-muted">
