@@ -574,6 +574,17 @@ durante a estabilização atual do data plane.
 - Ratchet arquitetural impede o retorno do acesso
   `PIPELINE_STAGES[index + 1].status` como regra de negócio.
 
+## Tranche adicional — feedback acessível ao marcar Lead como perdido
+
+- O diálogo de **Marcar como perdido** continua usando a validação canônica do
+  core, mas agora explica o erro depois que o campo é tocado.
+- O textarea expõe `aria-invalid`, ajuda e erro via `aria-describedby`;
+  a mensagem de validação usa região `aria-live="polite"`.
+- Fechar ou concluir o diálogo limpa também o estado de interação, evitando
+  erro residual na próxima abertura.
+- Ratchet arquitetural protege a semântica acessível sem duplicar a regra de
+  mínimo/máximo na UI.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
