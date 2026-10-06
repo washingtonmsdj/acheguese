@@ -108,6 +108,29 @@ describe("education visual SSOT", () => {
     expect(marketing).not.toContain("EducationCompareBar");
   });
 
+  it("keeps public Education cards truthful and impression-based", () => {
+    const detail = readSource(
+      "src/modules/business/education/pages/EducationDetailPage.tsx",
+    );
+    const presentation = readSource(
+      "src/modules/business/education/pages/EducationDetailPresentation.tsx",
+    );
+
+    expect(presentation).toContain("onViewportEnter={onVisible}");
+    expect(presentation).toContain("useReducedMotion");
+    expect(presentation).toContain("program.price_from === 0");
+    expect(presentation).toContain("'Gratuito'");
+    expect(presentation).not.toContain("Ver detalhes");
+    expect(presentation).not.toContain("cursor-pointer");
+
+    expect(detail).toContain("trackedProgramViews");
+    expect(detail).toContain("trackedEventViews");
+    expect(detail).toContain("trackProgramImpression");
+    expect(detail).toContain("trackEventImpression");
+    expect(detail).toContain("onViewportEnter={() => trackEventImpression(event.id)}");
+    expect(detail).not.toContain("onClick={() => trackEventView(event.id)}");
+  });
+
   it("keeps Education favorites and map links on canonical shared owners", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
