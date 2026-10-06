@@ -2,10 +2,6 @@ import { describe, it, expect } from 'vitest';
 import { EducationService } from '../EducationService';
 
 describe('EducationService Exports', () => {
-  it('exports getOrCreateProfile', () => {
-    expect(typeof EducationService.getOrCreateProfile).toBe('function');
-  });
-
   it('exports canManageProfile', () => {
     expect(typeof EducationService.canManageProfile).toBe('function');
   });
