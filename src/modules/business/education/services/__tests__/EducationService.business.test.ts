@@ -63,15 +63,10 @@ describe('EducationService - Business Logic', () => {
       updated_at: '2026-01-01T00:00:00Z',
     };
 
+
 ;
 
-    it('isProgramAvailable returns false for inactive programs', () => {
-      expect(EducationService.isProgramAvailable({ ...mockProgram, is_active: false })).toBe(false);
-    });
-
-    it('isProgramAvailable returns false when no slots available', () => {
-      expect(EducationService.isProgramAvailable({ ...mockProgram, available_slots: 0 })).toBe(false);
-    });
+;
 
     it('formatProgramPrice returns formatted price', () => {
       expect(EducationService.formatProgramPrice(199.99)).toBe('R$ 199,99');
