@@ -61,6 +61,8 @@ describe("G6 Education lead pipeline write boundary", () => {
     expect(view).toContain("getEducationLeadNextStatuses");
     expect(view).toContain("nextForwardStatus");
     expect(view).toContain("canMarkLost");
+    expect(view).toContain("Marcar ${lead.full_name} como perdido");
+    expect(view).toContain("Avançar ${lead.full_name} para");
     expect(view).not.toContain("PIPELINE_STAGES[index + 1].status");
   });
 });
