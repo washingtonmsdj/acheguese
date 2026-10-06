@@ -109,7 +109,6 @@ export function EducationEventsPage() {
     remove,
     isCreating,
     isUpdating,
-    isDeleting,
     isMutating,
   } = useEducationEvents(profile?.id);
   const dashboardUrl = businessId
