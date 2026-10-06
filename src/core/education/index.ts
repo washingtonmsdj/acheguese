@@ -126,3 +126,13 @@ export {
   EDUCATION_NICHE_KEYS_CANONICAL,
   isEducationNicheKey,
 } from "@/core/education/nicheKey";
+
+export {
+  EDUCATION_SCHOOL_NETWORKS_CANONICAL,
+  EDUCATION_SCHOOL_TYPES_CANONICAL,
+  getEducationSchoolIdentityPatchError,
+  isEducationSchoolNetwork,
+  isEducationSchoolNetworkCompatible,
+  isEducationSchoolType,
+  normalizeEducationSchoolNetwork,
+} from "@/core/education/schoolIdentity";
