@@ -31,9 +31,6 @@ describe("notifications mutation feedback SSOT", () => {
     expect(center).toContain("if (!marked)");
     expect(center).toContain("const deleted = await deleteNotification(notificationId);");
     expect(center).toContain("if (!deleted)");
-    expect(center).not.toContain("await markAllAsRead();");
-    expect(center).not.toContain("await markAsRead(notificationId);");
-    expect(center).not.toContain("await deleteNotification(notificationId);");
   });
 
   it("surfaces mutation failure through an accessible local alert", () => {
