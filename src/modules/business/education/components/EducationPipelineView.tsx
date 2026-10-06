@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Mail, Phone, Calendar } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -9,8 +9,9 @@ import { EducationStatusBadge } from './EducationStatusBadge';
 
 export interface EducationPipelineViewProps {
   leads: EducationLead[];
-  onMoveLead?: (leadId: string, toStatus: EducationLeadStatus) => void;
+  onMoveLead?: (leadId: string, toStatus: EducationLeadStatus) => Promise<void> | void;
   statusCounts?: Partial<Record<EducationLeadStatus, number>>;
+  isMoving?: boolean;
   className?: string;
 }
 
@@ -31,8 +32,10 @@ export const EducationPipelineView = memo(function EducationPipelineView({
   leads,
   onMoveLead,
   statusCounts,
+  isMoving = false,
   className,
 }: EducationPipelineViewProps) {
+  const prefersReducedMotion = useReducedMotion();
   const leadsByStage = (status: EducationLeadStatus) =>
     leads.filter((lead) => lead.status === status);
 
@@ -43,9 +46,9 @@ export const EducationPipelineView = memo(function EducationPipelineView({
         return (
           <motion.section
             key={stage.status}
-            initial={{ opacity: 0, y: 20 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }}
             className={cn(
               'rounded-2xl border p-4 text-territory-ink',
               stage.className,
@@ -118,14 +121,15 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                           variant="ghost"
                           size="sm"
                           className="h-8 shrink-0 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
+                          disabled={isMoving}
                           onClick={() =>
-                            onMoveLead(
+                            void onMoveLead(
                               lead.id,
                               PIPELINE_STAGES[index + 1].status,
                             )
                           }
                         >
-                          Avançar
+                          {isMoving ? 'Atualizando...' : 'Avançar'}
                           <ArrowRight className="ml-1 h-3 w-3" aria-hidden="true" />
                         </Button>
                       ) : null}
