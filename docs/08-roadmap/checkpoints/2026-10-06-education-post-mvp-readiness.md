@@ -158,6 +158,9 @@ durante a estabilização atual do data plane.
 
 - Setup passou a usar um único caminho de persistência: o botão principal é
   `type="submit"` e delega ao `onSubmit` do formulário.
+- O facade não expõe mais `getOrCreateProfile`: leitura não pode criar draft
+  implicitamente. A criação compensável de perfil fica restrita ao submit
+  explícito de `saveSetupProfile`.
 - Faixa etária e código INEP ganharam validação canônica em
   `src/core/education/profileValidation.ts`, consumida pelo frontend e pelo
   write model.
