@@ -17,6 +17,9 @@ E2E determinístico e deployment do mesmo SHA.
 | `education-programs.spec.ts` | smoke legado | parte do fluxo de Programas; contém skips condicionais, waits temporais e asserts ainda permissivos |
 | `education-leads.spec.ts` | smoke legado | carregamento e alguns cenários do pipeline; não prova integralmente as operações atuais |
 | `education-events.spec.ts` | smoke operacional, dependente de ambiente | fixture técnica semeia eventos; UI autenticada prova leitura, edição público/privado, aviso consultivo de sobreposição e exclusão; criação paga pela UI continua fora do escopo |
+| `education-debug.spec.ts` | diagnóstico, `skip` | captura manual de conteúdo/screenshot; não conta como teste de aceitação |
+| `education-cookie-debug.spec.ts` | diagnóstico, `skip` | inspeção manual de autenticação/cookies; não conta como teste de aceitação |
+| `education-network-debug.spec.ts` | diagnóstico, `skip` | inspeção manual de conectividade; não conta como teste de aceitação |
 | `education-dashboard-debug.spec.ts` | diagnóstico, `skip` | investigação manual histórica; não conta como teste de aceitação |
 | `global-setup.ts` | suporte | preparação da autenticação/fixture quando aplicável |
 
