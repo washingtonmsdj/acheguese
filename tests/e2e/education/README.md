@@ -86,14 +86,11 @@ esperado deixar de funcionar.
    - esta fatia não tem gap funcional conhecido no source; ainda precisa executar no ambiente autorizado do candidato de release.
 
 4. **Eventos**
-   - helper técnico alinhado às colunas canônicas `starts_at/ends_at`;
-   - leitura/edição/exclusão determinísticas podem usar fixture técnica;
-   - criação pela UI continua dependente de entitlement pago real e não deve
-     ser simulada alterando plano fora do contrato;
-   - datas impossíveis;
-   - início/fim coerentes;
-   - público/privado;
-   - confirmação de exclusão.
+   - helper técnico usa as colunas canônicas `starts_at/ends_at`;
+   - smoke operacional prova leitura, edição público→privado, sobreposição consultiva e exclusão com confirmação;
+   - término igual/anterior ao início é rejeitado e o teste confirma que os timestamps persistidos não mudam;
+   - datas locais impossíveis permanecem cobertas pelos testes canônicos de `educationEventDateTime`/core;
+   - criação pela UI continua dependente de entitlement pago real e não é simulada alterando plano fora do contrato.
 
 5. **Analytics**
    - erro de assinatura versus acesso negado;
