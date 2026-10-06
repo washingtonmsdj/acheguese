@@ -53,6 +53,8 @@ export const EducationPipelineView = memo(function EducationPipelineView({
     <div className={cn('space-y-6', className)}>
       {PIPELINE_STAGES.map((stage, index) => {
         const stageLeads = leadsByStage(stage.status);
+        const totalStageCount =
+          statusCounts?.[stage.status] ?? stageLeads.length;
         const nextStatuses = getEducationLeadNextStatuses(stage.status);
         const nextForwardStatus = nextStatuses.find(
           (status) => status !== 'lost',
@@ -85,7 +87,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                   variant="secondary"
                   className="border-territory-border bg-territory-surface/80 text-xs text-territory-ink"
                 >
-                  {statusCounts?.[stage.status] ?? stageLeads.length}
+                  {totalStageCount}
                 </Badge>
               </div>
               {nextForwardStatus ? (
@@ -98,7 +100,9 @@ export const EducationPipelineView = memo(function EducationPipelineView({
 
             {stageLeads.length === 0 ? (
               <p className="py-2 text-center text-xs text-territory-muted">
-                Nenhum lead nesta etapa
+                {totalStageCount > 0
+                  ? 'Nenhum lead desta etapa nesta página'
+                  : 'Nenhum lead nesta etapa'}
               </p>
             ) : (
               <div className="space-y-2">
