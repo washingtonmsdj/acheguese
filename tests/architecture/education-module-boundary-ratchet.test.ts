@@ -109,6 +109,10 @@ describe("Education module hardening ratchet", () => {
     expect(subscriptionHook).toContain("isActive: status?.isActive");
     expect(subscriptionHook).not.toContain("status?.planTier ?? PlanTier.FREE");
     expect(subscriptionHook).not.toContain("status?.planType ?? 'free'");
+    expect(subscriptionHook).not.toContain("const permissions =");
+    expect(subscriptionHook).not.toContain("canUsePremiumSite:");
+    expect(subscriptionHook).not.toContain("canUseShortLink:");
+    expect(subscriptionHook).not.toContain("isPremium:");
 
     expect(nicheRegistry).toContain("maxPrograms");
     expect(nicheRegistry).toContain("maxLeadsPerMonth");
