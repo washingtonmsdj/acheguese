@@ -5,7 +5,7 @@
  * Rota: /central/empresas/:businessId/educacao/eventos
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -51,6 +51,7 @@ import { EducationUrlService } from '../services/EducationUrlService';
 import {
   EDUCATION_EVENT_LOCATION_MAX_LENGTH,
   EDUCATION_EVENT_TITLE_MAX_LENGTH,
+  areEducationEventTimesOverlapping,
   getEducationEventTemporalState,
   getEducationEventValidationError,
   type EducationEvent,
@@ -123,6 +124,30 @@ export function EducationEventsPage() {
     isPublic: true,
     schoolEventType: '' as SchoolEventType | '',
   });
+
+  const scheduleConflicts = useMemo(() => {
+    if (!formData.startsAt) return [];
+
+    let startsAt: string;
+    let endsAt: string | undefined;
+    try {
+      startsAt = fromLocalInputToEventIso(formData.startsAt);
+      endsAt = formData.endsAt
+        ? fromLocalInputToEventIso(formData.endsAt)
+        : undefined;
+    } catch {
+      return [];
+    }
+
+    const candidate = { startsAt, endsAt };
+    return events.filter((existingEvent) => {
+      if (existingEvent.id === editingEvent?.id) return false;
+      return areEducationEventTimesOverlapping(candidate, {
+        startsAt: existingEvent.starts_at,
+        endsAt: existingEvent.ends_at,
+      });
+    });
+  }, [editingEvent?.id, events, formData.endsAt, formData.startsAt]);
 
   const buildValidatedEventPayload = () => {
     let startsAt: string;
@@ -681,6 +706,31 @@ export function EducationEventsPage() {
                 rows={3}
               />
             </div>
+
+            {scheduleConflicts.length > 0 ? (
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-lg border border-territory-warning/30 bg-territory-warning/10 p-3 text-sm text-territory-ink"
+              >
+                <p className="font-medium">
+                  Há {scheduleConflicts.length}{' '}
+                  {scheduleConflicts.length === 1 ? 'evento' : 'eventos'} com
+                  horário sobreposto.
+                </p>
+                <p className="mt-1 text-xs text-territory-muted">
+                  {scheduleConflicts
+                    .slice(0, 2)
+                    .map((event) => event.title)
+                    .join(' • ')}
+                  {scheduleConflicts.length > 2
+                    ? ` • +${scheduleConflicts.length - 2}`
+                    : ''}
+                  . O aviso é consultivo e não bloqueia atividades simultâneas
+                  intencionais.
+                </p>
+              </div>
+            ) : null}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
