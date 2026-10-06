@@ -368,6 +368,15 @@ describe("Education module hardening ratchet", () => {
     expect(service).not.toMatch(/proposal_sent:\s*75/);
   });
 
+  it("keeps active public Education events filtered by the temporal owner", () => {
+    const queries = read("src/core/education/services/education.queries.ts");
+
+    expect(queries).toContain("isEducationEventActive");
+    expect(queries).toContain("return options.active");
+    expect(queries).toContain("startsAt: event.starts_at");
+    expect(queries).toContain("endsAt: event.ends_at");
+  });
+
   it("keeps Education analytics on the real profile and real export contract", () => {
     const page = read(
       "src/modules/business/education/pages/EducationAnalyticsPage.tsx",
