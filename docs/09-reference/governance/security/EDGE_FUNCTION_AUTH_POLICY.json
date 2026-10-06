@@ -187,6 +187,22 @@
         "signInWithPassword\\s*\\(",
         "resource:\\s*[\"']ci-auth-fixture-session[\"']"
       ]
+    },
+    "education-lead-rpc": {
+      "kind": "public-registration-broker",
+      "label": "public authoritative Education lead intake broker",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "isOriginAllowed\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "readJsonBody<RequestBody>\\s*\\(",
+        "getRequiredEnv\\s*\\(\\s*[\"']TURNSTILE_SECRET_KEY[\"']\\s*\\)",
+        "verifyTurnstileToken\\s*\\(",
+        "requireLeadEligibleProfile\\s*\\(",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "education_leads",
+        "public_directory_form"
+      ]
     }
   },
   "serviceRoleAllowlist": {
@@ -726,10 +742,13 @@
     "education-lead-rpc": {
       "kind": "public-registration-broker",
       "risk": "Critical",
-      "label": "public Education lead intake service_role broker",
+      "label": "public authoritative Education lead service_role broker",
       "requiredPatterns": [
+        "isOriginAllowed\\s*\\(",
         "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
         "requireLeadEligibleProfile\\s*\\(",
+        "SUPABASE_SERVICE_ROLE_KEY",
         "education_leads",
         "public_directory_form"
       ]
