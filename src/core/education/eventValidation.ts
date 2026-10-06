@@ -45,3 +45,44 @@ export function getEducationEventValidationError(
 
   return null;
 }
+
+
+export interface EducationEventTimeRange {
+  startsAt: string;
+  endsAt?: string | null;
+}
+
+export function areEducationEventTimesOverlapping(
+  left: EducationEventTimeRange,
+  right: EducationEventTimeRange,
+): boolean {
+  const leftStart = new Date(left.startsAt).getTime();
+  const rightStart = new Date(right.startsAt).getTime();
+  const leftEnd = left.endsAt ? new Date(left.endsAt).getTime() : leftStart;
+  const rightEnd = right.endsAt ? new Date(right.endsAt).getTime() : rightStart;
+
+  if (
+    [leftStart, rightStart, leftEnd, rightEnd].some((value) =>
+      Number.isNaN(value),
+    )
+  ) {
+    return false;
+  }
+
+  const leftIsInstant = leftEnd === leftStart;
+  const rightIsInstant = rightEnd === rightStart;
+
+  if (leftIsInstant && rightIsInstant) {
+    return leftStart === rightStart;
+  }
+
+  if (leftIsInstant) {
+    return leftStart >= rightStart && leftStart < rightEnd;
+  }
+
+  if (rightIsInstant) {
+    return rightStart >= leftStart && rightStart < leftEnd;
+  }
+
+  return leftStart < rightEnd && rightStart < leftEnd;
+}
