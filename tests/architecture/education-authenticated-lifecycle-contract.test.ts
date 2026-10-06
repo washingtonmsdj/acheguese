@@ -22,6 +22,11 @@ describe("G6 Education authenticated lifecycle gate", () => {
     );
     expect(spec).toContain('const EDUCATION_PREFIX = "G6 E2E Education"');
     expect(spec).toContain("cleanupEducationFixtures(client)");
+    expect(spec).toContain('getByTestId("education-school-inep")');
+    expect(spec).toContain('getByTestId("education-school-source-url")');
+    expect(spec).toContain('getByTestId("education-age-min").fill("0")');
+    expect(spec).toContain("expect(inactiveProgram?.available_slots).toBe(0)");
+    expect(spec).toContain("expect(Number(inactiveProgram?.price_from)).toBe(0)");
     expect(spec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(spec).not.toContain("createOptionalOperationalAdminClient");
 
