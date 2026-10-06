@@ -216,6 +216,12 @@ durante a estabilização atual do data plane.
   códigos como `early_childhood` ou `elementary_2`.
 - Rede escolar no bloco público usa o mapa de labels já existente.
 - Ratchets visual e de constantes protegem essas semânticas.
+- O detalhe público também evita `institution_type` como fallback visível:
+  usa o nome do nicho ou **Instituição educacional**.
+- Badge de escola pública exibe somente o identificador **INEP**, sem sugerir
+  que o perfil inteiro foi oficialmente verificado.
+- Timestamp de proveniência aparece como **Referência atualizada em**, sem
+  afirmar uma revisão humana que o dado não comprova.
 
 ### Gates ainda pendentes
 
