@@ -194,6 +194,21 @@ describe("education visual SSOT", () => {
     expect(detail).not.toContain("onClick={() => trackEventView(event.id)}");
   });
 
+  it("keeps institutional Education claims on shared safe URL handling", () => {
+    const sidebar = readSource(
+      "src/modules/business/education/pages/EducationDetailSidebar.tsx",
+    );
+
+    expect(sidebar).toContain("resolveSafeHttpUrl");
+    expect(sidebar).toContain("education-institutional-claim");
+    expect(sidebar).toContain("hasInvalidInstitutionalEvidence");
+    expect(sidebar).toContain("Informe uma URL pública válida usando http ou https.");
+    expect(sidebar).toContain("normalizedInstitutionalEvidenceUrl ?? undefined");
+    expect(sidebar).not.toContain(
+      "void requestClaim(institutionalEvidenceUrl.trim())",
+    );
+  });
+
   it("keeps Education favorites and map links on canonical shared owners", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
