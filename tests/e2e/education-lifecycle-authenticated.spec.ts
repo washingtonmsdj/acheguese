@@ -240,13 +240,66 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
         .getByTestId("education-summary")
         .fill("Escola técnica E2E configurada pelo owner autenticado.");
       await page.getByTestId("education-whatsapp").fill("+5571999999999");
-      await page.getByTestId("education-school-inep").fill("29193559");
-      await page
-        .getByTestId("education-school-source-url")
-        .fill("https://example.com/education-e2e");
-      await page.getByTestId("education-age-min").fill("0");
-      await page.getByTestId("education-age-max").fill("17");
-      await page.getByTestId("education-save-setup").click();
+
+      const inepInput = page.getByTestId("education-school-inep");
+      await inepInput.fill("1234");
+      expect(
+        await inepInput.evaluate(
+          (element) => (element as HTMLInputElement).checkValidity(),
+        ),
+      ).toBe(false);
+      await inepInput.fill("29193559");
+
+      const sourceInput = page.getByTestId("education-school-source-url");
+      const ageMinInput = page.getByTestId("education-age-min");
+      const ageMaxInput = page.getByTestId("education-age-max");
+      const saveSetup = page.getByTestId("education-save-setup");
+
+      await sourceInput.fill("javascript:alert(1)");
+      await ageMinInput.fill("0");
+      await ageMaxInput.fill("17");
+      await saveSetup.click();
+
+      await expect(
+        page.getByText(
+          "A fonte pública deve ser uma URL http ou https válida.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+
+      const { data: invalidSourceProfile, error: invalidSourceReadError } =
+        await client
+          .from("education_profiles")
+          .select("id")
+          .eq("business_id", businessProfileId!)
+          .maybeSingle();
+      expect(invalidSourceReadError).toBeNull();
+      expect(invalidSourceProfile).toBeNull();
+
+      await sourceInput.fill("https://example.com/education-e2e");
+      await ageMinInput.fill("18");
+      await ageMaxInput.fill("6");
+      await saveSetup.click();
+
+      await expect(
+        page.getByText(
+          "A idade mínima não pode ser maior que a idade máxima.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+
+      const { data: invalidAgeProfile, error: invalidAgeReadError } =
+        await client
+          .from("education_profiles")
+          .select("id")
+          .eq("business_id", businessProfileId!)
+          .maybeSingle();
+      expect(invalidAgeReadError).toBeNull();
+      expect(invalidAgeProfile).toBeNull();
+
+      await ageMinInput.fill("0");
+      await ageMaxInput.fill("17");
+      await saveSetup.click();
 
       await expect(page).toHaveURL(
         new RegExp(
