@@ -105,6 +105,9 @@ export function EducationProgramsPage() {
     create,
     update,
     remove,
+    isCreating,
+    isUpdating,
+    isMutating,
   } = useEducationPrograms(profile?.id, { includeInactive: true });
   const dashboardUrl = businessId
     ? EducationUrlService.buildAdminDashboardUrl(businessId)
@@ -422,7 +425,7 @@ export function EducationProgramsPage() {
         <Button
           onClick={openNewDialog}
           className="gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
-          disabled={isProgramsBlocked || isLimitBlocked}
+          disabled={isProgramsBlocked || isLimitBlocked || isMutating}
           title={
             isProgramsBlocked
               ? programsCapability.upgradeMessage
@@ -478,7 +481,7 @@ export function EducationProgramsPage() {
             </p>
             <Button
               onClick={openNewDialog}
-              disabled={isProgramsBlocked || isLimitBlocked}
+              disabled={isProgramsBlocked || isLimitBlocked || isMutating}
               className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -521,17 +524,22 @@ export function EducationProgramsPage() {
                           variant="ghost"
                           size="sm"
                           aria-label={`Ações do programa ${program.name}`}
+                          disabled={isMutating}
                           className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(program)}>
+                        <DropdownMenuItem
+                          disabled={isMutating}
+                          onClick={() => openEditDialog(program)}
+                        >
                           <Edit2 className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          disabled={isMutating}
                           onClick={() => handleDelete(program.id)}
                           className="text-territory-error focus:text-territory-error"
                         >
@@ -609,7 +617,14 @@ export function EducationProgramsPage() {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (isMutating && !open) return;
+          setIsDialogOpen(open);
+          if (!open) setEditingProgram(null);
+        }}
+      >
         <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
@@ -700,7 +715,7 @@ export function EducationProgramsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="ageGroup">Faixa etária</Label>
                 <Input
@@ -710,6 +725,7 @@ export function EducationProgramsPage() {
                     setFormData({ ...formData, ageGroup: event.target.value })
                   }
                   placeholder="Ex: 6-10 anos"
+                  maxLength={50}
                 />
               </div>
               <div>
@@ -732,7 +748,7 @@ export function EducationProgramsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="modality">Modalidade</Label>
                 <select
@@ -756,6 +772,7 @@ export function EducationProgramsPage() {
                 <Input
                   id="availableSlots"
                   type="number"
+                  min="0"
                   value={formData.availableSlots}
                   onChange={(event) =>
                     setFormData({
@@ -818,14 +835,20 @@ export function EducationProgramsPage() {
             <div className="flex gap-4 pt-4">
               <Button
                 type="submit"
+                disabled={isMutating}
                 className="flex-1 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
               >
-                {editingProgram ? 'Salvar alterações' : 'Criar programa'}
+                {isCreating || isUpdating
+                  ? 'Salvando...'
+                  : editingProgram
+                    ? 'Salvar alterações'
+                    : 'Criar programa'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+                disabled={isMutating}
                 onClick={() => {
                   setIsDialogOpen(false);
                   setEditingProgram(null);
