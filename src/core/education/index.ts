@@ -46,9 +46,13 @@ export type { TrackEventOptions } from "@/core/education/services/EducationTrack
 export {
   EDUCATION_EVENT_LOCATION_MAX_LENGTH,
   EDUCATION_EVENT_TITLE_MAX_LENGTH,
+  areEducationEventTimesOverlapping,
   getEducationEventValidationError,
 } from "@/core/education/eventValidation";
-export type { EducationEventValidationInput } from "@/core/education/eventValidation";
+export type {
+  EducationEventTimeRange,
+  EducationEventValidationInput,
+} from "@/core/education/eventValidation";
 export {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
   EDUCATION_PROGRAM_NAME_MAX_LENGTH,
