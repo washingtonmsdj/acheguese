@@ -52,6 +52,27 @@ describe("G6 Education authenticated lifecycle gate", () => {
     );
   });
 
+  it("keeps preserved Education E2E suites truthful while the module is paused", () => {
+    const publicSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-public.spec.ts"),
+      "utf8",
+    );
+    const debugSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-dashboard-debug.spec.ts"),
+      "utf8",
+    );
+    const readme = readFileSync(
+      join(ROOT, "tests/e2e/education/README.md"),
+      "utf8",
+    );
+
+    expect(publicSpec).toContain("test.describe.skip('Education Public Pages'");
+    expect(debugSpec).toContain("Diagnóstico legado: não conta como certificação E2E de Education.");
+    expect(readme).toContain("não deve ser interpretada como prova de readiness de produção");
+    expect(readme).toContain("smoke legado");
+    expect(readme).not.toContain("✅ 69 testes criados e prontos para execução");
+  });
+
   it("keeps the public Education surface paused during authenticated certification", () => {
     const launchScope = readFileSync(
       join(ROOT, "src/app/config/launchScope.ts"),
