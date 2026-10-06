@@ -1,7 +1,7 @@
 # Achegue-se — Execução main-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Atualizado:** 2026-10-05  
+**Atualizado:** 2026-10-06  
 **Linha de integração:** `main`
 
 Este documento contém somente o estado operacional vigente, a ordem de execução e o Definition of Done do MVP. Histórico de PRs, SHAs e investigações encerradas pertence a `docs/08-roadmap/checkpoints/`, `docs/10-archive/` ou ao histórico do Git.
@@ -98,23 +98,23 @@ A documentação viva representa somente o produto atual:
 
 Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentais correspondentes.
 
-## Dependências externas resolvidas
+## Gates externos de release
 
-**Não há blocker externo ativo conhecido para o primeiro release.** Os antigos blockers permanecem citados apenas para preservar a regra de contenção e a proveniência da certificação.
+Os gates externos do primeiro release são controlados pelas issues operacionais **#305** e **#445**. O estado `open`/`closed` dessas issues, junto com as evidências registradas nelas, é a autoridade de execução. **Qualquer gate aberto bloqueia a promoção**, sem exigir que este documento replique SHA, deployment ou janela temporal que ficará obsoleta.
 
 ### #305 — Supabase / sessão autenticada
 
-Encerrado após o data plane voltar a responder e o candidato comprovar sessão real, Conta e Business no smoke autenticado de produção. A causa final encontrada no fluxo de Business foi uma leitura browser-side que tentava atravessar a tabela privada `profiles`; a correção moveu a resolução para o boundary canônico de Profile sem abrir grants nem relaxar RLS.
+O gate só pode permanecer fechado enquanto o data plane responder e o candidato comprovar sessão real, Conta e Business no smoke autenticado de produção, sem fallback de Auth/RLS. A correção consolidada moveu a resolução de Profile para o boundary canônico sem abrir grants nem relaxar RLS.
 
-A regressão de Auth/PostgREST, indisponibilidade do data plane ou falha de autorização volta a bloquear o release. Não compensar com retry ilimitado, timeout artificialmente maior, fallback de login, bypass OIDC, fixture alternativa ou relaxamento de RLS.
+Regressão de Auth/PostgREST, indisponibilidade do data plane ou falha de autorização reabre o gate e bloqueia o release. Não compensar com retry ilimitado, timeout artificialmente maior, fallback de login, bypass OIDC, fixture alternativa ou relaxamento de RLS.
 
 ### #445 — Vercel / identidade de release
 
-Encerrado após o gate canônico comprovar a identidade de runtime pela política **`exact/equivalent`**. Quando commits posteriores não alteram o fingerprint deployável, o runtime Production já certificado pode ser aceito como equivalente; isso evita build artificial sem reduzir a prova de identidade.
+O gate só pode permanecer fechado quando a identidade de runtime estiver comprovada pela política **`exact/equivalent`**. Quando commits posteriores não alteram o fingerprint deployável, um runtime Production já certificado pode ser aceito como equivalente; quando existe delta deployável, é obrigatória nova prova canônica antes da promoção.
 
 A política `tools/release/vercel-ignore-build.mjs` continua válida: somente paths classificados como **skippable** ficam fora do fingerprint deployável e podem receber `Ignored Build Step`. Testes e documentação comum normalmente entram nessa classe, mas documentos críticos de governança consumidos pela autoridade de release — incluindo este `EXECUCAO_MAIN_ONLY.md` — são deliberadamente deploy-relevant e alteram o fingerprint. Não contornar isso com commit vazio, alteração artificial de runtime, ampliação indevida da allowlist ou relaxamento de `vercel.json`.
 
-Todo novo delta deployável — inclusive mudança em input crítico de governança que participa do fingerprint — exige nova prova: deployment `READY` + smoke, ou equivalência de fingerprint aceita pelo gate canônico. Qualquer regressão de infraestrutura reabre o gate correspondente.
+Todo novo delta deployável — inclusive mudança em input crítico de governança que participa do fingerprint — exige nova prova: deployment `READY` + smoke, ou equivalência de fingerprint aceita pelo gate canônico. Falha de deployment, quota, identidade, infraestrutura ou smoke reabre #445; enquanto #445 estiver aberto, o primeiro release não pode ser promovido.
 
 ## Dívidas abertas que não são blocker genérico do MVP
 
@@ -148,11 +148,13 @@ Todo novo delta deployável — inclusive mudança em input crítico de governan
    - E2E público;
    - E2E autenticado;
    - release identity;
-   - deployment/smoke quando houver delta deployável.
+   - deployment/smoke quando houver delta deployável;
+   - #305 e #445 fechados com evidência vigente no momento da promoção.
 
 4. **Promover**
    - somente enquanto todas as provas aplicáveis ao mesmo conteúdo de runtime permanecerem verdes;
-   - regressão crítica reabre o gate;
+   - qualquer gate externo aberto bloqueia a promoção;
+   - regressão crítica reabre o gate correspondente;
    - módulos pós-MVP continuam `paused` após o primeiro release.
 
 ## Definition of Done — MVP READY
@@ -173,9 +175,10 @@ O MVP recebe **READY** quando o conteúdo candidato comprovar:
 - identidade de release `exact/equivalent` comprovada;
 - deployment `READY` + smoke para qualquer novo delta deployável;
 - `Ignored Build Step` apenas quando a política canônica provar que não houve delta deployável;
+- #305 e #445 fechados com evidência vigente;
 - nenhum erro crítico recorrente.
 
-O candidato vigente já possui as provas centrais de release e **não há blocker externo ativo conhecido**. O trabalho restante antes da promoção é acabamento/higiene e preservação dos gates, não abertura de novas frentes de produto.
+O trabalho restante antes da promoção é acabamento/higiene e preservação dos gates. A existência de um gate externo aberto não autoriza abrir nova feature, reduzir os critérios do MVP ou criar um caminho alternativo de release.
 
 ## Onde fica o histórico
 
