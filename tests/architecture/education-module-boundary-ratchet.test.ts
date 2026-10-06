@@ -153,6 +153,38 @@ describe("Education module hardening ratchet", () => {
     expect(form).toContain('maxLength={1000}');
   });
 
+  it("keeps Education admin empty states distinct from missing profile setup", () => {
+    const programs = read(
+      "src/modules/business/education/pages/EducationProgramsPage.tsx",
+    );
+    const events = read(
+      "src/modules/business/education/pages/EducationEventsPage.tsx",
+    );
+    const leads = read(
+      "src/modules/business/education/pages/EducationLeadsPage.tsx",
+    );
+    const analytics = read(
+      "src/modules/business/education/pages/EducationAnalyticsPage.tsx",
+    );
+
+    for (const source of [programs, events, leads, analytics]) {
+      expect(source).toContain("EducationProfileRequiredState");
+    }
+
+    expect(programs).toContain("getEducationProgramNameValidationError");
+    expect(programs).toContain("getEducationProgramNumericValidationError");
+    expect(programs).toContain("enabled: Boolean(profile?.id)");
+    expect(events).toContain("enabled: Boolean(profile?.id)");
+
+    const pipeline = read(
+      "src/modules/business/education/components/EducationPipelineView.tsx",
+    );
+    expect(pipeline).toContain("disabled={isMoving}");
+    expect(pipeline).toContain("useReducedMotion");
+    expect(leads).toContain("isMoving={isMoving}");
+    expect(leads).toContain("Não foi possível atualizar o lead");
+  });
+
   it("keeps Education analytics on the real profile and real export contract", () => {
     const page = read(
       "src/modules/business/education/pages/EducationAnalyticsPage.tsx",
