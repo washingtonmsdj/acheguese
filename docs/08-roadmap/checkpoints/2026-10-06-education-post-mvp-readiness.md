@@ -128,6 +128,14 @@ durante a estabilização atual do data plane.
 - Programas passou a distinguir valor numérico ausente de valor zero:
   `null` significa não informado, `0` continua sendo um valor válido para
   vagas e preço. Programa com preço zero é apresentado como **Gratuito**.
+- Vagas, capacidade e número de matriculados são validados como inteiros não
+  negativos; quando capacidade e matrícula são conhecidas, matrícula não pode
+  superar a capacidade.
+- Updates parciais de capacidade/matrícula combinam o valor novo com o valor
+  existente antes da validação, sem bloquear alterações alheias em registros
+  legados.
+- No detalhe público, capacidade conhecida com matrícula desconhecida mostra
+  apenas a capacidade; `null` não é inventado como **0 matriculados**.
 - Diálogos de Programas e Eventos ganharam altura máxima, rolagem interna e
   ações empilhadas no mobile para evitar campos ou botões inacessíveis em telas
   pequenas.
