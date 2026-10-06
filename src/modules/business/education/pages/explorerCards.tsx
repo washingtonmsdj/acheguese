@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowUpRight,
   Check,
@@ -59,13 +59,18 @@ export function EditorialCard({
   const whatsappHref = buildWhatsAppHref(profile.whatsapp_number);
   const institutionName = profile.business_name ?? profile.institution_type;
   const educationLevels = profile.education_levels ?? [];
+  const prefersReducedMotion = useReducedMotion();
+  const enterMotion = prefersReducedMotion ? false : { opacity: 0, y: 12 };
+  const enterTransition = prefersReducedMotion
+    ? { duration: 0 }
+    : { delay: Math.min(index * (view === 'list' ? 0.03 : 0.04), 0.3) };
 
   if (view === 'list') {
     return (
       <motion.article
-        initial={{ opacity: 0, y: 12 }}
+        initial={enterMotion}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: Math.min(index * 0.03, 0.3) }}
+        transition={enterTransition}
         className="group relative grid grid-cols-1 gap-0 overflow-hidden rounded-2xl border border-territory-border bg-territory-surface text-territory-ink transition-all hover:border-territory-brand/30 hover:shadow-lg md:grid-cols-[220px_1fr_220px]"
       >
         <div
@@ -127,7 +132,7 @@ export function EditorialCard({
             )}
           </div>
         </div>
-        <div className="flex flex-col justify-end gap-2 border-l border-territory-border/60 p-5">
+        <div className="flex flex-col justify-end gap-2 border-t border-territory-border/60 p-5 md:border-l md:border-t-0">
           {detailHref ? (
             <Button
               size="sm"
@@ -169,10 +174,10 @@ export function EditorialCard({
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 12 }}
+      initial={enterMotion}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.04, 0.3) }}
-      className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-territory-border bg-territory-surface text-territory-ink transition-all hover:-translate-y-0.5 hover:border-territory-brand/30 hover:shadow-lg"
+      transition={enterTransition}
+      className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-territory-border bg-territory-surface text-territory-ink transition-[border-color,box-shadow,transform] hover:border-territory-brand/30 hover:shadow-lg motion-safe:hover:-translate-y-0.5"
     >
       <div className={cn('h-1 bg-gradient-to-r', gradient)} />
       <div className="flex flex-1 flex-col p-3">
@@ -196,7 +201,10 @@ export function EditorialCard({
         </div>
 
         {detailHref ? (
-          <Link to={detailHref} className="mt-3 block">
+          <Link
+            to={detailHref}
+            className="mt-3 block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2 focus-visible:ring-offset-territory-surface"
+          >
             <h3 className="line-clamp-2 break-words text-[15px] font-bold leading-5 text-territory-ink transition-colors group-hover:text-territory-brand">
               {institutionName}
             </h3>
