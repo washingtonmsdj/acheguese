@@ -55,9 +55,13 @@ export type {
 } from "@/core/education/eventValidation";
 export {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS,
+  EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH,
   EDUCATION_PROGRAM_NAME_MAX_LENGTH,
+  getEducationProgramCurriculumValidationError,
   getEducationProgramNameValidationError,
   getEducationProgramNumericValidationError,
+  normalizeEducationProgramCurriculumTopics,
 } from "@/core/education/programValidation";
 
 export {
