@@ -56,15 +56,21 @@ export function EducationLeadsPage() {
   } = useLeadPipeline(profileId);
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  const handleMoveLead = async (leadId: string, toStatus: EducationLeadStatus) => {
+  const handleMoveLead = async (
+    leadId: string,
+    toStatus: EducationLeadStatus,
+    lostReason?: string,
+  ): Promise<boolean> => {
     try {
-      await moveLead({ leadId, toStatus });
+      await moveLead({ leadId, toStatus, lostReason });
+      return true;
     } catch {
       toast({
         title: 'Não foi possível atualizar o lead',
         description: 'A etapa não foi alterada. Tente novamente.',
         variant: 'destructive',
       });
+      return false;
     }
   };
 
