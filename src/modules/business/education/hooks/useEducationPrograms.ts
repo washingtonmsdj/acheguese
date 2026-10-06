@@ -1,7 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
 import * as educationQueries from '@/core/education/services/education.queries';
-import type { EducationLevel, EducationProgram } from '@/core/education';
+import type {
+  EducationLevel,
+  EducationProgramAdminPatch,
+} from '@/core/education';
 
 export interface EducationProgramQueryOptions {
   includeInactive?: boolean;
