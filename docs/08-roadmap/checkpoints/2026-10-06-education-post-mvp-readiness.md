@@ -448,6 +448,16 @@ durante a estabilização atual do data plane.
 - Ratchet arquitetural exige que o filtro `active` continue passando pelo
   owner temporal canônico.
 
+## Tranche adicional — visibilidade de eventos inválidos
+
+- O resumo administrativo de Eventos passou a expor uma categoria
+  **Revisar** para registros classificados como `invalid` pelo owner temporal.
+- `Total`, `Próximos`, `Em andamento`, `Passados` e `Revisar` deixam
+  de mascarar divergências quando existe dado legado com cronologia inválida.
+- A lista já mostrava badge **Revisar data**; agora o resumo também torna esse
+  estado observável sem alterar a regra de domínio nem bloquear edição.
+- Ratchet arquitetural protege a contagem de eventos inválidos.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
