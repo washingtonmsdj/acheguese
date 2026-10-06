@@ -166,6 +166,10 @@ describe("Education module hardening ratchet", () => {
     expect(form).toContain("phoneDigits.length < 10 || phoneDigits.length > 15");
     expect(form).toContain("EDUCATION_PROGRAM_SHIFT_OPTIONS");
     expect(form).toContain("Este envio não confirma matrícula, vaga ou prazo de resposta.");
+    expect(form).toContain('role="status"');
+    expect(form).toContain('aria-live="polite"');
+    expect(form).toContain("aria-busy={isLoading}");
+    expect(form).toContain("if (submissionError) setSubmissionError(null)");
   });
 
   it("keeps Education administrative motion accessible", () => {
