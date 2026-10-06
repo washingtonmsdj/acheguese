@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   Send,
@@ -11,6 +11,7 @@ import {
   Clock,
   AlertCircle,
   LifeBuoy,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -21,6 +22,8 @@ import { useLabels } from '../hooks/useEducationLabels';
 import type { EducationNicheKey, SchoolShift } from '@/core/education';
 import { onlyDigits } from '@/shared/utils/contactLinks';
 import { EDUCATION_PROGRAM_SHIFT_OPTIONS } from '../constants';
+import { TurnstileWidget } from '@/shared/components/security/TurnstileWidget';
+import { EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT } from '@/core/education';
 import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '@/core/education/constants/schoolStageOptions';
 
 export interface EducationLeadFormProps {
@@ -40,6 +43,8 @@ export interface LeadFormData {
   studentAge?: number;
   desiredGrade?: string;
   desiredShift?: SchoolShift;
+  honeypot: string;
+  turnstileToken: string;
 }
 
 const FIELD_CLASS_NAME =
@@ -47,6 +52,8 @@ const FIELD_CLASS_NAME =
 
 const SELECT_CLASS_NAME =
   'h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 py-2 text-sm text-territory-ink ring-offset-territory-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2';
+
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '').trim();
 
 export function EducationLeadForm({
   nicheKey,
@@ -58,7 +65,8 @@ export function EducationLeadForm({
   const isSchoolContext = nicheKey === 'regular_school' || nicheKey === 'daycare';
   const stageOptions = getSchoolStageOptions((nicheKey ?? undefined) as EducationNicheKey | undefined);
 
-  const [formData, setFormData] = useState<LeadFormData>({
+  const mountedAtRef = useRef(Date.now());
+  const [formData, setFormData] = useState<Omit<LeadFormData, 'honeypot' | 'turnstileToken'>>({
     fullName: '',
     email: '',
     phone: '',
@@ -75,6 +83,19 @@ export function EducationLeadForm({
   const [isLoading, setIsLoading] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [desiredStageOption, setDesiredStageOption] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [turnstileGeneration, setTurnstileGeneration] = useState(0);
+  const turnstileConfigured = TURNSTILE_SITE_KEY.length > 0;
+  const turnstileSatisfied =
+    !EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.turnstileRequired ||
+    (turnstileConfigured && Boolean(turnstileToken));
+
+  const resetTurnstile = () => {
+    setTurnstileToken(null);
+    setTurnstileGeneration((current) => current + 1);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -94,7 +115,31 @@ export function EducationLeadForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     if (!formData.fullName || !formData.email || !formData.phone) return;
+
+    if (
+      Date.now() - mountedAtRef.current <
+      EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.minimumFillMs
+    ) {
+      setSubmissionError('Confira os dados por alguns segundos antes de enviar.');
+      return;
+    }
+
+    if (
+      EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.turnstileRequired &&
+      !turnstileConfigured
+    ) {
+      setTurnstileError(
+        'Solicitação temporariamente indisponível: proteção anti-spam não configurada.',
+      );
+      return;
+    }
+
+    if (!turnstileToken) {
+      setTurnstileError('Confirme a verificação anti-spam antes de enviar.');
+      return;
+    }
 
     const phoneDigits = onlyDigits(formData.phone);
     if (phoneDigits.length < 10 || phoneDigits.length > 15) {
@@ -105,13 +150,21 @@ export function EducationLeadForm({
     }
 
     setSubmissionError(null);
+    setTurnstileError(null);
     setIsLoading(true);
     try {
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        honeypot,
+        turnstileToken,
+      });
       setIsSubmitted(true);
-    } catch {
+    } catch (error) {
+      resetTurnstile();
       setSubmissionError(
-        'Não foi possível registrar seu interesse. Revise os dados e tente novamente.',
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível registrar seu interesse. Revise os dados e tente novamente.',
       );
     } finally {
       setIsLoading(false);
@@ -396,6 +449,63 @@ export function EducationLeadForm({
         </div>
       </div>
 
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: '-10000px',
+          width: 1,
+          height: 1,
+          overflow: 'hidden',
+        }}
+      >
+        <label htmlFor="education-company-website">Não preencha este campo</label>
+        <input
+          id="education-company-website"
+          name="company_website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(event) => setHoneypot(event.target.value)}
+        />
+      </div>
+
+      {turnstileConfigured ? (
+        <div className="space-y-1.5">
+          <TurnstileWidget
+            key={turnstileGeneration}
+            siteKey={TURNSTILE_SITE_KEY}
+            action={EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.turnstileAction}
+            onVerify={(token) => {
+              setTurnstileToken(token);
+              setTurnstileError(null);
+            }}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => {
+              setTurnstileToken(null);
+              setTurnstileError(
+                'Não foi possível carregar a verificação. Recarregue a página.',
+              );
+            }}
+          />
+          {turnstileError ? (
+            <p role="alert" className="text-xs text-territory-error">
+              {turnstileError}
+            </p>
+          ) : (
+            <p className="flex items-center gap-1 text-[11px] text-territory-muted">
+              <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+              Verificação anti-spam protegida por Cloudflare.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p role="alert" className="text-xs text-territory-error">
+          Solicitação temporariamente indisponível: proteção anti-spam não configurada.
+        </p>
+      )}
+
       {submissionError && (
         <div
           role="alert"
@@ -410,7 +520,7 @@ export function EducationLeadForm({
       <Button
         type="submit"
         className="w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
-        disabled={isLoading}
+        disabled={isLoading || !turnstileSatisfied}
       >
         {isLoading ? (
           <span className="motion-safe:animate-pulse">Enviando...</span>
