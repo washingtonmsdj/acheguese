@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const appShell = read("src/app/components/AppLayoutSidebar.tsx");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const platformSettings = read("src/core/routing/config/platformSettings.ts");
+const protectedRoute = read("src/core/routing/components/ProtectedRoute.tsx");
 const publicInfoShell = read(
   "src/app/components/public/PublicInfoPageShell.tsx",
 );
@@ -67,12 +68,19 @@ describe("main landmark ownership SSOT", () => {
   });
 
   it("keeps protected Messaging outside generic child-owned delegation", () => {
+    const ownedRoutes =
+      appShell.match(
+        /const CHILD_OWNED_MAIN_ROUTES = new Set<string>\(\[[\s\S]*?\]\);/,
+      )?.[0] ?? "";
+
+    expect(ownedRoutes).not.toContain("MESSAGING_INBOX_PATH");
+    expect(protectedRoute).toContain("function AccessLoading");
+    expect(protectedRoute).not.toContain("<main");
     expect(appShell).toContain(
       "pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3",
     );
     expect(appShell).toContain(
       '<div className="messaging-route-shell h-[100dvh] w-full overflow-hidden bg-territory-canvas">',
     );
-    expect(appShell).toContain("expect").not;
   });
 });
