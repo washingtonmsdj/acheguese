@@ -64,6 +64,26 @@ export const MAP_TILE_STYLES = {
 export const DEFAULT_TILE_STYLE = MAP_TILE_STYLES.streets;
 
 /**
+ * Canonical visuals for the reusable MapLibre MiniMap renderer.
+ * MapLibre paint values and DOM marker styles require concrete CSS color strings,
+ * so this config owns them instead of scattering literals through React surfaces.
+ */
+export const MINI_MAP_VISUALS = {
+  marker: {
+    defaultColor: "#10b981",
+    outlineColor: "#ffffff",
+  },
+  route: {
+    defaultColor: "#0f766e",
+    startColor: "#fbbf24",
+    endColor: "#064e3b",
+    casingColor: "#ffffff",
+    endpointBorder: "3px solid #ffffff",
+    endpointShadow: "0 2px 8px rgba(15, 23, 42, 0.25)",
+  },
+} as const;
+
+/**
  * Read limits shared by the map-backed listing services. Keeping these in
  * the map configuration prevents each layer from silently inventing a new
  * operational ceiling.
