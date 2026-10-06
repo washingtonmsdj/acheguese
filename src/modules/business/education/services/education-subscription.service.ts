@@ -93,15 +93,9 @@ export const EducationSubscriptionService = {
         error,
       );
 
-      return {
-        isActive: false,
-        planTier: PlanTier.FREE,
-        planType: 'free',
-        entitlements: toEducationEntitlements(
-          EntitlementsService.getAll(PlanTier.FREE),
-        ),
-        expiresAt: null,
-      };
+      // Falha de leitura não é um plano gratuito: o chamador deve apresentar
+      // erro com possibilidade de nova tentativa, nunca um upgrade fictício.
+      throw error;
     }
   },
 
