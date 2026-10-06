@@ -210,6 +210,9 @@ durante a estabilização atual do data plane.
 - `updateEducationLead` não aceita mais `status` no contrato genérico e ainda
   rejeita essa chave em runtime; toda transição passa exclusivamente por
   `moveLeadToStatus`, preservando regras, motivo de perda e auditoria.
+- `first_contact_at` só é preenchido na transição real para `contacted`;
+  retry idempotente `contacted → contacted` não renova o timestamp do primeiro
+  contato.
 
 ## Tranche adicional — Acessibilidade de movimento
 
