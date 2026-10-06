@@ -161,6 +161,24 @@ describe("education visual SSOT", () => {
     expect(sidebar).toContain("prefersReducedMotion ? 'auto' : 'smooth'");
   });
 
+  it("keeps public Education detail tabs navigable and accessible", () => {
+    const detail = readSource(
+      "src/modules/business/education/pages/EducationDetailPage.tsx",
+    );
+    const presentation = readSource(
+      "src/modules/business/education/pages/EducationDetailPresentation.tsx",
+    );
+
+    expect(detail).toContain("const handleSectionChange");
+    expect(detail).toContain("scrollIntoView");
+    expect(detail).toContain("prefersReducedMotion ? 'auto' : 'smooth'");
+    expect(detail).toContain("onChange={handleSectionChange}");
+    expect(presentation).toContain('aria-label="Seções da instituição"');
+    expect(presentation).toContain("aria-controls={section.id}");
+    expect(presentation).toContain("aria-current={isActive ? 'location' : undefined}");
+    expect(presentation).toContain("focus-visible:ring-2");
+  });
+
   it("keeps public Education cards truthful and impression-based", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
