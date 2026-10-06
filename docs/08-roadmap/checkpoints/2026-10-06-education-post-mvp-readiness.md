@@ -724,6 +724,8 @@ durante a estabilização atual do data plane.
   banco: `full_enabled`, `basic_enabled`, `beta` e `planned`.
 - A constante pública do módulo apenas reutiliza o owner do core; não mantém
   uma segunda lista local.
+- `EducationNicheStatus` preserva o nome usado pelo registry, mas agora é alias
+  direto de `EducationSupportLevel`, sem repetir o union.
 - O write model rejeita níveis fora do contrato antes de persistir.
 - Teste unitário e ratchet arquitetural protegem o ownership e os valores.
 
