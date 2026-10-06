@@ -176,6 +176,25 @@ posterior: cada novo head relevante precisa ser revalidado no mesmo SHA.
 O checkpoint operacional detalhado desta frente está em
 `docs/08-roadmap/checkpoints/2026-10-06-education-post-mvp-readiness.md`.
 
+## 9.1 Certificação paga read-only preparada
+
+O caminho de release para Analytics/Planos ganhou uma suite opt-in separada:
+`education-paid-lifecycle-authenticated.spec.ts`.
+
+Ela exige `E2E_EDUCATION_PAID_BUSINESS_ID` real, autentica a fixture dedicada
+como owner e permanece estritamente read-only. A prova cobre acesso autorizado
+a Analytics, download CSV e resolução do plano atual pelo catálogo canônico.
+Nenhum plano é criado/adulterado para satisfazer o teste.
+
+O workflow só executa essa suite quando
+`run_education_paid_lifecycle=true`. A ausência da fixture paga faz o runner
+falhar explicitamente; não existe fallback FREE, entitlement sintético ou
+`test.skip` certificante.
+
+Essa preparação fecha a lacuna de **infraestrutura de teste**, mas não conta
+como evidência executada até o opt-in hosted rodar no mesmo SHA/deployment
+candidato.
+
 ## 10. O que ainda bloqueia Education READY
 
 ### BLOCKED — lifecycle / launch
