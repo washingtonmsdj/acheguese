@@ -20,8 +20,13 @@ describe("main landmark ownership SSOT", () => {
         /const CHILD_OWNED_MAIN_ROUTES = new Set<string>\(\[[\s\S]*?\]\);/,
       )?.[0] ?? "";
 
+    expect(appShell).toContain(
+      "const MESSAGING_INBOX_PATH = messagingRoutes.inbox();",
+    );
+    expect(ownedRoutes).toContain("MESSAGING_INBOX_PATH");
+    expect(appRoutes).toContain("path={messagingRoutes.inbox()}");
+
     for (const routeOwner of [
-      "messagingRoutes.inbox()",
       "TERMS_OF_SERVICE_PATH",
       "PRIVACY_POLICY_PATH",
       "OFFLINE_SETTINGS_PATH",
@@ -64,7 +69,7 @@ describe("main landmark ownership SSOT", () => {
 
   it("keeps focused message threads outside the global main wrapper", () => {
     expect(appShell).toContain(
-      'pathSegments[0] === "mensagens" && pathSegments.length >= 3',
+      "pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3",
     );
     expect(appShell).toContain(
       '<div className="messaging-route-shell h-[100dvh] w-full overflow-hidden bg-territory-canvas">',
