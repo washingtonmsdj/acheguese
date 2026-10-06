@@ -6,6 +6,7 @@
 
 import type {
   EducationLeadStatus,
+  EducationLevel,
   EducationProfileStatus,
   SchoolEventType,
   SchoolShift,
@@ -69,6 +70,33 @@ export const SCHOOL_EVENT_TYPE_OPTIONS: readonly {
   value: value as SchoolEventType,
   label,
 }));
+
+export const EDUCATION_LEVEL_LABELS: Record<EducationLevel, string> = {
+  early_childhood: 'Educação Infantil',
+  elementary_1: 'Ensino Fundamental - Anos Iniciais',
+  elementary_2: 'Ensino Fundamental - Anos Finais',
+  youth_adult_education: 'EJA - Educação de Jovens e Adultos',
+  high_school: 'Ensino Médio',
+  technical: 'Técnico',
+};
+
+export const EDUCATION_LEVEL_OPTIONS: readonly {
+  key: EducationLevel;
+  label: string;
+}[] = Object.entries(EDUCATION_LEVEL_LABELS).map(([key, label]) => ({
+  key: key as EducationLevel,
+  label,
+}));
+
+export function getEducationLevelLabel(
+  value: string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const option = EDUCATION_LEVEL_OPTIONS.find(
+    (candidate) => candidate.key === value,
+  );
+  return option?.label ?? null;
+}
 
 export const EDUCATION_SUPPORT_LEVELS = {
   FULL_ENABLED: 'full_enabled',
