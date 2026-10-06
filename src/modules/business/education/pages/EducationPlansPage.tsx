@@ -34,6 +34,7 @@ import { BillingService } from '@/core/billing';
 import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { BILLING_PATHS } from '@/core/billing/routes/billingRoutes';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { useOptionalBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { useDashboardAccess } from '@/core/business/hooks/useDashboardAccess';
@@ -72,20 +73,27 @@ export function EducationPlansPage() {
   const { toast } = useToast();
   const { permissions, loading: loadingAccess } = useDashboardAccess(businessId);
   const canManageBilling = permissions.role === 'owner';
-  const { status, entitlements, planTier, isLoading } =
-    useEducationSubscription({
-      businessId: businessId!,
-      enabled: Boolean(businessId),
-    });
-  const { data: billingPlans = [], isLoading: billingPlansLoading } =
-    useBillingPlans();
-
-  const currentPlanCode = planTier;
+  const {
+    status,
+    entitlements,
+    isLoading,
+    isError: isSubscriptionError,
+    error: subscriptionError,
+    refetch: refetchSubscription,
+  } = useEducationSubscription({
+    businessId: businessId ?? '',
+    enabled: Boolean(businessId),
+  });
+  const {
+    data: billingPlans = [],
+    isLoading: billingPlansLoading,
+    isError: isCatalogError,
+    error: catalogError,
+    refetch: refetchCatalog,
+  } = useBillingPlans();
 
   const currentPlan =
-    billingPlans.find((plan) => plan.code === currentPlanCode) ??
-    billingPlans[0] ??
-    null;
+    billingPlans.find((plan) => plan.code === status?.planTier) ?? null;
   const dashboardUrl = businessId
     ? EducationUrlService.buildAdminDashboardUrl(businessId)
     : null;
@@ -151,6 +159,26 @@ export function EducationPlansPage() {
     );
   }
 
+  if (isSubscriptionError || !status) {
+    return (
+      <EducationAdminReadError
+        title="Não foi possível verificar a assinatura de Educação"
+        error={subscriptionError}
+        onRetry={() => void refetchSubscription()}
+      />
+    );
+  }
+
+  if (isCatalogError) {
+    return (
+      <EducationAdminReadError
+        title="Não foi possível carregar os planos disponíveis"
+        error={catalogError}
+        onRetry={() => void refetchCatalog()}
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
@@ -212,7 +240,7 @@ export function EducationPlansPage() {
                 ) : null}
               </div>
               <p className="text-2xl font-bold text-territory-brand">
-                {currentPlan?.name ?? 'Plano atual'}
+                {currentPlan?.name ?? 'Plano não identificado no catálogo'}
               </p>
               <p className="text-sm text-territory-muted">
                 {status?.expiresAt
