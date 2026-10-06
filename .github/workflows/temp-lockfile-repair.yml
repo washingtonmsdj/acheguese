@@ -25,7 +25,13 @@ jobs:
         run: npm ci
 
       - name: Apply compatible audit fixes to lockfile only
-        run: npm audit fix --package-lock-only
+        shell: bash
+        run: |
+          set +e
+          npm audit fix --package-lock-only
+          fix_exit=$?
+          set -e
+          echo "npm audit fix exit code: ${fix_exit} (non-zero is expected when only breaking fixes remain)"
 
       - name: Capture full-tree audit after compatible fixes
         shell: bash
