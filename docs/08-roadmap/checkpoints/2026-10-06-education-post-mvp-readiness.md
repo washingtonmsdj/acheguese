@@ -624,6 +624,21 @@ durante a estabilização atual do data plane.
   produção executado** até um workflow manual rodar contra o deployment do mesmo
   SHA candidato.
 
+## Tranche adicional — fechamento operacional de Leads
+
+- A suíte operacional de Leads agora prova idade `0` sem colapsar o valor como
+  ausente.
+- A UI prova apenas transições permitidas: `new` avança para `contacted`,
+  `contacted` avança para `visit_scheduled`, não existe affordance de
+  salto/backward e `enrolled` não expõe ações.
+- Um `PATCH` abortado somente no navegador produz feedback de falha na UI e
+  preserva `status = new` e `first_contact_at = null` no backend.
+- A paginação 25/26 mantém a contagem global da etapa em ambas as páginas.
+- Motivo de `lost`, avanço válido e `first_contact_at` já eram verificados
+  com persistência real.
+- Não resta gap funcional conhecido nessa fatia de source/teste; a execução em
+  ambiente autorizado no SHA candidato continua obrigatória.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
