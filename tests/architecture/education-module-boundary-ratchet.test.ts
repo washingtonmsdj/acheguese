@@ -140,6 +140,19 @@ describe("Education module hardening ratchet", () => {
     expect(sidebar).not.toContain("Solicitar orçamento");
   });
 
+  it("keeps public Education lead collection privacy-minimized in the UI", () => {
+    const form = read(
+      "src/modules/business/education/components/EducationLeadForm.tsx",
+    );
+
+    expect(form).toContain("Não informe CPF");
+    expect(form).toContain("dados sensíveis do aluno");
+    expect(form).toContain("Este formulário registra interesse e não conclui matrícula");
+    expect(form).toContain("Primeiro nome do aluno (opcional)");
+    expect(form).toContain("grid grid-cols-1 gap-3 sm:grid-cols-2");
+    expect(form).toContain('maxLength={1000}');
+  });
+
   it("keeps Education analytics on the real profile and real export contract", () => {
     const page = read(
       "src/modules/business/education/pages/EducationAnalyticsPage.tsx",
