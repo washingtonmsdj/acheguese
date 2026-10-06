@@ -18,11 +18,24 @@ const VISUAL_EXTENSIONS = new Set([".tsx", ".css"]);
 const NON_SOURCE_ASSET_RE = /\.(?:avif|gif|ico|jpe?g|json|map|mp3|mp4|pdf|png|svg|webm|webp|woff2?|ttf)$/i;
 
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
+const HEX_COLOR_RE = /#[0-9a-fA-F]{3,8}\b/g;
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesk)/;
 const DIRECT_RUNTIME_FONT_RE = /\b(?:Arial|Helvetica),?\s*(?:sans-serif)?\b/;
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
 const APPROVED_FONT_WEIGHTS = new Set(["400", "500", "600", "700", "800"]);
+
+/**
+ * Third-party marks are the only place where provider-owned palette literals
+ * may live in the active UI graph. Keep this allowlist file- and value-scoped:
+ * it must never become a generic escape hatch for Achegue-se visual surfaces.
+ */
+const APPROVED_EXTERNAL_BRAND_HEX = new Map<string, ReadonlySet<string>>([
+  [
+    "src/shared/components/branding/google-provider-mark.css",
+    new Set(["#4285f4", "#34a853", "#fbbc05", "#ea4335", "#fff"]),
+  ],
+]);
 
 function toRepoPath(absolute: string): string {
   return path.relative(ROOT, absolute).split(path.sep).join("/");
@@ -168,6 +181,26 @@ function stripComments(relative: string, content: string): string {
     .replace(/^\s*\/\/.*$/gm, "");
 }
 
+function stripApprovedExternalBrandColors(
+  relative: string,
+  content: string,
+  violations: string[],
+): string {
+  const approved = APPROVED_EXTERNAL_BRAND_HEX.get(relative);
+  if (!approved) return content;
+
+  return content.replace(HEX_COLOR_RE, (literal) => {
+    const normalized = literal.toLowerCase();
+    if (!approved.has(normalized)) {
+      violations.push(
+        `${relative}: unapproved literal ${literal} found in the external-brand mark; only the explicitly owned provider palette is allowed.`,
+      );
+      return literal;
+    }
+    return "currentColor";
+  });
+}
+
 function validateApprovedFontWeights(
   relative: string,
   content: string,
@@ -196,8 +229,13 @@ function main(): void {
   for (const absolute of visualFiles) {
     const relative = toRepoPath(absolute);
     const content = stripComments(relative, fs.readFileSync(absolute, "utf8"));
+    const colorScanContent = stripApprovedExternalBrandColors(
+      relative,
+      content,
+      violations,
+    );
 
-    if (RAW_RUNTIME_COLOR_RE.test(content)) {
+    if (RAW_RUNTIME_COLOR_RE.test(colorScanContent)) {
       violations.push(
         `${relative}: raw runtime color found in a component/CSS reachable from the active MVP; use semantic SSOT tokens instead.`,
       );
