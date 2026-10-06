@@ -298,6 +298,17 @@ durante a estabilização atual do data plane.
 - Essas mudanças fortalecem a prova disponível, mas a execução hosted same-SHA
   da suite autenticada continua obrigatória antes de qualquer ativação.
 
+## Tranche adicional — reivindicação institucional pública
+
+- O campo de comprovação institucional reutiliza
+  `resolveSafeHttpUrl` do owner compartilhado antes do submit.
+- URL vazia ou inválida bloqueia a ação e produz feedback acessível no próprio
+  formulário; o usuário não precisa descobrir o erro apenas depois da chamada.
+- A URL normalizada é encaminhada ao `BusinessClaimService`, que permanece a
+  autoridade final para limite, protocolo, normalização e persistência da
+  evidência.
+- A vertical não introduz parser próprio nem reduz as validações centrais.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
