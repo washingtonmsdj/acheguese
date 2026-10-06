@@ -24,6 +24,21 @@ const EDUCATION_INSTITUTION_TYPE_BY_NICHE: Record<
   sports_school: 'sports_school',
 };
 
+export function resolveEducationInstitutionTypeForNiche(
+  nicheKey: string,
+): EducationInstitutionType | null {
+  if (
+    !Object.prototype.hasOwnProperty.call(
+      EDUCATION_INSTITUTION_TYPE_BY_NICHE,
+      nicheKey,
+    )
+  ) {
+    return null;
+  }
+
+  return EDUCATION_INSTITUTION_TYPE_BY_NICHE[nicheKey as EducationNicheKey];
+}
+
 export function getEducationInstitutionTypeForNiche(
   nicheKey: EducationNicheKey,
 ): EducationInstitutionType {
