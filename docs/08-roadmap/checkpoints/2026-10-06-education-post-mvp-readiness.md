@@ -524,6 +524,15 @@ durante a estabilização atual do data plane.
   preservando entitlement/cache como caminho canônico de acesso.
 - Ratchet arquitetural impede o retorno de `queries: educationQueries`.
 
+## Tranche adicional — API de assinatura
+
+- `useEducationSubscription` deixou de expor um objeto local `permissions`
+  com aliases de entitlement e classificações `isPremium/isBasic/isFree`.
+- A vertical consome `status`, `entitlements` e `planTier` canônicos do
+  Billing, evitando uma segunda linguagem de plano dentro de Education.
+- O import local de `PlanTier` deixou de ser necessário no hook.
+- Ratchet arquitetural impede o retorno desses aliases.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
