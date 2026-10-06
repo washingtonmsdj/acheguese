@@ -66,13 +66,13 @@ export function ReportReasonDialog<TReason extends string>({
 
   return (
     <Dialog open={open} onOpenChange={submitting ? undefined : onOpenChange}>
-      <DialogContent className="max-h-[90dvh] overflow-y-auto border-white/10 bg-[#172126] text-white sm:max-w-md">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto border-border bg-popover text-popover-foreground sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
-            <AlertTriangle className="h-5 w-5 text-amber-300" />
+            <AlertTriangle className="h-5 w-5 text-warning" />
             Denunciar {contentLabel}
           </DialogTitle>
-          <DialogDescription className="text-white/60">
+          <DialogDescription className="text-muted-foreground">
             Selecione o motivo. A equipe de moderacao recebera somente os dados
             necessarios para analisar a denuncia.
           </DialogDescription>
@@ -91,7 +91,7 @@ export function ReportReasonDialog<TReason extends string>({
             <Label
               key={option.id}
               htmlFor={`${fieldId}-reason-${option.id}`}
-              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-white/[0.035] px-3 py-2 text-sm font-medium hover:border-white/20 hover:bg-white/[0.06]"
+              className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium hover:border-primary/40 hover:bg-muted"
             >
               <RadioGroupItem
                 id={`${fieldId}-reason-${option.id}`}
@@ -106,7 +106,7 @@ export function ReportReasonDialog<TReason extends string>({
           <div className="space-y-2">
             <Label
               htmlFor={`${fieldId}-details`}
-              className="text-sm text-white/80"
+              className="text-sm text-foreground"
             >
               Detalhes adicionais (opcional)
             </Label>
@@ -117,9 +117,9 @@ export function ReportReasonDialog<TReason extends string>({
                 setDetails(event.target.value.slice(0, maxDetailsLength))
               }
               placeholder="Descreva o contexto sem incluir dados pessoais desnecessarios."
-              className="min-h-24 resize-none border-white/10 bg-black/20 text-white placeholder:text-white/35"
+              className="min-h-24 resize-none border-border bg-background text-foreground placeholder:text-muted-foreground"
             />
-            <p className="text-right text-xs text-white/40">
+            <p className="text-right text-xs text-muted-foreground">
               {details.length}/{maxDetailsLength}
             </p>
           </div>
@@ -131,7 +131,6 @@ export function ReportReasonDialog<TReason extends string>({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={submitting}
-            className="border-white/15 bg-transparent text-white hover:bg-white/10 hover:text-white"
           >
             Cancelar
           </Button>
