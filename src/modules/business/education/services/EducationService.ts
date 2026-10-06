@@ -539,13 +539,6 @@ export const EducationService = {
     });
   },
 
-  async listActivePublicEvents(profileId: string): Promise<EducationEvent[]> {
-    return queries.listEducationEvents(profileId, {
-      isPublic: true,
-      active: true,
-    });
-  },
-
   async listEvents(
     profileId: string,
     options: EducationEventsListOptions = {},
