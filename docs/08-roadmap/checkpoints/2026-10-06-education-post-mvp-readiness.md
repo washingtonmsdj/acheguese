@@ -216,6 +216,10 @@ durante a estabilização atual do data plane.
 - `first_contact_at` só é preenchido na transição real para `contacted`;
   retry idempotente `contacted → contacted` não renova o timestamp do primeiro
   contato.
+- A máquina de estados do pipeline foi centralizada em
+  `core/education/leadPipelineValidation.ts`; facade e write model usam o
+  mesmo owner. `enrolled` e `lost` não expõem próximos passos, eliminando a
+  divergência que antes sugeria `enrolled → lost` na helper de UI.
 
 ## Tranche adicional — Acessibilidade de movimento
 
