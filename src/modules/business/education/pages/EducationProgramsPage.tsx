@@ -649,8 +649,16 @@ export function EducationProgramsPage() {
                     </div>
                   )}
                   {program.available_slots !== null && (
-                    <p className="mt-2 text-sm text-territory-muted">
-                      {program.available_slots} vagas disponíveis
+                    <p
+                      className={
+                        program.available_slots === 0
+                          ? 'mt-2 text-sm font-medium text-territory-warning'
+                          : 'mt-2 text-sm text-territory-muted'
+                      }
+                    >
+                      {program.available_slots === 0
+                        ? 'Sem vagas'
+                        : `${program.available_slots} vagas disponíveis`}
                     </p>
                   )}
                 </CardContent>
