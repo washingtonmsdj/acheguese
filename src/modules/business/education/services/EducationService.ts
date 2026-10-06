@@ -23,6 +23,7 @@ import type {
   EducationProfile,
   EducationProgram,
   EducationLead,
+  EducationLeadAdminPatch,
   EducationEvent,
   EducationLeadStatus,
   EducationProfileStatus,
@@ -521,7 +522,7 @@ export const EducationService = {
 
   async updateLead(
     leadId: string,
-    payload: Partial<Omit<EducationLead, 'status'>>,
+    payload: EducationLeadAdminPatch,
   ): Promise<EducationLead | null> {
     const { data, error } = await mutations.updateEducationLead(leadId, payload);
     if (error) {
