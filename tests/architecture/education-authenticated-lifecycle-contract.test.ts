@@ -78,6 +78,18 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(readme).not.toContain("✅ 69 testes criados e prontos para execução");
   });
 
+  it("keeps Education E2E event fixtures on canonical timestamp columns", () => {
+    const helper = readFileSync(
+      join(ROOT, "tests/helpers/education-setup.ts"),
+      "utf8",
+    );
+
+    expect(helper).toContain("starts_at: startDate");
+    expect(helper).toContain("ends_at: endDate");
+    expect(helper).not.toContain("start_date: startDate");
+    expect(helper).not.toContain("end_date: endDate");
+  });
+
   it("keeps the public Education surface paused during authenticated certification", () => {
     const launchScope = readFileSync(
       join(ROOT, "src/app/config/launchScope.ts"),
