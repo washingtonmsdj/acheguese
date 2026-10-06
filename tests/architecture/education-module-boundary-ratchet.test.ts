@@ -286,6 +286,7 @@ describe("Education module hardening ratchet", () => {
 
     expect(page).toContain("profileId: profile?.id");
     expect(page).toContain("nicheKey: profile?.niche_key");
+    expect(page).toContain("enrollmentOpen: profile?.enrollment_open ?? null");
 
     const analyticsHook = read(
       "src/modules/business/education/hooks/useEducationAnalytics.ts",
@@ -300,6 +301,8 @@ describe("Education module hardening ratchet", () => {
     expect(analyticsHook).not.toContain("avgDaysToConversion");
     expect(analyticsHook).toContain("profile?.enrollment_open ?? null");
     expect(analyticsHook).not.toContain("profile?.enrollment_open ?? false");
+    expect(analyticsHook).toContain("enrollmentWindowOpen: enrollmentOpen");
+    expect(analyticsHook).not.toContain("getEducationProfileById(profileId)");
     expect(page).toContain("canExportAnalytics = canExport && nicheAllowsExport");
     expect(page).toContain("buildEducationAnalyticsCsv(data)");
     expect(page).toContain("onClick={handleExport}");
