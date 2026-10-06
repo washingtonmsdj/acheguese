@@ -105,3 +105,5 @@ export {
   getEducationLeadContactValidationError,
   normalizeEducationLeadAdminPatch,
 } from "@/core/education/leadValidation";
+
+export { EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT } from "@/core/education/publicLeadIntakeContract";
