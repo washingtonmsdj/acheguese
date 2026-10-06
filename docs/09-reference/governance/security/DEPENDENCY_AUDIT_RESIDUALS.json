@@ -1,17 +1,31 @@
 {
-  "schemaVersion": "dependency-audit-residuals/v1",
+  "schemaVersion": "dependency-audit-residuals/v2",
   "authority": "security-dependency-audit",
+  "expectedVulnerabilitySeverities": {
+    "@tailwindcss/typography": "moderate",
+    "braces": "high",
+    "chokidar": "high",
+    "fast-glob": "high",
+    "lovable-tagger": "moderate",
+    "micromatch": "high",
+    "postcss-nested": "moderate",
+    "postcss-selector-parser": "moderate",
+    "tailwindcss": "high"
+  },
   "residuals": [
     {
       "id": "EXC-2026-10-02-BRACES-TAILWIND3-DEV-ONLY",
       "package": "braces",
-      "installedVersion": "3.0.3",
+      "installedVersions": [
+        "3.0.3"
+      ],
       "advisory": "GHSA-vfj7-8cjw-p6xm",
       "severity": "high",
       "scope": "development-only",
       "validUntil": "2026-10-17",
       "productionAuditMustPass": true,
-      "allowedMetaPackages": [
+      "breakingFixRequired": true,
+      "affectedPackages": [
         "braces",
         "chokidar",
         "fast-glob",
@@ -20,12 +34,42 @@
         "tailwindcss"
       ],
       "removalTriggers": [
+        "a non-breaking fix becomes available anywhere in this residualized dependency path",
         "a patched braces 3.x release becomes available to the Tailwind 3 dependency graph",
         "the project completes its Tailwind 4 migration",
-        "any listed package becomes production-reachable",
-        "the advisory id, severity or dependency path changes"
+        "any affected package becomes production-reachable",
+        "the advisory id, severity, installed version set or dependency path changes"
       ],
-      "rationale": "The advisory is currently reachable only through Tailwind 3 build tooling. Production npm audit must remain clean; the exception is invalid if any affected package is production-reachable."
+      "rationale": "The advisory is reachable only through Tailwind 3 build tooling. npm currently offers Tailwind 4.3.3 as the fix, which is a breaking migration. Production npm audit must remain clean."
+    },
+    {
+      "id": "EXC-2026-10-06-POSTCSS-SELECTOR-TAILWIND3-DEV-ONLY",
+      "package": "postcss-selector-parser",
+      "installedVersions": [
+        "6.0.10",
+        "6.1.4"
+      ],
+      "advisory": "GHSA-rj75-hqrm-r3gf",
+      "severity": "moderate",
+      "scope": "development-only",
+      "validUntil": "2026-10-17",
+      "productionAuditMustPass": true,
+      "breakingFixRequired": true,
+      "affectedPackages": [
+        "@tailwindcss/typography",
+        "lovable-tagger",
+        "postcss-nested",
+        "postcss-selector-parser",
+        "tailwindcss"
+      ],
+      "removalTriggers": [
+        "a non-breaking fix becomes available anywhere in this residualized dependency path",
+        "the project can consume postcss-selector-parser 7.1.6 or newer without a breaking Tailwind migration",
+        "the project completes its Tailwind 4 migration",
+        "any affected package becomes production-reachable",
+        "the advisory id, severity, installed version set or dependency path changes"
+      ],
+      "rationale": "The advisory is reachable only through development tooling. npm currently proposes a breaking typography downgrade or the Tailwind major migration rather than a compatible repair. Production npm audit must remain clean."
     }
   ]
 }
