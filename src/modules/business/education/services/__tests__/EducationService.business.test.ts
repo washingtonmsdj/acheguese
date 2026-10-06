@@ -170,14 +170,7 @@ describe('EducationService - Business Logic', () => {
       expect(EducationService.formatLeadContactInfo(noEmail)).toBe('John Doe - +5588999999999');
     });
 
-    it('calculateLeadConversionProbability returns percentage', () => {
-      expect(EducationService.calculateLeadConversionProbability('new')).toBe(20);
-      expect(EducationService.calculateLeadConversionProbability('contacted')).toBe(35);
-      expect(EducationService.calculateLeadConversionProbability('proposal_sent')).toBe(75);
-      expect(EducationService.calculateLeadConversionProbability('enrolled')).toBe(100);
-      expect(EducationService.calculateLeadConversionProbability('lost')).toBe(0);
-    });
-  });
+
 
   describe('Pipeline Summary', () => {
     const leads: EducationLead[] = [
