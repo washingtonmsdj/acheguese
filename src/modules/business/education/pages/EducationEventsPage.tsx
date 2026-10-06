@@ -60,6 +60,7 @@ import {
   fromLocalInputToEventIso,
 } from '../utils/educationEventDateTime';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
 
 const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
   open_house: 'Portas Abertas',
@@ -118,6 +119,7 @@ export function EducationEventsPage() {
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
+    enabled: Boolean(profile?.id),
   });
 
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
@@ -352,6 +354,16 @@ export function EducationEventsPage() {
         onRetry={async () => {
           await Promise.all([refetchProfile(), refetchEvents()]);
         }}
+      />
+    );
+  }
+
+  if (!profile) {
+    return (
+      <EducationProfileRequiredState
+        businessId={businessId}
+        title="Configure Educação antes de gerenciar eventos"
+        description="Não existe um perfil Education configurado para cadastrar eventos nesta instituição."
       />
     );
   }
