@@ -71,13 +71,13 @@ describe('buildEducationAnalyticsCsv', () => {
       leads: {
         ...fixture.leads,
         byGrade: [
-          { grade: ' \\t=HYPERLINK(1)', leadCount: 4, enrollmentCount: 1 },
+          { grade: ' \t=HYPERLINK(1)', leadCount: 4, enrollmentCount: 1 },
         ],
       },
     });
 
-    expect(csv).toContain('"serie","leads","\\' \\t=HYPERLINK(1)","4"');
-    expect(csv).not.toContain('"serie","leads"," \\t=HYPERLINK(1)","4"');
+    expect(csv).toContain(`"serie","leads","' \t=HYPERLINK(1)","4"`);
+    expect(csv).not.toContain(`"serie","leads"," \t=HYPERLINK(1)","4"`);
   });
 
 });
