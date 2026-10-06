@@ -293,6 +293,9 @@ durante a estabilização atual do data plane.
   semântica para tecnologias assistivas.
 - Cards de categoria expõem `aria-pressed` e nome acessível, refletindo o
   estado real do filtro sem depender apenas de aparência visual.
+- Chips de nicho também expõem `aria-pressed`; a busca principal ganhou
+  rótulo acessível persistente e a contagem de resultados é anunciada com
+  `role="status"`/`aria-live="polite"`.
 - Cards destacados e seções de marketing respeitam `prefers-reduced-motion`.
 - O bloco que apenas mostra uma amostra dos primeiros resultados deixou de se
   apresentar como **curadoria/destaque** não comprovado.
