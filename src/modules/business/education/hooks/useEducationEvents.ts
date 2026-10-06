@@ -5,17 +5,22 @@ import type { EducationEvent, SchoolEventType } from '@/core/education';
 export interface EventFilters {
   isPublic?: boolean;
   upcoming?: boolean;
+  active?: boolean;
 }
 
 export function useEducationEvents(profileId?: string, filters: EventFilters = {}) {
   const queryClient = useQueryClient();
-  const { isPublic, upcoming } = filters;
+  const { isPublic, upcoming, active } = filters;
 
   const query = useQuery({
-    queryKey: ['education', 'events', profileId, isPublic, upcoming],
+    queryKey: ['education', 'events', profileId, isPublic, upcoming, active],
     queryFn: async () => {
       if (!profileId) return [];
-      return EducationService.listEvents(profileId, { isPublic, upcoming });
+      return EducationService.listEvents(profileId, {
+        isPublic,
+        upcoming,
+        active,
+      });
     },
     enabled: Boolean(profileId),
   });
