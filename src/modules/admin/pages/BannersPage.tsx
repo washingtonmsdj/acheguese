@@ -9,7 +9,6 @@ import {
   EyeOff,
   ExternalLink,
   Upload,
-  Image as ImageIcon,
   ArrowDown,
   ArrowLeftRight,
   ArrowRight,
@@ -46,7 +45,7 @@ export default function BannersPage() {
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { user, activeProfile } = useSessionContext();
 
-  // Form state
+  // Form state: only fields that are actually persisted by CreateBannerInput.
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -58,8 +57,6 @@ export default function BannersPage() {
     is_active: true,
     start_date: "",
     end_date: "",
-    background_color: "#ffffff",
-    text_color: "#000000",
   });
 
   useEffect(() => {
@@ -92,7 +89,6 @@ export default function BannersPage() {
 
       let imageUrl = formData.image_url;
 
-      // Se tem arquivo novo, fazer upload
       if (imageFile) {
         setUploading(true);
         imageUrl = await BannerService.uploadBannerImage(activeProfile.id, imageFile);
@@ -184,8 +180,6 @@ export default function BannersPage() {
       is_active: true,
       start_date: "",
       end_date: "",
-      background_color: "#ffffff",
-      text_color: "#000000",
     });
     setEditingBanner(null);
     setShowForm(false);
@@ -213,12 +207,10 @@ export default function BannersPage() {
       link_url: banner.link_url || "",
       position: banner.position,
       page: "home",
-      priority: banner.priority,
+      priority: banner.priority ?? 0,
       is_active: banner.is_active,
       start_date: banner.starts_at ? banner.starts_at.split("T")[0] : "",
       end_date: banner.ends_at ? banner.ends_at.split("T")[0] : "",
-      background_color: banner.background_color || "#ffffff",
-      text_color: banner.text_color || "#000000",
     });
     setEditingBanner(banner);
     setImagePreview(banner.image_url);
@@ -254,12 +246,9 @@ export default function BannersPage() {
             {editingBanner ? "Editar Banner" : "Novo Banner"}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Preview da Imagem */}
             {imagePreview && (
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">
-                  Preview
-                </label>
+                <label className="block text-sm font-medium mb-2">Preview</label>
                 <SafeImage
                   src={imagePreview}
                   alt="Preview"
@@ -268,7 +257,6 @@ export default function BannersPage() {
               </div>
             )}
 
-            {/* Upload de Imagem */}
             <div>
               <label className="block text-sm font-medium mb-2">
                 Imagem do Banner * {uploading && "(Enviando...)"}
@@ -297,37 +285,28 @@ export default function BannersPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Título *
-                </label>
+                <label className="block text-sm font-medium mb-2">Título *</label>
                 <input
                   type="text"
                   required
                   value={formData.title}
-                  onChange={(e) =>
-                    setFormData({ ...formData, title: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Link (opcional)
-                </label>
+                <label className="block text-sm font-medium mb-2">Link (opcional)</label>
                 <input
                   type="url"
                   value={formData.link_url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, link_url: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, link_url: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                   placeholder="https://..."
                 />
               </div>
             </div>
 
-            {/* Seleção Visual de Página */}
             <div>
               <label className="block text-sm font-medium mb-2">Página *</label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -341,31 +320,26 @@ export default function BannersPage() {
                 ].map((page) => {
                   const PageIcon = page.icon;
                   return (
-                  <button
-                    key={page.value}
-                    type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, page: page.value })
-                    }
-                    className={`p-4 border-2 rounded-lg text-center transition-all ${
-                      formData.page === page.value
-                        ? "border-primary bg-primary/10"
-                        : "border-gray-200 hover:border-primary/50"
-                    }`}
-                  >
-                    <PageIcon className="mx-auto mb-1 h-7 w-7 text-primary" aria-hidden="true" />
-                    <div className="text-sm font-medium">{page.label}</div>
-                  </button>
+                    <button
+                      key={page.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, page: page.value })}
+                      className={`p-4 border-2 rounded-lg text-center transition-all ${
+                        formData.page === page.value
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <PageIcon className="mx-auto mb-1 h-7 w-7 text-primary" aria-hidden="true" />
+                      <div className="text-sm font-medium">{page.label}</div>
+                    </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Seleção Visual de Posição */}
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Posição *
-              </label>
+              <label className="block text-sm font-medium mb-2">Posição *</label>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
                   { value: "top", label: "Topo", icon: ArrowUp },
@@ -375,21 +349,19 @@ export default function BannersPage() {
                 ].map((pos) => {
                   const PositionIcon = pos.icon;
                   return (
-                  <button
-                    key={pos.value}
-                    type="button"
-                    onClick={() =>
-                      setFormData({ ...formData, position: pos.value })
-                    }
-                    className={`p-3 border-2 rounded-lg text-center transition-all ${
-                      formData.position === pos.value
-                        ? "border-primary bg-primary/10"
-                        : "border-gray-200 hover:border-primary/50"
-                    }`}
-                  >
-                    <PositionIcon className="mx-auto mb-1 h-6 w-6 text-primary" aria-hidden="true" />
-                    <div className="text-sm font-medium">{pos.label}</div>
-                  </button>
+                    <button
+                      key={pos.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, position: pos.value })}
+                      className={`p-3 border-2 rounded-lg text-center transition-all ${
+                        formData.position === pos.value
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <PositionIcon className="mx-auto mb-1 h-6 w-6 text-primary" aria-hidden="true" />
+                      <div className="text-sm font-medium">{pos.label}</div>
+                    </button>
                   );
                 })}
               </div>
@@ -397,17 +369,12 @@ export default function BannersPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Prioridade
-                </label>
+                <label className="block text-sm font-medium mb-2">Prioridade</label>
                 <input
                   type="number"
                   value={formData.priority}
                   onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      priority: parseInt(e.target.value),
-                    })
+                    setFormData({ ...formData, priority: parseInt(e.target.value) })
                   }
                   className="w-full px-3 py-2 border rounded-lg"
                 />
@@ -423,17 +390,15 @@ export default function BannersPage() {
                     type="checkbox"
                     id="is_active"
                     checked={formData.is_active}
-                    onChange={(e) =>
-                      setFormData({ ...formData, is_active: e.target.checked })
-                    }
+                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
                     className="w-4 h-4"
                   />
                   <label htmlFor="is_active" className="text-sm font-medium">
                     <span className="inline-flex items-center gap-1.5">
                       {formData.is_active ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" aria-hidden="true" />
+                        <CheckCircle2 className="h-4 w-4 text-success" aria-hidden="true" />
                       ) : (
-                        <XCircle className="h-4 w-4 text-red-600" aria-hidden="true" />
+                        <XCircle className="h-4 w-4 text-destructive" aria-hidden="true" />
                       )}
                       {formData.is_active ? "Ativo" : "Inativo"}
                     </span>
@@ -442,43 +407,31 @@ export default function BannersPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Data Início
-                </label>
+                <label className="block text-sm font-medium mb-2">Data Início</label>
                 <input
                   type="date"
                   value={formData.start_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, start_date: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Data Fim
-                </label>
+                <label className="block text-sm font-medium mb-2">Data Fim</label>
                 <input
                   type="date"
                   value={formData.end_date}
-                  onChange={(e) =>
-                    setFormData({ ...formData, end_date: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Descrição
-              </label>
+              <label className="block text-sm font-medium mb-2">Descrição</label>
               <textarea
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 className="w-full px-3 py-2 border rounded-lg"
                 rows={3}
                 placeholder="Descrição opcional do banner..."
@@ -487,11 +440,7 @@ export default function BannersPage() {
 
             <div className="flex gap-2">
               <Button type="submit" disabled={uploading}>
-                {uploading
-                  ? "Enviando..."
-                  : editingBanner
-                    ? "Atualizar"
-                    : "Criar"}
+                {uploading ? "Enviando..." : editingBanner ? "Atualizar" : "Criar"}
               </Button>
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancelar
@@ -516,18 +465,16 @@ export default function BannersPage() {
               <div className="flex items-center gap-2">
                 <h3 className="font-bold">{banner.title}</h3>
                 {banner.is_active ? (
-                  <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
+                  <span className="text-xs bg-success/15 text-success px-2 py-1 rounded">
                     Ativo
                   </span>
                 ) : (
-                  <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded">
+                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
                     Inativo
                   </span>
                 )}
               </div>
-              <p className="text-sm text-muted-foreground">
-                {banner.description}
-              </p>
+              <p className="text-sm text-muted-foreground">{banner.description}</p>
               <div className="flex gap-4 text-xs text-muted-foreground mt-2">
                 <span>Página: n/a</span>
                 <span>Posição: {banner.position}</span>
@@ -537,11 +484,7 @@ export default function BannersPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => toggleActive(banner)}
-              >
+              <Button size="sm" variant="outline" onClick={() => toggleActive(banner)}>
                 {banner.is_active ? (
                   <EyeOff className="h-4 w-4" />
                 ) : (
@@ -550,27 +493,15 @@ export default function BannersPage() {
               </Button>
               {banner.link_url && (
                 <Button size="sm" variant="outline" asChild>
-                  <SafeLink
-                    href={banner.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
+                  <SafeLink href={banner.link_url} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
                   </SafeLink>
                 </Button>
               )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => startEdit(banner)}
-              >
+              <Button size="sm" variant="outline" onClick={() => startEdit(banner)}>
                 <Edit className="h-4 w-4" />
               </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={() => handleDelete(banner.id)}
-              >
+              <Button size="sm" variant="destructive" onClick={() => handleDelete(banner.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
