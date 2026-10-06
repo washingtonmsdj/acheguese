@@ -422,7 +422,10 @@ export function EducationExplorerPage() {
           />
 
           {isError ? (
-            <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-territory-error/35 bg-territory-error/5 p-12 text-center">
+            <div
+              role="alert"
+              className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-territory-error/35 bg-territory-error/5 p-12 text-center"
+            >
               <Shield className="h-10 w-10 text-territory-error" aria-hidden="true" />
               <h3 className="mt-4 text-lg font-semibold text-territory-ink">
                 Não conseguimos carregar a vitrine
@@ -440,6 +443,8 @@ export function EducationExplorerPage() {
             </div>
           ) : isLoading && !hasRealData ? (
             <div
+              role="status"
+              aria-label="Carregando instituições de Educação"
               className={cn(
                 view === 'grid'
                   ? 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 min-[1800px]:grid-cols-6'
@@ -451,7 +456,11 @@ export function EducationExplorerPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-territory-border bg-territory-raised/60 p-12 text-center">
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-territory-border bg-territory-raised/60 p-12 text-center"
+            >
               <ScanSearch className="h-10 w-10 text-territory-muted" aria-hidden="true" />
               <h3 className="mt-4 text-lg font-semibold text-territory-ink">
                 Nenhum resultado encontrado
@@ -516,6 +525,7 @@ export function EducationExplorerPage() {
           <EducationNicheShowcase
             niches={niches}
             sourceProfiles={sourceProfiles}
+            selectedNiches={filters.niches}
             setFilters={setFilters}
             nicheIcons={NICHE_ICONS}
             nicheAccent={NICHE_ACCENT}
