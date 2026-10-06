@@ -299,7 +299,7 @@ export function EducationProgramsPage() {
           price_from: isPublicSchool ? null : formData.priceFrom,
           curriculum_topics: parseCurriculumTopics(formData.curriculumTopics),
           is_active: formData.isActive,
-        } as Partial<EducationProgram>,
+        },
       });
       toast({
         title: 'Programa atualizado',
