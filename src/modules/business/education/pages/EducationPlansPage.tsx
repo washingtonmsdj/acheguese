@@ -8,6 +8,7 @@
  * pertencem ao registry do nicho e são mostrados nas telas de operação.
  */
 
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -71,6 +72,7 @@ export function EducationPlansPage() {
   const businessDataId = dashboardContext?.businessDataId;
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
+  const [checkoutPlanCode, setCheckoutPlanCode] = useState<string | null>(null);
   const { toast } = useToast();
   const { permissions, loading: loadingAccess } = useDashboardAccess(businessId);
   const canManageBilling = permissions.role === 'owner';
@@ -105,6 +107,8 @@ export function EducationPlansPage() {
     : null;
 
   const handleUpgrade = async (planCode: string) => {
+    if (checkoutPlanCode) return;
+
     if (!canManageBilling) {
       toast({
         title: 'Ação restrita ao proprietário',
@@ -124,6 +128,8 @@ export function EducationPlansPage() {
       });
       return;
     }
+
+    setCheckoutPlanCode(planCode);
 
     try {
       toast({
@@ -146,6 +152,8 @@ export function EducationPlansPage() {
         description: 'Não foi possível abrir o checkout. Tente novamente.',
         variant: 'destructive',
       });
+    } finally {
+      setCheckoutPlanCode(null);
     }
   };
 
@@ -247,9 +255,13 @@ export function EducationPlansPage() {
                 {currentPlan?.name ?? 'Plano não identificado no catálogo'}
               </p>
               <p className="text-sm text-territory-muted">
-                {status?.expiresAt
-                  ? `Renova em: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
-                  : 'Sem data de expiração'}
+                {status.expiresAt
+                  ? status.isActive
+                    ? `Próxima renovação: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
+                    : `Fim do período informado: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
+                  : status.isActive
+                    ? 'Data de renovação não informada'
+                    : 'Assinatura sem período ativo'}
               </p>
             </div>
 
@@ -257,7 +269,7 @@ export function EducationPlansPage() {
               variant="outline"
               className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
               onClick={() => navigate(BILLING_PATHS.subscription)}
-              disabled={loadingAccess || !canManageBilling}
+              disabled={loadingAccess || !canManageBilling || checkoutPlanCode !== null}
             >
               Gerenciar assinatura
             </Button>
@@ -404,11 +416,18 @@ export function EducationPlansPage() {
                           : 'w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90'
                       }
                       disabled={
-                        isCurrent || loadingAccess || !canManageBilling
+                        isCurrent ||
+                        loadingAccess ||
+                        !canManageBilling ||
+                        checkoutPlanCode !== null
                       }
                       onClick={() => handleUpgrade(plan.code)}
                     >
-                      {isCurrent ? 'Plano atual' : 'Escolher plano'}
+                      {isCurrent
+                        ? 'Plano atual'
+                        : checkoutPlanCode === plan.code
+                          ? 'Abrindo checkout...'
+                          : 'Escolher plano'}
                     </Button>
                   </CardContent>
                 </Card>
