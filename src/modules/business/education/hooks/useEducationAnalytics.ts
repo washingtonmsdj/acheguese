@@ -184,7 +184,6 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
 
     // Entitlements
     entitlements: subscription.entitlements,
-    planType: subscription.status?.planType,
     isActive: subscription.status?.isActive,
     isEntitlementLoading: subscription.isLoading,
     isEntitlementError: subscription.isError,
