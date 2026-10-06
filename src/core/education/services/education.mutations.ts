@@ -140,6 +140,21 @@ function validateProfilePayload(payload: Partial<EducationProfile>): ValidationE
     errors.push({ field: 'niche_key', message: 'Nicho invalido' });
   }
 
+  if (
+    payload.niche_key !== undefined &&
+    validNiches.includes(payload.niche_key) &&
+    payload.institution_type !== undefined &&
+    !isEducationInstitutionTypeForNiche(
+      payload.institution_type,
+      payload.niche_key as EducationNicheKey,
+    )
+  ) {
+    errors.push({
+      field: 'institution_type',
+      message: 'Tipo de instituicao incompativel com o nicho',
+    });
+  }
+
   const validSchoolTypes = ['public', 'private', 'charter', 'community'];
   if (payload.school_type !== undefined && payload.school_type !== null && !validSchoolTypes.includes(payload.school_type)) {
     errors.push({ field: 'school_type', message: 'Tipo de escola invalido' });
