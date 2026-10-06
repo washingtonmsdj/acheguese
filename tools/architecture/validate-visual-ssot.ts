@@ -106,6 +106,10 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/profile/components/AccountSettingsShell.tsx',
   'src/modules/profile/pages/ContaPreferenciasPage.tsx',
   'src/app/pages/NotificationPreferencesPage.tsx',
+  'src/app/pages/NotificationsPage.tsx',
+  'src/app/pages/MessagingInboxPage.tsx',
+  'src/modules/messaging/pages/MensagensPage.tsx',
+  'src/modules/messaging/pages/MensagensPage.css',
   'src/modules/profile/pages/ContaSegurancaPage.tsx',
   'src/app/pages/PrivacySettingsPage.tsx',
   'src/app/pages/EmailLogsPage.tsx',
@@ -215,6 +219,11 @@ const SEMANTIC_STATUS_RUNTIME_FILES = new Set([
   'src/app/pages/TermosPage.tsx',
   'src/app/pages/DPOContactPage.tsx',
 ]);
+const ACTIVE_VISUAL_COMPOSITION_FILES = [
+  'src/app/routes/sections/AppLayoutRoutes.tsx',
+  'src/app/components/AppLayoutSidebar.tsx',
+] as const;
+const ACTIVE_LAZY_IMPORTS_FILE = 'src/app/routes/activeLazyImports.ts';
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
 const APPROVED_FONT_WEIGHTS = new Set(['400', '500', '600', '700', '800']);
@@ -237,6 +246,38 @@ function readRequired(relative: string, violations: string[]): string {
     return '';
   }
   return fs.readFileSync(absolute, 'utf8');
+}
+
+function resolveActiveImport(specifier: string, violations: string[]): string | null {
+  if (!specifier.startsWith('@/')) return null;
+  const base = path.join(ROOT, 'src', specifier.slice(2));
+  const candidates = [
+    `${base}.tsx`,
+    `${base}.ts`,
+    path.join(base, 'index.tsx'),
+    path.join(base, 'index.ts'),
+  ];
+  const resolved = candidates.find((candidate) => fs.existsSync(candidate));
+  if (!resolved) {
+    violations.push(
+      `${ACTIVE_LAZY_IMPORTS_FILE}: active lazy import ${specifier} could not be resolved by the visual SSOT gate.`,
+    );
+    return null;
+  }
+  return path.relative(ROOT, resolved).split(path.sep).join('/');
+}
+
+function getActiveVisualRootFiles(violations: string[]): string[] {
+  const source = readRequired(ACTIVE_LAZY_IMPORTS_FILE, violations);
+  const roots = new Set<string>(ACTIVE_VISUAL_COMPOSITION_FILES);
+  const importRe = /import\(["'](@\/[^"']+)["']\)/g;
+
+  for (const match of source.matchAll(importRe)) {
+    const resolved = resolveActiveImport(match[1], violations);
+    if (resolved?.endsWith('.tsx')) roots.add(resolved);
+  }
+
+  return [...roots].sort();
 }
 
 function findHexColors(content: string): string[] {
@@ -408,6 +449,21 @@ function main(): void {
     }
   }
 
+  for (const relative of getActiveVisualRootFiles(violations)) {
+    const content = readRequired(relative, violations);
+    if (RAW_RUNTIME_COLOR_RE.test(content)) {
+      violations.push(
+        `${relative}: raw runtime color found in an active MVP visual root; use the global semantic SSOT instead.`,
+      );
+    }
+    if (LEGACY_FONT_RE.test(content)) {
+      violations.push(
+        `${relative}: legacy font found in an active MVP visual root; use the canonical Plus Jakarta Sans SSOT.`,
+      );
+    }
+    validateApprovedFontWeights(relative, content, violations);
+  }
+
   for (const relative of MIGRATED_RUNTIME_FILES) {
     const content = readRequired(relative, violations);
     const isBusinessManagementSurface =
@@ -524,7 +580,7 @@ function main(): void {
   }
 
   console.log(
-    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, theme bootstrap and high-contrast contracts are protected, migrated auth, community, mobility and admin surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
+    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, active MVP visual roots are discovered from activeLazyImports and checked automatically, migrated runtime surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
   );
 }
 
