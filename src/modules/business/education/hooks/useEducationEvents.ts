@@ -84,5 +84,12 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
     remove: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isMutating:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
   };
 }
