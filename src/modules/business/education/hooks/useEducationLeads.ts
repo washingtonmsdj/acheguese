@@ -1,7 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
 import { PublicEducationLeadService } from '@/core/education/services/PublicEducationLeadService';
-import type { EducationLead, EducationLeadStatus, SchoolShift } from '@/core/education';
+import type {
+  EducationLeadAdminPatch,
+  EducationLeadStatus,
+  SchoolShift,
+} from '@/core/education';
 
 export interface LeadFilters {
   status?: EducationLeadStatus;
@@ -95,7 +99,7 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
       payload,
     }: {
       leadId: string;
-      payload: Partial<Omit<EducationLead, 'status'>>;
+      payload: EducationLeadAdminPatch;
     }) => {
       const updated = await EducationService.updateLead(leadId, payload);
       if (!updated) throw new Error('Falha ao atualizar lead');
