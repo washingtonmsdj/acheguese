@@ -48,6 +48,12 @@ describe("public catalog mount boundary", () => {
     ]);
   });
 
+  it("publishes the catalog path through the canonical sitemap", () => {
+    const sitemap = read("src/core/routing/seo/generateSitemap.ts");
+    expect(sitemap).toContain("PUBLIC_CATALOG_PATH");
+    expect(sitemap).toContain("changefreq: 'weekly'");
+  });
+
   it("keeps routing generated from the public external apps SSOT", () => {
     const source = read("tools/security/generate-vercel-config.ts");
     expect(source).toContain("PUBLIC_EXTERNAL_APPS");
