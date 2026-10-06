@@ -728,6 +728,16 @@ export async function moveLeadToStatus(
   }
 
   if (options.ownerUserId !== undefined) {
+    const ownerValidationError = getEducationLeadContactValidationError({
+      owner_user_id: options.ownerUserId,
+    });
+    if (ownerValidationError) {
+      return {
+        data: null,
+        error: new Error(ownerValidationError),
+        previousStatus: currentStatus,
+      };
+    }
     updatePayload.owner_user_id = options.ownerUserId;
   }
 
