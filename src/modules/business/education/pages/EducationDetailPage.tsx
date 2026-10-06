@@ -103,7 +103,7 @@ export function EducationDetailPage() {
   const { programs } = useEducationPrograms(profile?.id);
   const { events } = useEducationEvents(profile?.id, {
     isPublic: true,
-    upcoming: true,
+    active: true,
   });
   const {
     isFavorite,
