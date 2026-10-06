@@ -11,6 +11,11 @@ import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getEducationEventValidationError } from '../eventValidation';
 import {
+  EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  getEducationProgramNameValidationError,
+  getEducationProgramNumericValidationError,
+} from '../programValidation';
+import {
   getSchoolStageOptions,
   isSchoolNiche,
   SCHOOL_STAGE_OTHER_VALUE,
@@ -260,6 +265,34 @@ export async function createEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
+  const programNameError = getEducationProgramNameValidationError(payload.name);
+  if (programNameError) {
+    return { data: null, error: new Error(programNameError) };
+  }
+
+  const numericError = getEducationProgramNumericValidationError({
+    availableSlots: payload.available_slots,
+    priceFrom: payload.price_from,
+  });
+  if (numericError) {
+    return { data: null, error: new Error(numericError) };
+  }
+
+  if (
+    payload.age_group &&
+    payload.age_group.trim().length > EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH
+  ) {
+    return {
+      data: null,
+      error: new Error(
+        `A faixa etária deve ter no máximo ${EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH} caracteres.`,
+      ),
+    };
+  }
+
+  payload.name = payload.name.trim();
+  payload.age_group = payload.age_group?.trim() || null;
+
   if (isSchoolNiche(nicheKey)) {
     const stageName = normalizeStageText(payload.name);
     const stageGrade = normalizeStageText(payload.grade ?? null);
@@ -316,12 +349,48 @@ export async function updateEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
+  if (payload.name !== undefined) {
+    const programNameError = getEducationProgramNameValidationError(payload.name);
+    if (programNameError) {
+      return { data: null, error: new Error(programNameError) };
+    }
+    payload.name = payload.name.trim();
+  }
+
+  const numericError = getEducationProgramNumericValidationError({
+    availableSlots: payload.available_slots,
+    priceFrom: payload.price_from,
+  });
+  if (numericError) {
+    return { data: null, error: new Error(numericError) };
+  }
+
+  if (
+    payload.age_group &&
+    payload.age_group.trim().length > EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH
+  ) {
+    return {
+      data: null,
+      error: new Error(
+        `A faixa etária deve ter no máximo ${EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH} caracteres.`,
+      ),
+    };
+  }
+  if (payload.age_group !== undefined) {
+    payload.age_group = payload.age_group?.trim() || null;
+  }
+
   if (isSchoolNiche(nicheKey)) {
     const updatedName = normalizeStageText(payload.name ?? null);
     const updatedGrade = normalizeStageText(payload.grade ?? null);
     const candidate = updatedName ?? updatedGrade;
 
     if (candidate) {
+      const programNameError = getEducationProgramNameValidationError(candidate);
+      if (programNameError) {
+        return { data: null, error: new Error(programNameError) };
+      }
+
       const official = isOfficialStageLabel(candidate, nicheKey);
       const custom = validateCustomStageText(candidate);
       if (!official && !custom) {
