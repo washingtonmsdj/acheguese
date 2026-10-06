@@ -391,9 +391,22 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
       await actions.click();
       await page.getByRole("menuitem", { name: "Editar" }).click();
       await expect(activeSwitch).not.toBeChecked();
+      await page.locator("#availableSlots").fill("");
+      await page.locator("#priceFrom").fill("");
       await activeSwitch.click();
       await page.getByRole("button", { name: /Salvar alterações/i }).click();
       await expect(page.getByText("Inativo", { exact: true })).toHaveCount(0);
+
+      const { data: unspecifiedProgram, error: unspecifiedProgramError } =
+        await client
+          .from("education_programs")
+          .select("is_active,available_slots,price_from")
+          .eq("id", program!.id)
+          .single();
+      expect(unspecifiedProgramError).toBeNull();
+      expect(unspecifiedProgram?.is_active).toBe(true);
+      expect(unspecifiedProgram?.available_slots).toBeNull();
+      expect(unspecifiedProgram?.price_from).toBeNull();
 
       await actions.click();
       await page.getByRole("menuitem", { name: "Excluir" }).click();
