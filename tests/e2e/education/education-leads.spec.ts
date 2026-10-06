@@ -157,7 +157,7 @@ test.describe('Education Leads Management — operational smoke', () => {
       child_name: null,
       child_age: null,
       interest_note: null,
-      source_channel: 'e2e_fixture',
+      source_channel: 'website',
       status: 'new',
       created_at: new Date(baseTime + index * 1000).toISOString(),
     }));
