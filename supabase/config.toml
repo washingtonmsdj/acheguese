@@ -250,7 +250,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.education-lead-rpc]
-verify_jwt = true
+verify_jwt = false
 
 [functions.register-community-interest]
 verify_jwt = false
