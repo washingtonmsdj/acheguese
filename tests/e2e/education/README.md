@@ -57,6 +57,24 @@ de depender de padrões como:
 Um teste só conta como certificação quando falha se o comportamento real
 esperado deixar de funcionar.
 
+## Certificação paga read-only preparada
+
+A suite `tests/e2e/education-paid-lifecycle-authenticated.spec.ts` cobre a
+parte de release que exige um Business realmente pago, sem fabricar
+entitlement:
+
+- requer `E2E_EDUCATION_PAID_BUSINESS_ID`;
+- exige owner real da fixture autenticada;
+- não faz `insert`, `update` ou `delete`;
+- prova acesso a Analytics e download CSV no navegador;
+- prova plano atual ativo e resolvido pelo Billing canônico;
+- não inicia checkout automaticamente.
+
+O runner é
+`npm run test:e2e:education-paid-lifecycle-authenticated` e só é incluído no
+workflow quando o input manual `run_education_paid_lifecycle` é solicitado.
+Ausência da fixture paga é falha de configuração, não sucesso nem skip.
+
 ## Gaps E2E obrigatórios antes da ativação
 
 1. **Setup**
