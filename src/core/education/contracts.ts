@@ -203,6 +203,24 @@ export interface EducationLead {
   desired_shift?: SchoolShift | null; // Turno desejado
 }
 
+export type EducationLeadAdminPatch = Partial<
+  Pick<
+    EducationLead,
+    | 'full_name'
+    | 'email'
+    | 'phone'
+    | 'child_name'
+    | 'child_age'
+    | 'interest_note'
+    | 'owner_user_id'
+    | 'guardian_name'
+    | 'student_name'
+    | 'student_age'
+    | 'desired_grade'
+    | 'desired_shift'
+  >
+>;
+
 export interface EducationLeadEvent {
   id: string;
   lead_id: string;
