@@ -70,12 +70,11 @@ esperado deixar de funcionar.
      qualquer prova remota adicional deve usar mecanismo explicitamente seguro.
 
 2. **Programas**
-   - CRUD determinístico;
-   - preço `0` versus ausente;
-   - vagas `0` versus ausente;
-   - confirmação de exclusão;
-   - limites/capabilities reais do nicho;
-   - mobile do diálogo.
+   - lifecycle autenticado já prova criação, edição, reativação e exclusão com confirmação;
+   - a exclusão é verificada pelo mesmo `program.id` no backend;
+   - preço `0` e vagas `0` já são preservados; ainda falta uma prova E2E explícita de valor ausente versus zero;
+   - entitlement FREE real é usado para a criação, sem falsificar plano;
+   - ainda falta matriz mobile do diálogo no candidato de release.
 
 3. **Leads**
    - paginação;
