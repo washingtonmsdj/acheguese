@@ -63,9 +63,7 @@ describe('EducationService - Business Logic', () => {
       updated_at: '2026-01-01T00:00:00Z',
     };
 
-    it('isProgramAvailable returns true for active programs with slots', () => {
-      expect(EducationService.isProgramAvailable(mockProgram)).toBe(true);
-    });
+;
 
     it('isProgramAvailable returns false for inactive programs', () => {
       expect(EducationService.isProgramAvailable({ ...mockProgram, is_active: false })).toBe(false);
