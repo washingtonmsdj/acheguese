@@ -121,8 +121,8 @@ export function getEducationProgramShiftLabel(
   value: string | null | undefined,
 ): string | null {
   if (!value) return null;
-  return (
-    EDUCATION_PROGRAM_SHIFT_LABELS[value as SchoolShift] ??
-    value.split('_').join(' ')
+  const option = EDUCATION_PROGRAM_SHIFT_OPTIONS.find(
+    (candidate) => candidate.value === value,
   );
+  return option?.label ?? value.split('_').join(' ');
 }
