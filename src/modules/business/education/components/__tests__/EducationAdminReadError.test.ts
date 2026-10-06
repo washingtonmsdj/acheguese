@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getEducationAdminReadErrorMessage } from '../EducationAdminReadError';
+import { getEducationAdminReadErrorMessage } from '../educationAdminErrorMessage';
 
 describe('EducationAdminReadError', () => {
   it('does not expose backend authorization details', () => {
