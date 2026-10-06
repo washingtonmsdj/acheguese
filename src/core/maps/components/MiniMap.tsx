@@ -35,6 +35,19 @@ type MiniMapErrorEvent = {
   preventDefault?: () => void;
 };
 
+function resolveCssColorToken(token: string): string {
+  const value = globalThis
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue(token)
+    .trim();
+
+  if (!value) {
+    throw new Error(`[MiniMap] visual SSOT token ausente: ${token}`);
+  }
+
+  return `hsl(${value})`;
+}
+
 export function MiniMap({
   latitude,
   longitude,
@@ -42,12 +55,12 @@ export function MiniMap({
   description,
   zoom = 15,
   height = '280px',
-  markerColor = '#10b981',
+  markerColor,
   markerIcon = '',
   routeCoordinates,
-  routeColor = '#0f766e',
-  routeStartColor = '#fbbf24',
-  routeEndColor = '#064e3b',
+  routeColor,
+  routeStartColor,
+  routeEndColor,
   className = '',
   showControls = true,
   interactive = true,
@@ -64,6 +77,12 @@ export function MiniMap({
       if (!containerRef.current || mapRef.current) return;
       const maplibregl = await loadMapLibreRuntime();
       if (disposed || !containerRef.current || mapRef.current) return;
+
+      const resolvedMarkerColor = markerColor ?? resolveCssColorToken('--territory-brand');
+      const resolvedRouteColor = routeColor ?? resolveCssColorToken('--territory-brand-strong');
+      const resolvedRouteStartColor = routeStartColor ?? resolveCssColorToken('--territory-sun');
+      const resolvedRouteEndColor = routeEndColor ?? resolveCssColorToken('--territory-brand');
+      const resolvedOnImageColor = resolveCssColorToken('--territory-action-on-image');
 
       const map = new maplibregl.Map({
         container: containerRef.current,
@@ -117,15 +136,15 @@ export function MiniMap({
       outerCircle.setAttribute('cx', '20');
       outerCircle.setAttribute('cy', '20');
       outerCircle.setAttribute('r', '18');
-      outerCircle.setAttribute('fill', markerColor);
+      outerCircle.setAttribute('fill', resolvedMarkerColor);
       outerCircle.setAttribute('opacity', '0.2');
 
       const innerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
       innerCircle.setAttribute('cx', '20');
       innerCircle.setAttribute('cy', '20');
       innerCircle.setAttribute('r', '12');
-      innerCircle.setAttribute('fill', markerColor);
-      innerCircle.setAttribute('stroke', 'white');
+      innerCircle.setAttribute('fill', resolvedMarkerColor);
+      innerCircle.setAttribute('stroke', resolvedOnImageColor);
       innerCircle.setAttribute('stroke-width', '3');
 
       svg.appendChild(outerCircle);
@@ -136,7 +155,7 @@ export function MiniMap({
         text.setAttribute('y', '24');
         text.setAttribute('text-anchor', 'middle');
         text.setAttribute('font-size', '16');
-        text.setAttribute('fill', 'white');
+        text.setAttribute('fill', resolvedOnImageColor);
         text.textContent = markerIcon;
         svg.appendChild(text);
       }
@@ -175,13 +194,13 @@ export function MiniMap({
           id: 'mini-map-route-casing',
           type: 'line',
           source: 'mini-map-route',
-          paint: { 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.9 },
+          paint: { 'line-color': resolvedOnImageColor, 'line-width': 7, 'line-opacity': 0.9 },
         });
         map.addLayer({
           id: 'mini-map-route-line',
           type: 'line',
           source: 'mini-map-route',
-          paint: { 'line-color': routeColor, 'line-width': 4, 'line-opacity': 0.95 },
+          paint: { 'line-color': resolvedRouteColor, 'line-width': 4, 'line-opacity': 0.95 },
         });
 
         const createEndpoint = (color: string) => {
@@ -190,17 +209,17 @@ export function MiniMap({
             'width: 24px',
             'height: 24px',
             `background: ${color}`,
-            'border: 3px solid white',
+            `border: 3px solid ${resolvedOnImageColor}`,
             'border-radius: 999px',
-            'box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25)',
+            'box-shadow: 0 2px 8px hsl(var(--territory-ink) / 0.25)',
           ].join(';');
           return endpoint;
         };
 
-        const start = new maplibregl.Marker({ element: createEndpoint(routeStartColor) })
+        const start = new maplibregl.Marker({ element: createEndpoint(resolvedRouteStartColor) })
           .setLngLat(routeCoordinates[0])
           .addTo(map);
-        const end = new maplibregl.Marker({ element: createEndpoint(routeEndColor) })
+        const end = new maplibregl.Marker({ element: createEndpoint(resolvedRouteEndColor) })
           .setLngLat(routeCoordinates[routeCoordinates.length - 1])
           .addTo(map);
         routeMarkers.push(start, end);
@@ -226,7 +245,7 @@ export function MiniMap({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full bg-muted ${className}`}
+      className={`relative w-full bg-territory-raised ${className}`}
       style={{ height }}
       aria-label={title ? `Mapa mostrando localização de ${title}` : 'Mapa de localização'}
     />
