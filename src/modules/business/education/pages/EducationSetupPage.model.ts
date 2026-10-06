@@ -12,6 +12,7 @@ import type {
   SchoolFacilityFeatureKey,
   SchoolNetwork,
   SchoolShift,
+  SchoolType,
 } from '@/core/education';
 
 export type EducationSetupFormData = {
@@ -166,14 +167,14 @@ export function hasEducationLevels(nicheKey: string): nicheKey is EducationNiche
   return EDUCATION_LEVEL_NICHES.includes(nicheKey as EducationNicheKey);
 }
 
-export const SCHOOL_TYPES = [
+export const SCHOOL_TYPES: { value: SchoolType; label: string }[] = [
   { value: 'public', label: 'Pública' },
   { value: 'private', label: 'Privada' },
   { value: 'community', label: 'Comunitária' },
   { value: 'charter', label: 'Conveniada' },
 ];
 
-export const SCHOOL_NETWORKS = [
+export const SCHOOL_NETWORKS: { value: SchoolNetwork; label: string }[] = [
   { value: 'municipal', label: 'Municipal' },
   { value: 'state', label: 'Estadual' },
   { value: 'federal', label: 'Federal' },
@@ -193,7 +194,7 @@ export function getSchoolNetworkOptions(schoolType: string) {
 
     return isEducationSchoolNetworkCompatible(
       schoolType,
-      network.value as SchoolNetwork,
+      network.value,
     );
   });
 }
