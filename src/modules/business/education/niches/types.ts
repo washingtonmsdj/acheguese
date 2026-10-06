@@ -1,4 +1,5 @@
 import { isEducationNicheKey as isEducationNicheKeyCore } from '@/core/education';
+import type { EducationNicheKey } from '@/core/education';
 
 /**
  * Education Niches - Types
@@ -146,7 +147,7 @@ const EDUCATION_CAPABILITIES = [
   'analytics_advanced',
 ] as const;
 
-export function isEducationNicheKey(key: string): boolean {
+export function isEducationNicheKey(key: string): key is EducationNicheKey {
   return isEducationNicheKeyCore(key);
 }
 
