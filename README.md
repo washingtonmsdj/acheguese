@@ -2,7 +2,7 @@
 
 Plataforma hiperlocal, territory-first e modular, construída para conectar moradores às empresas e serviços do próprio território.
 
-> **MVP atual — 2026-10-05**
+> **MVP atual — 2026-10-06**
 >
 > **Domínio de produto ativo:** Business / Empresas.
 >
@@ -14,11 +14,11 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 ## Estado de entrega
 
-O núcleo do MVP está funcional e o candidato vigente já comprovou os gates determinísticos de arquitetura, segurança, build, E2E público e smoke autenticado de produção. **Não há blocker externo ativo conhecido para o primeiro release.**
+O núcleo do MVP está funcional e o Release Candidate vigente está consolidado na PR `#621`. O candidate passou pelos gates determinísticos de arquitetura, segurança, build e E2E, mas **a promoção permanece bloqueada enquanto o gate externo `#445` estiver aberto**.
 
-Os antigos blockers de infraestrutura foram encerrados com prova real: `#305` após sessão autenticada + Conta + Business no runtime certificado, e `#445` após validação da identidade de release pela política canônica `exact/equivalent`, sem forçar deployment artificial. Regressão de infraestrutura ou delta deployável reabre o gate correspondente; issue encerrada não vira permissão para ignorar falha futura.
+`#305` permanece fechado após prova real de sessão autenticada + Conta + Business no runtime certificado anterior. `#445` foi reaberto porque o delta deployável atual ainda não possui nova prova canônica de Production `READY` + smoke: a última tentativa foi recusada pela quota diária da Vercel. O estado `open`/`closed` dessas issues e suas evidências são a autoridade operacional; este README não substitui o SSOT de release.
 
-A certificação vigente cobre Auth/Conta, Business lifecycle e Business Messaging no runtime aceito. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado; não se deve transformar ausência de um cenário específico no smoke agregado em afirmação de cobertura que o teste não executou.
+A certificação pré-produção do candidate atual cobre os gates do mesmo SHA. A certificação autenticada de produção existente pertence ao runtime anterior e não deve ser reutilizada como prova do novo delta. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado.
 
 O frontend ativo está em fase final de acabamento visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
 
