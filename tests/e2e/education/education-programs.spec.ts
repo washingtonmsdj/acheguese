@@ -1,7 +1,11 @@
 /**
  * E2E Tests - Education Module: Programs Management
  *
- * Usa storageState do projeto 'education-authenticated' para autenticação.
+ * Suite legada de smoke para Programas.
+ *
+ * Não constitui certificação CRUD completa: contém skips condicionais,
+ * esperas temporais e asserts permissivos que ainda precisam ser substituídos
+ * por provas determinísticas antes da ativação pós-MVP.
  */
 
 import { test, expect } from '@playwright/test';
