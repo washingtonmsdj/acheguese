@@ -17,6 +17,7 @@ export function NicheChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={Boolean(active)}
       className={cn(
         'group inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2',
         active
