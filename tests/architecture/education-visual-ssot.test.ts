@@ -158,6 +158,12 @@ describe("education visual SSOT", () => {
 
     expect(detail).toContain("trackedProgramViews");
     expect(detail).toContain("trackedEventViews");
+    expect(detail).toContain("'Instituição educacional'");
+    expect(detail).toContain("INEP {profile.school_inep_code}");
+    expect(detail).toContain("Referência atualizada em");
+    expect(detail).not.toContain("Cadastro público · INEP");
+    expect(detail).not.toContain("Fonte revisada em");
+    expect(detail).not.toContain("profile?.institution_type ??");
     expect(detail).toContain("trackProgramImpression");
     expect(detail).toContain("trackEventImpression");
     expect(detail).toContain("onViewportEnter={() => trackEventImpression(event.id)}");
