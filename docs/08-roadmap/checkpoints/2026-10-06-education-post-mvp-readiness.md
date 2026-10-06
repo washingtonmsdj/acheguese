@@ -178,6 +178,9 @@ durante a estabilização atual do data plane.
   de cache quando o tamanho da página variar.
 - Ratchet arquitetural protege o motivo operacional, a minimização de dados e
   a paginação.
+- Conversão para **Matriculado** preserva o status anterior já lido pelo write
+  model e o reutiliza no evento `education_lead_converted`; a métrica não
+  registra mais `enrolled` como se fosse o status anterior.
 
 ### Gates ainda pendentes
 
