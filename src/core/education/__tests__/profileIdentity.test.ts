@@ -3,6 +3,7 @@ import {
   getEducationInstitutionTypeForNiche,
   getEducationProfileIdentityPatchError,
   isEducationInstitutionTypeForNiche,
+  resolveEducationInstitutionTypeForNiche,
 } from '../profileIdentity';
 
 describe('Education profile institution identity', () => {
@@ -39,6 +40,10 @@ describe('Education profile institution identity', () => {
         nextNicheKey: 'language_school',
       }),
     ).toBeNull();
+  });
+
+  it('returns null for an unknown niche key', () => {
+    expect(resolveEducationInstitutionTypeForNiche('unknown_niche')).toBeNull();
   });
 
   it('rejects institution types that do not match the niche', () => {
