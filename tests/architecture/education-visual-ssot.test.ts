@@ -148,7 +148,7 @@ describe("education visual SSOT", () => {
     expect(subscription).toContain("planTier: subscription.plan_tier");
     expect(nicheBilling).toContain("planTier: subscriptionData.status.planTier");
     expect(nicheBilling).not.toContain("mapPlanTypeToTier");
-    expect(plansPage).toContain("const currentPlanCode = planTier;");
+    expect(plansPage).toContain("const currentPlanCode = status?.planTier ?? null;");
     expect(plansPage).not.toContain("planType === 'premium'");
   });
 
