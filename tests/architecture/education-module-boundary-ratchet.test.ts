@@ -478,6 +478,16 @@ describe("Education module hardening ratchet", () => {
     expect(service).not.toContain("sortProgramsByDisplayOrder");
   });
 
+  it("does not create Education profiles from a read-like facade API", () => {
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+
+    expect(service).not.toContain("getOrCreateProfile");
+    expect(service).toContain("async saveSetupProfile");
+    expect(service).toContain("createDraftEducationProfile");
+  });
+
   it("keeps public lead intake on the canonical broker", () => {
     const service = read(
       "src/modules/business/education/services/EducationService.ts",
