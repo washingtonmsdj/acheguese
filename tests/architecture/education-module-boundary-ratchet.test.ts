@@ -188,7 +188,8 @@ describe("Education module hardening ratchet", () => {
     expect(leadsPage).toContain("await moveLead({ leadId, toStatus, lostReason })");
     expect(lostDialog).toContain("Motivo operacional *");
     expect(lostDialog).toContain("Não inclua CPF");
-    expect(lostDialog).toContain("maxLength={500}");
+    expect(lostDialog).toContain("EDUCATION_LEAD_LOST_REASON_MAX_LENGTH");
+    expect(lostDialog).toContain("getEducationLeadLostReasonValidationError");
     expect(leadsHook).toContain(
       "queryKey: ['education', 'leads', profileId, status, page, pageSize]",
     );
