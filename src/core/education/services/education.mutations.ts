@@ -44,7 +44,6 @@ import type {
   EducationEventAdminPatch,
   EducationLeadStatus,
   EducationNicheKey,
-  EducationProfileStatus,
   SchoolNetwork,
   SchoolType,
 } from '../types';
