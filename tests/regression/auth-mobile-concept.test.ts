@@ -77,9 +77,17 @@ describe("mobile account concept composition", () => {
     expect(iconComponent).toContain('| "shield-filled"');
     expect(iconCss).toContain(".auth-concept-icon--chevron-right");
     expect(iconCss).toContain(".auth-concept-icon--shield-filled");
-    expect(iconCss).toContain("clip-path:polygon(50% 0,94% 17%,88% 68%,50% 100%,12% 68%,6% 17%)");
-    expect(iconCss).toContain("border-left:2px solid #fff");
-    expect(iconCss).toContain("border-bottom:2px solid #fff");
+    expect(iconCss).toMatch(
+      /clip-path:\s*polygon\(\s*50% 0,\s*94% 17%,\s*88% 68%,\s*50% 100%,\s*12% 68%,\s*6% 17%\s*\)/,
+    );
+    expect(iconCss).toContain(
+      "border-left: 2px solid hsl(var(--territory-on-image))",
+    );
+    expect(iconCss).toContain(
+      "border-bottom: 2px solid hsl(var(--territory-on-image))",
+    );
+    expect(iconCss).toContain("font-family: var(--font-sans)");
+    expect(iconCss).not.toContain("#fff");
   });
 
   it("keeps the Google provider artwork on one shared owner", () => {
