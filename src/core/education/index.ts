@@ -39,3 +39,10 @@ export type {
 } from "@/core/education/services/EducationObservabilityService";
 export { EducationTrackingService } from "@/core/education/services/EducationTrackingService";
 export type { TrackEventOptions } from "@/core/education/services/EducationTrackingService";
+
+export {
+  EDUCATION_EVENT_LOCATION_MAX_LENGTH,
+  EDUCATION_EVENT_TITLE_MAX_LENGTH,
+  getEducationEventValidationError,
+} from "@/core/education/eventValidation";
+export type { EducationEventValidationInput } from "@/core/education/eventValidation";
