@@ -84,6 +84,24 @@ durante a estabilização atual do data plane.
 - Ratchet de erros privados alinhado ao componente atual que sanitiza
   mensagens técnicas.
 
+## Tranche adicional — Programas, Eventos e Leads
+
+- Programas, Eventos e Leads agora distinguem explicitamente uma instituição
+  sem perfil Education de uma instituição configurada sem registros.
+- Programas consome os validadores canônicos de `src/core/education` antes de
+  disparar mutation, mantendo frontend e write model no mesmo contrato de nome,
+  vagas e preço.
+- As consultas de Billing/Niche em Programas e Eventos não são iniciadas quando
+  ainda não existe perfil Education.
+- O pipeline de Leads bloqueia novas transições enquanto uma mudança está em
+  andamento e apresenta feedback seguro quando a mutation falha.
+- O pipeline respeita `prefers-reduced-motion`.
+- Datas de evento vindas de `datetime-local` passaram a usar parser estrito:
+  datas impossíveis que o JavaScript normalizaria silenciosamente são rejeitadas
+  antes da conversão para UTC.
+- Testes unitários cobrem datas locais impossíveis e o ratchet arquitetural
+  protege os novos estados administrativos e o bloqueio de dupla transição.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
