@@ -203,16 +203,27 @@ export default function TerritoryEntryPage() {
       </a>
 
       {PUBLIC_CATALOG_ANNOUNCEMENT_ENABLED && (
-        <aside className="ag-catalog-announcement" aria-label="Acesso temporário ao catálogo">
+        <aside className="ag-catalog-announcement" aria-label="Pré-lançamento do Achegue-se e acesso ao catálogo">
           <div className="ag-container ag-catalog-announcement__inner">
-            <div>
-              <span>Enquanto o Achegue-se segue em evolução</span>
-              <strong>O Catálogo já está disponível neste mesmo site.</strong>
+            <div className="ag-catalog-announcement__copy">
+              <span className="ag-catalog-announcement__status">
+                <i aria-hidden="true" />
+                Pré-lançamento
+              </span>
+              <div>
+                <strong>O Achegue-se está sendo preparado para o lançamento.</strong>
+                <p>A home continua disponível para conhecer o projeto. O Catálogo já pode ser acessado neste mesmo site.</p>
+              </div>
             </div>
-            <a href={PUBLIC_CATALOG_PATH}>
-              Abrir catálogo
-              <ArrowIcon />
-            </a>
+            <div className="ag-catalog-announcement__actions">
+              <a className="ag-catalog-announcement__secondary" href="#conteudo">
+                Conhecer o Achegue-se
+              </a>
+              <a className="ag-catalog-announcement__primary" href={PUBLIC_CATALOG_PATH}>
+                Abrir catálogo
+                <ArrowIcon />
+              </a>
+            </div>
           </div>
         </aside>
       )}
