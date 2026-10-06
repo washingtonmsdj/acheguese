@@ -377,14 +377,20 @@ export function EducationDetailPage() {
             aria-hidden="true"
           />
           <div className="container relative mx-auto px-4">
-            <nav className="flex flex-wrap items-center gap-1 text-xs text-territory-on-image/80">
-              <Link to="/" className="hover:text-territory-on-image">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex flex-wrap items-center gap-1 text-xs text-territory-on-image/80"
+            >
+              <Link
+                to="/"
+                className="rounded-sm hover:text-territory-on-image focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
+              >
                 Início
               </Link>
               <ChevronRight className="h-3 w-3" aria-hidden="true" />
               <Link
                 to={showcasePath}
-                className="hover:text-territory-on-image"
+                className="rounded-sm hover:text-territory-on-image focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
               >
                 Educação
               </Link>
@@ -452,7 +458,7 @@ export function EducationDetailPage() {
                     onClick={() => void toggleFavorite()}
                     disabled={favoriteLoading}
                     className={cn(
-                      'inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 backdrop-blur-sm transition disabled:cursor-not-allowed disabled:opacity-60',
+                      'inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 backdrop-blur-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand disabled:cursor-not-allowed disabled:opacity-60',
                       isFavorite
                         ? 'bg-territory-on-image text-territory-brand'
                         : 'bg-territory-on-image/15 hover:bg-territory-on-image/25',
@@ -474,7 +480,7 @@ export function EducationDetailPage() {
                 <button
                   type="button"
                   onClick={() => void handleShare()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 bg-territory-on-image/15 backdrop-blur-sm transition hover:bg-territory-on-image/25"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 bg-territory-on-image/15 backdrop-blur-sm transition hover:bg-territory-on-image/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
                   aria-label="Compartilhar"
                 >
                   <Share2 className="h-4 w-4" aria-hidden="true" />
