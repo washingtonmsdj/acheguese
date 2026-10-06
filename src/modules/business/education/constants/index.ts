@@ -8,6 +8,7 @@ import type {
   EducationLeadStatus,
   EducationProfileStatus,
   SchoolEventType,
+  SchoolShift,
 } from '@/core/education';
 
 export const EDUCATION_PROFILE_STATUS: Record<
@@ -84,3 +85,44 @@ export const UI_LIMITS = {
   MAX_PROGRAM_NAME_LENGTH: 100,
   MAX_NOTE_LENGTH: 1000,
 } as const;
+
+
+export const EDUCATION_PROGRAM_MODALITY_OPTIONS = [
+  { value: 'in_person', label: 'Presencial' },
+  { value: 'online', label: 'Online' },
+  { value: 'hybrid', label: 'Híbrido' },
+] as const;
+
+export const EDUCATION_PROGRAM_SHIFT_LABELS: Record<SchoolShift, string> = {
+  morning: 'Manhã',
+  afternoon: 'Tarde',
+  evening: 'Noite',
+  full_day: 'Integral',
+};
+
+export const EDUCATION_PROGRAM_SHIFT_OPTIONS = Object.entries(
+  EDUCATION_PROGRAM_SHIFT_LABELS,
+).map(([value, label]) => ({
+  value: value as SchoolShift,
+  label,
+}));
+
+export function getEducationProgramModalityLabel(
+  value: string | null | undefined,
+): string | null {
+  if (!value) return null;
+  const option = EDUCATION_PROGRAM_MODALITY_OPTIONS.find(
+    (candidate) => candidate.value === value,
+  );
+  return option?.label ?? value.split('_').join(' ');
+}
+
+export function getEducationProgramShiftLabel(
+  value: string | null | undefined,
+): string | null {
+  if (!value) return null;
+  return (
+    EDUCATION_PROGRAM_SHIFT_LABELS[value as SchoolShift] ??
+    value.split('_').join(' ')
+  );
+}
