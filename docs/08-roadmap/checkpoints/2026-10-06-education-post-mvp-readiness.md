@@ -727,6 +727,9 @@ durante a estabilização atual do data plane.
 - `EducationNicheStatus` preserva o nome usado pelo registry, mas agora é alias
   direto de `EducationSupportLevel`, sem repetir o union.
 - O write model rejeita níveis fora do contrato antes de persistir.
+- `saveSetupProfile` resolve o nicho no registry antes de qualquer escrita e
+  persiste o `support_level` real do nicho; nichos beta deixam de ser gravados
+  como `basic_enabled` e chave inválida não cria draft.
 - Teste unitário e ratchet arquitetural protegem o ownership e os valores.
 
 ## Tranche adicional — chaves de nicho canônicas
