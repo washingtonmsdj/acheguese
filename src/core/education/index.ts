@@ -115,3 +115,9 @@ export {
   resolveEducationInstitutionTypeForNiche,
 } from "@/core/education/profileIdentity";
 export type { EducationInstitutionType } from "@/core/education/profileIdentity";
+
+export {
+  EDUCATION_SUPPORT_LEVELS_CANONICAL,
+  isEducationSupportLevel,
+} from "@/core/education/supportLevel";
+export type { EducationSupportLevel } from "@/core/education/supportLevel";
