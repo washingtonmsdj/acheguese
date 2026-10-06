@@ -713,42 +713,6 @@ export const EducationService = {
     return { total, byStatus, conversionRate, active };
   },
 
-  /** Valida payload de criação de perfil */
-  validateProfilePayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.institution_type || String(payload.institution_type).trim() === '') {
-      errors.push('institution_type is required');
-    }
-    if (!payload.niche_key || String(payload.niche_key).trim() === '') {
-      errors.push('niche_key is required');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
-
-  /** Valida payload de criação de programa */
-  validateProgramPayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.name || String(payload.name).trim() === '') {
-      errors.push('name is required');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
-
-  /** Valida payload de criação de lead */
-  validateLeadPayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.full_name || String(payload.full_name).trim() === '') {
-      errors.push('full_name is required');
-    }
-    if (payload.email && !validateEmail(String(payload.email))) {
-      errors.push('email is invalid');
-    }
-    if (payload.phone && !validatePhone(String(payload.phone))) {
-      errors.push('phone is invalid');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
-
   /** Verifica se evento está no futuro */
   isEventUpcoming(startsAt: string): boolean {
     return new Date(startsAt) > new Date();
@@ -766,15 +730,5 @@ export const EducationService = {
     });
   },
 
-  /** Valida payload de criação de evento */
-  validateEventPayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.title || String(payload.title).trim() === '') {
-      errors.push('title is required');
-    }
-    if (!payload.starts_at || String(payload.starts_at).trim() === '') {
-      errors.push('starts_at is required');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
+
 };
