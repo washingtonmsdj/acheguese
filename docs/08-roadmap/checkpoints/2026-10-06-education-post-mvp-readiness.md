@@ -161,9 +161,10 @@ durante a estabilização atual do data plane.
 
 - A etapa **Perdido** deixou de ser apenas visual: o painel agora expõe uma
   transição explícita para `lost`, já permitida pelo domínio canônico.
-- Marcar um lead como perdido exige motivo operacional no frontend e encaminha
-  `lostReason` pela mutation existente, preservando auditoria e sem criar uma
-  segunda regra de transição fora do core.
+- Marcar um lead como perdido exige motivo operacional validado pelo
+  `src/core/education`; o frontend consome a mesma regra e encaminha
+  `lostReason` pela mutation existente, preservando auditoria sem criar uma
+  segunda autoridade.
 - O diálogo orienta explicitamente a não registrar CPF, documentos,
   diagnóstico, prontuário ou outros dados sensíveis no motivo da perda.
 - O pipeline bloqueia ações concorrentes enquanto uma mutation está em curso.
