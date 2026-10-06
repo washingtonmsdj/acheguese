@@ -745,7 +745,7 @@ describe("Education module hardening ratchet", () => {
     const identity = read("src/core/education/profileIdentity.ts");
 
     expect(identity).toContain("EDUCATION_INSTITUTION_TYPE_BY_NICHE");
-    expect(setupModel).toContain("getEducationInstitutionTypeForNiche");
+    expect(setupModel).toContain("resolveEducationInstitutionTypeForNiche");
     expect(setupModel).not.toContain("const INSTITUTION_TYPE_BY_NICHE");
     expect(mutations).toContain("isEducationInstitutionTypeForNiche");
     expect(mutations).toContain("getEducationProfileIdentityPatchError");
