@@ -534,9 +534,11 @@ export function EducationProgramsPage() {
           {programs.map((program, index) => (
             <motion.div
               key={program.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={
+                prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }
+              }
             >
               <Card
                 className={`border-territory-border bg-territory-surface text-territory-ink shadow-sm ${
