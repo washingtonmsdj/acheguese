@@ -16,7 +16,12 @@ describe("G6 Education lead pipeline write boundary", () => {
     expect(mutations).not.toContain("const EDUCATION_LEAD_PIPELINE:");
     expect(mutations).toContain("EducationLeadAdminPatch");
     expect(mutations).toContain("payload: EducationLeadAdminPatch");
-    expect(mutations).toContain("Mudanca de status deve usar moveLeadToStatus");
+    expect(mutations).toContain(
+      "Campos controlados do lead nao podem ser alterados pelo patch administrativo",
+    );
+    expect(mutations).toContain("'source_channel'");
+    expect(mutations).toContain("'first_contact_at'");
+    expect(mutations).toContain("'lost_reason'");
     expect(mutations).toContain("persistEducationLeadUpdate");
     expect(mutations).toContain("newStatus === 'contacted' && currentStatus !== 'contacted'");
     expect(mutations).toContain("updatePayload.first_contact_at = new Date().toISOString()");
