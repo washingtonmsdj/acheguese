@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   BookOpen,
   Plus,
@@ -87,6 +87,7 @@ function parseCurriculumTopics(value: string): string[] {
 export function EducationProgramsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const {
@@ -434,8 +435,9 @@ export function EducationProgramsPage() {
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="flex items-center gap-3">
