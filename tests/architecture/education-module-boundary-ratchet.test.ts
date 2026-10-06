@@ -290,6 +290,17 @@ describe("Education module hardening ratchet", () => {
     expect(leads).toContain("Não foi possível atualizar o lead");
   });
 
+  it("does not expose synthetic Education lead conversion probability", () => {
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+
+    expect(service).not.toContain("calculateLeadConversionProbability");
+    expect(service).not.toMatch(/new:\s*20/);
+    expect(service).not.toMatch(/contacted:\s*35/);
+    expect(service).not.toMatch(/proposal_sent:\s*75/);
+  });
+
   it("keeps Education analytics on the real profile and real export contract", () => {
     const page = read(
       "src/modules/business/education/pages/EducationAnalyticsPage.tsx",
