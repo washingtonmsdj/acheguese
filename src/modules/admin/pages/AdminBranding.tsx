@@ -18,10 +18,16 @@ import { useConfirmActionDialog } from '@/shared/hooks/useConfirmActionDialog';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/core/admin/components';
 import { SiteSettingsService } from '@/core/admin/services/SiteSettingsService';
-import { SITE_SETTINGS_STORAGE } from '@/core/admin/config/siteSettings.config';
+import {
+  SITE_SETTING_KEYS,
+  SITE_SETTINGS_DEFAULTS,
+  SITE_SETTINGS_STORAGE,
+} from '@/core/admin/config/siteSettings.config';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSessionContext } from '@/core/session';
 import { SafeImage } from '@/shared/components/security/SafeImage';
+
+const DEFAULT_PRIMARY_COLOR = SITE_SETTINGS_DEFAULTS[SITE_SETTING_KEYS.PRIMARY_COLOR];
 
 export default function AdminBranding() {
   const { activeProfile } = useSessionContext();
@@ -31,7 +37,7 @@ export default function AdminBranding() {
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string>('');
-  const [primaryColor, setPrimaryColor] = useState('#3b82f6');
+  const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY_COLOR);
 
   // Buscar configurações atuais
   const { data: settings, isLoading } = useQuery({
@@ -341,7 +347,7 @@ export default function AdminBranding() {
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
                   className="flex-1"
-                  placeholder="#3b82f6"
+                  placeholder={DEFAULT_PRIMARY_COLOR}
                 />
               </div>
             </div>
@@ -384,12 +390,12 @@ export default function AdminBranding() {
       </div>
 
       {/* Aviso */}
-      <Card className="border-blue-500/50 bg-blue-500/5">
+      <Card className="border-info/40 bg-info/5">
         <CardContent className="pt-6">
           <div className="flex gap-3">
             <div className="flex-shrink-0">
-              <div className="h-8 w-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                <ImageIcon className="h-4 w-4 text-blue-600" />
+              <div className="h-8 w-8 rounded-full bg-info/15 flex items-center justify-center">
+                <ImageIcon className="h-4 w-4 text-info" />
               </div>
             </div>
             <div className="space-y-1">
