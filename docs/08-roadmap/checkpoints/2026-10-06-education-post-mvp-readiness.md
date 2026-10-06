@@ -237,6 +237,10 @@ durante a estabilização atual do data plane.
 ## Tranche adicional — Explorer/vitrine pública
 
 - A interface pública não expõe mais o sufixo interno **V3** em título ou badge.
+- Estados de erro, carregamento e resultado vazio do Explorer anunciam sua
+  semântica para tecnologias assistivas.
+- Cards de categoria expõem `aria-pressed` e nome acessível, refletindo o
+  estado real do filtro sem depender apenas de aparência visual.
 - Cards destacados e seções de marketing respeitam `prefers-reduced-motion`.
 - O bloco que apenas mostra uma amostra dos primeiros resultados deixou de se
   apresentar como **curadoria/destaque** não comprovado.
