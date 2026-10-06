@@ -145,6 +145,11 @@ durante a estabilização atual do data plane.
   cards administrativos.
 - Tipos de evento usam o owner compartilhado de `../constants`; a página de
   Eventos deixou de manter uma segunda tabela local de labels/opções.
+- Sobreposição de horários ganhou detecção canônica no core e aviso consultivo
+  no formulário administrativo. A UI não bloqueia atividades simultâneas porque
+  o domínio ainda não possui conceito de sala/recurso que justificaria uma
+  restrição obrigatória; durante edição, o próprio evento é excluído da
+  comparação.
 - Estado temporal de evento foi centralizado no core como `upcoming`,
   `ongoing`, `past` ou `invalid`; evento já iniciado mas ainda não
   encerrado não é mais tratado como passado.
