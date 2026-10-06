@@ -516,6 +516,14 @@ durante a estabilização atual do data plane.
 - Ratchet arquitetural impede o retorno de waits fixos e asserts permissivos
   removidos desta suite.
 
+## Tranche adicional — API de Analytics
+
+- `useEducationAnalytics` deixa de reexportar o namespace bruto
+  `educationQueries`.
+- O hook expõe somente dados, estados, retry e permissões necessárias à UI,
+  preservando entitlement/cache como caminho canônico de acesso.
+- Ratchet arquitetural impede o retorno de `queries: educationQueries`.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
