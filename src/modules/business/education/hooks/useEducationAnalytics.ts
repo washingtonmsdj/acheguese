@@ -194,9 +194,6 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
     // Permission checks
     canAccessAnalytics,
     canExport,
-
-    // Raw queries para uso avançado
-    queries: educationQueries,
   };
 }
 
