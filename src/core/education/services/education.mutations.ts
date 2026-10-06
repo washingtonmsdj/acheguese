@@ -10,6 +10,7 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getEducationEventValidationError } from '../eventValidation';
+import { getEducationLeadLostReasonValidationError } from '../leadPipelineValidation';
 import { getEducationProfileSetupValidationErrors } from '../profileValidation';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
@@ -583,8 +584,15 @@ export async function moveLeadToStatus(
 
   const updatePayload: Partial<EducationLead> = { status: newStatus };
 
-  if (options.lostReason && newStatus === 'lost') {
-    updatePayload.lost_reason = options.lostReason;
+  if (newStatus === 'lost') {
+    const lostReasonError = getEducationLeadLostReasonValidationError(
+      options.lostReason,
+    );
+    if (lostReasonError) {
+      return { data: null, error: new Error(lostReasonError) };
+    }
+
+    updatePayload.lost_reason = options.lostReason?.trim() ?? null;
   }
 
   if (options.ownerUserId !== undefined) {
