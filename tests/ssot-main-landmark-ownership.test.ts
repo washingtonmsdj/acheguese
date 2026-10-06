@@ -9,6 +9,7 @@ const appShell = read("src/app/components/AppLayoutSidebar.tsx");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const platformSettings = read("src/core/routing/config/platformSettings.ts");
 const protectedRoute = read("src/core/routing/components/ProtectedRoute.tsx");
+const messagingPage = read("src/modules/messaging/pages/MensagensPage.tsx");
 const publicInfoShell = read(
   "src/app/components/public/PublicInfoPageShell.tsx",
 );
@@ -102,5 +103,10 @@ describe("main landmark ownership SSOT", () => {
     expect(appShell).toContain(
       '<div className="messaging-route-shell h-[100dvh] w-full overflow-hidden bg-territory-canvas">',
     );
+  });
+
+  it("keeps MessagingInboxScreen as the loaded main landmark owner", () => {
+    expect(messagingPage).toContain('data-page="messaging-inbox"');
+    expect(messagingPage.match(/id="main-content"/g)?.length).toBe(3);
   });
 });
