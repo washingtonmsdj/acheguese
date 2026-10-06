@@ -39,7 +39,7 @@ export function StickyTabs({
               aria-controls={section.id}
               aria-current={isActive ? 'location' : undefined}
               className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2",
+                "inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2",
                 isActive
                   ? "bg-territory-brand text-territory-on-image shadow-sm"
                   : "text-territory-muted hover:bg-territory-raised hover:text-territory-ink",
