@@ -503,27 +503,6 @@ export async function createEducationLead(
   return { data: data as EducationLead, error: null };
 }
 
-const EDUCATION_LEAD_PIPELINE: EducationLeadStatus[] = [
-  'new',
-  'contacted',
-  'visit_scheduled',
-  'proposal_sent',
-  'enrolled',
-];
-
-function isAllowedLeadTransition(
-  from: EducationLeadStatus,
-  to: EducationLeadStatus,
-): boolean {
-  if (from === to) return true;
-  if (from === 'enrolled' || from === 'lost') return false;
-  if (to === 'lost') return true;
-
-  const fromIndex = EDUCATION_LEAD_PIPELINE.indexOf(from);
-  const toIndex = EDUCATION_LEAD_PIPELINE.indexOf(to);
-  return fromIndex >= 0 && toIndex === fromIndex + 1;
-}
-
 async function persistEducationLeadUpdate(
   id: string,
   payload: Partial<EducationLead>,
