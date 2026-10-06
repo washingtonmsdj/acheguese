@@ -283,6 +283,40 @@ export async function updateEducationProfile(
     return { data: null, error: handleValidationErrors(errors) };
   }
 
+  if (
+    payload.institution_type !== undefined ||
+    payload.niche_key !== undefined
+  ) {
+    const { data: currentIdentity, error: currentIdentityError } = await supabase
+      .from('education_profiles')
+      .select('institution_type,niche_key')
+      .eq('id', id)
+      .single();
+
+    if (currentIdentityError || !currentIdentity) {
+      logger.error(
+        '[EducationMutations] Error loading profile identity:',
+        currentIdentityError,
+      );
+      return {
+        data: null,
+        error: new Error(
+          currentIdentityError?.message ?? 'Perfil de educacao nao encontrado',
+        ),
+      };
+    }
+
+    const identityError = getEducationProfileIdentityPatchError({
+      currentInstitutionType: currentIdentity.institution_type,
+      currentNicheKey: currentIdentity.niche_key as EducationNicheKey,
+      nextInstitutionType: payload.institution_type,
+      nextNicheKey: payload.niche_key,
+    });
+    if (identityError) {
+      return { data: null, error: new Error(identityError) };
+    }
+  }
+
   // Atualiza published_at automaticamente se status muda para published
   if (payload.status === 'published' && !payload.published_at) {
     payload.published_at = new Date().toISOString();
