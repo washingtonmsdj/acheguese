@@ -607,6 +607,9 @@ durante a estabilização atual do data plane.
 - O mesmo lifecycle fecha CRUD real de Programas no entitlement FREE da
   fixture: criação, edição, reativação e exclusão com confirmação; a remoção é
   verificada pelo mesmo `program.id` no backend.
+- O lifecycle também prova semântica numérica real: vagas/preço `0` persistem
+  como zero; ao limpar os campos, ambos persistem como `null`, sem colapsar
+  valor ausente em zero.
 - Compensação de falha parcial já é provada deterministicamente por
   `EducationService.setup-compensation.test.ts`: draft criado pela tentativa
   falha é removido, perfil preexistente é preservado e sucesso não dispara
