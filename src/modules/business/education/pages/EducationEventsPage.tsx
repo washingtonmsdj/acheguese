@@ -631,7 +631,7 @@ export function EducationEventsPage() {
           if (!open) setEditingEvent(null);
         }}
       >
-        <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
               {editingEvent ? 'Editar evento' : 'Novo evento'}
@@ -740,7 +740,7 @@ export function EducationEventsPage() {
               <Label htmlFor="isPublic">Evento público (visível na página)</Label>
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col gap-3 pt-4 sm:flex-row">
               <Button
                 type="submit"
                 disabled={isMutating}
