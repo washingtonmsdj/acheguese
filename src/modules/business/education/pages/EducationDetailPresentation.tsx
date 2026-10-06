@@ -1,7 +1,7 @@
 import type React from "react";
 import { motion, useReducedMotion } from "framer-motion";
- import { Badge } from "@/shared/components/ui/badge";
- import { cn } from "@/shared/utils/cn";
+import { Badge } from "@/shared/components/ui/badge";
+import { cn } from "@/shared/utils/cn";
 import type { EducationProgram } from "@/core/education";
 import {
   formatPrice,
