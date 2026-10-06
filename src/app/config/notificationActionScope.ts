@@ -1,16 +1,17 @@
+import { notificationRoutes } from "@/core/notifications/routes/notificationRoutes";
+import {
+  APP_MODULE_SLUGS,
+  getAppModuleSlugFromPath,
+  type AppModuleSlug,
+} from "@/shared/config/moduleSlugs";
 import {
   isPlatformCapabilityEnabled,
   isProductModuleEnabled,
 } from "./lifecycleRegistry";
 import type { PlatformCapabilityKey } from "./platformCapabilityRegistry";
 import type { ProductModuleKey } from "./productModuleRegistry";
-import {
-  APP_MODULE_SLUGS,
-  getAppModuleSlugFromPath,
-  type AppModuleSlug,
-} from "@/shared/config/moduleSlugs";
 
-export const NOTIFICATION_INBOX_PATH = "/notificacoes";
+export const NOTIFICATION_INBOX_PATH = notificationRoutes.inbox();
 export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
 
 type NotificationLifecycleSurfaceKey = ProductModuleKey | PlatformCapabilityKey;
