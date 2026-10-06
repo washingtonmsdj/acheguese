@@ -219,7 +219,5 @@ describe('EducationService - Business Logic', () => {
       const date = '2026-01-15T14:30:00Z';
       expect(EducationService.formatEventDateTime(date)).toContain('15/01/2026');
     });
-
-;
   });
 });
