@@ -153,6 +153,23 @@ describe("Education module hardening ratchet", () => {
     expect(form).toContain('maxLength={1000}');
   });
 
+  it("keeps Education administrative motion accessible", () => {
+    const leads = read(
+      "src/modules/business/education/pages/EducationLeadsPage.tsx",
+    );
+    const plans = read(
+      "src/modules/business/education/pages/EducationPlansPage.tsx",
+    );
+    const setupControls = read(
+      "src/modules/business/education/pages/EducationSetupControls.tsx",
+    );
+
+    for (const source of [leads, plans, setupControls]) {
+      expect(source).toContain("useReducedMotion");
+      expect(source).toContain("prefersReducedMotion");
+    }
+  });
+
   it("keeps the Education dashboard truthful before and after setup", () => {
     const dashboard = read(
       "src/modules/business/education/pages/EducationDashboardPage.tsx",
