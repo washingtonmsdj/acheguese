@@ -14,6 +14,7 @@ describe("G6 Education lead pipeline write boundary", () => {
     expect(mutations).toContain("Transicao de lead invalida");
     expect(mutations).toContain("getEducationLeadLostReasonValidationError");
     expect(mutations).toContain("options.lostReason?.trim() ?? null");
+    expect(mutations).toContain("previousStatus: currentStatus");
     expect(mutations).toContain(".select('status')");
   });
 
