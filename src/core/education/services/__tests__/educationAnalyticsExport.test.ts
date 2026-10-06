@@ -60,6 +60,23 @@ describe('buildEducationAnalyticsCsv', () => {
     expect(csv).toContain('"escola","serie_mais_procurada","","6 ano"');
   });
 
+  it('preserves an unknown enrollment window as an empty CSV value', () => {
+    const csv = buildEducationAnalyticsCsv({
+      ...fixture,
+      schoolMetrics: {
+        ...fixture.schoolMetrics!,
+        enrollmentWindowOpen: null,
+      },
+    });
+
+    expect(csv).toContain(
+      '"escola","janela_matricula_aberta","",""',
+    );
+    expect(csv).not.toContain(
+      '"escola","janela_matricula_aberta","","false"',
+    );
+  });
+
   it('neutralizes spreadsheet formulas in text dimensions', () => {
     const csv = buildEducationAnalyticsCsv(fixture);
     expect(csv).toContain('"serie","leads","\'=1+1","4"');
