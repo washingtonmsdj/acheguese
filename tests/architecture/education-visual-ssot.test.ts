@@ -182,6 +182,8 @@ describe("education visual SSOT", () => {
 
     expect(detail).toContain("trackedProgramViews");
     expect(detail).toContain("trackedEventViews");
+    expect(detail).toContain("active: true");
+    expect(detail).not.toContain("upcoming: true");
     expect(detail).toContain("'Instituição educacional'");
     expect(detail).toContain("INEP {profile.school_inep_code}");
     expect(detail).toContain("Referência atualizada em");
