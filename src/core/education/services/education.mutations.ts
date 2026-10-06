@@ -20,8 +20,10 @@ import {
 } from '../profileValidation';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  getEducationProgramCurriculumValidationError,
   getEducationProgramNameValidationError,
   getEducationProgramNumericValidationError,
+  normalizeEducationProgramCurriculumTopics,
 } from '../programValidation';
 import {
   getSchoolStageOptions,
@@ -79,30 +81,6 @@ function normalizeStageText(value: string | null | undefined): string | null {
 
 function validateCustomStageText(value: string): boolean {
   return value.length >= 3 && value.length <= 120 && value !== SCHOOL_STAGE_OTHER_VALUE;
-}
-
-function normalizeCurriculumTopics(
-  topics: string[] | null | undefined,
-): string[] | null | undefined {
-  if (topics === undefined) return undefined;
-  if (topics === null) return null;
-
-  const normalized = Array.from(
-    new Set(
-      topics
-        .map((topic) => topic.trim().replace(/\s+/g, ' '))
-        .filter(Boolean),
-    ),
-  );
-
-  if (normalized.length > 50) {
-    throw new Error('Curriculo excede o limite de 50 disciplinas/conteudos');
-  }
-  if (normalized.some((topic) => topic.length > 80)) {
-    throw new Error('Cada disciplina/conteudo deve ter no maximo 80 caracteres');
-  }
-
-  return normalized.length > 0 ? normalized : null;
 }
 
 function isOfficialStageLabel(
@@ -390,7 +368,14 @@ export async function createEducationProgram(
     payload.grade = stageGrade ?? stageName;
   }
 
-  payload.curriculum_topics = normalizeCurriculumTopics(payload.curriculum_topics) ?? null;
+  const curriculumError = getEducationProgramCurriculumValidationError(
+    payload.curriculum_topics,
+  );
+  if (curriculumError) {
+    return { data: null, error: new Error(curriculumError) };
+  }
+  payload.curriculum_topics =
+    normalizeEducationProgramCurriculumTopics(payload.curriculum_topics) ?? null;
 
   const { data, error } = await supabase
     .from('education_programs')
@@ -500,7 +485,14 @@ export async function updateEducationProgram(
   }
 
   if (payload.curriculum_topics !== undefined) {
-    payload.curriculum_topics = normalizeCurriculumTopics(payload.curriculum_topics) ?? null;
+    const curriculumError = getEducationProgramCurriculumValidationError(
+      payload.curriculum_topics,
+    );
+    if (curriculumError) {
+      return { data: null, error: new Error(curriculumError) };
+    }
+    payload.curriculum_topics =
+      normalizeEducationProgramCurriculumTopics(payload.curriculum_topics) ?? null;
   }
 
   const { data, error } = await supabase
