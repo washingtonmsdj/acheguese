@@ -116,6 +116,68 @@ test.describe('Education Leads Management — operational smoke', () => {
     expect(data?.first_contact_at).toBeTruthy();
   });
 
+  test('does not expose skip backward or terminal transitions', async ({
+    page,
+  }) => {
+    const newName = 'Responsável E2E Sem Salto';
+    const contactedName = 'Responsável E2E Sem Retorno';
+    const enrolledName = 'Responsável E2E Terminal';
+
+    const [newLeadId, contactedLeadId, enrolledLeadId] = await Promise.all([
+      createTestLead(businessId, {
+        parent_name: newName,
+        status: 'new',
+      }),
+      createTestLead(businessId, {
+        parent_name: contactedName,
+        status: 'contacted',
+      }),
+      createTestLead(businessId, {
+        parent_name: enrolledName,
+        status: 'enrolled',
+      }),
+    ]);
+
+    expect(newLeadId).toBeTruthy();
+    expect(contactedLeadId).toBeTruthy();
+    expect(enrolledLeadId).toBeTruthy();
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+
+    const newLeadCard = page
+      .getByText(newName, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(
+      newLeadCard.getByRole('button', {
+        name: `Avançar ${newName} para Contactado`,
+      }),
+    ).toBeVisible();
+    await expect(
+      newLeadCard.getByRole('button', {
+        name: `Avançar ${newName} para Matriculado`,
+      }),
+    ).toHaveCount(0);
+
+    const contactedLeadCard = page
+      .getByText(contactedName, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(
+      contactedLeadCard.getByRole('button', {
+        name: `Avançar ${contactedName} para Visita agendada`,
+      }),
+    ).toBeVisible();
+    await expect(
+      contactedLeadCard.getByRole('button', {
+        name: `Avançar ${contactedName} para Novo`,
+      }),
+    ).toHaveCount(0);
+
+    const enrolledLeadCard = page
+      .getByText(enrolledName, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(enrolledLeadCard.locator('button')).toHaveCount(0);
+  });
+
   test('shows mutation failure and preserves the lead status', async ({
     page,
   }) => {
