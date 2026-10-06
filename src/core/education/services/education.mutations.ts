@@ -45,6 +45,8 @@ import type {
   EducationLeadStatus,
   EducationNicheKey,
   EducationProfileStatus,
+  SchoolNetwork,
+  SchoolType,
 } from '../types';
 
 // ============================================================
@@ -344,6 +346,44 @@ export async function updateEducationProfile(
     });
     if (identityError) {
       return { data: null, error: new Error(identityError) };
+    }
+  }
+
+  if (
+    payload.school_type !== undefined ||
+    payload.school_network !== undefined
+  ) {
+    const { data: currentSchoolIdentity, error: currentSchoolIdentityError } =
+      await supabase
+        .from('education_profiles')
+        .select('school_type,school_network')
+        .eq('id', id)
+        .single();
+
+    if (currentSchoolIdentityError || !currentSchoolIdentity) {
+      logger.error(
+        '[EducationMutations] Error loading school identity:',
+        currentSchoolIdentityError,
+      );
+      return {
+        data: null,
+        error: new Error(
+          currentSchoolIdentityError?.message ??
+            'Perfil de educacao nao encontrado',
+        ),
+      };
+    }
+
+    const schoolIdentityError = getEducationSchoolIdentityPatchError({
+      currentSchoolType:
+        (currentSchoolIdentity.school_type as SchoolType | null) ?? null,
+      currentSchoolNetwork:
+        (currentSchoolIdentity.school_network as SchoolNetwork | null) ?? null,
+      nextSchoolType: payload.school_type,
+      nextSchoolNetwork: payload.school_network,
+    });
+    if (schoolIdentityError) {
+      return { data: null, error: new Error(schoolIdentityError) };
     }
   }
 
