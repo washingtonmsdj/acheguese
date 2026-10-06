@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Save, Settings } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -13,10 +13,13 @@ type EducationSetupHeaderProps = {
 };
 
 export function EducationSetupHeader({ onBack }: EducationSetupHeaderProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       className="mb-8"
     >
       <Button
