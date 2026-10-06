@@ -520,21 +520,26 @@ function isAllowedLeadTransition(
   return fromIndex >= 0 && toIndex === fromIndex + 1;
 }
 
-/**
- * Atualiza lead (incluindo mudanca de status)
- */
-export async function updateEducationLead(
+type EducationLeadEditablePatch = Partial<
+  Omit<EducationLead, 'status'>
+>;
+
+async function persistEducationLeadUpdate(
   id: string,
   payload: Partial<EducationLead>,
 ): Promise<MutationResult<EducationLead>> {
-  // Se status mudou para 'contacted', registra first_contact_at
-  if (payload.status === 'contacted' && !payload.first_contact_at) {
-    payload.first_contact_at = new Date().toISOString();
+  const updatePayload: Partial<EducationLead> = { ...payload };
+
+  if (
+    updatePayload.status === 'contacted' &&
+    !updatePayload.first_contact_at
+  ) {
+    updatePayload.first_contact_at = new Date().toISOString();
   }
 
   const { data, error } = await supabase
     .from('education_leads')
-    .update(payload)
+    .update(updatePayload)
     .eq('id', id)
     .select()
     .single();
@@ -545,6 +550,26 @@ export async function updateEducationLead(
   }
 
   return { data: data as EducationLead, error: null };
+}
+
+/**
+ * Atualiza campos editaveis do lead.
+ * Mudancas de status devem passar exclusivamente por moveLeadToStatus.
+ */
+export async function updateEducationLead(
+  id: string,
+  payload: EducationLeadEditablePatch,
+): Promise<MutationResult<EducationLead>> {
+  if ('status' in (payload as Record<string, unknown>)) {
+    return {
+      data: null,
+      error: new Error(
+        'Mudanca de status deve usar moveLeadToStatus',
+      ),
+    };
+  }
+
+  return persistEducationLeadUpdate(id, payload);
 }
 
 /**
@@ -609,7 +634,7 @@ export async function moveLeadToStatus(
     updatePayload.owner_user_id = options.ownerUserId;
   }
 
-  const result = await updateEducationLead(id, updatePayload);
+  const result = await persistEducationLeadUpdate(id, updatePayload);
   return { ...result, previousStatus: currentStatus };
 }
 
