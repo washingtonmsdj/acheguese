@@ -284,7 +284,7 @@ export interface EducationAnalyticsData {
     enrolled: number;
     lost: number;
     conversionRate: number;
-    avgDaysToFirstContact: number;
+    avgDaysToFirstContact: number | null;
     byGrade?: EducationGradeMetrics[];
     byShift?: EducationShiftMetrics[];
   };
