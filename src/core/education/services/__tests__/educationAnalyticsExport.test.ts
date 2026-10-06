@@ -77,6 +77,23 @@ describe('buildEducationAnalyticsCsv', () => {
     );
   });
 
+  it('keeps a missing first-contact average empty instead of exporting zero', () => {
+    const csv = buildEducationAnalyticsCsv({
+      ...fixture,
+      leads: {
+        ...fixture.leads,
+        avgDaysToFirstContact: null,
+      },
+    });
+
+    expect(csv).toContain(
+      '"leads","media_dias_ate_primeiro_contato","",""',
+    );
+    expect(csv).not.toContain(
+      '"leads","media_dias_ate_primeiro_contato","","0"',
+    );
+  });
+
   it('neutralizes spreadsheet formulas in text dimensions', () => {
     const csv = buildEducationAnalyticsCsv(fixture);
     expect(csv).toContain('"serie","leads","\'=1+1","4"');
