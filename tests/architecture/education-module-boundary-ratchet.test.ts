@@ -219,6 +219,18 @@ describe("Education module hardening ratchet", () => {
     expect(dashboard).not.toContain("profile.institution_type ??");
   });
 
+  it("keeps lost lead validation feedback accessible", () => {
+    const dialog = read(
+      "src/modules/business/education/components/EducationLeadLostDialog.tsx",
+    );
+
+    expect(dialog).toContain("hasTouchedReason");
+    expect(dialog).toContain("aria-invalid={shouldShowValidationError}");
+    expect(dialog).toContain("education-lost-reason-error");
+    expect(dialog).toContain("aria-live=\"polite\"");
+    expect(dialog).toContain("validationError");
+  });
+
   it("keeps Education lead loss explicit, privacy-minimized, and paginated", () => {
     const leadsPage = read(
       "src/modules/business/education/pages/EducationLeadsPage.tsx",
