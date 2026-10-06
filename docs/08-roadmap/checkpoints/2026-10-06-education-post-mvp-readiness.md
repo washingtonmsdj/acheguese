@@ -48,6 +48,9 @@ durante a estabilização atual do data plane.
 - nome de aluno foi apresentado como **primeiro nome opcional**;
 - limites de tamanho e autocomplete foram reforçados nos campos públicos;
 - pares de campos passaram a empilhar no mobile;
+- cards da vitrine respeitam `prefers-reduced-motion` e deixam de aplicar deslocamento visual quando redução de movimento está ativa;
+- área de ações do modo lista usa separação horizontal no mobile e lateral apenas a partir de `md`;
+- link principal do card recebeu foco visível consistente com os tokens territoriais;
 - testes protegem sanitização de erro e minimização de dados.
 
 ## Restrições desta frente
@@ -70,8 +73,8 @@ durante a estabilização atual do data plane.
    feedback de mutation;
 5. revisar Analytics para estados sem dados, exportação e semântica das
    métricas;
-6. validar Explorer e Detail em mobile, teclado, leitura por screen reader e
-   reduced-motion;
+6. continuar a validação de Explorer e Detail em mobile, teclado e leitura por
+   screen reader; reduced-motion dos cards do Explorer já foi corrigido;
 7. somente após liberação do data plane, reconciliar schema/RLS/RPCs e rodar
    probes remotos;
 8. fechar com E2E completo e deployment do mesmo SHA antes de qualquer
