@@ -197,8 +197,10 @@ function validateProfilePayload(payload: Partial<EducationProfile>): ValidationE
     errors.push({ field: 'support_level', message: 'Nivel de suporte invalido' });
   }
 
-  const validStatuses: EducationProfileStatus[] = ['draft', 'published', 'paused'];
-  if (payload.status !== undefined && !validStatuses.includes(payload.status)) {
+  if (
+    payload.status !== undefined &&
+    !isEducationProfileStatus(payload.status)
+  ) {
     errors.push({ field: 'status', message: 'Status invalido' });
   }
 
