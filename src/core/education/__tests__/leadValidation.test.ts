@@ -56,6 +56,12 @@ describe('Education lead contact validation', () => {
 
     expect(
       getEducationLeadContactValidationError({
+        desired_shift: 'overnight' as never,
+      }),
+    ).toBe('O turno desejado é inválido.');
+
+    expect(
+      getEducationLeadContactValidationError({
         interest_note: 'x'.repeat(EDUCATION_LEAD_NOTE_MAX_LENGTH + 1),
       }),
     ).toContain('no máximo 1000 caracteres');
