@@ -57,6 +57,9 @@ export const EducationPipelineView = memo(function EducationPipelineView({
         const nextForwardStatus = nextStatuses.find(
           (status) => status !== 'lost',
         );
+        const nextForwardStage = PIPELINE_STAGES.find(
+          (candidate) => candidate.status === nextForwardStatus,
+        );
         const canMarkLost = nextStatuses.includes('lost');
         return (
           <motion.section
@@ -141,6 +144,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                               size="sm"
                               className="h-8 px-2 text-xs text-territory-error hover:bg-territory-error/10 hover:text-territory-error"
                               disabled={isMoving}
+                              aria-label={`Marcar ${lead.full_name} como perdido`}
                               onClick={() => setLostLead(lead)}
                             >
                               Perdido
@@ -152,6 +156,9 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                               size="sm"
                               className="h-8 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
                               disabled={isMoving}
+                              aria-label={`Avançar ${lead.full_name} para ${
+                                nextForwardStage?.label ?? nextForwardStatus
+                              }`}
                               onClick={() =>
                                 void onMoveLead(lead.id, nextForwardStatus)
                               }
