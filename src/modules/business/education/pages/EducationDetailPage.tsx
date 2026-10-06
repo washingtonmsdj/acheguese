@@ -207,7 +207,7 @@ export function EducationDetailPage() {
       desiredShift: formData.desiredShift,
     });
 
-    if (lead) {
+    if (lead.created) {
       trackLeadSubmitted(lead.id, {
         hasGuardian: Boolean(formData.guardianName),
         hasStudent: Boolean(formData.studentName),
