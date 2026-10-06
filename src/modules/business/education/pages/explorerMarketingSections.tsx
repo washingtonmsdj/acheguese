@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import type { Dispatch, ElementType, SetStateAction } from 'react';
 import {
   ArrowUpRight,
@@ -21,6 +21,7 @@ import { cn } from '@/shared/utils/cn';
 
 import { getNicheByKey, getPublicNiches } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
+import { getEducationLevelLabel } from '../constants';
 import type { EducationPublicProfile } from '@/core/education';
 import {
   INFRASTRUCTURE_FILTERS,
@@ -29,6 +30,7 @@ import {
   SCHOOL_NETWORK_FILTERS,
 } from './explorerFilterControls';
 import type { FilterState } from './explorerFilters';
+import { SCHOOL_NETWORK_LABELS } from './explorerPresentation.constants';
 
 type EducationNiche = ReturnType<typeof getPublicNiches>[number];
 type SetFilters = Dispatch<SetStateAction<FilterState>>;
@@ -260,7 +262,7 @@ export function EducationNicheShowcase({
                     : [...previous.niches, niche.nicheKey],
                 }))
               }
-              className="group relative overflow-hidden rounded-2xl border border-territory-border bg-territory-surface p-4 text-left transition-all hover:-translate-y-0.5 hover:border-territory-brand/30 hover:bg-territory-raised/40 hover:shadow-md"
+              className="group relative overflow-hidden rounded-2xl border border-territory-border bg-territory-surface p-4 text-left transition-all hover:border-territory-brand/30 hover:bg-territory-raised/40 hover:shadow-md motion-safe:hover:-translate-y-0.5"
             >
               <div
                 className={cn(
@@ -309,6 +311,8 @@ export function FeaturedEducationSection({
   nicheAccent: Record<string, string>;
   sanitizeSummary: (value?: string | null) => string;
 }) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <section className="border-t border-territory-border bg-gradient-to-b from-territory-raised/45 via-territory-surface to-territory-surface py-16 text-territory-ink">
       <div className="container mx-auto px-4">
@@ -319,13 +323,13 @@ export function FeaturedEducationSection({
               variant="secondary"
             >
               <Star className="mr-1 h-3 w-3 fill-current" aria-hidden="true" />
-              Instituições em destaque
+              Explore instituições
             </Badge>
             <h2 className="text-3xl font-bold capitalize text-territory-ink">
-              Instituições em destaque em {territoryLabel}
+              Instituições em {territoryLabel}
             </h2>
             <p className="mt-2 max-w-2xl text-territory-muted">
-              Curadoria com base em dados territoriais e informações institucionais públicas.
+              Uma amostra dos perfis disponíveis neste território com informações institucionais públicas.
             </p>
           </div>
           <Button
@@ -350,19 +354,23 @@ export function FeaturedEducationSection({
               'from-territory-brand/90 to-territory-brand/70';
             const nicheLabel =
               getNicheByKey(profile.niche_key)?.displayName ??
-              profile.niche_key;
+              'Instituição educacional';
             const detailHref = EducationUrlService.buildDetailUrl(route);
             const institutionName =
-              profile.business_name ?? profile.institution_type;
+              profile.business_name ?? nicheLabel;
 
             return (
               <motion.article
                 key={profile.id}
-                initial={{ opacity: 0, y: 16 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.08, duration: 0.4 }}
-                className="group relative overflow-hidden rounded-3xl border border-territory-border bg-territory-surface transition-all hover:-translate-y-1 hover:border-territory-brand/30 hover:shadow-xl"
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { delay: index * 0.08, duration: 0.4 }
+                }
+                className="group relative overflow-hidden rounded-3xl border border-territory-border bg-territory-surface transition-all hover:border-territory-brand/30 hover:shadow-xl motion-safe:hover:-translate-y-1"
               >
                 <div
                   className={cn(
@@ -376,7 +384,7 @@ export function FeaturedEducationSection({
                     </div>
                     <Badge className="border-territory-on-image/30 bg-territory-on-image/20 text-territory-on-image backdrop-blur-sm">
                       <Star className="mr-1 h-3 w-3 fill-current" aria-hidden="true" />
-                      Destaque
+                      Na vitrine
                     </Badge>
                   </div>
                 </div>
@@ -400,7 +408,12 @@ export function FeaturedEducationSection({
                   <div className="mt-4 grid grid-cols-2 gap-2">
                     {[
                       profile.school_network
-                        ? { label: 'Rede', value: profile.school_network }
+                        ? {
+                            label: 'Rede',
+                            value:
+                              SCHOOL_NETWORK_LABELS[profile.school_network] ??
+                              'Rede não informada',
+                          }
                         : null,
                       profile.enrollment_open
                         ? { label: 'Matrículas', value: 'Abertas' }
@@ -439,7 +452,7 @@ export function FeaturedEducationSection({
                               aria-hidden="true"
                             />
                             <span className="line-clamp-1">
-                              {level.replace(/_/g, ' ')}
+                              {getEducationLevelLabel(level) ?? 'Etapa educacional'}
                             </span>
                           </div>
                         ))}
@@ -501,6 +514,8 @@ export function EducationInstitutionCta({
 }: {
   businessExplorerHref: string;
 }) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <section className="relative overflow-hidden border-t border-territory-border bg-territory-surface py-20">
       <div
@@ -518,9 +533,10 @@ export function EducationInstitutionCta({
 
       <div className="container relative mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={prefersReducedMotion ? { duration: 0 } : undefined}
           className="mx-auto max-w-4xl"
         >
           <div className="overflow-hidden rounded-3xl border border-territory-border bg-territory-surface/90 p-8 text-territory-ink shadow-xl backdrop-blur-sm md:p-12">
