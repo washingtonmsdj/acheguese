@@ -4,7 +4,11 @@ import { ArrowRight, Mail, Phone, Calendar } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import type { EducationLead, EducationLeadStatus } from '@/core/education';
+import {
+  getEducationLeadNextStatuses,
+  type EducationLead,
+  type EducationLeadStatus,
+} from '@/core/education';
 import { EducationStatusBadge } from './EducationStatusBadge';
 import { EducationLeadLostDialog } from './EducationLeadLostDialog';
 
@@ -49,6 +53,11 @@ export const EducationPipelineView = memo(function EducationPipelineView({
     <div className={cn('space-y-6', className)}>
       {PIPELINE_STAGES.map((stage, index) => {
         const stageLeads = leadsByStage(stage.status);
+        const nextStatuses = getEducationLeadNextStatuses(stage.status);
+        const nextForwardStatus = nextStatuses.find(
+          (status) => status !== 'lost',
+        );
+        const canMarkLost = nextStatuses.includes('lost');
         return (
           <motion.section
             key={stage.status}
@@ -76,7 +85,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                   {statusCounts?.[stage.status] ?? stageLeads.length}
                 </Badge>
               </div>
-              {index < PIPELINE_STAGES.length - 1 ? (
+              {nextForwardStatus ? (
                 <ArrowRight
                   className="h-4 w-4 text-territory-muted"
                   aria-hidden="true"
@@ -124,34 +133,33 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                         ) : null}
                       </div>
 
-                      {onMoveLead &&
-                      lead.status !== 'enrolled' &&
-                      lead.status !== 'lost' ? (
+                      {onMoveLead && nextStatuses.length > 0 ? (
                         <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-xs text-territory-error hover:bg-territory-error/10 hover:text-territory-error"
-                            disabled={isMoving}
-                            onClick={() => setLostLead(lead)}
-                          >
-                            Perdido
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
-                            disabled={isMoving}
-                            onClick={() =>
-                              void onMoveLead(
-                                lead.id,
-                                PIPELINE_STAGES[index + 1].status,
-                              )
-                            }
-                          >
-                            {isMoving ? 'Atualizando...' : 'Avançar'}
-                            <ArrowRight className="ml-1 h-3 w-3" aria-hidden="true" />
-                          </Button>
+                          {canMarkLost ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-territory-error hover:bg-territory-error/10 hover:text-territory-error"
+                              disabled={isMoving}
+                              onClick={() => setLostLead(lead)}
+                            >
+                              Perdido
+                            </Button>
+                          ) : null}
+                          {nextForwardStatus ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
+                              disabled={isMoving}
+                              onClick={() =>
+                                void onMoveLead(lead.id, nextForwardStatus)
+                              }
+                            >
+                              {isMoving ? 'Atualizando...' : 'Avançar'}
+                              <ArrowRight className="ml-1 h-3 w-3" aria-hidden="true" />
+                            </Button>
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
