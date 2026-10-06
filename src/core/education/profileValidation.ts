@@ -5,10 +5,15 @@ export interface EducationProfileSetupValidationInput {
   ageRangeMin?: number | null;
   ageRangeMax?: number | null;
   schoolInepCode?: string | null;
+  schoolSourceUrl?: string | null;
 }
 
 export interface EducationProfileSetupValidationError {
-  field: 'age_range_min' | 'age_range_max' | 'school_inep_code';
+  field:
+    | 'age_range_min'
+    | 'age_range_max'
+    | 'school_inep_code'
+    | 'school_source_url';
   message: string;
 }
 
@@ -71,6 +76,27 @@ export function getEducationProfileSetupValidationErrors(
       field: 'school_inep_code',
       message: 'O código INEP deve conter exatamente 8 dígitos.',
     });
+  }
+
+  const sourceUrl = input.schoolSourceUrl?.trim() ?? '';
+  if (sourceUrl) {
+    let validSourceUrl = false;
+    if (sourceUrl.length <= 2048) {
+      try {
+        const parsed = new URL(sourceUrl);
+        validSourceUrl =
+          parsed.protocol === 'https:' || parsed.protocol === 'http:';
+      } catch {
+        validSourceUrl = false;
+      }
+    }
+
+    if (!validSourceUrl) {
+      errors.push({
+        field: 'school_source_url',
+        message: 'A fonte pública deve ser uma URL http ou https válida.',
+      });
+    }
   }
 
   return errors;
