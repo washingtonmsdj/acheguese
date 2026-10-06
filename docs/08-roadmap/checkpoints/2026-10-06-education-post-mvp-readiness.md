@@ -468,6 +468,17 @@ durante a estabilização atual do data plane.
   detalhe público e preservando a diferença entre zero e valor não informado.
 - Ratchet arquitetural protege essa semântica.
 
+## Tranche adicional — currículo de Programas
+
+- Limites de currículo/conteúdo foram movidos para
+  `src/core/education/programValidation.ts`.
+- O owner canônico normaliza espaços, remove duplicatas e valida no máximo
+  `50` itens com até `80` caracteres por item.
+- Mutation e formulário administrativo consomem a mesma regra; o usuário recebe
+  feedback antes da chamada em vez de cair em erro genérico após persistência.
+- A UI apresenta os limites reais junto ao campo.
+- Testes unitários e ratchet arquitetural protegem normalização e ownership.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
