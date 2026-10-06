@@ -118,6 +118,11 @@ describe("Education module hardening ratchet", () => {
     expect(plansPage).toContain("plan.features.map");
     expect(plansPage).not.toContain("EDUCATION_PLAN_TEMPLATES");
     expect(plansPage).not.toMatch(/maxPrograms:\s*\d+/);
+    expect(plansPage).toContain("checkoutPlanCode");
+    expect(plansPage).toContain("Abrindo checkout...");
+    expect(plansPage).toContain("Data de renovação não informada");
+    expect(plansPage).toContain("Assinatura sem período ativo");
+    expect(plansPage).not.toContain("Sem data de expiração");
 
     expect(nicheBillingHook).not.toMatch(/current:\s*0/);
     expect(nicheBillingHook).not.toContain("Limites base (sem uso)");
