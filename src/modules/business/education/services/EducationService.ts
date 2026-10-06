@@ -155,7 +155,6 @@ export const EducationService = {
       school_network: payload.schoolNetwork ?? null,
       school_inep_code: payload.schoolInepCode ?? null,
       school_source_url: payload.schoolSourceUrl ?? null,
-      school_source_updated_at: payload.schoolSourceUrl ? new Date().toISOString() : null,
       education_levels: nullIfEmpty(payload.educationLevels),
       shifts: nullIfEmpty(payload.shifts),
       age_range_min: payload.ageRangeMin ?? null,
