@@ -91,6 +91,9 @@ jobs:
       - name: Validate global SSOT contracts
         run: npm run validate:ssot
 
+      - name: Validate active frontend visual import graph
+        run: npx vitest --run tests/ssot-active-visual-import-graph.test.ts
+
       - name: Validate community module boundaries
         run: npm run validate:architecture:community
 
@@ -232,6 +235,7 @@ jobs:
           echo "  ✅ Critical architecture file sizes"
           echo "  ✅ Maps architecture"
           echo "  ✅ Global SSOT contracts"
+          echo "  ✅ Active frontend visual import graph"
           echo "  ✅ Community module boundaries"
           echo "  ✅ Education migration boundaries"
           echo "  ✅ Gastronomy migration boundaries"
