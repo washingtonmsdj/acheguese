@@ -92,8 +92,10 @@ export function EducationPlansPage() {
     refetch: refetchCatalog,
   } = useBillingPlans();
 
-  const currentPlan =
-    billingPlans.find((plan) => plan.code === status?.planTier) ?? null;
+  const currentPlanCode = status?.planTier ?? null;
+  const currentPlan = currentPlanCode
+    ? billingPlans.find((plan) => plan.code === currentPlanCode) ?? null
+    : null;
   const dashboardUrl = businessId
     ? EducationUrlService.buildAdminDashboardUrl(businessId)
     : null;
