@@ -490,6 +490,18 @@ durante a estabilização atual do data plane.
 - Ratchet arquitetural impede a remoção acidental do `skip` sem uma decisão
   explícita de transformar o diagnóstico em teste determinístico.
 
+## Tranche adicional — E2E operacional de Programas
+
+- `education-programs.spec.ts` deixou de depender de waits fixos, asserts de
+  “qualquer conteúdo” e skips condicionais quando a UI obrigatória não aparece.
+- A fixture técnica semeia o programa; a UI autenticada prova renderização,
+  edição com `available_slots = 0`, desativação e exclusão com confirmação.
+- A persistência da edição/exclusão é verificada no banco pela fixture
+  autorizada.
+- Criação pela UI continua fora desta suite quando o entitlement real da fixture
+  não autoriza o recurso; nenhum plano é falsificado para produzir um “verde”.
+- Ratchet arquitetural impede o retorno dos padrões permissivos removidos.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
