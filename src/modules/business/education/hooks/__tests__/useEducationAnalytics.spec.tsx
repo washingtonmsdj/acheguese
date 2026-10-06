@@ -29,11 +29,13 @@ const subscription = {
   refetch: vi.fn(),
 };
 
-function wrapper({ children }: { children: React.ReactNode }) {
+function createWrapper() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return function Wrapper({ children }: { children: React.ReactNode }) {
+    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  };
 }
 
 function mount() {
@@ -43,7 +45,7 @@ function mount() {
       profileId: 'education-id',
       nicheKey: 'language_school',
     }),
-    { wrapper },
+    { wrapper: createWrapper() },
   );
 }
 
