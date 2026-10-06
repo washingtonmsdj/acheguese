@@ -296,6 +296,8 @@ export async function createEducationProgram(
   const numericError = getEducationProgramNumericValidationError({
     availableSlots: payload.available_slots,
     priceFrom: payload.price_from,
+    maxCapacity: payload.max_capacity,
+    currentEnrollment: payload.current_enrollment,
   });
   if (numericError) {
     return { data: null, error: new Error(numericError) };
