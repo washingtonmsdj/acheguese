@@ -316,6 +316,24 @@ describe("Education module hardening ratchet", () => {
     expect(queries).toContain("ends_at.gte.");
   });
 
+  it("keeps program capacity invariants in the Education write model", () => {
+    const validation = read("src/core/education/programValidation.ts");
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
+
+    expect(validation).toContain("maxCapacity?: number | null");
+    expect(validation).toContain("currentEnrollment?: number | null");
+    expect(validation).toContain("Number.isInteger(input.availableSlots)");
+    expect(validation).toContain(
+      "input.currentEnrollment > input.maxCapacity",
+    );
+    expect(mutations).toContain(
+      ".select('education_profile_id,max_capacity,current_enrollment')",
+    );
+    expect(mutations).toContain("const capacityTouched =");
+  });
+
   it("does not collapse unknown program vacancies into unavailable", () => {
     const service = read(
       "src/modules/business/education/services/EducationService.ts",
