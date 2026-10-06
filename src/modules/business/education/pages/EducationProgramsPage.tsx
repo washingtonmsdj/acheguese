@@ -673,7 +673,7 @@ export function EducationProgramsPage() {
           if (!open) setEditingProgram(null);
         }}
       >
-        <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
               {editingProgram ? 'Editar programa' : 'Novo programa'}
@@ -884,7 +884,7 @@ export function EducationProgramsPage() {
               </div>
             )}
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col gap-3 pt-4 sm:flex-row">
               <Button
                 type="submit"
                 disabled={isMutating}
