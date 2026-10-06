@@ -1,13 +1,16 @@
+import {
+  isEducationSchoolNetworkCompatible,
+  normalizeEducationSchoolNetwork,
+  resolveEducationInstitutionTypeForNiche,
+} from '@/core/education';
 import type {
   EducationLevel,
   EducationNicheKey,
-  resolveEducationInstitutionTypeForNiche,
-  isEducationSchoolNetworkCompatible,
-  normalizeEducationSchoolNetwork,
   SchoolAccessibilityFeatureKey,
   SchoolBasicResourceKey,
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
+  SchoolNetwork,
   SchoolShift,
 } from '@/core/education';
 
