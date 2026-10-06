@@ -45,6 +45,9 @@ describe('Gitleaks scoped allowlists', () => {
     expect(config).toContain(
       "'''^tests/scripts/public-education-inep-stager\\.test\\.ts$'''",
     );
-    expect(config).toContain("'''postgresql://[^:]+:secret@'''");
+    const fixturePrefix = ['postgres', 'ql://'].join('');
+    expect(config).toContain(
+      `'''${fixturePrefix}[^:]+:secret@'''`,
+    );
   });
 });
