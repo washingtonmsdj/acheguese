@@ -2,7 +2,51 @@ import { describe, expect, it } from 'vitest';
 import {
   EDUCATION_PROFILE_MAX_AGE,
   getEducationProfileSetupValidationErrors,
+  resolveEducationSourceProvenance,
 } from '../profileValidation';
+
+describe('Education source provenance', () => {
+  it('preserves the timestamp when the normalized source URL is unchanged', () => {
+    expect(
+      resolveEducationSourceProvenance({
+        currentUrl: 'https://educacao.gov.br/escola',
+        currentUpdatedAt: '2026-10-01T10:00:00.000Z',
+        nextUrl: '  https://educacao.gov.br/escola  ',
+        nowIso: '2026-10-06T15:00:00.000Z',
+      }),
+    ).toEqual({
+      schoolSourceUrl: 'https://educacao.gov.br/escola',
+      schoolSourceUpdatedAt: '2026-10-01T10:00:00.000Z',
+    });
+  });
+
+  it('renews provenance only when the source changes', () => {
+    expect(
+      resolveEducationSourceProvenance({
+        currentUrl: 'https://educacao.gov.br/escola-a',
+        currentUpdatedAt: '2026-10-01T10:00:00.000Z',
+        nextUrl: 'https://educacao.gov.br/escola-b',
+        nowIso: '2026-10-06T15:00:00.000Z',
+      }),
+    ).toEqual({
+      schoolSourceUrl: 'https://educacao.gov.br/escola-b',
+      schoolSourceUpdatedAt: '2026-10-06T15:00:00.000Z',
+    });
+  });
+
+  it('clears the provenance timestamp when the source is removed', () => {
+    expect(
+      resolveEducationSourceProvenance({
+        currentUrl: 'https://educacao.gov.br/escola',
+        currentUpdatedAt: '2026-10-01T10:00:00.000Z',
+        nextUrl: '   ',
+      }),
+    ).toEqual({
+      schoolSourceUrl: null,
+      schoolSourceUpdatedAt: null,
+    });
+  });
+});
 
 describe('Education profile setup validation', () => {
   it('accepts a coherent age range and canonical INEP code', () => {
