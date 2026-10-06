@@ -140,12 +140,22 @@ export function EducationLeadForm({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       onSubmit={handleSubmit}
+      aria-describedby="education-lead-privacy-note"
       className={cn('space-y-4 text-territory-ink', className)}
     >
       <h3 className="flex items-center gap-2 font-heading font-semibold text-territory-ink">
         <MessageSquare className="h-5 w-5 text-territory-brand" aria-hidden="true" />
         {isSchoolContext ? labels.enrollmentLabel : 'Solicitar Informações'}
       </h3>
+
+      <p
+        id="education-lead-privacy-note"
+        className="rounded-lg border border-territory-border bg-territory-raised/55 px-3 py-2 text-xs leading-5 text-territory-muted"
+      >
+        Envie somente os dados necessários para este contato. Não informe CPF,
+        documentos, diagnóstico, prontuário ou outros dados sensíveis do aluno.
+        Este formulário registra interesse e não conclui matrícula.
+      </p>
 
       <div className="space-y-3">
         {isSchoolContext && (
@@ -164,6 +174,8 @@ export function EducationLeadForm({
                 value={formData.guardianName ?? ''}
                 onChange={handleChange}
                 placeholder="Quando diferente do nome acima"
+                autoComplete="name"
+                maxLength={120}
                 className={cn(FIELD_CLASS_NAME, 'pl-10')}
               />
             </div>
@@ -185,6 +197,8 @@ export function EducationLeadForm({
               value={formData.fullName}
               onChange={handleChange}
               placeholder="Seu nome"
+              autoComplete="name"
+              maxLength={120}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
@@ -207,6 +221,8 @@ export function EducationLeadForm({
               value={formData.email}
               onChange={handleChange}
               placeholder="seu@email.com"
+              autoComplete="email"
+              maxLength={254}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
@@ -229,13 +245,16 @@ export function EducationLeadForm({
               value={formData.phone}
               onChange={handleChange}
               placeholder="(71) 99999-9999"
+              autoComplete="tel"
+              inputMode="tel"
+              maxLength={30}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <Label htmlFor={isSchoolContext ? 'studentName' : 'childName'} className="text-sm">
               Nome do aluno
@@ -245,13 +264,14 @@ export function EducationLeadForm({
               name={isSchoolContext ? 'studentName' : 'childName'}
               value={isSchoolContext ? (formData.studentName ?? '') : (formData.childName ?? '')}
               onChange={handleChange}
-              placeholder="Opcional"
+              placeholder="Primeiro nome"
+              maxLength={120}
               className={cn(FIELD_CLASS_NAME, 'mt-1')}
             />
           </div>
           <div>
             <Label htmlFor={isSchoolContext ? 'studentAge' : 'childAge'} className="text-sm">
-              {isSchoolContext ? 'Idade do aluno' : 'Idade'}
+              {isSchoolContext ? 'Idade do aluno (opcional)' : 'Idade (opcional)'}
             </Label>
             <Input
               id={isSchoolContext ? 'studentAge' : 'childAge'}
@@ -268,7 +288,7 @@ export function EducationLeadForm({
         </div>
 
         {isSchoolContext && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="desiredStageOption" className="flex items-center gap-1 text-sm">
                 <GraduationCap className="h-3.5 w-3.5 text-territory-muted" aria-hidden="true" />
@@ -302,6 +322,7 @@ export function EducationLeadForm({
                     value={formData.desiredGrade ?? ''}
                     onChange={handleChange}
                     placeholder="Informe a etapa/série"
+                    maxLength={120}
                     className={FIELD_CLASS_NAME}
                   />
                   <Button
@@ -352,6 +373,7 @@ export function EducationLeadForm({
             value={formData.interestNote}
             onChange={handleChange}
             placeholder="Conte-nos o que procura..."
+            maxLength={1000}
             className={cn(FIELD_CLASS_NAME, 'mt-1 resize-none')}
             rows={3}
           />
