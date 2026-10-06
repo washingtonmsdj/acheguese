@@ -3,6 +3,10 @@ import {
   EDUCATION_PROFILE_STATUS,
   EDUCATION_LEAD_STATUS,
   EDUCATION_SUPPORT_LEVELS,
+  EDUCATION_PROGRAM_MODALITY_OPTIONS,
+  EDUCATION_PROGRAM_SHIFT_OPTIONS,
+  getEducationProgramModalityLabel,
+  getEducationProgramShiftLabel,
   UI_LIMITS,
 } from '../constants';
 
@@ -44,6 +48,29 @@ describe('Education Constants', () => {
         expect(previous).toBeDefined();
         expect(current?.order).toBeGreaterThan(previous?.order ?? -1);
       }
+    });
+  });
+
+  describe('program presentation labels', () => {
+    it('maps known technical values to pt-BR labels without inventing missing data', () => {
+      expect(getEducationProgramModalityLabel('in_person')).toBe('Presencial');
+      expect(getEducationProgramModalityLabel('hybrid')).toBe('Híbrido');
+      expect(getEducationProgramModalityLabel(null)).toBeNull();
+
+      expect(getEducationProgramShiftLabel('morning')).toBe('Manhã');
+      expect(getEducationProgramShiftLabel('full_day')).toBe('Integral');
+      expect(getEducationProgramShiftLabel(null)).toBeNull();
+    });
+
+    it('keeps selector options aligned with the same label owners', () => {
+      expect(EDUCATION_PROGRAM_MODALITY_OPTIONS).toContainEqual({
+        value: 'online',
+        label: 'Online',
+      });
+      expect(EDUCATION_PROGRAM_SHIFT_OPTIONS).toContainEqual({
+        value: 'evening',
+        label: 'Noite',
+      });
     });
   });
 
