@@ -50,6 +50,11 @@ import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBan
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import {
+  EDUCATION_PROGRAM_MODALITY_OPTIONS,
+  EDUCATION_PROGRAM_SHIFT_OPTIONS,
+  getEducationProgramShiftLabel,
+} from '../constants';
 import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
@@ -64,19 +69,6 @@ import {
   isSchoolNiche,
   SCHOOL_STAGE_OTHER_VALUE,
 } from '@/core/education/constants/schoolStageOptions';
-
-const SHIFTS = [
-  { value: 'morning', label: 'Manhã' },
-  { value: 'afternoon', label: 'Tarde' },
-  { value: 'evening', label: 'Noite' },
-  { value: 'full_day', label: 'Integral' },
-];
-
-const MODALITIES = [
-  { value: 'in_person', label: 'Presencial' },
-  { value: 'online', label: 'Online' },
-  { value: 'hybrid', label: 'Híbrido' },
-];
 
 const selectClassName =
   'h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none transition-colors focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20';
@@ -616,8 +608,7 @@ export function EducationProgramsPage() {
                         className="gap-1 border-territory-border text-territory-muted"
                       >
                         <Clock className="h-3 w-3" />
-                        {SHIFTS.find((shift) => shift.value === program.shift)?.label ||
-                          program.shift}
+                        {getEducationProgramShiftLabel(program.shift)}
                       </Badge>
                     )}
                     {!isPublicSchool && program.price_from != null && (
@@ -789,7 +780,7 @@ export function EducationProgramsPage() {
                   className={selectClassName}
                 >
                   <option value="">Selecione...</option>
-                  {SHIFTS.map((shift) => (
+                  {EDUCATION_PROGRAM_SHIFT_OPTIONS.map((shift) => (
                     <option key={shift.value} value={shift.value}>
                       {shift.label}
                     </option>
@@ -810,7 +801,7 @@ export function EducationProgramsPage() {
                   className={selectClassName}
                 >
                   <option value="">Selecione...</option>
-                  {MODALITIES.map((modality) => (
+                  {EDUCATION_PROGRAM_MODALITY_OPTIONS.map((modality) => (
                     <option key={modality.value} value={modality.value}>
                       {modality.label}
                     </option>
