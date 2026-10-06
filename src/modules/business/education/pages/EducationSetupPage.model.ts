@@ -1,7 +1,7 @@
 import type {
   EducationLevel,
   EducationNicheKey,
-  getEducationInstitutionTypeForNiche,
+  resolveEducationInstitutionTypeForNiche,
   SchoolAccessibilityFeatureKey,
   SchoolBasicResourceKey,
   SchoolEquipmentFeatureKey,
@@ -147,9 +147,7 @@ function resolveEducationInfrastructurePreset(
 }
 
 export function getInstitutionTypeForNiche(nicheKey: string): string {
-  return getEducationInstitutionTypeForNiche(
-    nicheKey as EducationNicheKey,
-  );
+  return resolveEducationInstitutionTypeForNiche(nicheKey) ?? '';
 }
 
 const SCHOOL_PROFILE_NICHES: EducationNicheKey[] = ['regular_school', 'daycare', 'technical_school'];
