@@ -347,30 +347,45 @@ durante a estabilização atual do data plane.
   do facade. Os dois testes que existiam apenas para essa API auto-referencial
   também foram removidos.
 
-### Gates ainda pendentes
+### Gates comprovados e gates ainda pendentes
 
-Os commits desta tranche **não** ativam Educação. São necessários typecheck,
-lint, testes direcionados e E2E da branch; certificação de auth/RLS/schema,
-probes remotos e deployment no mesmo SHA só após a liberação do data plane.
-Não declarar `ready` apenas por alteração de código ou CI parcial.
+No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
+
+- Lint e TypeScript typecheck verdes;
+- Canonical Release Build Preflight verde;
+- Runtime Tests (Vitest) verdes;
+- Phase Core Gate / SSOT verde;
+- Active Visual SSOT verde;
+- Security Check e Security Scan verdes;
+- Heavy PR Certification verde;
+- E2E fixture-backed remoto verde;
+- Regression Check verde.
+
+O job **Authenticated release E2E (Production smoke)** permaneceu **skipped**.
+Por isso, estes resultados **não ativam Educação** e não autorizam marcar a
+vertical como production-ready.
+
+Ainda são obrigatórios antes de qualquer despausa:
+
+- E2E autenticado de release no mesmo SHA candidato;
+- reconciliação de schema/RLS/RPCs quando o data plane for liberado;
+- probes remotos de autorização e persistência sobre o backend reconciliado;
+- validação final de responsividade/acessibilidade nas rotas que serão ativadas;
+- deployment do mesmo SHA que passar todos os gates de ativação.
 
 ## Próximas etapas
 
-1. executar typecheck, lint e testes Education/arquitetura no SHA da branch;
-2. consolidar o shell administrativo de Education para cabeçalhos, navegação,
-   loading, empty e error states consistentes;
-3. revisar Programs e Events para validação de formulário, conflitos de data,
-   limites e estados de mutation;
-4. revisar Leads para minimização operacional, transições de pipeline e
-   feedback de mutation;
-5. revisar Analytics para estados sem dados, exportação e semântica das
-   métricas;
-6. continuar a validação de Explorer e Detail em mobile, teclado e leitura por
-   screen reader; reduced-motion dos cards do Explorer já foi corrigido;
-7. somente após liberação do data plane, reconciliar schema/RLS/RPCs e rodar
-   probes remotos;
-8. fechar com E2E completo e deployment do mesmo SHA antes de qualquer
-   despausa.
+1. manter o PR em draft e Education em `paused`;
+2. continuar apenas hardening de frontend/contratos que não exija DDL nem
+   reativação de rotas;
+3. revisar Programs e Events para conflitos de agenda, limites e estados de
+   mutation que ainda não estejam cobertos pelo core;
+4. continuar a validação de Explorer e Detail em mobile, teclado e screen
+   reader;
+5. após liberação do data plane, reconciliar schema/RLS/RPCs e rodar os probes
+   remotos;
+6. executar o E2E autenticado de release e o deployment no mesmo SHA candidato;
+7. somente então avaliar a despausa da vertical.
 
 ## Definition of Done para entrada pós-MVP
 
