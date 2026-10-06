@@ -161,6 +161,17 @@ describe("education visual SSOT", () => {
     expect(sidebar).toContain("prefersReducedMotion ? 'auto' : 'smooth'");
   });
 
+  it("keeps public Education hero actions keyboard-visible", () => {
+    const detail = readSource(
+      "src/modules/business/education/pages/EducationDetailPage.tsx",
+    );
+
+    expect(detail).toContain('aria-label="Breadcrumb"');
+    expect(detail).toContain("focus-visible:ring-territory-on-image");
+    expect(detail).toContain("aria-label=\"Compartilhar\"");
+    expect(detail).toContain("aria-pressed={isFavorite}");
+  });
+
   it("keeps public Education detail tabs navigable and accessible", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
