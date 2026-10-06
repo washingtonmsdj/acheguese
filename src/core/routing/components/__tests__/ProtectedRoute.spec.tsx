@@ -198,7 +198,22 @@ describe("ProtectedRoute", () => {
     expect(screen.queryByText("private content")).not.toBeInTheDocument();
   });
 
-  it("fails closed to privacy when deletion authority is unavailable", async () => {
+  it("recovers protected access when the deletion authority succeeds on its bounded retry", async () => {
+    mockAuthenticatedSession();
+    mockedGetDeletionStatus
+      .mockRejectedValueOnce(new Error("transient deletion authority failure"))
+      .mockResolvedValueOnce(null);
+
+    renderProtectedRoute("/private");
+
+    expect(
+      await screen.findByText("private content", undefined, { timeout: 2500 }),
+    ).toBeInTheDocument();
+    expect(mockedGetDeletionStatus).toHaveBeenCalledTimes(2);
+    expect(screen.queryByText("privacy content")).not.toBeInTheDocument();
+  });
+
+  it("fails closed to privacy when deletion authority remains unavailable after the bounded retry", async () => {
     mockAuthenticatedSession();
     mockedGetDeletionStatus.mockRejectedValue(
       new Error("deletion authority unavailable"),
@@ -206,7 +221,10 @@ describe("ProtectedRoute", () => {
 
     renderProtectedRoute("/private");
 
-    expect(await screen.findByText("privacy content")).toBeInTheDocument();
+    expect(
+      await screen.findByText("privacy content", undefined, { timeout: 2500 }),
+    ).toBeInTheDocument();
+    expect(mockedGetDeletionStatus).toHaveBeenCalledTimes(2);
     expect(screen.queryByText("private content")).not.toBeInTheDocument();
   });
 

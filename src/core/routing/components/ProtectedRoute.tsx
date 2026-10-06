@@ -11,6 +11,7 @@ export interface ProtectedRouteProps {
 }
 
 const PRIVACY_ACCOUNT_PATH = "/conta/privacidade";
+const PRIVACY_ACCESS_GATE_RETRIES = 1;
 const RESTRICTED_DELETION_STATUSES = new Set([
   "scheduled",
   "processing",
@@ -39,6 +40,9 @@ function AccessLoading({ label }: { label: string }) {
  * Accounts with a pending deletion lifecycle may remain authenticated only to
  * reach the privacy recovery surface. Every other protected route waits for a
  * fresh status response and fails closed when that authority is unavailable.
+ * One bounded recheck prevents a single transient transport failure from being
+ * mistaken for authoritative unavailability; a repeated failure still takes
+ * the same fail-closed privacy route.
  * Database access is independently enforced by RLS and the server-side
  * operational-account boundaries.
  */
@@ -55,7 +59,7 @@ export function ProtectedRoute({
     queryKey: ["deletion-status", user?.id],
     queryFn: () => PrivacySettingsService.getDeletionStatus(user!.id),
     enabled: Boolean(user?.id) && !isLoading && !isPrivacySurface,
-    retry: false,
+    retry: PRIVACY_ACCESS_GATE_RETRIES,
     staleTime: 0,
     refetchOnMount: "always",
   });
