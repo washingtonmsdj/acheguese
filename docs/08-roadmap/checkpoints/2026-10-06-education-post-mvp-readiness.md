@@ -667,7 +667,7 @@ durante a estabilização atual do data plane.
 
 ### Gates comprovados e gates ainda pendentes
 
-No SHA `a840ae91896963104d9f54fc114a612d77b7cb91`, o PR comprovou:
+No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
 
 - Lint e TypeScript typecheck verdes;
 - Canonical Release Build Preflight verde;
