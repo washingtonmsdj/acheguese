@@ -15,6 +15,7 @@ import { cn } from '@/shared/utils/cn';
 import { SafeLink } from '@/shared/components/security';
 import { buildWhatsAppUrl } from '@/shared/utils/contactLinks';
 import { getNicheByKey } from '../niches/registry';
+import { getEducationLevelLabel } from '../constants';
 import { EducationUrlService } from '../services/EducationUrlService';
 import type { EducationPublicProfile } from '@/core/education';
 import type { ViewMode } from './explorerFilters';
@@ -57,8 +58,11 @@ export function EditorialCard({
   const route = profile.public_route;
   const detailHref = route ? EducationUrlService.buildDetailUrl(route) : null;
   const whatsappHref = buildWhatsAppHref(profile.whatsapp_number);
-  const institutionName = profile.business_name ?? profile.institution_type;
-  const educationLevels = profile.education_levels ?? [];
+  const institutionName =
+    profile.business_name ?? nicheConfig?.displayName ?? 'Instituição educacional';
+  const educationLevels = (profile.education_levels ?? [])
+    .map((level) => getEducationLevelLabel(level))
+    .filter((level): level is string => Boolean(level));
   const prefersReducedMotion = useReducedMotion();
   const enterMotion = prefersReducedMotion ? false : { opacity: 0, y: 12 };
   const enterTransition = prefersReducedMotion
@@ -117,7 +121,7 @@ export function EditorialCard({
                     variant="outline"
                     className={`${outlineBadgeClassName} text-[10px]`}
                   >
-                    {level.replace(/_/g, ' ')}
+                    {level}
                   </Badge>
                 ))}
               </div>
@@ -227,7 +231,7 @@ export function EditorialCard({
                   aria-hidden="true"
                 />
                 <span className="line-clamp-1 capitalize">
-                  {level.replace(/_/g, ' ')}
+                  {level}
                 </span>
               </div>
             ))}
