@@ -49,6 +49,13 @@ describe("G6 public Education territorial read model", () => {
     expect(page).toContain("if (resolved?.kind === 'group') return null");
     expect(page).toContain("locationIds: groupLocationIds");
     expect(page).toContain("enabled: educationScopeReady");
+    expect(page).toContain(
+      "const routeTerritorySegment = district ?? groupSlugOrDistrict",
+    );
+    expect(page).toContain("district: routeTerritorySegment");
+    expect(page).toContain(
+      "routeTerritorySegment ? [routeTerritorySegment] : []",
+    );
     expect(page).not.toContain("if (district) return district;");
 
     expect(hook).toContain("locationIds?: string[]");
