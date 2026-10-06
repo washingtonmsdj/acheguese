@@ -76,23 +76,23 @@ export function AppLayoutRoutes() {
         {accountEnabled ? (
           <>
             <Route
-              path="/conta/preferencias"
+              path={ACCOUNT_PATHS.preferences}
               element={protectedElement(<P.ContaPreferenciasPage />)}
             />
             <Route
-              path="/conta/privacidade"
+              path={ACCOUNT_PATHS.privacy}
               element={protectedElement(<P.PrivacySettingsPage />)}
             />
             <Route
-              path="/conta/perfil/configuracoes"
+              path={ACCOUNT_PATHS.profileSettings}
               element={protectedElement(<P.ProfileSettingsPage />)}
             />
             <Route
-              path="/conta/seguranca"
+              path={ACCOUNT_PATHS.security}
               element={protectedElement(<P.ContaSegurancaPage />)}
             />
             <Route
-              path="/conta/enderecos"
+              path={ACCOUNT_PATHS.addresses}
               element={protectedElement(<P.ContaEnderecosPage />)}
             />
             {notificationsEnabled ? (
@@ -105,7 +105,10 @@ export function AppLayoutRoutes() {
               path="/conta/editar/:profileId"
               element={protectedElement(<P.ContaEditarPerfilPage />)}
             />
-            <Route path="/conta" element={protectedElement(<P.ContaPage />)} />
+            <Route
+              path={ACCOUNT_PATHS.home}
+              element={protectedElement(<P.ContaPage />)}
+            />
           </>
         ) : null}
 
