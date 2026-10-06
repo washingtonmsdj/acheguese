@@ -215,12 +215,14 @@ export function ActiveEducationFilterChips({
 export function EducationNicheShowcase({
   niches,
   sourceProfiles,
+  selectedNiches,
   setFilters,
   nicheIcons,
   nicheAccent,
 }: {
   niches: EducationNiche[];
   sourceProfiles: EducationPublicProfile[];
+  selectedNiches: string[];
   setFilters: SetFilters;
   nicheIcons: NicheIconMap;
   nicheAccent: Record<string, string>;
@@ -252,6 +254,8 @@ export function EducationNicheShowcase({
             <button
               key={niche.nicheKey}
               type="button"
+              aria-pressed={selectedNiches.includes(niche.nicheKey)}
+              aria-label={`Filtrar por ${niche.displayName}`}
               onClick={() =>
                 setFilters((previous) => ({
                   ...previous,
