@@ -1,0 +1,7 @@
+:root {
+  /* External provider identity primitives. This file is the single owner for provider marks. */
+  --provider-google-blue: 217 89% 61%;
+  --provider-google-green: 136 53% 43%;
+  --provider-google-yellow: 45 97% 50%;
+  --provider-google-red: 4 82% 56%;
+}
