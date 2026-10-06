@@ -52,3 +52,13 @@ export {
   getEducationProgramNameValidationError,
   getEducationProgramNumericValidationError,
 } from "@/core/education/programValidation";
+
+export {
+  EDUCATION_PROFILE_MAX_AGE,
+  EDUCATION_PROFILE_MIN_AGE,
+  getEducationProfileSetupValidationErrors,
+} from "@/core/education/profileValidation";
+export type {
+  EducationProfileSetupValidationError,
+  EducationProfileSetupValidationInput,
+} from "@/core/education/profileValidation";
