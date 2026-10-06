@@ -90,7 +90,11 @@ export const EducationPipelineView = memo(function EducationPipelineView({
               </p>
             ) : (
               <div className="space-y-2">
-                {stageLeads.map((lead) => (
+                {stageLeads.map((lead) => {
+                  const studentName = lead.student_name ?? lead.child_name;
+                  const studentAge = lead.student_age ?? lead.child_age;
+
+                  return (
                   <article
                     key={lead.id}
                     className="rounded-xl border border-territory-border bg-territory-surface p-3 shadow-sm"
@@ -112,10 +116,10 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                             </span>
                           ) : null}
                         </div>
-                        {lead.child_name ? (
+                        {studentName ? (
                           <p className="mt-1 text-xs text-territory-muted">
-                            Aluno: {lead.child_name}
-                            {lead.child_age ? ` (${lead.child_age} anos)` : ''}
+                            Aluno: {studentName}
+                            {studentAge != null ? ` (${studentAge} anos)` : ''}
                           </p>
                         ) : null}
                       </div>
@@ -166,7 +170,8 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                       <EducationStatusBadge status={lead.status} type="lead" />
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </div>
             )}
           </motion.section>
