@@ -12,14 +12,22 @@ import {
   getAllSecurityHeaders,
   getAuditInfo,
   getRequiredEnv,
+  getTrustedClientIp,
+  isOriginAllowed,
   jsonResponse,
   rateLimitMiddleware,
   readJsonBody,
   requireHttpMethod,
 } from "../_shared/security.ts";
+import {
+  parseAllowedTurnstileHostnames,
+  verifyTurnstileToken,
+} from "../_shared/turnstile.ts";
 
 const ALLOWED_METHODS = "POST, OPTIONS";
 const MAX_BODY_BYTES = 24_576;
+const MAX_REQUESTS_PER_MINUTE = 8;
+const TURNSTILE_ACTION = "education-lead";
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -40,6 +48,8 @@ interface RequestBody {
   studentAge?: unknown;
   desiredGrade?: unknown;
   desiredShift?: unknown;
+  honeypot?: unknown;
+  turnstileToken?: unknown;
 }
 
 class IntakeError extends Error {
@@ -100,6 +110,84 @@ function normalizePhone(value: unknown): string {
     throw new IntakeError("invalid_phone");
   }
   return phone;
+}
+
+async function verifyPublicLeadAntiAbuse(
+  req: Request,
+  body: RequestBody,
+): Promise<Response | null> {
+  if (typeof body.honeypot !== "string" || body.honeypot.length > 200) {
+    return jsonResponse(
+      { error: "invalid_honeypot" },
+      400,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  if (body.honeypot.trim()) {
+    return jsonResponse(
+      { error: "turnstile_failed" },
+      200,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  const turnstileToken =
+    typeof body.turnstileToken === "string"
+      ? body.turnstileToken.trim()
+      : "";
+  if (!turnstileToken || turnstileToken.length > 2_048) {
+    return jsonResponse(
+      { error: "turnstile_failed" },
+      200,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  try {
+    const verification = await verifyTurnstileToken({
+      token: turnstileToken,
+      secret: getRequiredEnv("TURNSTILE_SECRET_KEY"),
+      expectedAction: TURNSTILE_ACTION,
+      allowedHostnames: parseAllowedTurnstileHostnames(
+        getRequiredEnv("ALLOWED_ORIGINS"),
+      ),
+      remoteIp: getTrustedClientIp(req),
+    });
+
+    if (!verification.ok) {
+      if (verification.reason === "unavailable") {
+        return jsonResponse(
+          { error: "verification_unavailable" },
+          502,
+          ALLOWED_METHODS,
+          req,
+        );
+      }
+
+      return jsonResponse(
+        { error: "turnstile_failed" },
+        200,
+        ALLOWED_METHODS,
+        req,
+      );
+    }
+  } catch (error) {
+    console.error("[education-lead-rpc] anti-abuse configuration unavailable", {
+      message: error instanceof Error ? error.message : "unknown configuration error",
+    });
+    return jsonResponse(
+      { error: "configuration_unavailable" },
+      503,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  return null;
 }
 
 async function requireLeadEligibleProfile(
@@ -184,7 +272,22 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  const rateLimitResponse = await rateLimitMiddleware(req, 8, 60_000);
+  const requestOrigin = req.headers.get("origin");
+  if (requestOrigin && !isOriginAllowed(requestOrigin)) {
+    return jsonResponse(
+      { error: "origin_not_allowed" },
+      403,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  const rateLimitResponse = await rateLimitMiddleware(
+    req,
+    MAX_REQUESTS_PER_MINUTE,
+    60_000,
+    ALLOWED_METHODS,
+  );
   if (rateLimitResponse) return rateLimitResponse;
 
   const body = await readJsonBody<RequestBody>(req, {
@@ -192,6 +295,21 @@ serve(async (req: Request) => {
     methods: ALLOWED_METHODS,
   });
   if (!body.ok) return body.response;
+  if (
+    !body.data ||
+    typeof body.data !== "object" ||
+    Array.isArray(body.data)
+  ) {
+    return jsonResponse(
+      { error: "invalid_payload" },
+      400,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  const antiAbuseError = await verifyPublicLeadAntiAbuse(req, body.data);
+  if (antiAbuseError) return antiAbuseError;
 
   const educationProfileId =
     typeof body.data.educationProfileId === "string"
