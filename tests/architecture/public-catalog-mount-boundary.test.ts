@@ -18,6 +18,10 @@ describe("public catalog mount boundary", () => {
     expect(rootEntry).not.toContain('"/catalogo/"');
     expect(entryPage).toContain("PUBLIC_CATALOG_ANNOUNCEMENT_ENABLED");
     expect(entryPage).toContain("PUBLIC_CATALOG_PATH");
+    expect(entryPage).toContain("Pré-lançamento");
+    expect(entryPage).toContain("Abrir catálogo");
+    expect(entryPage).toContain('href="#conteudo"');
+    expect(entryPage).toContain("Conhecer o Achegue-se");
   });
 
   it("mounts catalog rewrites before the SPA catch-all", () => {
@@ -52,6 +56,13 @@ describe("public catalog mount boundary", () => {
     const sitemap = read("src/core/routing/seo/generateSitemap.ts");
     expect(sitemap).toContain("PUBLIC_CATALOG_PATH");
     expect(sitemap).toContain("changefreq: 'weekly'");
+  });
+
+  it("keeps the temporary catalog announcement reversible by public config", () => {
+    const config = read("src/shared/config/publicExternalApps.config.ts");
+    expect(config).toContain("VITE_PUBLIC_CATALOG_ANNOUNCEMENT");
+    expect(config).toContain('?? "true"');
+    expect(config).toContain("PUBLIC_CATALOG_PATH");
   });
 
   it("keeps routing generated from the public external apps SSOT", () => {
