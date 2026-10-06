@@ -261,6 +261,19 @@ durante a estabilização atual do data plane.
 - Ratchet visual impede a reintrodução de URL WhatsApp montada manualmente no
   service Education.
 
+## Tranche adicional — integridade de dados e segurança de CI
+
+- O teste de allowlists do Gitleaks deixou de embutir uma string de conexão
+  detectável; o único falso positivo histórico foi registrado pelo fingerprint
+  exato no baseline, sem liberar arquivo inteiro ou ampliar regex de exceção.
+- O Security Scan isolado do fix de Gitleaks passou verde.
+- Taxa média de ocupação permanece `null` quando não há capacidade conhecida;
+  o CSV não converte esse estado em `0%`.
+- O formatter monetário compartilhado preserva `0` como valor válido e
+  diferencia preço zero de preço ausente.
+- O pipeline administrativo prefere `student_name/student_age` aos campos
+  legados e preserva idade `0`; teste de renderização cobre esse caso.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
