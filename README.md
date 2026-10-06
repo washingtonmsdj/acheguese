@@ -14,11 +14,11 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 ## Estado de entrega
 
-O núcleo do MVP está funcional e o Release Candidate vigente está consolidado na PR `#621`. O candidate passou pelos gates determinísticos de arquitetura, segurança, build e E2E, mas **a promoção permanece bloqueada enquanto o gate externo `#445` estiver aberto**.
+O núcleo do MVP está funcional e o Release Candidate vigente está consolidado na PR `#621`. O candidate passa pelos gates determinísticos de arquitetura, segurança, build e E2E antes de qualquer promoção, mas **CI pré-produção não equivale a runtime de produção certificado**.
 
-`#305` permanece fechado após prova real de sessão autenticada + Conta + Business no runtime certificado anterior. `#445` foi reaberto porque o delta deployável atual ainda não possui nova prova canônica de Production `READY` + smoke: a última tentativa foi recusada pela quota diária da Vercel. O estado `open`/`closed` dessas issues e suas evidências são a autoridade operacional; este README não substitui o SSOT de release.
+Os gates externos do primeiro release são `#305` (Supabase/data plane e smoke autenticado) e `#445` (Vercel/identidade de release). O estado `open`/`closed` dessas issues, junto com suas evidências, é a autoridade operacional para promoção; este README não replica nem congela esse estado. Qualquer gate externo aberto bloqueia a promoção sem autorizar fallback, bypass ou redução dos critérios do MVP.
 
-A certificação pré-produção do candidate atual cobre os gates do mesmo SHA. A certificação autenticada de produção existente pertence ao runtime anterior e não deve ser reutilizada como prova do novo delta. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado.
+A certificação autenticada de produção de um runtime anterior permanece evidência histórica daquele conteúdo e não é reutilizada automaticamente para um novo delta deployável. O candidate vigente precisa satisfazer as provas aplicáveis ao seu próprio conteúdo conforme `EXECUCAO_MAIN_ONLY.md`. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado.
 
 O frontend ativo está em fase final de acabamento visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
 
