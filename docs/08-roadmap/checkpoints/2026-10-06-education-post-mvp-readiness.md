@@ -348,6 +348,19 @@ durante a estabilização atual do data plane.
   evidência; o frontend não força HTTPS sobre uma fonte `http` válida.
 - A vertical não introduz parser próprio nem reduz as validações centrais.
 
+## Tranche adicional — owner de captação pública de Leads
+
+- O caminho privado legado `EducationService.createLead` foi aposentado porque
+  não tinha caller de UI; sua única consumidora era uma mutation interna do
+  hook que também não era usada por nenhuma tela.
+- A captação pública permanece exclusivamente em
+  `PublicEducationLeadService.create`, preservando broker/RPC, deduplicação e
+  contratos de segurança já certificados.
+- Regex locais de e-mail/telefone e tracking paralelo saíram do facade, evitando
+  uma segunda autoridade de validação/observabilidade.
+- O write model interno de Lead permanece disponível para operações autorizadas
+  do domínio, mas não é exposto pela UI pública como atalho.
+
 ## Tranche adicional — ownership de validação
 
 - Validadores legados de perfil, programa, lead e evento foram removidos do
