@@ -98,6 +98,29 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(readme).not.toContain("✅ 69 testes criados e prontos para execução");
   });
 
+  it("keeps Setup compensation proven without unsafe remote fault injection", () => {
+    const compensation = readFileSync(
+      join(
+        ROOT,
+        "src/modules/business/education/services/__tests__/EducationService.setup-compensation.test.ts",
+      ),
+      "utf8",
+    );
+
+    expect(compensation).toContain(
+      "removes only a profile created by the failing setup",
+    );
+    expect(compensation).toContain(
+      "never deletes a pre-existing profile when setup update fails",
+    );
+    expect(compensation).toContain(
+      "keeps a newly created profile when setup succeeds",
+    );
+    expect(compensation).toContain(
+      "deleteEducationProfile).toHaveBeenCalledWith(profile.id)",
+    );
+  });
+
   it("keeps Education E2E event fixtures on canonical timestamp columns", () => {
     const helper = readFileSync(
       join(ROOT, "tests/helpers/education-setup.ts"),
