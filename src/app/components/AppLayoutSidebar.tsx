@@ -14,15 +14,22 @@ import { Outlet, useLocation } from "react-router-dom";
 import { getActiveTerritoryNavigationModeIds } from "@/app/config/territoryNavigationScope";
 import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
 import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
+import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 import { BottomNav } from "@/core/navigation/BottomNav";
 import {
   ACCOUNT_PATHS,
   ACCOUNT_SETTINGS_SHELL_PATHS,
 } from "@/core/routing/config/account";
+import { OFFLINE_SETTINGS_PATH } from "@/core/routing/config/platformSettings";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { getAppModuleSlugFromPath } from "@/shared/config/moduleSlugs";
+import {
+  DATA_PROTECTION_CONTACT_PATH,
+  PRIVACY_POLICY_PATH,
+  TERMS_OF_SERVICE_PATH,
+} from "@/shared/constants/legal";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { AppSidebar } from "./navigation/AppSidebar";
 import { AppTopbar } from "./navigation/AppTopbar";
@@ -36,11 +43,11 @@ const TERRITORY_PORTAL_MODULES = new Set<string>([
 ]);
 
 const CHILD_OWNED_MAIN_ROUTES = new Set<string>([
-  "/mensagens",
-  "/termos",
-  "/privacidade",
-  "/offline-settings",
-  "/dpo",
+  messagingRoutes.inbox(),
+  TERMS_OF_SERVICE_PATH,
+  PRIVACY_POLICY_PATH,
+  OFFLINE_SETTINGS_PATH,
+  DATA_PROTECTION_CONTACT_PATH,
 ]);
 
 export function AppLayoutSidebar() {
