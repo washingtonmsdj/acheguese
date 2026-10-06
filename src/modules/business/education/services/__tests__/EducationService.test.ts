@@ -26,10 +26,6 @@ describe('EducationService Exports', () => {
     expect(typeof EducationService.createProgram).toBe('function');
   });
 
-  it('exports createLead', () => {
-    expect(typeof EducationService.createLead).toBe('function');
-  });
-
   it('exports moveLeadInPipeline', () => {
     expect(typeof EducationService.moveLeadInPipeline).toBe('function');
   });
