@@ -94,25 +94,10 @@ export const EducationSubscriptionService = {
     }
   },
 
-  async canUsePremiumPublicPage(businessProfileId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessProfileId);
-    return status.isActive && status.entitlements.canUsePremiumPublicPage;
-  },
 
-  async canUseShortPremiumLink(businessProfileId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessProfileId);
-    return status.isActive && status.entitlements.canUseShortPremiumLink;
-  },
 
-  async canUseAnalytics(businessProfileId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessProfileId);
-    return status.isActive && status.entitlements.canUseAnalytics;
-  },
 
-  async canExportData(businessProfileId: string): Promise<boolean> {
-    const status = await this.getSubscriptionStatus(businessProfileId);
-    return status.isActive && status.entitlements.canExportData;
-  },
+
 };
 
 export default EducationSubscriptionService;
