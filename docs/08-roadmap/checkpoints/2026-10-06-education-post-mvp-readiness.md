@@ -711,6 +711,9 @@ durante a estabilização atual do data plane.
 - Setup consome o mesmo owner canônico usado pelo domínio.
 - O write model rejeita combinações incompatíveis de tipo institucional e
   nicho, impedindo persistência válida apenas pela UI.
+- Updates parciais também são protegidos: ao alterar só `niche_key` ou só
+  `institution_type`, o write model combina o patch com a identidade persistida
+  e valida o estado final antes de gravar.
 - Teste unitário e ratchet arquitetural protegem o mapeamento e a ausência de
   uma tabela paralela no frontend.
 
