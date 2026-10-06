@@ -689,19 +689,6 @@ export const EducationService = {
     return `${lead.full_name} - ${contact}`;
   },
 
-  /** Calcula probabilidade de conversão baseada no status */
-  calculateLeadConversionProbability(status: EducationLeadStatus): number {
-    const probabilities: Record<EducationLeadStatus, number> = {
-      new: 20,
-      contacted: 35,
-      visit_scheduled: 50,
-      proposal_sent: 75,
-      enrolled: 100,
-      lost: 0,
-    };
-    return getRecordValue(probabilities, status) ?? 0;
-  },
-
   /** Calcula resumo do pipeline (versão síncrona para dados já carregados) */
   calculatePipelineSummary(leads: EducationLead[]): { total: number; byStatus: Record<string, number>; conversionRate: number; active: number; } {
     const byStatus: Record<string, number> = {
