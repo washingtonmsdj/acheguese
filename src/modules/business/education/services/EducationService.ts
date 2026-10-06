@@ -455,10 +455,11 @@ export const EducationService = {
         logger.warn('[EducationService] Moving lead to lost without reason');
       }
 
-      const { data, error } = await mutations.moveLeadToStatus(leadId, toStatus, {
-        lostReason,
-        ownerUserId,
-      });
+      const { data, error, previousStatus } =
+        await mutations.moveLeadToStatus(leadId, toStatus, {
+          lostReason,
+          ownerUserId,
+        });
 
       if (error) {
         logger.error('[EducationService] Error moving lead:', error);
@@ -469,9 +470,12 @@ export const EducationService = {
       if (data && toStatus === 'enrolled') {
         const profile = await queries.getEducationProfileById(data.education_profile_id);
         if (profile) {
-          await trackLeadConverted(data.education_profile_id, data.id, profile.niche_key, {
-            previousStatus: data.status,
-          });
+          await trackLeadConverted(
+            data.education_profile_id,
+            data.id,
+            profile.niche_key,
+            { previousStatus },
+          );
         }
       }
 
