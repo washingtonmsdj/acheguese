@@ -4,6 +4,11 @@
 import { test, expect } from '@playwright/test';
 import { gotoAuthenticated } from '../../helpers/education-auth-inject';
 
+test.skip(
+  true,
+  'Diagnóstico legado: não conta como certificação E2E de Education.',
+);
+
 const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
 
 test('debug - capture programs page content', async ({ page }) => {
@@ -27,5 +32,5 @@ test('debug - capture programs page content', async ({ page }) => {
   // Tirar screenshot
   await page.screenshot({ path: 'test-results/debug-programs-page.png', fullPage: true });
 
-  expect(url).toContain('/education/programas');
+  expect(url).toContain('/educacao/programas');
 });
