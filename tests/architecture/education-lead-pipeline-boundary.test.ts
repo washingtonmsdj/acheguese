@@ -18,6 +18,20 @@ describe("G6 Education lead pipeline write boundary", () => {
     expect(mutations).toContain(".select('status')");
   });
 
+  it("reports the real previous status when a lead converts", () => {
+    const service = readFileSync(
+      join(
+        ROOT,
+        "src/modules/business/education/services/EducationService.ts",
+      ),
+      "utf8",
+    );
+
+    expect(service).toContain("const { data, error, previousStatus }");
+    expect(service).toContain("{ previousStatus }");
+    expect(service).not.toContain("previousStatus: data.status");
+  });
+
   it("does not render advance actions for terminal lead statuses", () => {
     const view = readFileSync(
       join(
