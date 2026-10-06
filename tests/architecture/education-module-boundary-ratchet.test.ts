@@ -603,6 +603,22 @@ describe("Education module hardening ratchet", () => {
     expect(service).not.toContain("Event title too short");
   });
 
+  it("keeps Education Programs operational smoke deterministic", () => {
+    const programsE2e = read(
+      "tests/e2e/education/education-programs.spec.ts",
+    );
+
+    expect(programsE2e).toContain("authenticateAsBusinessOwner");
+    expect(programsE2e).toContain("createTestProgram");
+    expect(programsE2e).toContain("Sem vagas");
+    expect(programsE2e).toContain("Salvar alterações");
+    expect(programsE2e).toContain("Excluir programa");
+    expect(programsE2e).not.toContain("waitForTimeout");
+    expect(programsE2e).not.toContain("body.innerText.trim().length");
+    expect(programsE2e).not.toContain("Campo de busca não encontrado");
+    expect(programsE2e).not.toContain("Botão de criar programa não encontrado");
+  });
+
   it("keeps legacy Education debug E2E outside certification", () => {
     for (const path of [
       "tests/e2e/education/education-debug.spec.ts",
