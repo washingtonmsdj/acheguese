@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { motion } from 'framer-motion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen,
@@ -174,6 +175,20 @@ export function EducationDetailPage() {
     businessDataId: profile?.business_data_id ?? undefined,
   });
   const { createPublic: createLead } = useEducationLeads(profile?.id ?? undefined);
+  const trackedProgramViews = useRef(new Set<string>());
+  const trackedEventViews = useRef(new Set<string>());
+
+  const trackProgramImpression = (programId: string) => {
+    if (trackedProgramViews.current.has(programId)) return;
+    trackedProgramViews.current.add(programId);
+    trackProgramView(programId);
+  };
+
+  const trackEventImpression = (eventId: string) => {
+    if (trackedEventViews.current.has(eventId)) return;
+    trackedEventViews.current.add(eventId);
+    trackEventView(eventId);
+  };
 
   const handleLeadSubmit = async (formData: LeadFormData) => {
     if (!profile?.id) return;
@@ -573,7 +588,7 @@ export function EducationDetailPage() {
                       key={program.id}
                       program={program}
                       showPrice={profile.school_type !== 'public'}
-                      onClick={() => trackProgramView(program.id)}
+                      onVisible={() => trackProgramImpression(program.id)}
                     />
                   ))}
                 </div>
@@ -663,10 +678,11 @@ export function EducationDetailPage() {
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {events.map((event) => (
-                    <article
+                    <motion.article
                       key={event.id}
-                      className="cursor-pointer rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm transition hover:border-territory-brand/30 hover:shadow-md"
-                      onClick={() => trackEventView(event.id)}
+                      viewport={{ once: true, amount: 0.5 }}
+                      onViewportEnter={() => trackEventImpression(event.id)}
+                      className="rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge className="border-territory-border bg-territory-raised text-[11px] text-territory-ink">
@@ -696,7 +712,7 @@ export function EducationDetailPage() {
                           {event.location}
                         </div>
                       )}
-                    </article>
+                    </motion.article>
                   ))}
                 </div>
               )}
