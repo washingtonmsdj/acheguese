@@ -773,6 +773,22 @@ describe("Education module hardening ratchet", () => {
     expect(mutations).toContain("Nivel de suporte invalido");
   });
 
+  it("keeps Education niche keys owned by core", () => {
+    const nicheTypes = read(
+      "src/modules/business/education/niches/types.ts",
+    );
+    const nicheKey = read("src/core/education/nicheKey.ts");
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
+
+    expect(nicheKey).toContain("EDUCATION_NICHE_KEYS_CANONICAL");
+    expect(nicheTypes).toContain("isEducationNicheKeyCore(key)");
+    expect(nicheTypes).not.toContain("const EDUCATION_NICHE_KEYS");
+    expect(mutations).toContain("isEducationNicheKey(payload.niche_key)");
+    expect(mutations).not.toContain("const validNiches");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
