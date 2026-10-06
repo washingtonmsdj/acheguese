@@ -89,6 +89,13 @@ describe("active AppLayout route boundary", () => {
       "buildAppModulePath(APP_MODULE_SLUGS.nearby)",
       "buildAppModulePath(APP_MODULE_SLUGS.search)",
       "path={`/${TERRITORIAL_STATIC.searchAlias}`}",
+      "path={ACCOUNT_PATHS.home}",
+      "path={ACCOUNT_PATHS.preferences}",
+      "path={ACCOUNT_PATHS.privacy}",
+      "path={ACCOUNT_PATHS.profileSettings}",
+      "path={ACCOUNT_PATHS.security}",
+      "path={ACCOUNT_PATHS.addresses}",
+      "path={ACCOUNT_PATHS.notifications}",
     ]) {
       expect(appLayout).toContain(ownedRoute);
     }
@@ -100,12 +107,17 @@ describe("active AppLayout route boundary", () => {
       'path="/perto-de-mim"',
       'path="/busca"',
       'path="/buscar"',
+      'path="/conta"',
+      'path="/conta/preferencias"',
+      'path="/conta/privacidade"',
+      'path="/conta/perfil/configuracoes"',
+      'path="/conta/seguranca"',
+      'path="/conta/enderecos"',
     ]) {
       expect(appLayout).not.toContain(duplicatedLiteral);
     }
 
     expect(appLayout).toContain('path="/notificacoes"');
-    expect(appLayout).toContain("path={ACCOUNT_PATHS.notifications}");
     expect(appLayout).toContain("messagingRoutes.inbox()");
     expect(appLayout).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
