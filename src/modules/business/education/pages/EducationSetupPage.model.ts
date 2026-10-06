@@ -204,14 +204,7 @@ export function normalizeSchoolNetworkForType(
   return schoolNetwork;
 }
 
-export const EDUCATION_LEVEL_OPTIONS: { key: EducationLevel; label: string }[] = [
-  { key: 'early_childhood', label: 'Educação Infantil' },
-  { key: 'elementary_1', label: 'Ensino Fundamental - Anos Iniciais' },
-  { key: 'elementary_2', label: 'Ensino Fundamental - Anos Finais' },
-  { key: 'youth_adult_education', label: 'EJA - Educacao de Jovens e Adultos' },
-  { key: 'high_school', label: 'Ensino Médio' },
-  { key: 'technical', label: 'Técnico' },
-];
+export { EDUCATION_LEVEL_OPTIONS } from '../constants';
 
 export const SHIFT_OPTIONS: { key: SchoolShift; label: string }[] = [
   { key: 'morning', label: 'Manhã' },
