@@ -665,6 +665,24 @@ durante a estabilização atual do data plane.
 - Criação de evento pela UI continua deliberadamente pendente de entitlement
   pago real; a fixture FREE não tem plano adulterado para produzir um verde.
 
+## Tranche adicional — certificação paga read-only
+
+- Foi adicionada uma suite autenticada separada para Analytics/Planos que só
+  roda quando `E2E_EDUCATION_PAID_BUSINESS_ID` aponta para um Business
+  realmente pago e owned pela fixture autenticada dedicada.
+- A suite não cria assinatura, não altera plano, não usa service-role no
+  navegador e não pode transformar ausência de fixture paga em skip verde.
+- Analytics prova acesso autorizado e exportação CSV pelo navegador; o arquivo
+  baixado precisa conter as seções canônicas de leads, programas e eventos.
+- Planos prova que o plano atual está ativo e resolvido pelo catálogo canônico,
+  sem fallback **Plano não identificado no catálogo**.
+- Checkout não é iniciado por esta prova read-only; comportamento real de
+  checkout continua exigindo uma certificação controlada separada.
+- O workflow ganhou o opt-in manual `run_education_paid_lifecycle`, desligado
+  por padrão e sem impacto em pull requests/pushes normais.
+- Ratchet arquitetural protege o caráter read-only, o requisito de Business
+  pago explícito e a ausência de service-role.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
