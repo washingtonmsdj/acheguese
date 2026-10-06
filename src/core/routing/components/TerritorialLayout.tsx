@@ -73,7 +73,7 @@ function resolveModuleKeysFromSlug(
 
 function PartialCoverageBanner({ activeCount, totalCount }: { activeCount: number; totalCount: number }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 text-xs text-amber-700 dark:text-amber-400">
+    <div className="flex items-center gap-2 border-b border-warning/20 bg-warning/10 px-4 py-2 text-xs text-warning">
       <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
       <span>
         Cobertura parcial: {activeCount} de {totalCount} bairros disponíveis neste módulo.
@@ -132,8 +132,8 @@ function TerritoryStatusMessage({
 }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-8 text-center">
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-full p-4">
-        <AlertTriangle className="h-12 w-12 text-amber-600 dark:text-amber-500" />
+      <div className="rounded-full border border-warning/20 bg-warning/10 p-4">
+        <AlertTriangle className="h-12 w-12 text-warning" />
       </div>
       <div className="space-y-2 max-w-md">
         <p className="text-xl font-semibold text-foreground">{title}</p>
