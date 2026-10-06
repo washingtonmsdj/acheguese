@@ -381,6 +381,26 @@ describe("Education module hardening ratchet", () => {
     expect(mutations).toContain("payload.summary != null");
   });
 
+  it("keeps Education lead editable fields owned by the core contract", () => {
+    const contracts = read("src/core/education/contracts.ts");
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+    const hook = read(
+      "src/modules/business/education/hooks/useEducationLeads.ts",
+    );
+
+    expect(contracts).toContain("export type EducationLeadAdminPatch");
+    expect(contracts).not.toContain("| 'status'");
+    expect(contracts).not.toContain("| 'created_at'");
+    expect(contracts).not.toContain("| 'updated_at'");
+    expect(contracts).not.toContain("| 'education_profile_id'");
+    expect(contracts).not.toContain("| 'first_contact_at'");
+    expect(contracts).not.toContain("| 'lost_reason'");
+    expect(service).toContain("payload: EducationLeadAdminPatch");
+    expect(hook).toContain("payload: EducationLeadAdminPatch");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
