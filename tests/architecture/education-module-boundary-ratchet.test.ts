@@ -447,16 +447,27 @@ describe("Education module hardening ratchet", () => {
     expect(mutations).toContain("payload.summary != null");
   });
 
-  it("keeps Education lead editable fields owned by the core contract", () => {
+  it("keeps Education admin write patches owned by core contracts", () => {
     const contracts = read("src/core/education/contracts.ts");
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
     const service = read(
       "src/modules/business/education/services/EducationService.ts",
     );
-    const hook = read(
+    const leadsHook = read(
       "src/modules/business/education/hooks/useEducationLeads.ts",
+    );
+    const programsHook = read(
+      "src/modules/business/education/hooks/useEducationPrograms.ts",
+    );
+    const eventsHook = read(
+      "src/modules/business/education/hooks/useEducationEvents.ts",
     );
 
     expect(contracts).toContain("export type EducationLeadAdminPatch");
+    expect(contracts).toContain("export type EducationProgramAdminPatch");
+    expect(contracts).toContain("export type EducationEventAdminPatch");
     expect(contracts).not.toContain("| 'status'");
     expect(contracts).not.toContain("| 'created_at'");
     expect(contracts).not.toContain("| 'updated_at'");
@@ -464,7 +475,13 @@ describe("Education module hardening ratchet", () => {
     expect(contracts).not.toContain("| 'first_contact_at'");
     expect(contracts).not.toContain("| 'lost_reason'");
     expect(service).toContain("payload: EducationLeadAdminPatch");
-    expect(hook).toContain("payload: EducationLeadAdminPatch");
+    expect(service).toContain("payload: EducationProgramAdminPatch");
+    expect(service).toContain("payload: EducationEventAdminPatch");
+    expect(leadsHook).toContain("payload: EducationLeadAdminPatch");
+    expect(programsHook).toContain("payload: EducationProgramAdminPatch");
+    expect(eventsHook).toContain("payload: EducationEventAdminPatch");
+    expect(mutations).toContain("IMMUTABLE_EDUCATION_ENTITY_FIELDS");
+    expect(mutations).toContain("hasForbiddenMutationKey");
   });
 
   it("keeps EducationService focused on orchestration", () => {
