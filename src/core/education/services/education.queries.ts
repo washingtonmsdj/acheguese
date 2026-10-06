@@ -804,7 +804,7 @@ export async function countEventsByType(
  */
 export async function getLeadPipelineMetrics(
   profileId: string,
-): Promise<{ conversionRate: number; avgDaysToFirstContact: number }> {
+): Promise<{ conversionRate: number; avgDaysToFirstContact: number | null }> {
   requireAnalyticsProfileId(profileId);
 
   const { data, error } = await supabase
@@ -838,7 +838,7 @@ export async function getLeadPipelineMetrics(
           firstContactDays.reduce((sum, days) => sum + days, 0) /
             firstContactDays.length,
         )
-      : 0;
+      : null;
 
   return { conversionRate, avgDaysToFirstContact };
 }
