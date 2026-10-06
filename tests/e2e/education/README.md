@@ -93,16 +93,17 @@ esperado deixar de funcionar.
    - criação pela UI continua dependente de entitlement pago real e não é simulada alterando plano fora do contrato.
 
 5. **Analytics**
-   - erro de assinatura versus acesso negado;
-   - dados vazios reais;
-   - `null` para métricas não mensuráveis;
-   - exportação CSV autorizada e conteúdo fiel.
+   - query canônica prova erro de leitura separado de dados reais e `null` quando não há amostra de primeiro contato;
+   - CSV prova célula vazia para métricas não mensuráveis e neutralização de fórmulas;
+   - source/ratchets distinguem falha de assinatura, acesso negado e dados carregados;
+   - ainda falta E2E de release com entitlement pago real para acesso autorizado, empty state real e download CSV pelo navegador.
 
 6. **Planos/Billing**
-   - plano atual vindo do status canônico;
-   - owner versus gestor;
-   - checkout único;
-   - falha de catálogo/assinatura.
+   - teste dedicado prova que falhas de identidade Business, assinatura e catálogo não viram plano Free sintético;
+   - ausência de policy no catálogo usa baseline somente do mesmo tier canônico;
+   - plano atual e entitlements continuam vindo das autoridades de Billing;
+   - ainda faltam E2E de release para owner versus gestor, checkout único e falhas reais de catálogo/checkout;
+   - nenhum desses cenários deve ser produzido adulterando plano/entitlement da fixture.
 
 7. **Explorer e Detail**
    - só podem ser reativados depois do lifecycle;
