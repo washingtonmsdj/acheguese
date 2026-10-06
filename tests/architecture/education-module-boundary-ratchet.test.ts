@@ -270,10 +270,12 @@ describe("Education module hardening ratchet", () => {
     expect(programs).toContain("program.price_from === 0");
     expect(programs).toContain("max-h-[90vh]");
     expect(programs).toContain("useReducedMotion");
+    expect(programs).toContain("prefersReducedMotion ? false : { opacity: 0, y: 20 }");
     expect(programs).toContain("enabled: Boolean(profile?.id)");
     expect(events).toContain("enabled: Boolean(profile?.id)");
     expect(events).toContain("max-h-[90vh]");
     expect(events).toContain("useReducedMotion");
+    expect(events).toContain("prefersReducedMotion ? false : { opacity: 0, y: 20 }");
     expect(events).toContain("SCHOOL_EVENT_TYPE_LABELS");
     expect(events).toContain("SCHOOL_EVENT_TYPE_OPTIONS");
     expect(events).not.toContain("const SCHOOL_EVENT_TYPE_LABELS:");
