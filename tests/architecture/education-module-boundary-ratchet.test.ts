@@ -755,6 +755,24 @@ describe("Education module hardening ratchet", () => {
     );
   });
 
+  it("keeps Education support levels owned by core", () => {
+    const constants = read(
+      "src/modules/business/education/constants/index.ts",
+    );
+    const supportLevel = read("src/core/education/supportLevel.ts");
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
+
+    expect(supportLevel).toContain("EDUCATION_SUPPORT_LEVELS_CANONICAL");
+    expect(constants).toContain(
+      "EDUCATION_SUPPORT_LEVELS = EDUCATION_SUPPORT_LEVELS_CANONICAL",
+    );
+    expect(constants).not.toContain("FULL_ENABLED: 'full_enabled'");
+    expect(mutations).toContain("isEducationSupportLevel");
+    expect(mutations).toContain("Nivel de suporte invalido");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
