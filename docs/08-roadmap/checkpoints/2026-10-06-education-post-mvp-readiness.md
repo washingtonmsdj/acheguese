@@ -337,6 +337,9 @@ durante a estabilização atual do data plane.
   duplicavam regras já pertencentes ao core/write model.
 - O facade volta a orquestrar operações sem manter uma segunda autoridade de
   validação.
+- `createProgram` e `createEvent` também deixaram de repetir prechecks locais de
+  nome/título; os respectivos write models canônicos são a autoridade dessas
+  regras.
 - Ratchet arquitetural impede o retorno desses quatro validadores locais.
 - O bloco legado `AUXILIARY / UTILITY METHODS` do `EducationService` foi
   removido integralmente: labels, formatação, resumo síncrono de pipeline,
