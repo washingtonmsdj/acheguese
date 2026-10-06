@@ -421,6 +421,21 @@ durante a estabilização atual do data plane.
   do facade. Os dois testes que existiam apenas para essa API auto-referencial
   também foram removidos.
 
+## Tranche adicional — E2E operacional de Eventos
+
+- `createTestEvent` foi alinhado ao schema canônico
+  (`starts_at`/`ends_at`); o helper legado ainda usava
+  `start_date`/`end_date`.
+- Nova suite `education-events.spec.ts` usa fixture técnica com provenance
+  controlada apenas para semear dados e autentica a UI como owner/admin real.
+- A suite prova renderização, edição público/privado, aviso consultivo de
+  sobreposição e exclusão com confirmação.
+- A criação pela UI permanece fora dessa prova porque a fixture atual é FREE;
+  nenhum teste altera plano artificialmente para fazer a capability parecer
+  liberada.
+- Esta suite é smoke operacional dependente de ambiente e **não** substitui o
+  E2E autenticado de release com entitlement pago real.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
