@@ -15,6 +15,10 @@ import {
   getEducationLeadLostReasonValidationError,
 } from '../leadPipelineValidation';
 import {
+  getEducationLeadContactValidationError,
+  normalizeEducationLeadAdminPatch,
+} from '../leadValidation';
+import {
   getEducationProfileSetupValidationErrors,
   resolveEducationSourceProvenance,
 } from '../profileValidation';
@@ -539,6 +543,13 @@ export async function deleteEducationProgram(
 export async function createEducationLead(
   payload: Omit<EducationLead, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationLead>> {
+  const contactValidationError = getEducationLeadContactValidationError(payload);
+  if (contactValidationError) {
+    return { data: null, error: new Error(contactValidationError) };
+  }
+
+  Object.assign(payload, normalizeEducationLeadAdminPatch(payload));
+
   const nicheKey = await getProfileNicheKey(payload.education_profile_id);
   if (!nicheKey) {
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
@@ -616,7 +627,42 @@ export async function updateEducationLead(
     };
   }
 
-  return persistEducationLeadUpdate(id, payload);
+  const contactValidationError = getEducationLeadContactValidationError(payload);
+  if (contactValidationError) {
+    return { data: null, error: new Error(contactValidationError) };
+  }
+
+  const normalizedPayload = normalizeEducationLeadAdminPatch(payload);
+
+  if (normalizedPayload.desired_grade !== undefined) {
+    const { data: currentLead, error: currentLeadError } = await supabase
+      .from('education_leads')
+      .select('education_profile_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (currentLeadError || !currentLead?.education_profile_id) {
+      return {
+        data: null,
+        error: new Error(currentLeadError?.message ?? 'Lead nao encontrado'),
+      };
+    }
+
+    const nicheKey = await getProfileNicheKey(currentLead.education_profile_id);
+    if (!nicheKey) {
+      return { data: null, error: new Error('Perfil de educacao nao encontrado') };
+    }
+
+    if (isSchoolNiche(nicheKey) && normalizedPayload.desired_grade) {
+      const official = isOfficialStageLabel(normalizedPayload.desired_grade, nicheKey);
+      const custom = validateCustomStageText(normalizedPayload.desired_grade);
+      if (!official && !custom) {
+        return { data: null, error: new Error('Serie/etapa desejada invalida') };
+      }
+    }
+  }
+
+  return persistEducationLeadUpdate(id, normalizedPayload);
 }
 
 /**
