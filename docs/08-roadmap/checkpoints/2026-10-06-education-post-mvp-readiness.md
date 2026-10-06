@@ -717,6 +717,16 @@ durante a estabilização atual do data plane.
 - Teste unitário e ratchet arquitetural protegem o mapeamento e a ausência de
   uma tabela paralela no frontend.
 
+## Tranche adicional — nível de suporte canônico
+
+- Os valores de `support_level` passaram para
+  `src/core/education/supportLevel.ts`, alinhados ao constraint existente do
+  banco: `full_enabled`, `basic_enabled`, `beta` e `planned`.
+- A constante pública do módulo apenas reutiliza o owner do core; não mantém
+  uma segunda lista local.
+- O write model rejeita níveis fora do contrato antes de persistir.
+- Teste unitário e ratchet arquitetural protegem o ownership e os valores.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
