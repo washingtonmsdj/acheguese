@@ -19,24 +19,23 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
   const [expanded, setExpanded] = useState(false);
   const { score, items, completed, total } = useProfileCompleteness(profile);
 
-  // Perfil 100% completo - nao exibe o widget
   if (score === 100) return null;
 
   const pending = items.filter((item) => !item.done);
 
   const scoreColor =
     score >= 80
-      ? "text-green-600 dark:text-green-400"
+      ? "text-success"
       : score >= 50
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-red-500 dark:text-red-400";
+        ? "text-warning"
+        : "text-destructive";
 
   const barColor =
     score >= 80
-      ? "[&>div]:bg-green-500"
+      ? "[&>div]:bg-success"
       : score >= 50
-        ? "[&>div]:bg-amber-500"
-        : "[&>div]:bg-red-500";
+        ? "[&>div]:bg-warning"
+        : "[&>div]:bg-destructive";
 
   return (
     <motion.div
@@ -44,7 +43,6 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
       animate={{ opacity: 1, y: 0 }}
       className="space-y-2 rounded-lg border bg-card px-3 py-2.5 sm:space-y-3 sm:rounded-xl sm:px-4 sm:py-3"
     >
-      {/* Cabecalho */}
       <div
         className="flex cursor-pointer select-none items-center justify-between"
         onClick={() => setExpanded((value) => !value)}
@@ -73,7 +71,6 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
         />
       </div>
 
-      {/* Barra de progresso */}
       <div className="space-y-0.5 sm:space-y-1">
         <Progress value={score} className={cn("h-1.5 sm:h-2", barColor)} />
         <p className="text-[10px] text-muted-foreground sm:text-[11px]">
@@ -81,7 +78,6 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
         </p>
       </div>
 
-      {/* Lista expansivel de pendencias */}
       <AnimatePresence initial={false}>
         {expanded ? (
           <motion.div
@@ -103,7 +99,7 @@ export function ProfileCompletenessWidget({ profile }: ProfileCompletenessWidget
                 >
                   <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
                     {item.done ? (
-                      <CheckCircle2 className="h-3 w-3 shrink-0 text-green-500 sm:h-3.5 sm:w-3.5" />
+                      <CheckCircle2 className="h-3 w-3 shrink-0 text-success sm:h-3.5 sm:w-3.5" />
                     ) : (
                       <Circle className="h-3 w-3 shrink-0 text-muted-foreground sm:h-3.5 sm:w-3.5" />
                     )}
