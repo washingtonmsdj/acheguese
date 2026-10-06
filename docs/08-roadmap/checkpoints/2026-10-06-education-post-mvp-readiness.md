@@ -369,6 +369,19 @@ durante a estabilização atual do data plane.
 - O write model interno de Lead permanece disponível para operações autorizadas
   do domínio, mas não é exposto pela UI pública como atalho.
 
+## Tranche adicional — fronteiras de escrita administrativas
+
+- Programas e Eventos ganharam patches canônicos no `src/core/education`,
+  equivalentes ao contrato restrito já usado por Leads.
+- Patches administrativos não expõem `id`, `education_profile_id`,
+  `created_at` ou `updated_at`.
+- A guarda runtime do write model bloqueia campos imutáveis mesmo se um caller
+  tentar contornar a tipagem por cast.
+- A guarda de Lead também cobre `source_channel`, `first_contact_at` e
+  `lost_reason`, além de `status`.
+- Facade e hooks usam os mesmos tipos canônicos; o cast amplo de Programas foi
+  removido.
+
 ## Tranche adicional — ownership de validação
 
 - Validadores legados de perfil, programa, lead e evento foram removidos do
