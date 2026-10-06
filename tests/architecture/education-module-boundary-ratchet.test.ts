@@ -159,6 +159,10 @@ describe("Education module hardening ratchet", () => {
     expect(subscription).not.toContain("maxEvents");
     expect(subscription).not.toContain("planType");
     expect(subscription).not.toContain("resolvePlanType");
+    expect(subscription).not.toContain("async canUsePremiumPublicPage(");
+    expect(subscription).not.toContain("async canUseShortPremiumLink(");
+    expect(subscription).not.toContain("async canUseAnalytics(");
+    expect(subscription).not.toContain("async canExportData(");
     expect(subscriptionHook).not.toContain("calculateLimits");
     expect(subscriptionHook).toContain("const planTier = status?.planTier;");
     expect(subscriptionHook).toContain("isActive: status?.isActive");
