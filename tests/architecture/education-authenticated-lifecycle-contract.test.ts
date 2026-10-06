@@ -29,6 +29,12 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(spec).toContain('getByTestId("education-school-inep")');
     expect(spec).toContain('getByTestId("education-school-source-url")');
     expect(spec).toContain('getByTestId("education-age-min").fill("0")');
+    expect(spec).toContain("checkValidity()");
+    expect(spec).toContain("A fonte pública deve ser uma URL http ou https válida.");
+    expect(spec).toContain("A idade mínima não pode ser maior que a idade máxima.");
+    expect(spec).toContain("invalidSourceProfile");
+    expect(spec).toContain("invalidAgeProfile");
+    expect(spec).toContain(".maybeSingle()");
     expect(spec).toContain("expect(inactiveProgram?.available_slots).toBe(0)");
     expect(spec).toContain("expect(Number(inactiveProgram?.price_from)).toBe(0)");
     expect(spec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
