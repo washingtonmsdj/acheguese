@@ -78,8 +78,9 @@ describe("mobile account concept composition", () => {
     expect(iconCss).toContain(".auth-concept-icon--chevron-right");
     expect(iconCss).toContain(".auth-concept-icon--shield-filled");
     expect(iconCss).toContain("clip-path:polygon(50% 0,94% 17%,88% 68%,50% 100%,12% 68%,6% 17%)");
-    expect(iconCss).toContain("border-left:2px solid #fff");
-    expect(iconCss).toContain("border-bottom:2px solid #fff");
+    expect(iconCss).toContain("border-left:2px solid hsl(var(--territory-on-image))");
+    expect(iconCss).toContain("border-bottom:2px solid hsl(var(--territory-on-image))");
+    expect(iconCss).not.toContain("#fff");
   });
 
   it("keeps the Google provider artwork on one shared owner", () => {
