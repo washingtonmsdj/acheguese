@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Send,
   User,
@@ -19,6 +19,8 @@ import { Textarea } from '@/shared/components/ui/textarea';
 import { cn } from '@/shared/utils/cn';
 import { useLabels } from '../hooks/useEducationLabels';
 import type { EducationNicheKey, SchoolShift } from '@/core/education';
+import { onlyDigits } from '@/shared/utils/contactLinks';
+import { EDUCATION_PROGRAM_SHIFT_OPTIONS } from '../constants';
 import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '@/core/education/constants/schoolStageOptions';
 
 export interface EducationLeadFormProps {
@@ -40,13 +42,6 @@ export interface LeadFormData {
   desiredShift?: SchoolShift;
 }
 
-const SHIFT_OPTIONS: { value: SchoolShift; label: string }[] = [
-  { value: 'morning', label: 'Manhã' },
-  { value: 'afternoon', label: 'Tarde' },
-  { value: 'evening', label: 'Noite' },
-  { value: 'full_day', label: 'Integral' },
-];
-
 const FIELD_CLASS_NAME =
   'border-territory-border bg-territory-surface text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-brand focus-visible:ring-offset-territory-canvas';
 
@@ -58,6 +53,7 @@ export function EducationLeadForm({
   onSubmit,
   className,
 }: EducationLeadFormProps) {
+  const prefersReducedMotion = useReducedMotion();
   const labels = useLabels((nicheKey ?? undefined) as EducationNicheKey | undefined);
   const isSchoolContext = nicheKey === 'regular_school' || nicheKey === 'daycare';
   const stageOptions = getSchoolStageOptions((nicheKey ?? undefined) as EducationNicheKey | undefined);
@@ -99,6 +95,14 @@ export function EducationLeadForm({
     e.preventDefault();
     if (!formData.fullName || !formData.email || !formData.phone) return;
 
+    const phoneDigits = onlyDigits(formData.phone);
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      setSubmissionError(
+        'Informe um telefone válido com DDD e, quando necessário, código do país.',
+      );
+      return;
+    }
+
     setSubmissionError(null);
     setIsLoading(true);
     try {
@@ -116,8 +120,9 @@ export function EducationLeadForm({
   if (isSubmitted) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className={cn(
           'rounded-xl border border-territory-success/25 bg-territory-success/10 p-6 text-center text-territory-ink',
           className,
@@ -129,7 +134,12 @@ export function EducationLeadForm({
         <h3 className="mb-1 font-heading font-semibold text-territory-ink">
           Interesse registrado!
         </h3>
-        <p className="text-sm text-territory-success">Entraremos em contato em breve.</p>
+        <p className="text-sm text-territory-success">
+          Sua solicitação foi registrada para análise pela instituição.
+        </p>
+        <p className="mt-1 text-xs text-territory-muted">
+          Este envio não confirma matrícula, vaga ou prazo de resposta.
+        </p>
       </motion.div>
     );
   }
@@ -137,8 +147,9 @@ export function EducationLeadForm({
   return (
     <motion.form
       id="education-lead-form"
-      initial={{ opacity: 0, y: 10 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       onSubmit={handleSubmit}
       aria-describedby="education-lead-privacy-note"
       className={cn('space-y-4 text-territory-ink', className)}
@@ -198,6 +209,7 @@ export function EducationLeadForm({
               onChange={handleChange}
               placeholder="Seu nome"
               autoComplete="name"
+              minLength={2}
               maxLength={120}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
@@ -247,7 +259,7 @@ export function EducationLeadForm({
               placeholder="(71) 99999-9999"
               autoComplete="tel"
               inputMode="tel"
-              maxLength={30}
+              maxLength={32}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
@@ -353,7 +365,7 @@ export function EducationLeadForm({
                 className={cn(SELECT_CLASS_NAME, 'mt-1')}
               >
                 <option value="">Selecione...</option>
-                {SHIFT_OPTIONS.map((opt) => (
+                {EDUCATION_PROGRAM_SHIFT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -397,7 +409,7 @@ export function EducationLeadForm({
         disabled={isLoading}
       >
         {isLoading ? (
-          <span className="animate-pulse">Enviando...</span>
+          <span className="motion-safe:animate-pulse">Enviando...</span>
         ) : (
           <>
             <Send className="mr-2 h-4 w-4" aria-hidden="true" />
