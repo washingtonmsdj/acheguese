@@ -173,6 +173,8 @@ describe("education visual SSOT", () => {
     expect(presentation).toContain("useReducedMotion");
     expect(presentation).toContain("program.price_from === 0");
     expect(presentation).toContain("'Gratuito'");
+    expect(presentation).toContain("program.available_slots === 0");
+    expect(presentation).toContain("'Sem vagas'");
     expect(presentation).toContain("getEducationProgramModalityLabel");
     expect(presentation).toContain("getEducationProgramShiftLabel");
     expect(presentation).toContain("program.current_enrollment != null");
