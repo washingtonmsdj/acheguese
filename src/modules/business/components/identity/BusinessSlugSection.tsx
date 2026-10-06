@@ -137,7 +137,7 @@ export function BusinessSlugSection({
       )}
 
       {shouldShowSafetyWarning && (
-        <p className="text-xs text-amber-700">
+        <p className="text-xs text-warning">
           Este link está distante do nome informado. Para reduzir risco de fraude, use um link mais próximo do
           nome oficial.
         </p>
