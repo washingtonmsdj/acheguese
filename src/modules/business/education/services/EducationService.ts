@@ -467,7 +467,11 @@ export const EducationService = {
       }
 
       // Track conversion when lead is enrolled
-      if (data && toStatus === 'enrolled') {
+      if (
+        data &&
+        toStatus === 'enrolled' &&
+        previousStatus !== 'enrolled'
+      ) {
         const profile = await queries.getEducationProfileById(data.education_profile_id);
         if (profile) {
           await trackLeadConverted(
