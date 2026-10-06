@@ -190,6 +190,20 @@ durante a estabilização atual do data plane.
   interface quando redução de movimento está ativa.
 - Ratchet arquitetural protege as superfícies administrativas restantes.
 
+## Tranche adicional — formulário público de interesse
+
+- O formulário público respeita `prefers-reduced-motion` tanto no estado de
+  edição quanto no sucesso.
+- Telefone é validado no cliente pelo mesmo intervalo aceito pelo broker
+  público (10 a 15 dígitos), reduzindo round-trips de erro sem deslocar a
+  autoridade final do RPC.
+- Turnos desejados reutilizam o owner compartilhado de labels da vertical.
+- O sucesso informa apenas que a solicitação foi registrada para análise e
+  explicita que isso não confirma matrícula, vaga ou prazo de resposta.
+- Respostas deduplicadas do broker (`created: false`) não disparam
+  `trackLeadSubmitted`, evitando inflar conversões com reenvios do mesmo lead.
+- Ratchet arquitetural protege essas semânticas e a minimização de dados.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
