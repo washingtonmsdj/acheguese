@@ -37,7 +37,6 @@ export function MapLayerControl({
   visibleLayers: externalVisible,
   className,
 }: MapLayerControlProps) {
-  // Estado interno — usado apenas quando não há controle externo
   const [internalVisible, setInternalVisible] = useState<Map<string, boolean>>(
     () => new Map((layerKeys as string[]).map((layerKey) => [layerKey, true])),
   );
@@ -65,15 +64,15 @@ export function MapLayerControl({
   return (
     <div
       className={cn(
-        'bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden',
+        'overflow-hidden rounded-xl border border-territory-border bg-territory-surface shadow-lg',
         className,
       )}
       role="group"
       aria-label="Camadas do mapa"
     >
-      <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-200 bg-gray-50">
-        <Layers className="h-4 w-4 text-gray-600" />
-        <span className="text-sm font-semibold text-gray-700">Camadas</span>
+      <div className="flex items-center gap-2 border-b border-territory-border bg-territory-raised px-3 py-2">
+        <Layers className="h-4 w-4 text-territory-muted" />
+        <span className="text-sm font-semibold text-territory-ink">Camadas</span>
       </div>
 
       <div className={cn('p-2', layout === 'horizontal' ? 'flex flex-row gap-1' : 'flex flex-col gap-1')}>
@@ -88,16 +87,16 @@ export function MapLayerControl({
               key={key}
               onClick={() => toggleLayer(key)}
               className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all',
+                'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-all',
                 isVisible
-                  ? 'bg-blue-50 text-gray-900 border border-blue-200'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700 border border-transparent',
+                  ? 'border-territory-brand/25 bg-territory-brand/10 text-territory-ink'
+                  : 'border-transparent text-territory-muted hover:bg-territory-raised hover:text-territory-ink',
               )}
               aria-pressed={isVisible}
               aria-label={`${isVisible ? 'Ocultar' : 'Mostrar'} ${cfg.label}`}
             >
               <span
-                className="w-3 h-3 rounded-full shrink-0 transition-opacity border border-white"
+                className="h-3 w-3 shrink-0 rounded-full border border-territory-on-image transition-opacity"
                 style={{ backgroundColor: cfg.color, opacity: isVisible ? 1 : 0.4 }}
               />
               <span className="whitespace-nowrap">{cfg.label}</span>
