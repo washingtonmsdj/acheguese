@@ -187,14 +187,16 @@ export function ProgramCard({
             </dd>
           </div>
         )}
-        {isSchoolProgram && program.max_capacity && (
+        {isSchoolProgram && program.max_capacity != null ? (
           <div className="rounded-lg bg-territory-raised px-3 py-2">
             <dt className="text-territory-muted">Capacidade</dt>
             <dd className="font-semibold text-territory-ink">
-              {program.current_enrollment ?? 0}/{program.max_capacity} alunos
+              {program.current_enrollment != null
+                ? `${program.current_enrollment}/${program.max_capacity} alunos`
+                : `${program.max_capacity} alunos`}
             </dd>
           </div>
-        )}
+        ) : null}
       </dl>
 
       {showPrice && program.price_from != null ? (
