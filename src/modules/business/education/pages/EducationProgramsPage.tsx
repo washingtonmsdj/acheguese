@@ -50,9 +50,12 @@ import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBan
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
   EDUCATION_PROGRAM_NAME_MAX_LENGTH,
+  getEducationProgramNameValidationError,
+  getEducationProgramNumericValidationError,
   type EducationLevel,
   type EducationProgram,
 } from '@/core/education';
@@ -121,6 +124,7 @@ export function EducationProgramsPage() {
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
+    enabled: Boolean(profile?.id),
   });
 
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
@@ -185,6 +189,13 @@ export function EducationProgramsPage() {
     };
   };
 
+  const getProgramFormValidationError = (name: string) =>
+    getEducationProgramNameValidationError(name) ??
+    getEducationProgramNumericValidationError({
+      availableSlots: formData.availableSlots,
+      priceFrom: isPublicSchool ? null : formData.priceFrom,
+    });
+
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -214,6 +225,16 @@ export function EducationProgramsPage() {
         toast({
           title: 'Campo obrigatório',
           description: 'Selecione ou informe a etapa/série.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const validationError = getProgramFormValidationError(stage.name);
+      if (validationError) {
+        toast({
+          title: 'Revise o programa',
+          description: validationError,
           variant: 'destructive',
         });
         return;
@@ -261,11 +282,21 @@ export function EducationProgramsPage() {
         return;
       }
 
+      const validationError = getProgramFormValidationError(stage.name);
+      if (validationError) {
+        toast({
+          title: 'Revise o programa',
+          description: validationError,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await update({
         programId: editingProgram.id,
         payload: {
-          name: isSchoolContext ? stage.name : formData.name,
-          grade: isSchoolContext ? stage.grade : formData.name,
+          name: stage.name,
+          grade: stage.grade,
           education_level: isSchoolContext ? stage.educationLevel ?? null : null,
           description: formData.description || null,
           age_group: formData.ageGroup || null,
@@ -394,6 +425,16 @@ export function EducationProgramsPage() {
         onRetry={async () => {
           await Promise.all([refetchProfile(), refetchPrograms()]);
         }}
+      />
+    );
+  }
+
+  if (!profile) {
+    return (
+      <EducationProfileRequiredState
+        businessId={businessId}
+        title="Configure Educação antes de gerenciar programas"
+        description="Não existe um perfil Education configurado para cadastrar programas nesta instituição."
       />
     );
   }
