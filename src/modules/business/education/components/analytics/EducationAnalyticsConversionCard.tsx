@@ -27,7 +27,7 @@ interface EducationAnalyticsConversionCardProps {
     lost: number;
   };
   conversionRate: number;
-  avgDaysToFirstContact: number;
+  avgDaysToFirstContact: number | null;
   isLoading?: boolean;
 }
 
@@ -82,14 +82,14 @@ export function EducationAnalyticsConversionCard({
       <Card className="border-territory-border bg-territory-surface text-territory-ink">
         <CardHeader>
           <CardTitle className="font-heading text-sm font-medium text-territory-muted">
-            Pipeline de Conversão
+            Distribuição do pipeline
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {[1, 2, 3, 4, 5].map((i) => (
             <div
               key={i}
-              className="h-8 animate-pulse rounded bg-territory-raised"
+              className="h-8 rounded bg-territory-raised motion-safe:animate-pulse"
               aria-hidden="true"
             />
           ))}
@@ -112,7 +112,9 @@ export function EducationAnalyticsConversionCard({
               {conversionRate}% conversão
             </span>
             <span className="text-territory-muted">
-              {avgDaysToFirstContact} dias até o 1º contato
+              {avgDaysToFirstContact == null
+                ? 'Sem contatos medidos'
+                : `${avgDaysToFirstContact} dias até o 1º contato`}
             </span>
           </div>
         </div>
