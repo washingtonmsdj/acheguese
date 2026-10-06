@@ -207,16 +207,17 @@ export function EducationExplorerPage() {
     return slugToLabel(effectiveCity);
   }, [effectiveCity, groupSlugOrDistrict, resolved]);
 
+  const routeTerritorySegment = district ?? groupSlugOrDistrict;
   const canonicalPath = EducationUrlService.buildListingUrl({
     state: effectiveState,
     city: effectiveCity,
-    district,
+    district: routeTerritorySegment,
   });
   const businessExplorerHref = buildModuleTerritoryUrlFromSegments(
     APP_MODULE_SLUGS.business,
     effectiveState,
     effectiveCity,
-    district ? [district] : [],
+    routeTerritorySegment ? [routeTerritorySegment] : [],
   );
 
   return (
