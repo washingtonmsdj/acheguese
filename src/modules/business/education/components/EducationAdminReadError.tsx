@@ -7,12 +7,49 @@ interface EducationAdminReadErrorProps {
   onRetry?: () => void | Promise<void>;
 }
 
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
+const AUTHORIZATION_HINTS = [
+  "permission denied",
+  "not authorized",
+  "unauthorized",
+  "forbidden",
+  "row-level security",
+  "rls",
+];
+
+const CONNECTIVITY_HINTS = [
+  "failed to fetch",
+  "network",
+  "networkerror",
+  "timeout",
+  "timed out",
+  "connection",
+];
+
+function normalizeErrorHint(error: unknown): string {
+  if (error instanceof Error) return error.message.toLowerCase();
+  if (typeof error === "string") return error.toLowerCase();
+  return "";
+}
+
+/**
+ * Converts infrastructure failures into a small, safe user-facing vocabulary.
+ *
+ * Never return the raw backend/Supabase error here: this component is rendered
+ * in authenticated product UI and must not expose SQL, policy or provider
+ * internals to the browser surface.
+ */
+export function getEducationAdminReadErrorMessage(error: unknown): string {
+  const hint = normalizeErrorHint(error);
+
+  if (AUTHORIZATION_HINTS.some((token) => hint.includes(token))) {
+    return "Sua conta não tem permissão para consultar estes dados de Educação.";
   }
 
-  return "A leitura dos dados falhou. Nenhum estado vazio artificial foi exibido.";
+  if (CONNECTIVITY_HINTS.some((token) => hint.includes(token))) {
+    return "Não foi possível conectar ao serviço de Educação. Verifique a conexão e tente novamente.";
+  }
+
+  return "Não foi possível carregar os dados de Educação agora. Tente novamente.";
 }
 
 export function EducationAdminReadError({
@@ -22,13 +59,17 @@ export function EducationAdminReadError({
 }: EducationAdminReadErrorProps) {
   return (
     <div className="container mx-auto max-w-3xl p-6 text-territory-ink">
-      <div className="rounded-xl border border-territory-error/25 bg-territory-error/10 p-6">
+      <div
+        role="alert"
+        aria-live="assertive"
+        className="rounded-xl border border-territory-error/25 bg-territory-error/10 p-6"
+      >
         <div className="mb-3 flex items-center gap-2 text-territory-error">
           <AlertCircle className="h-5 w-5" aria-hidden="true" />
           <h1 className="font-heading font-semibold">{title}</h1>
         </div>
         <p className="mb-4 text-sm text-territory-muted">
-          {errorMessage(error)}
+          {getEducationAdminReadErrorMessage(error)}
         </p>
         {onRetry ? (
           <Button
