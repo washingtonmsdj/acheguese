@@ -336,8 +336,8 @@ export async function createTestEvent(
   overrides?: Partial<{
     title: string;
     description: string;
-    start_date: string;
-    end_date: string;
+    starts_at: string;
+    ends_at: string;
     location: string;
     is_public: boolean;
   }>,
@@ -348,10 +348,10 @@ export async function createTestEvent(
   if (!profileId) return null;
 
   const startDate =
-    overrides?.start_date ??
+    overrides?.starts_at ??
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const endDate =
-    overrides?.end_date ??
+    overrides?.ends_at ??
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString();
 
   const { data: event, error } = await admin
@@ -360,8 +360,8 @@ export async function createTestEvent(
       education_profile_id: profileId,
       title: overrides?.title ?? 'Evento de Teste',
       description: overrides?.description ?? 'Descricao do evento de teste',
-      start_date: startDate,
-      end_date: endDate,
+      starts_at: startDate,
+      ends_at: endDate,
       location: overrides?.location ?? 'Auditorio Principal',
       is_public: overrides?.is_public ?? true,
     })
