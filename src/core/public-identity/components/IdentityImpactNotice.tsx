@@ -74,8 +74,8 @@ export function IdentityImpactNotice({
 
   const isInfo = config.variant === "info";
   const baseClass = isInfo
-    ? "border-blue-200 bg-blue-50 text-blue-800"
-    : "border-amber-200 bg-amber-50 text-amber-800";
+    ? "border-info/30 bg-info/10 text-info"
+    : "border-warning/30 bg-warning/10 text-warning";
   const Icon = isInfo ? Info : AlertTriangle;
 
   return (
