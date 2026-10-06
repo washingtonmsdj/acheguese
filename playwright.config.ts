@@ -33,6 +33,13 @@ const authenticatedEducationLifecycleIgnore =
     ? []
     : [/[\\/]education-lifecycle-authenticated\.spec\.ts$/];
 
+const authenticatedEducationPaidLifecycleEnabled =
+  process.env.E2E_EDUCATION_PAID_LIFECYCLE_AUTHENTICATED === "true";
+const authenticatedEducationPaidLifecycleIgnore =
+  authenticatedEducationPaidLifecycleEnabled
+    ? []
+    : [/[\\/]education-paid-lifecycle-authenticated\.spec\.ts$/];
+
 const mutatingE2EIgnore = mutationTargetSafety.safe
   ? []
   : [
@@ -61,6 +68,7 @@ export default defineConfig({
     /\.test\.ts$/,
     ...authenticatedBusinessLifecycleIgnore,
     ...authenticatedEducationLifecycleIgnore,
+    ...authenticatedEducationPaidLifecycleIgnore,
     ...mutatingE2EIgnore,
   ],
   fullyParallel: false,
