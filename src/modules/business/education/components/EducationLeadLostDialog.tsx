@@ -30,23 +30,31 @@ export function EducationLeadLostDialog({
   onConfirm,
 }: EducationLeadLostDialogProps) {
   const [reason, setReason] = useState('');
+  const [hasTouchedReason, setHasTouchedReason] = useState(false);
   const normalizedReason = reason.trim();
   const validationError = getEducationLeadLostReasonValidationError(reason);
   const canSubmit = validationError === null && !isSubmitting;
+  const shouldShowValidationError =
+    hasTouchedReason && validationError !== null;
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && isSubmitting) return;
-    if (!nextOpen) setReason('');
+    if (!nextOpen) {
+      setReason('');
+      setHasTouchedReason(false);
+    }
     onOpenChange(nextOpen);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setHasTouchedReason(true);
     if (!canSubmit) return;
 
     const moved = await onConfirm(normalizedReason);
     if (moved) {
       setReason('');
+      setHasTouchedReason(false);
       onOpenChange(false);
     }
   };
@@ -77,14 +85,28 @@ export function EducationLeadLostDialog({
               id="education-lost-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
+              onBlur={() => setHasTouchedReason(true)}
               maxLength={EDUCATION_LEAD_LOST_REASON_MAX_LENGTH}
               rows={4}
               required
+              aria-invalid={shouldShowValidationError}
+              aria-describedby="education-lost-reason-help education-lost-reason-error"
               placeholder="Ex: família optou por outra instituição"
             />
-            <p className="mt-1 text-xs leading-5 text-territory-muted">
+            <p
+              id="education-lost-reason-help"
+              className="mt-1 text-xs leading-5 text-territory-muted"
+            >
               Não inclua CPF, documentos, diagnóstico, prontuário ou outros
               dados sensíveis. Registre apenas o contexto operacional necessário.
+            </p>
+            <p
+              id="education-lost-reason-error"
+              role="status"
+              aria-live="polite"
+              className="mt-1 min-h-5 text-xs text-territory-error"
+            >
+              {shouldShowValidationError ? validationError : ''}
             </p>
           </div>
 
