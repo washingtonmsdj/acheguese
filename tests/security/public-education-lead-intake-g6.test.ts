@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -6,6 +6,16 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 describe("G6 public Education lead intake", () => {
+  it("keeps the public broker outside the authenticated -rpc namespace", () => {
+    expect(
+      existsSync(resolve(root, "supabase/functions/education-lead-intake/index.ts")),
+    ).toBe(true);
+    expect(
+      existsSync(resolve(root, "supabase/functions/education-lead-rpc/index.ts")),
+    ).toBe(false);
+  });
+
+
   it("keeps browser lead intake behind a server-owned Edge broker", () => {
     const service = read(
       "src/core/education/services/PublicEducationLeadService.ts",
