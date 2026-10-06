@@ -1,6 +1,35 @@
 export const EDUCATION_PROFILE_MIN_AGE = 0;
 export const EDUCATION_PROFILE_MAX_AGE = 120;
 
+export interface EducationSourceProvenance {
+  schoolSourceUrl: string | null;
+  schoolSourceUpdatedAt: string | null;
+}
+
+export function resolveEducationSourceProvenance(input: {
+  currentUrl?: string | null;
+  currentUpdatedAt?: string | null;
+  nextUrl?: string | null;
+  nowIso?: string;
+}): EducationSourceProvenance {
+  const currentUrl = input.currentUrl?.trim() || null;
+  const nextUrl = input.nextUrl?.trim() || null;
+
+  if (nextUrl === currentUrl) {
+    return {
+      schoolSourceUrl: nextUrl,
+      schoolSourceUpdatedAt: input.currentUpdatedAt ?? null,
+    };
+  }
+
+  return {
+    schoolSourceUrl: nextUrl,
+    schoolSourceUpdatedAt: nextUrl
+      ? input.nowIso ?? new Date().toISOString()
+      : null,
+  };
+}
+
 export interface EducationProfileSetupValidationInput {
   ageRangeMin?: number | null;
   ageRangeMax?: number | null;
