@@ -13,6 +13,7 @@ import { useEducationProfile } from '../hooks/useEducationProfile';
 import { EducationService } from '../services/EducationService';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import { getEducationProfileSetupValidationErrors } from '@/core/education';
 import type {
   EducationLevel,
   SchoolShift,
@@ -22,7 +23,6 @@ import type {
   SchoolAccessibilityFeatureKey,
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
-  getEducationProfileSetupValidationErrors,
 } from '@/core/education';
 import {
   INITIAL_EDUCATION_SETUP_FORM,
