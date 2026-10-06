@@ -6,7 +6,6 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlanTier } from '@/core/billing/types';
 import { EducationSubscriptionService } from '../services/education-subscription.service';
 import type { EducationSubscriptionStatus } from '../services/education-subscription.service';
 
@@ -41,17 +40,7 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
   const entitlements = status?.entitlements;
   const planTier = status?.planTier;
 
-  const permissions = {
-    canUsePremiumPublicPage: entitlements?.canUsePremiumPublicPage ?? false,
-    canUseShortPremiumLink: entitlements?.canUseShortPremiumLink ?? false,
-    canUseShortLink: entitlements?.canUseShortPremiumLink ?? false,
-    canUsePremiumSite: entitlements?.canUsePremiumPublicPage ?? false,
-    canUseAnalytics: entitlements?.canUseAnalytics ?? false,
-    canExportData: entitlements?.canExportData ?? false,
-    isPremium: planTier === PlanTier.DELIVERY,
-    isBasic: planTier === PlanTier.PRO,
-    isFree: planTier === PlanTier.FREE,
-  };
+
 
   return {
     status,
@@ -65,7 +54,6 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
     planType: status?.planType,
     isActive: status?.isActive,
     expiresAt: status?.expiresAt,
-    permissions,
     refresh: refreshMutation.mutate,
     isRefreshing: refreshMutation.isPending,
   };
