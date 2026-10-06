@@ -10,6 +10,7 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
+import { isEducationEventActive } from '../eventTemporalState';
 import type {
   EducationPublicProfile,
   EducationPublicRoute,
@@ -488,7 +489,15 @@ export async function listEducationEvents(
     educationQueryError('Error listing events', error);
   }
 
-  return (data ?? []) as EducationEvent[];
+  const events = (data ?? []) as EducationEvent[];
+  return options.active
+    ? events.filter((event) =>
+        isEducationEventActive({
+          startsAt: event.starts_at,
+          endsAt: event.ends_at,
+        }),
+      )
+    : events;
 }
 
 /**
