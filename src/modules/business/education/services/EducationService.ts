@@ -96,6 +96,7 @@ export interface EducationLeadsListOptions {
 export interface EducationEventsListOptions {
   isPublic?: boolean;
   upcoming?: boolean;
+  active?: boolean;
 }
 
 // ============================================================
@@ -532,7 +533,17 @@ export const EducationService = {
    * Lista proximos eventos publicos
    */
   async listUpcomingPublicEvents(profileId: string): Promise<EducationEvent[]> {
-    return queries.listEducationEvents(profileId, { isPublic: true, upcoming: true });
+    return queries.listEducationEvents(profileId, {
+      isPublic: true,
+      upcoming: true,
+    });
+  },
+
+  async listActivePublicEvents(profileId: string): Promise<EducationEvent[]> {
+    return queries.listEducationEvents(profileId, {
+      isPublic: true,
+      active: true,
+    });
   },
 
   async listEvents(
