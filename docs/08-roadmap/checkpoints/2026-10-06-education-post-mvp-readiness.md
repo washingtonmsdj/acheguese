@@ -137,6 +137,19 @@ durante a estabilização atual do data plane.
 - Modalidade ausente não é mais inventada como **Presencial**.
 - Ocupação conhecida com zero matrículas preserva o valor real `0%`.
 
+## Tranche adicional — Dashboard administrativo
+
+- Sem perfil Education, o Dashboard expõe somente **Configuração**; Programas,
+  Leads, Eventos e Analytics deixam de parecer utilizáveis antes do setup.
+- Status do perfil usa o componente canônico com labels pt-BR em vez de exibir
+  valores técnicos como `draft` ou `published`.
+- O cabeçalho não exibe `institution_type` bruto; usa o nome do nicho quando
+  conhecido.
+- Infraestrutura `null` é exibida como **Não informado**; somente arrays
+  realmente carregados são contados, preservando a diferença entre ausência de
+  informação e zero itens.
+- Animações do Dashboard respeitam `prefers-reduced-motion`.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
