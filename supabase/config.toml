@@ -249,7 +249,7 @@ verify_jwt = true
 [functions.business-network-rpc]
 verify_jwt = true
 
-[functions.education-lead-rpc]
+[functions.education-lead-intake]
 verify_jwt = false
 
 [functions.register-community-interest]
