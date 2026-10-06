@@ -16,6 +16,8 @@ describe("G6 Education lead pipeline write boundary", () => {
     expect(mutations).toContain("Omit<EducationLead, 'status'>");
     expect(mutations).toContain("Mudanca de status deve usar moveLeadToStatus");
     expect(mutations).toContain("persistEducationLeadUpdate");
+    expect(mutations).toContain("newStatus === 'contacted' && currentStatus !== 'contacted'");
+    expect(mutations).toContain("updatePayload.first_contact_at = new Date().toISOString()");
     expect(mutations).toContain("getEducationLeadLostReasonValidationError");
     expect(mutations).toContain("options.lostReason?.trim() ?? null");
     expect(mutations).toContain("previousStatus: currentStatus");
