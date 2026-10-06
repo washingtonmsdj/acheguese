@@ -282,7 +282,7 @@ export function EducationExplorerPage() {
                   <SheetTrigger asChild>
                     <Button
                       size="sm"
-                      className="rounded-xl bg-territory-brand text-territory-on-image hover:bg-territory-brand/90 lg:hidden"
+                      className="h-11 w-11 rounded-xl bg-territory-brand p-0 text-territory-on-image hover:bg-territory-brand/90 lg:hidden"
                       type="button"
                       aria-label="Abrir filtros"
                     >
