@@ -272,6 +272,16 @@ describe("Education module hardening ratchet", () => {
     expect(events).toContain("'Data inválida'");
   });
 
+  it("keeps zero program slots truthful in the Education admin", () => {
+    const programs = read(
+      "src/modules/business/education/pages/EducationProgramsPage.tsx",
+    );
+
+    expect(programs).toContain("program.available_slots === 0");
+    expect(programs).toContain("'Sem vagas'");
+    expect(programs).toContain("vagas disponíveis");
+  });
+
   it("keeps Education admin empty states distinct from missing profile setup", () => {
     const programs = read(
       "src/modules/business/education/pages/EducationProgramsPage.tsx",
