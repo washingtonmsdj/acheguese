@@ -450,12 +450,17 @@ Ainda são obrigatórios antes de qualquer despausa:
 ## Próximas etapas
 
 1. manter o PR em draft e Education em `paused`;
-2. continuar apenas hardening de frontend/contratos que não exija DDL nem
-   reativação de rotas;
-3. revisar Programs e Events para conflitos de agenda, limites e estados de
-   mutation que ainda não estejam cobertos pelo core;
-4. continuar a validação de Explorer e Detail em mobile, teclado e screen
-   reader;
+2. aceitar novo hardening de frontend/contratos apenas quando houver achado
+   concreto de CI, E2E, revisão ou teste manual; não repetir auditorias já
+   encerradas nesta branch;
+3. considerar concluída, em nível de código desta frente, a rodada de
+   Programs/Events sobre cronologia, estados de mutation e aviso consultivo de
+   sobreposição; qualquer regra obrigatória de conflito depende de um futuro
+   conceito de sala/recurso e não deve ser inventada na UI;
+4. considerar concluída, em nível de código desta frente, a rodada de
+   Explorer/Detail sobre teclado, screen reader, reduced-motion, nomes
+   acessíveis e alvos de toque; a prova de release continua dependendo de E2E
+   e validação no mesmo SHA candidato;
 5. após liberação do data plane, reconciliar schema/RLS/RPCs e rodar os probes
    remotos;
 6. executar o E2E autenticado de release e o deployment no mesmo SHA candidato;
