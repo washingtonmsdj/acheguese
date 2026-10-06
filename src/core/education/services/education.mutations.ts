@@ -26,6 +26,7 @@ import type {
   EducationProfile,
   EducationProgram,
   EducationLead,
+  EducationLeadAdminPatch,
   EducationEvent,
   EducationLeadStatus,
   EducationNicheKey,
@@ -520,10 +521,6 @@ function isAllowedLeadTransition(
   return fromIndex >= 0 && toIndex === fromIndex + 1;
 }
 
-type EducationLeadEditablePatch = Partial<
-  Omit<EducationLead, 'status'>
->;
-
 async function persistEducationLeadUpdate(
   id: string,
   payload: Partial<EducationLead>,
@@ -551,7 +548,7 @@ async function persistEducationLeadUpdate(
  */
 export async function updateEducationLead(
   id: string,
-  payload: EducationLeadEditablePatch,
+  payload: EducationLeadAdminPatch,
 ): Promise<MutationResult<EducationLead>> {
   if ('status' in (payload as Record<string, unknown>)) {
     return {
