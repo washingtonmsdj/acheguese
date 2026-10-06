@@ -21,9 +21,9 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - `RECOVERY-ROADMAP.md` supersedido removido da árvore viva;
 - especificações antigas de Feed/Post retiradas da UX ativa porque Community permanece pausado;
 - `docs/README.md` e `docs/08-roadmap/README.md` separam SSOT vivo, planos futuros e histórico;
-- **#305 — Supabase** encerrado após smoke autenticado real de produção com Conta + Business no candidato certificado, sem fallback de Auth/RLS;
-- **#445 — Vercel** encerrado após a identidade canônica de release comprovar runtime `exact/equivalent`; não foi necessário forçar deployment quando o fingerprint deployável permaneceu idêntico;
-- Account passou nos três viewports do smoke autenticado;
+- **#305 — Supabase** possui gate operacional explícito para sessão autenticada real, sem fallback de Auth/RLS;
+- **#445 — Vercel** possui gate canônico de identidade `exact/equivalent`; seu estado `open`/`closed` e as evidências registradas na issue são a autoridade de promoção;
+- Account passou nos três viewports do smoke autenticado do candidato certificado;
 - Business lifecycle e Business Messaging passaram no mesmo gate de release;
 - o build canônico confirmou `npm audit --omit=dev` com zero vulnerabilidades de produção.
 
@@ -43,7 +43,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - não apagar módulos pós-MVP apenas por estarem `paused`;
 
 3. preservar a prontidão do candidato:
-   - **não há blocker externo ativo conhecido** para o primeiro release;
+   - #305 e #445 devem estar fechados com evidência vigente no momento da promoção; qualquer um aberto bloqueia o release;
    - regressão de Supabase/Auth, release identity ou runtime reabre o gate correspondente;
    - todo delta deployável novo exige nova prova de Production `READY` ou equivalência de fingerprint aceita pela política canônica;
    - somente paths explicitamente classificados como skippable podem receber `Ignored Build Step`; documentos críticos de governança que participam do fingerprint, como `EXECUCAO_MAIN_ONLY.md`, exigem nova prova de release mesmo sem alterar bytes de aplicação;
@@ -55,7 +55,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - #447/#448 continuam condicionadas à autoridade OrdaX e não bloqueiam Business/Mapa/Nearby/Busca/Mensagens do Achegue-se;
    - #50/#118 continuam pós-MVP;
 
-5. promover o primeiro release somente mantendo verdes os owners ativos:
+5. promover o primeiro release somente mantendo verdes os owners ativos e os gates externos aplicáveis:
    - Business;
    - Mapa;
    - Perto de mim;
@@ -64,7 +64,8 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - Notificações;
    - Conta/Auth;
    - lifecycle/SSOT;
-   - security/build/release identity.
+   - security/build/release identity;
+   - #305/#445 fechados com prova vigente.
 
 ## Proibições
 
