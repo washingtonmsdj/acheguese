@@ -730,6 +730,25 @@ Ainda são obrigatórios antes de qualquer despausa:
 - validação final de responsividade/acessibilidade nas rotas que serão ativadas;
 - deployment do mesmo SHA que passar todos os gates de ativação.
 
+## Tranche adicional — anti-abuso do intake público de Leads
+
+- O formulário público de Education passou a usar o `TurnstileWidget`
+  compartilhado do produto, com action canônica `education-lead`.
+- O client envia `turnstileToken` e honeypot pelo
+  `PublicEducationLeadService`; o token não é persistido na tabela de Leads.
+- O broker `education-lead-rpc` valida origem permitida, rate limit, honeypot,
+  Turnstile action/hostname e IP confiável antes de consultar elegibilidade ou
+  gravar PII.
+- Falha de Turnstile/configuração é fail-closed e retorna mensagem pública
+  sanitizada; o formulário reseta token consumido após erro.
+- `verify_jwt=false` fica explícito porque o endpoint é intake público e
+  auto-protegido, no mesmo modelo dos brokers públicos já canônicos; escrita
+  continua exclusivamente server-side por service role.
+- `EDGE_FUNCTION_AUTH_POLICY.json` passou a ratchear origin, rate limit,
+  Turnstile, honeypot, token e service-role do broker.
+- O teste `public-education-lead-intake-g6.test.ts` protege o contrato
+  browser → service → Edge → policy para impedir novo drift.
+
 ## Próximas etapas
 
 1. manter o PR em draft e Education em `paused`;
