@@ -190,6 +190,71 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(eventsSpec).not.toContain("E2E_EDUCATION_OWNER_PASSWORD");
   });
 
+  it("keeps paid Education certification explicit, read-only, and opt-in", () => {
+    const spec = readFileSync(
+      join(ROOT, "tests/e2e/education-paid-lifecycle-authenticated.spec.ts"),
+      "utf8",
+    );
+    const runner = readFileSync(
+      join(
+        ROOT,
+        "tools/release/run-education-paid-lifecycle-authenticated.mjs",
+      ),
+      "utf8",
+    );
+    const config = readFileSync(join(ROOT, "playwright.config.ts"), "utf8");
+    const packageJson = readFileSync(join(ROOT, "package.json"), "utf8");
+    const workflow = readFileSync(
+      join(ROOT, ".github/workflows/ssot-tests.yml"),
+      "utf8",
+    );
+
+    expect(spec).toContain("E2E_EDUCATION_PAID_BUSINESS_ID");
+    expect(spec).toContain("No synthetic plan or entitlement fallback is allowed");
+    expect(spec).toContain("E2E_AUTH_FIXTURE_MARKER");
+    expect(spec).toContain('eq("role", "owner")');
+    expect(spec).toContain('getByRole("button", { name: "Exportar CSV" })');
+    expect(spec).toContain("download.suggestedFilename()");
+    expect(spec).toContain("Plano não identificado no catálogo");
+    expect(spec).not.toContain(".insert(");
+    expect(spec).not.toContain(".update(");
+    expect(spec).not.toContain(".delete(");
+    expect(spec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+
+    expect(runner).toContain("E2E_EDUCATION_PAID_BUSINESS_ID");
+    expect(runner).toContain(
+      'E2E_EDUCATION_PAID_LIFECYCLE_AUTHENTICATED: "true"',
+    );
+    expect(runner).toContain(
+      '"tests/e2e/education-paid-lifecycle-authenticated.spec.ts"',
+    );
+    expect(runner).toContain('"--retries=0"');
+    expect(runner).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+
+    expect(config).toContain(
+      'process.env.E2E_EDUCATION_PAID_LIFECYCLE_AUTHENTICATED === "true"',
+    );
+    expect(config).toContain(
+      "education-paid-lifecycle-authenticated\\.spec\\.ts",
+    );
+
+    expect(packageJson).toContain(
+      '"test:e2e:education-paid-lifecycle-authenticated": "node tools/release/run-education-paid-lifecycle-authenticated.mjs"',
+    );
+
+    expect(workflow).toContain("run_education_paid_lifecycle:");
+    expect(workflow).toContain("E2E_EDUCATION_PAID_BUSINESS_ID");
+    expect(workflow).toContain(
+      "Run authenticated Education paid read-only E2E",
+    );
+    expect(workflow).toContain(
+      "inputs.run_education_paid_lifecycle",
+    );
+    expect(workflow).toContain(
+      "npm run test:e2e:education-paid-lifecycle-authenticated",
+    );
+  });
+
   it("keeps the public Education surface paused during authenticated certification", () => {
     const launchScope = readFileSync(
       join(ROOT, "src/app/config/launchScope.ts"),
