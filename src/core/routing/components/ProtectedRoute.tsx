@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 
+import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 import { PrivacySettingsService } from "@/core/privacy/services/PrivacySettingsService";
 import { useSessionContext } from "@/core/session";
 
@@ -11,6 +12,7 @@ export interface ProtectedRouteProps {
 }
 
 const PRIVACY_ACCOUNT_PATH = "/conta/privacidade";
+const MESSAGING_INBOX_PATH = messagingRoutes.inbox();
 const PRIVACY_ACCESS_GATE_RETRIES = 1;
 const RESTRICTED_DELETION_STATUSES = new Set([
   "scheduled",
@@ -19,18 +21,26 @@ const RESTRICTED_DELETION_STATUSES = new Set([
   "completed",
 ]);
 
-function AccessLoading({ label }: { label: string }) {
+function AccessLoading({
+  label,
+  ownsMainLandmark = false,
+}: {
+  label: string;
+  ownsMainLandmark?: boolean;
+}) {
+  const LoadingElement = ownsMainLandmark ? "main" : "div";
+
   return (
-    <div
+    <LoadingElement
+      id={ownsMainLandmark ? "main-content" : undefined}
       className="flex min-h-[60vh] items-center justify-center px-4"
-      role="status"
-      aria-live="polite"
+      tabIndex={ownsMainLandmark ? -1 : undefined}
     >
-      <div className="space-y-3 text-center">
+      <div role="status" aria-live="polite" className="space-y-3 text-center">
         <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         <p className="text-sm text-muted-foreground">{label}</p>
       </div>
-    </div>
+    </LoadingElement>
   );
 }
 
@@ -54,6 +64,9 @@ export function ProtectedRoute({
   const location = useLocation();
   const redirectPath = `${location.pathname}${location.search}${location.hash}`;
   const isPrivacySurface = location.pathname === PRIVACY_ACCOUNT_PATH;
+  const protectedRouteOwnsMainLandmark =
+    location.pathname === MESSAGING_INBOX_PATH ||
+    location.pathname.startsWith(`${MESSAGING_INBOX_PATH}/`);
 
   const deletionStatusQuery = useQuery({
     queryKey: ["deletion-status", user?.id],
@@ -65,7 +78,12 @@ export function ProtectedRoute({
   });
 
   if (isLoading) {
-    return <AccessLoading label={loadingLabel} />;
+    return (
+      <AccessLoading
+        label={loadingLabel}
+        ownsMainLandmark={protectedRouteOwnsMainLandmark}
+      />
+    );
   }
 
   if (!user) {
@@ -83,7 +101,12 @@ export function ProtectedRoute({
   }
 
   if (deletionStatusQuery.isPending || deletionStatusQuery.isFetching) {
-    return <AccessLoading label={loadingLabel} />;
+    return (
+      <AccessLoading
+        label={loadingLabel}
+        ownsMainLandmark={protectedRouteOwnsMainLandmark}
+      />
+    );
   }
 
   if (deletionStatusQuery.isError) {
