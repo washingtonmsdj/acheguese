@@ -22,6 +22,7 @@ export interface UseEducationAnalyticsOptions {
   profileId?: string;
   enabled?: boolean;
   nicheKey?: string | null; // Para gerar métricas específicas do nicho
+  enrollmentOpen?: boolean | null;
 }
 
 // ============================================================
@@ -29,7 +30,13 @@ export interface UseEducationAnalyticsOptions {
 // ============================================================
 
 export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
-  const { businessId, profileId, enabled = true, nicheKey } = options;
+  const {
+    businessId,
+    profileId,
+    enabled = true,
+    nicheKey,
+    enrollmentOpen = null,
+  } = options;
   // Todos os consumidores usam a mesma query canônica de assinatura.
   // Um erro de leitura nunca deve ser tratado como plano gratuito ou upgrade.
   const subscription = useEducationSubscription({
@@ -44,7 +51,14 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
   );
 
   const analyticsQuery = useQuery({
-    queryKey: ['education', 'analytics', businessId, profileId, nicheKey],
+    queryKey: [
+      'education',
+      'analytics',
+      businessId,
+      profileId,
+      nicheKey,
+      enrollmentOpen,
+    ],
     queryFn: async (): Promise<EducationAnalyticsData> => {
       if (!profileId) {
         throw new Error('Perfil Education obrigatório para consultar analytics');
@@ -117,9 +131,6 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
           const mostRequestedShift =
             byShift.length > 0 ? byShift[0].shift : null;
 
-          // Fetch profile para enrollment_open
-          const profile = await educationQueries.getEducationProfileById(profileId);
-
           return {
             ...baseData,
             leads: {
@@ -140,7 +151,7 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
               enrollmentFairCount: eventCounts.enrollmentFairCount,
             },
             schoolMetrics: {
-              enrollmentWindowOpen: profile?.enrollment_open ?? null,
+              enrollmentWindowOpen: enrollmentOpen,
               mostRequestedGrade,
               mostRequestedShift,
             },
