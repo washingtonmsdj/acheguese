@@ -101,6 +101,12 @@ durante a estabilização atual do data plane.
   antes da conversão para UTC.
 - Testes unitários cobrem datas locais impossíveis e o ratchet arquitetural
   protege os novos estados administrativos e o bloqueio de dupla transição.
+- Programas passou a distinguir valor numérico ausente de valor zero:
+  `null` significa não informado, `0` continua sendo um valor válido para
+  vagas e preço. Programa com preço zero é apresentado como **Gratuito**.
+- Diálogos de Programas e Eventos ganharam altura máxima, rolagem interna e
+  ações empilhadas no mobile para evitar campos ou botões inacessíveis em telas
+  pequenas.
 
 ### Gates ainda pendentes
 
