@@ -157,20 +157,40 @@ export function normalizeEducationLeadAdminPatch(
     normalized.phone = normalizedText(normalized.phone);
   }
 
-  for (const key of [
-    'child_name',
-    'interest_note',
-    'guardian_name',
-    'student_name',
-    'desired_grade',
-  ] as const) {
-    if (normalized[key] !== undefined) {
-      const value = normalized[key];
-      normalized[key] =
-        value == null || normalizedText(value) === ''
-          ? null
-          : normalizedText(value);
-    }
+  if (normalized.child_name !== undefined) {
+    normalized.child_name =
+      normalized.child_name == null ||
+      normalizedText(normalized.child_name) === ''
+        ? null
+        : normalizedText(normalized.child_name);
+  }
+  if (normalized.interest_note !== undefined) {
+    normalized.interest_note =
+      normalized.interest_note == null ||
+      normalizedText(normalized.interest_note) === ''
+        ? null
+        : normalizedText(normalized.interest_note);
+  }
+  if (normalized.guardian_name !== undefined) {
+    normalized.guardian_name =
+      normalized.guardian_name == null ||
+      normalizedText(normalized.guardian_name) === ''
+        ? null
+        : normalizedText(normalized.guardian_name);
+  }
+  if (normalized.student_name !== undefined) {
+    normalized.student_name =
+      normalized.student_name == null ||
+      normalizedText(normalized.student_name) === ''
+        ? null
+        : normalizedText(normalized.student_name);
+  }
+  if (normalized.desired_grade !== undefined) {
+    normalized.desired_grade =
+      normalized.desired_grade == null ||
+      normalizedText(normalized.desired_grade) === ''
+        ? null
+        : normalizedText(normalized.desired_grade);
   }
 
   return normalized;
