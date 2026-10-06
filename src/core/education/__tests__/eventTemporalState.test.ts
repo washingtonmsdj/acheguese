@@ -45,15 +45,13 @@ describe('Education event temporal state', () => {
     ).toBe('past');
   });
 
-  it('does not normalize invalid chronology into a valid state', () => {
-    expect(
-      getEducationEventTemporalState(
-        {
-          startsAt: '2026-10-06T16:00:00.000Z',
-          endsAt: '2026-10-06T15:00:00.000Z',
-        },
-        now,
-      ),
-    ).toBe('invalid');
+  it('does not normalize invalid chronology into a valid or active state', () => {
+    const event = {
+      startsAt: '2026-10-06T16:00:00.000Z',
+      endsAt: '2026-10-06T15:00:00.000Z',
+    };
+
+    expect(getEducationEventTemporalState(event, now)).toBe('invalid');
+    expect(isEducationEventActive(event, now)).toBe(false);
   });
 });
