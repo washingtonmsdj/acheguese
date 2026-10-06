@@ -4,6 +4,7 @@
  * Constantes e enums do módulo Education.
  */
 
+import { EDUCATION_SUPPORT_LEVELS_CANONICAL } from '@/core/education';
 import type {
   EducationLeadStatus,
   EducationLevel,
@@ -98,12 +99,7 @@ export function getEducationLevelLabel(
   return option?.label ?? null;
 }
 
-export const EDUCATION_SUPPORT_LEVELS = {
-  FULL_ENABLED: 'full_enabled',
-  BASIC_ENABLED: 'basic_enabled',
-  BETA: 'beta',
-  PLANNED: 'planned',
-} as const;
+export const EDUCATION_SUPPORT_LEVELS = EDUCATION_SUPPORT_LEVELS_CANONICAL;
 
 export const UI_LIMITS = {
   MAX_PROGRAMS_PER_PROFILE: 50,
