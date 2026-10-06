@@ -22,16 +22,20 @@ describe("public catalog mount boundary", () => {
 
   it("mounts catalog rewrites before the SPA catch-all", () => {
     const config = JSON.parse(read("vercel.json")) as {
+      redirects?: Array<{ source?: string; destination?: string; permanent?: boolean }>;
       rewrites?: Array<{ source?: string; destination?: string }>;
     };
+    expect(config.redirects).toEqual([
+      {
+        source: "/catalogo",
+        destination: "/catalogo/",
+        permanent: true,
+      },
+    ]);
     expect(config.rewrites).toEqual([
       {
         source: "/catalogo-api/:path*",
         destination: "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev/:path*",
-      },
-      {
-        source: "/catalogo",
-        destination: "https://washingtonmsdj.github.io/catalogo/",
       },
       {
         source: "/catalogo/:path*",
