@@ -789,6 +789,26 @@ describe("Education module hardening ratchet", () => {
     expect(mutations).not.toContain("const validNiches");
   });
 
+  it("keeps Education school identity owned by core", () => {
+    const setupModel = read(
+      "src/modules/business/education/pages/EducationSetupPage.model.ts",
+    );
+    const schoolIdentity = read("src/core/education/schoolIdentity.ts");
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
+
+    expect(schoolIdentity).toContain("EDUCATION_SCHOOL_TYPES_CANONICAL");
+    expect(schoolIdentity).toContain("EDUCATION_SCHOOL_NETWORKS_CANONICAL");
+    expect(setupModel).toContain("isEducationSchoolNetworkCompatible");
+    expect(setupModel).toContain("normalizeEducationSchoolNetwork");
+    expect(mutations).toContain("getEducationSchoolIdentityPatchError");
+    expect(mutations).toContain("school_type,school_network");
+    expect(mutations).toContain(
+      "Rede administrativa incompativel com o tipo de escola",
+    );
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
