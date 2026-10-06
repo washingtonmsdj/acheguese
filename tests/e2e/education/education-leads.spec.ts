@@ -1,8 +1,11 @@
 /**
  * E2E Tests - Education Module: Leads Management
  *
- * Testa o fluxo completo de gestão de leads (pipeline).
- * Usa token injection para autenticação Supabase.
+ * Suite legada de smoke para gestão de leads.
+ *
+ * Não constitui certificação completa do pipeline: parte dos casos valida
+ * apenas carregamento/conteúdo genérico e alguns recursos atuais não possuem
+ * assertiva E2E forte nesta suite. Usa token injection para autenticação.
  */
 
 import { test, expect } from '@playwright/test';
