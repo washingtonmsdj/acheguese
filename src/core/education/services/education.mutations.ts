@@ -10,6 +10,7 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getEducationEventValidationError } from '../eventValidation';
+import { getEducationProfileSetupValidationErrors } from '../profileValidation';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
   getEducationProgramNameValidationError,
@@ -106,6 +107,14 @@ async function getProfileNicheKey(profileId: string): Promise<EducationNicheKey 
 function validateProfilePayload(payload: Partial<EducationProfile>): ValidationError[] {
   const errors: ValidationError[] = [];
 
+  const setupErrors = getEducationProfileSetupValidationErrors({
+    ageRangeMin: payload.age_range_min,
+    ageRangeMax: payload.age_range_max,
+    schoolInepCode: payload.school_inep_code,
+  });
+  errors.push(...setupErrors);
+
+
   if (payload.whatsapp_number !== undefined && payload.whatsapp_number.length > 20) {
     errors.push({ field: 'whatsapp_number', message: 'Maximo 20 caracteres' });
   }
@@ -155,6 +164,7 @@ function handleValidationErrors(errors: ValidationError[]): Error {
 export async function createEducationProfile(
   payload: Omit<EducationProfile, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationProfile>> {
+  payload.school_inep_code = payload.school_inep_code?.trim() || null;
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
     return { data: null, error: handleValidationErrors(errors) };
@@ -204,6 +214,9 @@ export async function updateEducationProfile(
   id: string,
   payload: Partial<EducationProfile>,
 ): Promise<MutationResult<EducationProfile>> {
+  if (payload.school_inep_code !== undefined) {
+    payload.school_inep_code = payload.school_inep_code?.trim() || null;
+  }
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
     return { data: null, error: handleValidationErrors(errors) };
