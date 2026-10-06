@@ -58,9 +58,13 @@ import {
 import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS,
+  EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH,
   EDUCATION_PROGRAM_NAME_MAX_LENGTH,
+  getEducationProgramCurriculumValidationError,
   getEducationProgramNameValidationError,
   getEducationProgramNumericValidationError,
+  normalizeEducationProgramCurriculumTopics,
   type EducationLevel,
   type EducationProgram,
 } from '@/core/education';
@@ -74,13 +78,8 @@ const selectClassName =
   'h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none transition-colors focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20';
 
 function parseCurriculumTopics(value: string): string[] {
-  return Array.from(
-    new Set(
-      value
-        .split(',')
-        .map((topic) => topic.trim().replace(/\s+/g, ' '))
-        .filter(Boolean),
-    ),
+  return (
+    normalizeEducationProgramCurriculumTopics(value.split(',')) ?? []
   );
 }
 
@@ -182,12 +181,17 @@ export function EducationProgramsPage() {
     };
   };
 
-  const getProgramFormValidationError = (name: string) =>
-    getEducationProgramNameValidationError(name) ??
-    getEducationProgramNumericValidationError({
-      availableSlots: formData.availableSlots,
-      priceFrom: isPublicSchool ? null : formData.priceFrom,
-    });
+  const getProgramFormValidationError = (name: string) => {
+    const curriculumTopics = parseCurriculumTopics(formData.curriculumTopics);
+    return (
+      getEducationProgramNameValidationError(name) ??
+      getEducationProgramNumericValidationError({
+        availableSlots: formData.availableSlots,
+        priceFrom: isPublicSchool ? null : formData.priceFrom,
+      }) ??
+      getEducationProgramCurriculumValidationError(curriculumTopics)
+    );
+  };
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -850,7 +854,8 @@ export function EducationProgramsPage() {
                 rows={2}
               />
               <p className="mt-1 text-xs text-territory-muted">
-                Separe por vírgulas. Em cursos, use módulos ou conteúdos principais.
+                Separe por vírgulas. Máximo de {EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS}{' '}
+                itens e {EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH} caracteres por item.
               </p>
             </div>
 
