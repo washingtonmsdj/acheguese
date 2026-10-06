@@ -44,7 +44,8 @@ describe("G6 Education private read truthfulness", () => {
     const errorState = read(
       "src/modules/business/education/components/EducationAdminReadError.tsx",
     );
-    expect(errorState).toContain("Nenhum estado vazio artificial foi exibido.");
+    expect(errorState).toContain("getEducationAdminReadErrorMessage(error)");
+    expect(errorState).not.toContain("{error.message}");
     expect(errorState).toContain("Tentar novamente");
 
     for (const path of [
