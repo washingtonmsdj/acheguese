@@ -134,7 +134,6 @@ describe('EducationSubscriptionService', () => {
     expect(status).toEqual({
       isActive: true,
       planTier: PlanTier.PRO,
-      planType: 'basic',
       entitlements: {
         canUsePremiumPublicPage: true,
         canUseShortPremiumLink: false,
@@ -153,7 +152,6 @@ describe('EducationSubscriptionService', () => {
 
     expect(mocks.getAll).toHaveBeenCalledWith(PlanTier.PRO);
     expect(status.planTier).toBe(PlanTier.PRO);
-    expect(status.planType).toBe('basic');
     expect(status.entitlements).toEqual({
       canUsePremiumPublicPage: false,
       canUseShortPremiumLink: false,
@@ -172,7 +170,6 @@ describe('EducationSubscriptionService', () => {
       await EducationSubscriptionService.getSubscriptionStatus('profile-1');
 
     expect(status.planTier).toBe(PlanTier.FREE);
-    expect(status.planType).toBe('free');
     expect(mocks.getPublishedPlanEntitlements).toHaveBeenCalledWith(
       PlanTier.FREE,
     );
