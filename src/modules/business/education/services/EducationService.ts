@@ -339,11 +339,6 @@ export const EducationService = {
       curriculumTopics?: string[];
     },
   ): Promise<EducationProgram | null> {
-    if (!payload.name || payload.name.length < 3) {
-      logger.error('[EducationService] Program name too short');
-      return null;
-    }
-
     const { data, error } = await mutations.createEducationProgram({
       education_profile_id: profileId,
       name: payload.name,
@@ -562,11 +557,6 @@ export const EducationService = {
       schoolEventType?: SchoolEventType;
     },
   ): Promise<EducationEvent | null> {
-    if (!payload.title || payload.title.length < 3) {
-      logger.error('[EducationService] Event title too short');
-      return null;
-    }
-
     const { data, error } = await mutations.createEducationEvent({
       education_profile_id: profileId,
       title: payload.title,
