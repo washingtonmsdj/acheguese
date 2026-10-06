@@ -16,11 +16,14 @@ import { useEducationLeads } from '../hooks/useEducationLeads';
 import { useLeadPipeline } from '../hooks/useLeadPipeline';
 import { EducationPipelineView } from '../components/EducationPipelineView';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
 import { EducationUrlService } from '../services/EducationUrlService';
+import { useToast } from '@/shared/hooks/use-toast';
 import type { EducationLeadStatus } from '@/core/education';
 
 export function EducationLeadsPage() {
   const { businessId } = useParams<{ businessId: string }>();
+  const { toast } = useToast();
   const {
     data: profile,
     isLoading: isProfileLoading,
@@ -49,11 +52,20 @@ export function EducationLeadsPage() {
     isError: isPipelineError,
     error: pipelineError,
     refetch: refetchPipeline,
+    isMoving,
   } = useLeadPipeline(profileId);
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const handleMoveLead = async (leadId: string, toStatus: EducationLeadStatus) => {
-    await moveLead({ leadId, toStatus });
+    try {
+      await moveLead({ leadId, toStatus });
+    } catch {
+      toast({
+        title: 'Não foi possível atualizar o lead',
+        description: 'A etapa não foi alterada. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const isLoading = isProfileLoading || isLeadsLoading;
@@ -70,6 +82,16 @@ export function EducationLeadsPage() {
             refetchPipeline(),
           ]);
         }}
+      />
+    );
+  }
+
+  if (!isProfileLoading && !profile) {
+    return (
+      <EducationProfileRequiredState
+        businessId={businessId}
+        title="Configure Educação antes de gerenciar interessados"
+        description="Não existe um perfil Education configurado para acompanhar os interessados desta instituição."
       />
     );
   }
@@ -117,6 +139,7 @@ export function EducationLeadsPage() {
             leads={leads}
             onMoveLead={handleMoveLead}
             statusCounts={summary?.byStatus}
+            isMoving={isMoving}
           />
 
           {totalCount > pageSize && (
