@@ -16,13 +16,27 @@ describe("G6 public Education lead intake", () => {
     const detail = read(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
     );
+    const form = read(
+      "src/modules/business/education/components/EducationLeadForm.tsx",
+    );
+    const contract = read(
+      "src/core/education/publicLeadIntakeContract.ts",
+    );
 
     expect(service).toContain(
       'supabase.functions.invoke("education-lead-rpc"',
     );
     expect(service).not.toContain('.from("education_leads")');
     expect(hook).toContain("PublicEducationLeadService.create");
+    expect(hook).toContain("turnstileToken: string | null");
+    expect(hook).toContain("honeypot: string");
     expect(detail).toContain("createPublic");
+    expect(detail).toContain("turnstileToken: formData.turnstileToken");
+    expect(detail).toContain("honeypot: formData.honeypot");
+    expect(form).toContain("TurnstileWidget");
+    expect(form).toContain("education-lead-honeypot");
+    expect(form).toContain("EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT");
+    expect(contract).toContain('turnstileAction: "education-lead"');
   });
 
   it("keeps the PII table closed to anonymous direct inserts", () => {
@@ -39,9 +53,17 @@ describe("G6 public Education lead intake", () => {
     expect(edge).toContain("public_institution_lead_intake_disabled");
     expect(edge).toContain("findRecentDuplicate");
     expect(edge).toContain("enforceDailySubjectLimit");
+    expect(edge).toContain("isOriginAllowed");
+    expect(edge).toContain("verifyTurnstileToken");
+    expect(edge).toContain('getRequiredEnv("TURNSTILE_SECRET_KEY")');
+    expect(edge).toContain('getRequiredEnv("ALLOWED_ORIGINS")');
+    expect(edge).toContain('const TURNSTILE_ACTION = "education-lead"');
+    expect(edge).toContain("getTrustedClientIp");
+    expect(edge).toContain("body.honeypot");
+    expect(edge).toContain("body.turnstileToken");
   });
 
-  it("pins the lead broker to JWT verification and service-role governance", () => {
+  it("pins the public lead broker to explicit no-JWT anti-abuse governance", () => {
     const config = read("supabase/config.toml");
     const policy = read(
       "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
@@ -51,10 +73,12 @@ describe("G6 public Education lead intake", () => {
     expect(
       config.slice(config.indexOf("[functions.education-lead-rpc]"))
         .split("\n\n")[0],
-    ).toContain("verify_jwt = true");
+    ).toContain("verify_jwt = false");
     expect(policy).toContain('"education-lead-rpc"');
     expect(policy).toContain('"public-registration-broker"');
     expect(policy).toContain("requireLeadEligibleProfile");
+    expect(policy).toContain("verifyTurnstileToken\\s*\\(");
+    expect(policy).toContain("isOriginAllowed\\s*\\(");
   });
 
   it("does not log submitted PII in the broker audit payload", () => {
