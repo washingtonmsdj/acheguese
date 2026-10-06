@@ -11,19 +11,18 @@ import { IDENTITY_MESSAGES } from '@/core/public-identity/domain/messages';
 interface IdentityAvailabilityBadgeProps {
   result: AvailabilityResult | null;
   isChecking: boolean;
-  /** Exibir erro de infraestrutura */
   infraError?: boolean;
 }
 
 const STATUS_CONFIG = {
   available: {
     icon: CheckCircle,
-    className: 'text-green-600',
+    className: 'text-success',
     label: (r: AvailabilityResult) => r.message ?? IDENTITY_MESSAGES.available,
   },
   taken: {
     icon: XCircle,
-    className: 'text-red-500',
+    className: 'text-destructive',
     label: (r: AvailabilityResult) =>
       r.suggestion
         ? `${r.message ?? IDENTITY_MESSAGES.taken} - ${IDENTITY_MESSAGES.suggestion_prefix}: ${r.suggestion}`
@@ -31,7 +30,7 @@ const STATUS_CONFIG = {
   },
   reserved: {
     icon: AlertCircle,
-    className: 'text-amber-500',
+    className: 'text-warning',
     label: (r: AvailabilityResult) =>
       r.suggestion
         ? `${IDENTITY_MESSAGES.reserved} - ${IDENTITY_MESSAGES.suggestion_prefix}: ${r.suggestion}`
@@ -39,12 +38,12 @@ const STATUS_CONFIG = {
   },
   invalid: {
     icon: XCircle,
-    className: 'text-red-500',
+    className: 'text-destructive',
     label: (r: AvailabilityResult) => r.message ?? IDENTITY_MESSAGES.invalid_format,
   },
   cooldown_blocked: {
     icon: AlertCircle,
-    className: 'text-amber-500',
+    className: 'text-warning',
     label: () => IDENTITY_MESSAGES.cooldown_blocked,
   },
 } as const;
@@ -65,7 +64,7 @@ export function IdentityAvailabilityBadge({
 
   if (infraError) {
     return (
-      <span className="flex items-center gap-1 text-xs text-red-500" role="status" aria-live="polite">
+      <span className="flex items-center gap-1 text-xs text-destructive" role="status" aria-live="polite">
         <XCircle className="h-3 w-3" aria-hidden="true" />
         {IDENTITY_MESSAGES.infra_error}
       </span>
@@ -88,4 +87,3 @@ export function IdentityAvailabilityBadge({
     </span>
   );
 }
-
