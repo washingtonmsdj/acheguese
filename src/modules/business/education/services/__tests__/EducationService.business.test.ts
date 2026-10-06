@@ -159,6 +159,9 @@ describe('EducationService - Business Logic', () => {
       const proposalSteps = EducationService.getNextPipelineSteps('proposal_sent');
       expect(proposalSteps).toContain('enrolled');
       expect(proposalSteps).toContain('lost');
+
+      expect(EducationService.getNextPipelineSteps('enrolled')).toEqual([]);
+      expect(EducationService.getNextPipelineSteps('lost')).toEqual([]);
     });
 
     it('formatLeadContactInfo returns formatted string', () => {
