@@ -319,13 +319,17 @@ describe("Education module hardening ratchet", () => {
       "src/modules/business/education/components/analytics/EducationAnalyticsConversionCard.tsx",
     );
     expect(conversionCard).toContain("avgDaysToFirstContact");
-    expect(conversionCard).toContain("dias ate o 1º contato");
+    expect(conversionCard).toContain("Sem contatos medidos");
+    expect(conversionCard).toContain("Distribuição do pipeline");
+    expect(conversionCard).toContain("motion-safe:animate-pulse");
     expect(conversionCard).not.toContain("avgDaysToConversion");
 
     const queries = read(
       "src/core/education/services/education.queries.ts",
     );
     expect(queries).toContain("analyticsQueryError");
+    expect(queries).toContain(": null;");
+    expect(queries).not.toContain("firstContactDays.length > 0\n      ? Math.round(\n          firstContactDays.reduce((sum, days) => sum + days, 0) /\n            firstContactDays.length,\n        )\n      : 0;");
     expect(queries).not.toContain("getProfileViewMetrics");
     expect(queries).not.toContain("getConversionFunnel");
     expect(queries).not.toContain("getProgramViewMetrics");
