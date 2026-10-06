@@ -148,25 +148,25 @@ export function MapSearchControl({
   return (
     <div ref={containerRef} className={cn('relative flex flex-col gap-2', className)}>
       <div className="relative w-64 md:w-80">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" />
         <Input
           type="text"
           placeholder={placeholder}
           value={query}
           onChange={(e) => handleChange(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
-          className="pl-10 pr-10 bg-white border-gray-200 shadow-lg text-gray-900 placeholder:text-gray-400"
+          className="border-territory-border bg-territory-surface pl-10 pr-10 text-territory-ink shadow-lg placeholder:text-territory-muted"
           aria-label={placeholder}
           aria-expanded={open}
           aria-autocomplete="list"
           role="combobox"
         />
         {loading ? (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-territory-muted" />
         ) : query ? (
           <button
             onClick={handleClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-territory-muted transition-colors hover:text-territory-ink"
             aria-label="Limpar busca"
           >
             <X className="h-4 w-4" />
@@ -176,7 +176,7 @@ export function MapSearchControl({
 
       {open && results.length > 0 && (
         <div
-          className="absolute top-full mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-10"
+          className="absolute top-full z-10 mt-1 w-full overflow-hidden rounded-xl border border-territory-border bg-territory-surface shadow-xl"
           role="listbox"
           aria-label="Resultados da busca"
         >
@@ -184,13 +184,13 @@ export function MapSearchControl({
             <button
               key={r.id}
               onClick={() => handleSelect(r)}
-              className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-blue-50 transition-colors text-left"
+              className="flex w-full items-start gap-2.5 px-3 py-2.5 text-left transition-colors hover:bg-territory-brand/10"
               role="option"
             >
-              <MapPin className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-territory-brand" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{r.label}</p>
-                {r.sublabel && <p className="text-xs text-gray-500 truncate">{r.sublabel}</p>}
+                <p className="truncate text-sm font-medium text-territory-ink">{r.label}</p>
+                {r.sublabel && <p className="truncate text-xs text-territory-muted">{r.sublabel}</p>}
               </div>
             </button>
           ))}
@@ -198,9 +198,9 @@ export function MapSearchControl({
       )}
 
       {type === 'entity-filter' && query.trim() && (
-        <div className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-lg">
-          <span className="font-semibold text-gray-900">{filteredEntities.length}</span>
-          <span className="text-gray-600 ml-1">
+        <div className="rounded-lg border border-territory-border bg-territory-surface px-3 py-2 text-sm shadow-lg">
+          <span className="font-semibold text-territory-ink">{filteredEntities.length}</span>
+          <span className="ml-1 text-territory-muted">
             {filteredEntities.length === 1 ? 'resultado' : 'resultados'}
           </span>
         </div>
