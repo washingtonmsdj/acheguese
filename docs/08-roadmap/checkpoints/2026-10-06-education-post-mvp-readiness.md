@@ -136,6 +136,8 @@ durante a estabilização atual do data plane.
   legados.
 - No detalhe público, capacidade conhecida com matrícula desconhecida mostra
   apenas a capacidade; `null` não é inventado como **0 matriculados**.
+- `available_slots = 0` aparece como **Sem vagas** com estado visual de
+  atenção, em vez de um badge verde de disponibilidade.
 - Diálogos de Programas e Eventos ganharam altura máxima, rolagem interna e
   ações empilhadas no mobile para evitar campos ou botões inacessíveis em telas
   pequenas.
