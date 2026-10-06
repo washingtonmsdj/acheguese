@@ -245,6 +245,20 @@ describe("Education module hardening ratchet", () => {
     expect(leadsPage).toContain("As contagens por etapa consideram todo o pipeline.");
   });
 
+  it("keeps Education event schedule conflicts advisory and core-owned", () => {
+    const events = read(
+      "src/modules/business/education/pages/EducationEventsPage.tsx",
+    );
+    const validation = read("src/core/education/eventValidation.ts");
+
+    expect(validation).toContain("areEducationEventTimesOverlapping");
+    expect(events).toContain("areEducationEventTimesOverlapping");
+    expect(events).toContain("const scheduleConflicts = useMemo");
+    expect(events).toContain('role="status"');
+    expect(events).toContain("O aviso é consultivo");
+    expect(events).not.toContain("Conflito de agenda impede");
+  });
+
   it("keeps Education admin empty states distinct from missing profile setup", () => {
     const programs = read(
       "src/modules/business/education/pages/EducationProgramsPage.tsx",
