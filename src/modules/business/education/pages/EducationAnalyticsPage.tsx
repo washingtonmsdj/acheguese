@@ -11,8 +11,8 @@
  * - CSV é derivado apenas do read model carregado, sem segunda fonte.
  */
 
-import { useParams } from 'react-router-dom';
-import { BarChart3, Download } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft, BarChart3, Download } from 'lucide-react';
 import { useEducationAnalytics } from '../hooks';
 import {
   EducationAnalyticsOverviewCard,
@@ -27,6 +27,7 @@ import { useEducationProfile } from '../hooks/useEducationProfile';
 import { buildEducationAnalyticsCsv } from '@/core/education/services/educationAnalyticsExport';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
+import { EducationUrlService } from '../services/EducationUrlService';
 import type { UpgradeReason } from '../niches/components/EducationUpgradeBanner';
 
 function toUpgradeReason(reason: string): UpgradeReason {
@@ -56,6 +57,9 @@ function downloadCsv(content: string, businessId: string) {
 export function EducationAnalyticsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const { toast } = useToast();
+  const dashboardUrl = businessId
+    ? EducationUrlService.buildAdminDashboardUrl(businessId)
+    : null;
   const {
     data: profile,
     isLoading: isProfileLoading,
@@ -172,7 +176,16 @@ export function EducationAnalyticsPage() {
 
   if (!canAccessAnalytics || !canViewAnalytics.allowed) {
     return (
-      <div className="container mx-auto max-w-4xl p-6 text-territory-ink">
+      <div className="container mx-auto max-w-4xl p-4 text-territory-ink sm:p-6">
+        {dashboardUrl && (
+          <Link
+            to={dashboardUrl}
+            className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-medium text-territory-muted hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar para Educação
+          </Link>
+        )}
         <h1 className="mb-6 flex items-center gap-2 font-heading text-2xl font-bold">
           <BarChart3 className="h-6 w-6 text-territory-brand" aria-hidden="true" />
           Analytics
@@ -225,12 +238,26 @@ export function EducationAnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
+    <div className="container mx-auto max-w-6xl p-4 text-territory-ink sm:p-6">
+      {dashboardUrl && (
+        <Link
+          to={dashboardUrl}
+          className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-medium text-territory-muted hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Voltar para Educação
+        </Link>
+      )}
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="flex items-center gap-2 font-heading text-2xl font-bold">
+        <div>
+          <h1 className="flex items-center gap-2 font-heading text-2xl font-bold">
           <BarChart3 className="h-6 w-6 text-territory-brand" aria-hidden="true" />
           Analytics
-        </h1>
+          </h1>
+          <p className="mt-1 text-sm text-territory-muted">
+            Métricas calculadas a partir dos registros disponíveis da instituição.
+          </p>
+        </div>
 
         {canExportAnalytics ? (
           <Button
@@ -241,7 +268,7 @@ export function EducationAnalyticsPage() {
             className="gap-2 border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised hover:text-territory-ink"
           >
             <Download className="h-4 w-4" aria-hidden="true" />
-            Exportar Relatório
+            Exportar CSV
           </Button>
         ) : (
           <EducationUpgradeBanner
