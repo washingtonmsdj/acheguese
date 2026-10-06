@@ -94,6 +94,25 @@ describe('buildEducationAnalyticsCsv', () => {
     );
   });
 
+  it('keeps an unmeasurable program occupancy rate empty', () => {
+    const csv = buildEducationAnalyticsCsv({
+      ...fixture,
+      programs: {
+        ...fixture.programs,
+        avgEnrollmentRate: null,
+        totalVacancies: 0,
+        filledVacancies: 0,
+      },
+    });
+
+    expect(csv).toContain(
+      '"programas","taxa_ocupacao_media_pct","",""',
+    );
+    expect(csv).not.toContain(
+      '"programas","taxa_ocupacao_media_pct","","0"',
+    );
+  });
+
   it('neutralizes spreadsheet formulas in text dimensions', () => {
     const csv = buildEducationAnalyticsCsv(fixture);
     expect(csv).toContain('"serie","leads","\'=1+1","4"');
