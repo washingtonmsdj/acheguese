@@ -80,6 +80,7 @@ export function EducationLeadForm({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+    if (submissionError) setSubmissionError(null);
     setFormData((prev) => ({
       ...prev,
       [name]:
@@ -123,6 +124,8 @@ export function EducationLeadForm({
         initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={prefersReducedMotion ? { duration: 0 } : undefined}
+        role="status"
+        aria-live="polite"
         className={cn(
           'rounded-xl border border-territory-success/25 bg-territory-success/10 p-6 text-center text-territory-ink',
           className,
@@ -151,6 +154,7 @@ export function EducationLeadForm({
       animate={{ opacity: 1, y: 0 }}
       transition={prefersReducedMotion ? { duration: 0 } : undefined}
       onSubmit={handleSubmit}
+      aria-busy={isLoading}
       aria-describedby="education-lead-privacy-note"
       className={cn('space-y-4 text-territory-ink', className)}
     >
