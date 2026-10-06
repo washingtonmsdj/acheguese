@@ -55,6 +55,29 @@ test.describe('Education Leads Management — operational smoke', () => {
     ).toBeVisible();
   });
 
+  test('renders student age zero without treating it as missing', async ({
+    page,
+  }) => {
+    const name = 'Responsável E2E Idade Zero';
+    const childName = 'Aluno E2E Zero';
+    const leadId = await createTestLead(businessId, {
+      parent_name: name,
+      child_name: childName,
+      child_age: 0,
+    });
+    expect(leadId).toBeTruthy();
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+
+    const leadCard = page
+      .getByText(name, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(leadCard).toBeVisible({ timeout: 30_000 });
+    await expect(
+      leadCard.getByText(`Aluno: ${childName} (0 anos)`, { exact: true }),
+    ).toBeVisible();
+  });
+
   test('advances a new lead to contacted and records first contact', async ({
     page,
   }) => {
@@ -91,6 +114,48 @@ test.describe('Education Leads Management — operational smoke', () => {
     expect(error).toBeNull();
     expect(data?.status).toBe('contacted');
     expect(data?.first_contact_at).toBeTruthy();
+  });
+
+  test('shows mutation failure and preserves the lead status', async ({
+    page,
+  }) => {
+    const name = 'Responsável E2E Falha';
+    const leadId = await createTestLead(businessId, {
+      parent_name: name,
+      status: 'new',
+    });
+    expect(leadId).toBeTruthy();
+
+    await page.route('**/rest/v1/education_leads*', async (route) => {
+      if (route.request().method() === 'PATCH') {
+        await route.abort('failed');
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+    const leadCard = page
+      .getByText(name, { exact: true })
+      .locator('xpath=ancestor::article');
+
+    await leadCard
+      .getByRole('button', { name: /Avançar .* para Contactado/i })
+      .click();
+
+    await expect(
+      page.getByText('Não foi possível atualizar o lead', { exact: true }),
+    ).toBeVisible({ timeout: 20_000 });
+
+    const { data, error } = await admin!
+      .from('education_leads')
+      .select('status,first_contact_at')
+      .eq('id', leadId!)
+      .single();
+
+    expect(error).toBeNull();
+    expect(data?.status).toBe('new');
+    expect(data?.first_contact_at).toBeNull();
   });
 
   test('requires and persists an operational reason when marking a lead lost', async ({
@@ -173,6 +238,11 @@ test.describe('Education Leads Management — operational smoke', () => {
     await expect(page.getByText(/Exibindo 25 leads nesta página de 26 no total/))
       .toBeVisible();
 
+    const newStage = page
+      .getByRole('heading', { name: 'Novo' })
+      .locator('xpath=ancestor::section');
+    await expect(newStage.getByText('26', { exact: true })).toBeVisible();
+
     await page.getByRole('button', { name: 'Próxima' }).click();
 
     await expect(page.getByText('Página 2 de 2', { exact: true })).toBeVisible({
@@ -180,6 +250,7 @@ test.describe('Education Leads Management — operational smoke', () => {
     });
     await expect(page.getByText(/Exibindo 1 leads nesta página de 26 no total/))
       .toBeVisible();
+    await expect(newStage.getByText('26', { exact: true })).toBeVisible();
     await expect(
       page.getByText('Lead Paginação 01', { exact: true }),
     ).toBeVisible();
