@@ -4,6 +4,11 @@
 import { test, expect } from '@playwright/test';
 import { getOperationalEnv } from '../../helpers/operational-env';
 
+test.skip(
+  true,
+  'Diagnóstico legado: não conta como certificação E2E de Education.',
+);
+
 test('debug - check supabase connectivity', async ({ page }) => {
   const supabaseUrl = getOperationalEnv().supabaseUrl;
   console.log('Supabase URL:', supabaseUrl);
