@@ -610,6 +610,9 @@ durante a estabilização atual do data plane.
 - O lifecycle também prova semântica numérica real: vagas/preço `0` persistem
   como zero; ao limpar os campos, ambos persistem como `null`, sem colapsar
   valor ausente em zero.
+- Em viewport `390×844`, o diálogo de Programa mantém dimensões limitadas,
+  rolagem interna e ações **Criar Programa**/**Cancelar** alcançáveis no
+  viewport, sem persistir dados extras durante essa prova.
 - Compensação de falha parcial já é provada deterministicamente por
   `EducationService.setup-compensation.test.ts`: draft criado pela tentativa
   falha é removido, perfil preexistente é preservado e sucesso não dispara
