@@ -9,6 +9,7 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { getEducationEventValidationError } from '../eventValidation';
 import {
   getSchoolStageOptions,
   isSchoolNiche,
@@ -516,6 +517,19 @@ export async function moveLeadToStatus(
 export async function createEducationEvent(
   payload: Omit<EducationEvent, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationEvent>> {
+  const validationError = getEducationEventValidationError({
+    title: payload.title,
+    startsAt: payload.starts_at,
+    endsAt: payload.ends_at,
+    location: payload.location,
+  });
+  if (validationError) {
+    return { data: null, error: new Error(validationError) };
+  }
+
+  payload.title = payload.title.trim();
+  payload.location = payload.location?.trim() || null;
+
   const { data, error } = await supabase
     .from('education_events')
     .insert(payload)
@@ -537,6 +551,46 @@ export async function updateEducationEvent(
   id: string,
   payload: Partial<EducationEvent>,
 ): Promise<MutationResult<EducationEvent>> {
+  const shouldValidate =
+    payload.title !== undefined ||
+    payload.starts_at !== undefined ||
+    payload.ends_at !== undefined ||
+    payload.location !== undefined;
+
+  if (shouldValidate) {
+    const { data: currentEvent, error: currentEventError } = await supabase
+      .from('education_events')
+      .select('title, starts_at, ends_at, location')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (currentEventError || !currentEvent) {
+      return {
+        data: null,
+        error: new Error(currentEventError?.message ?? 'Evento nao encontrado'),
+      };
+    }
+
+    const validationError = getEducationEventValidationError({
+      title: payload.title ?? currentEvent.title,
+      startsAt: payload.starts_at ?? currentEvent.starts_at,
+      endsAt:
+        payload.ends_at === undefined ? currentEvent.ends_at : payload.ends_at,
+      location:
+        payload.location === undefined ? currentEvent.location : payload.location,
+    });
+    if (validationError) {
+      return { data: null, error: new Error(validationError) };
+    }
+
+    if (payload.title !== undefined) {
+      payload.title = payload.title.trim();
+    }
+    if (payload.location !== undefined) {
+      payload.location = payload.location?.trim() || null;
+    }
+  }
+
   const { data, error } = await supabase
     .from('education_events')
     .update(payload)
