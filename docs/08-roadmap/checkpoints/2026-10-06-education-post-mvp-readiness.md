@@ -182,6 +182,14 @@ durante a estabilização atual do data plane.
   model e o reutiliza no evento `education_lead_converted`; a métrica não
   registra mais `enrolled` como se fosse o status anterior.
 
+## Tranche adicional — Acessibilidade de movimento
+
+- Dashboard, Explorer, detalhe público, Programas, Eventos, Leads, Planos e
+  cabeçalho do Setup respeitam `prefers-reduced-motion`.
+- Animações de entrada deixam de ser requisito para compreender ou operar a
+  interface quando redução de movimento está ativa.
+- Ratchet arquitetural protege as superfícies administrativas restantes.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
