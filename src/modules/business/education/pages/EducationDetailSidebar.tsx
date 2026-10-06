@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2,
@@ -49,6 +50,7 @@ export function EducationDetailSidebar({
   whatsappHref,
 }: EducationDetailSidebarProps) {
   const { user } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -162,7 +164,10 @@ export function EducationDetailSidebar({
   const focusLeadForm = (trackingLabel: string) => {
     trackEnrollmentCTAClick(trackingLabel);
     const form = document.getElementById('education-lead-form');
-    form?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    form?.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'center',
+    });
     const nameInput = document.getElementById('fullName');
     if (nameInput instanceof HTMLElement) {
       nameInput.focus({ preventScroll: true });
