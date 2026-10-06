@@ -184,6 +184,12 @@ describe("education visual SSOT", () => {
     expect(detail).not.toContain("https://www.google.com/maps/search");
     expect(presentationData).toContain("buildWhatsAppUrl");
     expect(presentationData).not.toContain("https://wa.me/");
+
+    const urlService = readSource(
+      "src/modules/business/education/services/EducationUrlService.ts",
+    );
+    expect(urlService).toContain("buildWhatsAppUrl");
+    expect(urlService).not.toContain("https://wa.me/");
   });
 
   it("keeps AnalyticsGuard bound to the analytics authority", () => {
