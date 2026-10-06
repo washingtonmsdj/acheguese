@@ -121,3 +121,8 @@ export {
   isEducationSupportLevel,
 } from "@/core/education/supportLevel";
 export type { EducationSupportLevel } from "@/core/education/supportLevel";
+
+export {
+  EDUCATION_NICHE_KEYS_CANONICAL,
+  isEducationNicheKey,
+} from "@/core/education/nicheKey";
