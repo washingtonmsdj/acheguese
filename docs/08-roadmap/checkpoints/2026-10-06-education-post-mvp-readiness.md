@@ -135,6 +135,14 @@ durante a estabilização atual do data plane.
   cards administrativos.
 - Tipos de evento usam o owner compartilhado de `../constants`; a página de
   Eventos deixou de manter uma segunda tabela local de labels/opções.
+- Estado temporal de evento foi centralizado no core como `upcoming`,
+  `ongoing`, `past` ou `invalid`; evento já iniciado mas ainda não
+  encerrado não é mais tratado como passado.
+- O painel administrativo mostra **Em andamento** e sinaliza registros legados
+  com cronologia inválida como **Revisar data**.
+- A vitrine pública usa um filtro `active` separado para incluir eventos em
+  andamento, sem mudar silenciosamente a semântica da métrica `upcoming` de
+  Analytics.
 
 ## Tranche adicional — Setup e integridade do perfil
 
