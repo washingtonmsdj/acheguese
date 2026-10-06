@@ -31,7 +31,8 @@ export function getEducationLeadNextStatuses(
     return [];
   }
 
-  return [EDUCATION_LEAD_PIPELINE[index + 1], 'lost'];
+  const nextStatus = EDUCATION_LEAD_PIPELINE[index + 1];
+  return nextStatus ? [nextStatus, 'lost'] : [];
 }
 
 export const EDUCATION_LEAD_LOST_REASON_MIN_LENGTH = 3;
