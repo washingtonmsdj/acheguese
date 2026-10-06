@@ -161,6 +161,26 @@ describe("education visual SSOT", () => {
     expect(sidebar).toContain("prefersReducedMotion ? 'auto' : 'smooth'");
   });
 
+  it("keeps primary Education public touch targets mobile-sized", () => {
+    const detail = readSource(
+      "src/modules/business/education/pages/EducationDetailPage.tsx",
+    );
+    const presentation = readSource(
+      "src/modules/business/education/pages/EducationDetailPresentation.tsx",
+    );
+    const explorer = readSource(
+      "src/modules/business/education/pages/EducationExplorerPage.tsx",
+    );
+    const nicheChip = readSource(
+      "src/modules/business/education/pages/explorerNicheChip.tsx",
+    );
+
+    expect(detail).toContain("h-11 w-11");
+    expect(presentation).toContain("min-h-11");
+    expect(explorer).toContain("h-11 w-11");
+    expect(nicheChip).toContain("min-h-11");
+  });
+
   it("keeps public Education hero actions keyboard-visible", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
