@@ -171,6 +171,11 @@ durante a estabilização atual do data plane.
 - Testes unitários e ratchet arquitetural protegem essas invariantes.
 - Fonte pública, quando informada, precisa ser uma URL absoluta `http` ou
   `https` válida e é normalizada antes da persistência.
+- `school_source_updated_at` pertence ao write model: salvar configurações com
+  a mesma URL preserva o timestamp anterior; trocar a fonte gera novo timestamp;
+  remover a fonte limpa a proveniência.
+- Atualização isolada de `school_source_updated_at` sem alteração da URL é
+  ignorada, evitando afirmar uma revisão de fonte que não ocorreu.
 - Validação do write model ficou null-safe para `summary` e
   `whatsapp_number`; campos opcionais nulos não podem provocar exceção.
 - Setup reforça semântica de entrada com INEP numérico de 8 dígitos, URL de
