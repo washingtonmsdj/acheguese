@@ -461,6 +461,7 @@ export async function listEducationEvents(
   options: {
     isPublic?: boolean;
     upcoming?: boolean;
+    active?: boolean;
   } = {},
 ): Promise<EducationEvent[]> {
   let query = supabase
@@ -472,8 +473,12 @@ export async function listEducationEvents(
     query = query.eq('is_public', options.isPublic);
   }
 
+  const nowIso = new Date().toISOString();
+
   if (options.upcoming) {
-    query = query.gte('starts_at', new Date().toISOString());
+    query = query.gte('starts_at', nowIso);
+  } else if (options.active) {
+    query = query.or(`starts_at.gte.${nowIso},ends_at.gte.${nowIso}`);
   }
 
   const { data, error } = await query
