@@ -23,6 +23,10 @@ describe("G6 Education lead pipeline write boundary", () => {
     expect(mutations).toContain("'first_contact_at'");
     expect(mutations).toContain("'lost_reason'");
     expect(mutations).toContain("persistEducationLeadUpdate");
+    expect(mutations).toContain("getEducationLeadContactValidationError");
+    expect(mutations).toContain("normalizeEducationLeadAdminPatch");
+    expect(mutations).toContain("desired_grade");
+    expect(mutations).toContain("ownerValidationError");
     expect(mutations).toContain("newStatus === 'contacted' && currentStatus !== 'contacted'");
     expect(mutations).toContain("updatePayload.first_contact_at = new Date().toISOString()");
     expect(mutations).toContain("getEducationLeadLostReasonValidationError");
