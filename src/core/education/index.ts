@@ -7,6 +7,7 @@ export type {
   EducationShiftMetrics,
   EducationEvent,
   EducationLead,
+  EducationLeadAdminPatch,
   EducationLeadEvent,
   EducationLeadStatus,
   EducationLevel,
