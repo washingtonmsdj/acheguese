@@ -18,6 +18,8 @@ export interface PublicEducationLeadInput {
   studentAge?: number;
   desiredGrade?: string;
   desiredShift?: SchoolShift;
+  honeypot: string;
+  turnstileToken: string;
 }
 
 export interface PublicEducationLeadResult {
@@ -39,6 +41,15 @@ function publicLeadError(message: string): string {
   }
   if (normalized.includes("daily_limit") || normalized.includes("rate")) {
     return "Muitas solicitacoes foram enviadas. Tente novamente mais tarde.";
+  }
+  if (normalized.includes("turnstile_failed")) {
+    return "A verificação anti-spam expirou ou foi rejeitada. Confirme novamente.";
+  }
+  if (
+    normalized.includes("verification_unavailable") ||
+    normalized.includes("configuration_unavailable")
+  ) {
+    return "A verificação anti-spam está temporariamente indisponível. Tente novamente mais tarde.";
   }
   if (normalized.includes("not_available")) {
     return "Este perfil nao esta disponivel para receber solicitacoes.";
