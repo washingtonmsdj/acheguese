@@ -4,7 +4,9 @@ type AnalyticsCsvValue = string | number | boolean | null | undefined;
 
 function escapeCsvCell(value: AnalyticsCsvValue): string {
   const raw = value == null ? '' : String(value);
-  const formulaSafe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  // Algumas planilhas ignoram espaços/controles iniciais ao avaliar fórmulas.
+  // Neutralizar também prefixos aparentemente inofensivos em dimensões externas.
+  const formulaSafe = /^(?:[\s\u0000-\u001f]*[=+\-@]|[\t\r\n])/.test(raw) ? `'${raw}` : raw;
   return `"${formulaSafe.replace(/"/g, '""')}"`;
 }
 
