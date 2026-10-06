@@ -69,7 +69,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export const PublicEducationLeadService = {
   async create(input: PublicEducationLeadInput): Promise<PublicEducationLeadResult> {
-    const { data, error } = await supabase.functions.invoke("education-lead-rpc", {
+    const { data, error } = await supabase.functions.invoke("education-lead-intake", {
       body: {
         ...input,
         honeypot: input.honeypot,
