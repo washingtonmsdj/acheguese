@@ -389,7 +389,10 @@ describe("account and access concept contract", () => {
       "src/app/components/auth/auth-concept-icons.css",
     );
     expect(iconCss).toContain(".auth-concept-icon--shield-filled");
-    expect(iconCss).toContain("clip-path:polygon");
+    expect(iconCss).toMatch(/clip-path:\s*polygon\(/);
+    expect(iconCss).toContain("hsl(var(--territory-on-image))");
+    expect(iconCss).toContain("font-family: var(--font-sans)");
+    expect(iconCss).not.toContain("#fff");
     expect(iconCss).not.toContain("content:'G'");
 
     const firstAccess = readProjectFile(
