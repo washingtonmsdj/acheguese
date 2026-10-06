@@ -132,6 +132,10 @@ durante a estabilização atual do data plane.
 - Preço `0` é preservado na página pública e apresentado como **Gratuito**;
   ausência de preço continua sendo ausência de informação.
 - Ratchet visual impede o retorno da falsa affordance.
+- Modalidade e turno de programas usam labels compartilhados da vertical;
+  códigos técnicos como `in_person` e `morning` não vazam para a UI.
+- Modalidade ausente não é mais inventada como **Presencial**.
+- Ocupação conhecida com zero matrículas preserva o valor real `0%`.
 
 ### Gates ainda pendentes
 
