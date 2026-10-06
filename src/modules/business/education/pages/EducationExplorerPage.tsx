@@ -20,7 +20,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   GraduationCap,
   Search,
@@ -85,6 +85,7 @@ import type { EducationPublicProfile } from '@/core/education';
 
 export function EducationExplorerPage() {
   const { state, city, district, groupSlugOrDistrict } = useParams();
+  const prefersReducedMotion = useReducedMotion();
   const { active } = usePublicBrowsingCity();
   const effectiveState = state ?? active.state;
   const effectiveCity = city ?? active.city;
@@ -221,7 +222,7 @@ export function EducationExplorerPage() {
   return (
     <div className="min-h-screen bg-territory-surface text-territory-ink">
       <Helmet>
-        <title>Educação em {territoryLabel} - Vitrine V3 | Acheguese</title>
+        <title>Educação em {territoryLabel} | Acheguese</title>
         <meta
           name="description"
           content={`Explore escolas, cursos, professores e instituições educacionais em ${territoryLabel} com filtros avançados e contato direto.`}
@@ -247,7 +248,7 @@ export function EducationExplorerPage() {
                 className="mb-4 inline-flex items-center gap-1.5 rounded-full border-territory-brand/30 bg-territory-brand/5 px-3 py-1 text-xs uppercase tracking-wide text-territory-brand"
               >
                 <Sparkles className="h-3 w-3" aria-hidden="true" />
-                Vitrine educacional V3
+                Vitrine educacional
               </Badge>
               <h1 className="text-balance text-4xl font-bold tracking-tight text-territory-ink md:text-5xl lg:text-6xl">
                 Encontre a escola, curso ou professor ideal em{' '}
@@ -348,9 +349,11 @@ export function EducationExplorerPage() {
                   return (
                     <motion.div
                       key={profile.id}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
+                      transition={
+                        prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }
+                      }
                       className={cn(
                         'relative overflow-hidden rounded-3xl border border-territory-border/60 bg-gradient-to-br p-5 text-territory-on-image shadow-lg',
                         gradient,
@@ -366,7 +369,9 @@ export function EducationExplorerPage() {
                             {getNicheByKey(profile.niche_key)?.displayName}
                           </div>
                           <div className="mt-1 line-clamp-2 text-base font-bold">
-                            {profile.business_name ?? profile.institution_type}
+                            {profile.business_name ??
+                              getNicheByKey(profile.niche_key)?.displayName ??
+                              'Instituição educacional'}
                           </div>
                           {profile.public_route?.district && (
                             <div className="mt-2 inline-flex items-center gap-1 text-[11px] opacity-80">
@@ -452,8 +457,8 @@ export function EducationExplorerPage() {
                 Nenhum resultado encontrado
               </h3>
               <p className="mt-2 max-w-sm text-sm text-territory-muted">
-                Tente remover alguns filtros ou buscar com outro termo. Estamos
-                ampliando a base de instituições constantemente.
+                Tente remover alguns filtros ou buscar com outro termo para consultar
+                outras instituições disponíveis neste território.
               </p>
               <Button
                 onClick={clearFilters}
@@ -498,7 +503,7 @@ export function EducationExplorerPage() {
               >
                 {isFetchingNextPage ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                    <Loader2 className="mr-2 h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
                     Carregando...
                   </>
                 ) : (
