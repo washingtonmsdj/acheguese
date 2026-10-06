@@ -15,7 +15,7 @@ E2E determinístico e deployment do mesmo SHA.
 | `education-setup.spec.ts` | operacional, dependente de ambiente | fluxo real de setup e persistência quando credenciais/ambiente operacional estão disponíveis |
 | `education-public.spec.ts` | `describe.skip` por lifecycle | cenários preservados para Explorer/Detail; não roda enquanto Education estiver pausado |
 | `education-programs.spec.ts` | smoke operacional, dependente de ambiente | fixture técnica semeia programas; UI autenticada prova leitura, edição, estado `0` vagas e exclusão confirmada; criação pela UI depende de entitlement real |
-| `education-leads.spec.ts` | smoke legado | carregamento e alguns cenários do pipeline; não prova integralmente as operações atuais |
+| `education-leads.spec.ts` | smoke operacional, dependente de ambiente | fixture técnica semeia leads; UI autenticada prova renderização, avanço `new → contacted`, `lost` com motivo obrigatório e paginação 25/26 |
 | `education-events.spec.ts` | smoke operacional, dependente de ambiente | fixture técnica semeia eventos; UI autenticada prova leitura, edição público/privado, aviso consultivo de sobreposição e exclusão; criação paga pela UI continua fora do escopo |
 | `education-debug.spec.ts` | diagnóstico, `skip` | captura manual de conteúdo/screenshot; não conta como teste de aceitação |
 | `education-cookie-debug.spec.ts` | diagnóstico, `skip` | inspeção manual de autenticação/cookies; não conta como teste de aceitação |
