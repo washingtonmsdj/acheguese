@@ -395,6 +395,26 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
       await page.getByRole("button", { name: /Salvar alterações/i }).click();
       await expect(page.getByText("Inativo", { exact: true })).toHaveCount(0);
 
+      await actions.click();
+      await page.getByRole("menuitem", { name: "Excluir" }).click();
+      await expect(
+        page.getByRole("heading", { name: "Excluir programa" }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Excluir", exact: true }).click();
+
+      await expect(
+        page.getByText(programName, { exact: true }),
+      ).toHaveCount(0, { timeout: 30_000 });
+
+      const { data: deletedProgram, error: deletedProgramError } =
+        await client
+          .from("education_programs")
+          .select("id")
+          .eq("id", program!.id)
+          .maybeSingle();
+      expect(deletedProgramError).toBeNull();
+      expect(deletedProgram).toBeNull();
+
       await page.goto(
         `/central/empresas/${businessProfileId}/educacao/leads`,
         { waitUntil: "domcontentloaded" },
