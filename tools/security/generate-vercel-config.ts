@@ -22,6 +22,7 @@ import {
   CACHE_HEADERS,
   getSecurityConfigSummary,
 } from "../../src/shared/config/security.config";
+import { PUBLIC_EXTERNAL_APPS } from "../../src/shared/config/publicExternalApps.config";
 
 const VERCEL_CONFIG_TEMPLATE = {
   $schema: "https://openapi.vercel.sh/vercel.json",
@@ -41,6 +42,14 @@ const VERCEL_CONFIG_TEMPLATE = {
   framework: "vite",
 
   rewrites: [
+    {
+      source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
+      destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/`,
+    },
+    {
+      source: `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*`,
+      destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/:path*`,
+    },
     {
       source: "/(.*)",
       destination: "/index.html",
@@ -97,6 +106,7 @@ function generateVercelConfig() {
     ignoreCommand?: string;
     buildCommand?: string;
     installCommand?: string;
+    rewrites?: Array<{ source?: string; destination?: string }>;
     headers?: Array<{
       source?: string;
       headers?: Array<{ key?: string; value?: string }>;
@@ -130,6 +140,19 @@ function generateVercelConfig() {
     "node tools/release/validate-package-lock-consistency.mjs && npm ci"
   ) {
     throw new Error("Install command drifted from lockfile consistency guard");
+  }
+
+  const [catalogIndexRewrite, catalogNestedRewrite, spaRewrite] =
+    generated.rewrites ?? [];
+  if (
+    catalogIndexRewrite?.source !== PUBLIC_EXTERNAL_APPS.catalog.mountPath ||
+    catalogIndexRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/` ||
+    catalogNestedRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*` ||
+    catalogNestedRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/:path*` ||
+    spaRewrite?.source !== "/(.*)" ||
+    spaRewrite?.destination !== "/index.html"
+  ) {
+    throw new Error("Public catalog rewrites drifted from publicExternalApps SSOT");
   }
 
   const cspCount = (generated.headers ?? [])
