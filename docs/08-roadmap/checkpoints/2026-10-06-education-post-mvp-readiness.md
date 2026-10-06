@@ -90,6 +90,9 @@ durante a estabilização atual do data plane.
   Analytics; não é mais convertido em `false`/“fechado”.
 - Na exportação CSV, estado de matrícula desconhecido produz célula vazia,
   preservando a diferença entre ausência de informação e valor negativo.
+- Analytics reutiliza `enrollment_open` do perfil já carregado pela página e
+  inclui esse valor na chave da query; não faz uma segunda leitura do perfil
+  apenas para compor a métrica escolar.
 
 ## Tranche adicional — Programas, Eventos e Leads
 
