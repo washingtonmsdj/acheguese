@@ -113,8 +113,16 @@ export function ProgramCard({
           </h4>
         </div>
         {hasKnownSlots ? (
-          <Badge className="border-territory-success/25 bg-territory-success/10 text-territory-success hover:bg-territory-success/15">
-            {program.available_slots} vagas
+          <Badge
+            className={
+              program.available_slots === 0
+                ? "border-territory-warning/30 bg-territory-warning/10 text-territory-warning"
+                : "border-territory-success/25 bg-territory-success/10 text-territory-success"
+            }
+          >
+            {program.available_slots === 0
+              ? 'Sem vagas'
+              : `${program.available_slots} vagas`}
           </Badge>
         ) : vacancyRate !== null ? (
           <Badge
