@@ -6,6 +6,7 @@ export type {
   EducationProfile,
   EducationProgram,
   EducationLead,
+  EducationLeadAdminPatch,
   EducationLeadEvent,
   EducationEvent,
   EducationLeadStatus,
