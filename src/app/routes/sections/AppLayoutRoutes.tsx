@@ -12,6 +12,7 @@ import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { OFFLINE_SETTINGS_PATH } from "@/core/routing/config/platformSettings";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
@@ -21,6 +22,11 @@ import {
   buildTerritorialRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+import {
+  DATA_PROTECTION_CONTACT_PATH,
+  PRIVACY_POLICY_PATH,
+  TERMS_OF_SERVICE_PATH,
+} from "@/shared/constants/legal";
 
 import * as P from "../activeLazyImports";
 import {
@@ -162,10 +168,10 @@ export function AppLayoutRoutes() {
           </>
         ) : null}
 
-        <Route path="/termos" element={<P.TermosPage />} />
-        <Route path="/privacidade" element={<P.PrivacidadePage />} />
-        <Route path="/offline-settings" element={<P.OfflineSettingsPage />} />
-        <Route path="/dpo" element={<P.DPOContactPage />} />
+        <Route path={TERMS_OF_SERVICE_PATH} element={<P.TermosPage />} />
+        <Route path={PRIVACY_POLICY_PATH} element={<P.PrivacidadePage />} />
+        <Route path={OFFLINE_SETTINGS_PATH} element={<P.OfflineSettingsPage />} />
+        <Route path={DATA_PROTECTION_CONTACT_PATH} element={<P.DPOContactPage />} />
 
         {renderAppLayoutRouteDescriptors(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES)}
 
