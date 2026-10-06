@@ -7,6 +7,10 @@ const privacyRpcService = readFileSync(
   join(root, "src/core/privacy/services/PrivacyRpcService.ts"),
   "utf8",
 );
+const protectedRoute = readFileSync(
+  join(root, "src/core/routing/components/ProtectedRoute.tsx"),
+  "utf8",
+);
 const broker = readFileSync(
   join(
     root,
@@ -41,6 +45,14 @@ describe("account deletion browser authority boundary", () => {
     );
     expect(privacyRpcService).not.toContain("invokeNullableSupabaseBroker");
     expect(broker).toContain("export async function invokeNullableSupabaseBroker");
+  });
+
+  it("rechecks the operational-account authority once before keeping the fail-closed privacy redirect", () => {
+    expect(protectedRoute).toContain("const PRIVACY_ACCESS_GATE_RETRIES = 1;");
+    expect(protectedRoute).toContain("retry: PRIVACY_ACCESS_GATE_RETRIES");
+    expect(protectedRoute).toContain("if (deletionStatusQuery.isError)");
+    expect(protectedRoute).toContain("to={PRIVACY_ACCOUNT_PATH}");
+    expect(protectedRoute).toContain("state={{ accountStateUnavailable: true }}");
   });
 
   it("allows only an explicit RPC data null to represent no deletion request", () => {

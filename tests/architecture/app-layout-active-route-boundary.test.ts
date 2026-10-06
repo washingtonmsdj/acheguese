@@ -7,6 +7,7 @@ const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const appShell = read("src/app/components/AppLayoutSidebar.tsx");
 const messagingInboxPage = read("src/app/pages/MessagingInboxPage.tsx");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
+const messagingCss = read("src/modules/messaging/pages/MensagensPage.css");
 const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
 );
@@ -96,11 +97,21 @@ describe("active AppLayout route boundary", () => {
     expect(appShell).toContain('pathSegments[0] === "mensagens" && pathSegments.length >= 3');
     expect(appShell).toContain("if (isConversationRoute)");
     expect(appShell).not.toContain("if (isMessagingRoute)");
+    expect(appShell).toContain(
+      'className="messaging-route-shell h-[100dvh] w-full overflow-hidden bg-territory-canvas"',
+    );
     expect(appShell).toContain("<AppSidebar />");
     expect(appShell).toContain("<AppTopbar />");
     expect(messagingInboxPage).toContain("getActiveMessagingProviderIds()");
     expect(messagingInboxPage).not.toContain("PublicBrandHeader");
     expect(messagingInboxPage).not.toContain("LAUNCH_URLS");
+
+    const inboxRule = messagingCss.match(/\.messaging-inbox \{[\s\S]*?\n\}/)?.[0] ?? "";
+    expect(inboxRule).toContain("min-height: 0;");
+    expect(inboxRule).not.toContain("height: 100dvh");
+    expect(messagingCss).toContain(
+      ".messaging-route-shell .messaging-inbox {\n  height: 100%;\n}",
+    );
   });
 
   it("keeps prefetch and idle warmup limited to selected active chunks", () => {

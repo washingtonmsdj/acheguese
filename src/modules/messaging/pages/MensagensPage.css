@@ -17,11 +17,15 @@
 }
 
 .messaging-inbox {
-  height: 100dvh;
   min-width: 0;
+  min-height: 0;
   color: hsl(var(--foreground));
   display: flex;
   flex-direction: column;
+}
+
+.messaging-route-shell .messaging-inbox {
+  height: 100%;
 }
 
 .messaging-inbox__profile {

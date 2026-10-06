@@ -111,7 +111,7 @@ export function AppLayoutSidebar() {
 
   if (isConversationRoute) {
     return (
-      <div className="min-h-[100dvh] w-full bg-territory-canvas">
+      <div className="messaging-route-shell h-[100dvh] w-full overflow-hidden bg-territory-canvas">
         <Outlet />
       </div>
     );
