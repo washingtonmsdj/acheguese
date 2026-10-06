@@ -165,6 +165,45 @@ export function EducationDashboardPage() {
         </div>
       </motion.div>
 
+      {!profile && adminUrls?.setup && (
+        <Card className="mb-8 overflow-hidden border-territory-brand/25 bg-territory-surface text-territory-ink shadow-sm">
+          <CardContent className="p-0">
+            <div className="grid gap-0 lg:grid-cols-[1.4fr_0.6fr]">
+              <div className="p-6 sm:p-8">
+                <Badge className="mb-3 border-territory-warning/25 bg-territory-warning/10 text-territory-warning hover:bg-territory-warning/10">
+                  Configuração pendente
+                </Badge>
+                <h2 className="font-heading text-xl font-bold text-territory-ink sm:text-2xl">
+                  Prepare o perfil educacional da instituição
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-territory-muted">
+                  Defina o tipo de instituição, o nicho educacional e os dados
+                  operacionais antes de cadastrar programas, receber interessados
+                  ou publicar eventos.
+                </p>
+                <Link
+                  to={adminUrls.setup}
+                  className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-lg bg-territory-brand px-4 py-2 text-sm font-semibold text-territory-on-image transition hover:bg-territory-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2 focus-visible:ring-offset-territory-canvas"
+                >
+                  Começar configuração
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </div>
+              <div className="border-t border-territory-border bg-territory-raised/55 p-6 lg:border-l lg:border-t-0">
+                <p className="text-xs font-semibold uppercase tracking-wide text-territory-muted">
+                  Antes de operar
+                </p>
+                <ul className="mt-3 space-y-2 text-sm text-territory-muted">
+                  <li>• Identifique corretamente a instituição.</li>
+                  <li>• Configure somente recursos realmente oferecidos.</li>
+                  <li>• Revise os canais públicos de contato.</li>
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {profile && (
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card className="border-territory-border bg-territory-surface text-territory-ink">
