@@ -1,13 +1,12 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { getEducationAdminReadErrorMessage } from "./educationAdminErrorMessage";
 
 interface EducationAdminReadErrorProps {
   title: string;
   error?: unknown;
   onRetry?: () => void | Promise<void>;
 }
-
-import { getEducationAdminReadErrorMessage } from "./educationAdminErrorMessage";
 
 export function EducationAdminReadError({
   title,
