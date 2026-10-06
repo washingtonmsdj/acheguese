@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Calendar,
   Plus,
@@ -56,33 +56,15 @@ import {
   type SchoolEventType,
 } from '@/core/education';
 import {
+  SCHOOL_EVENT_TYPE_LABELS,
+  SCHOOL_EVENT_TYPE_OPTIONS,
+} from '../constants';
+import {
   fromEventIsoToLocalInput,
   fromLocalInputToEventIso,
 } from '../utils/educationEventDateTime';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
-
-const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
-  open_house: 'Portas Abertas',
-  enrollment_fair: 'Feira de Matrícula',
-  parent_meeting: 'Reunião de Pais',
-  trial_class: 'Aula Experimental',
-  school_tour: 'Visita Escolar',
-  cultural_event: 'Evento Cultural',
-  sports_event: 'Evento Esportivo',
-  other: 'Outro',
-};
-
-const SCHOOL_EVENT_TYPE_OPTIONS: { value: SchoolEventType; label: string }[] = [
-  { value: 'open_house', label: 'Portas Abertas' },
-  { value: 'enrollment_fair', label: 'Feira de Matrícula' },
-  { value: 'parent_meeting', label: 'Reunião de Pais' },
-  { value: 'trial_class', label: 'Aula Experimental' },
-  { value: 'school_tour', label: 'Visita Escolar' },
-  { value: 'cultural_event', label: 'Evento Cultural' },
-  { value: 'sports_event', label: 'Evento Esportivo' },
-  { value: 'other', label: 'Outro' },
-];
 
 const selectClassName =
   'mt-1 h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 py-2 text-sm text-territory-ink outline-none transition-colors focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20';
@@ -90,6 +72,7 @@ const selectClassName =
 export function EducationEventsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const {
@@ -375,8 +358,9 @@ export function EducationEventsPage() {
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="flex items-center gap-3">
