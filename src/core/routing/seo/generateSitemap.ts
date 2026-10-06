@@ -12,6 +12,7 @@ import {
   TERMS_OF_SERVICE_PATH,
 } from '@/shared/constants/legal';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
+import { PUBLIC_CATALOG_PATH } from '@/shared/config/publicExternalApps.config';
 import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
   MODULE_SLUGS,
@@ -292,6 +293,7 @@ function collectSitemapUrls(
       : []),
     { path: '/como-funciona', priority: 0.7, changefreq: 'monthly' as const },
     { path: '/sobre', priority: 0.6, changefreq: 'monthly' as const },
+    { path: PUBLIC_CATALOG_PATH, priority: 0.7, changefreq: 'weekly' as const },
     { path: SUPPORT_PATH, priority: 0.6, changefreq: 'monthly' as const },
     { path: TERMS_OF_SERVICE_PATH, priority: 0.3, changefreq: 'monthly' as const },
     { path: PRIVACY_POLICY_PATH, priority: 0.3, changefreq: 'monthly' as const },
