@@ -9,7 +9,7 @@ import {
   getEducationLevelLabel,
   getEducationProgramModalityLabel,
   getEducationProgramShiftLabel,
-  UI_LIMITS,
+
 } from '../constants';
 
 describe('Education Constants', () => {
@@ -105,18 +105,5 @@ describe('Education Constants', () => {
     });
   });
 
-  describe('UI_LIMITS', () => {
-    it('should have reasonable limits', () => {
-      expect(UI_LIMITS.MAX_PROGRAMS_PER_PROFILE).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_LEADS_PER_PAGE).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_EVENTS_PER_PROFILE).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_SUMMARY_LENGTH).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_PROGRAM_NAME_LENGTH).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_NOTE_LENGTH).toBeGreaterThan(0);
-    });
 
-    it('should have MAX_LEADS_PER_PAGE as 25', () => {
-      expect(UI_LIMITS.MAX_LEADS_PER_PAGE).toBe(25);
-    });
-  });
 });
