@@ -94,9 +94,7 @@ describe("active AppLayout route boundary", () => {
   });
 
   it("keeps Messaging inbox in the app shell while threads use focused conversation mode", () => {
-    expect(appShell).toContain(
-      'pathSegments[0] === "mensagens" && pathSegments.length >= 3',
-    );
+    expect(appShell).toContain('pathSegments[0] === "mensagens" && pathSegments.length >= 3');
     expect(appShell).toContain("if (isConversationRoute)");
     expect(appShell).not.toContain("if (isMessagingRoute)");
     expect(appShell).toContain(
@@ -108,8 +106,7 @@ describe("active AppLayout route boundary", () => {
     expect(messagingInboxPage).not.toContain("PublicBrandHeader");
     expect(messagingInboxPage).not.toContain("LAUNCH_URLS");
 
-    const inboxRule =
-      messagingCss.match(/\.messaging-inbox \{[\s\S]*?\n\}/)?.[0] ?? "";
+    const inboxRule = messagingCss.match(/\.messaging-inbox \{[\s\S]*?\n\}/)?.[0] ?? "";
     expect(inboxRule).toContain("min-height: 0;");
     expect(inboxRule).not.toContain("height: 100dvh");
     expect(messagingCss).toContain(
@@ -207,18 +204,10 @@ describe("active AppLayout route boundary", () => {
   it("keeps active territorial wrappers on the canonical Territory portal owner", () => {
     expect(activeTerritorialPages).toContain("CategoryBusinessPage");
     expect(activeTerritorialPages).toContain("@/app/pages/TerritoryHomePage");
-    expect(activeTerritorialPages).toContain(
-      '<TerritoryHomePage activeView="map" />',
-    );
-    expect(activeTerritorialPages).toContain(
-      '<TerritoryHomePage activeView="business" />',
-    );
-    expect(activeTerritorialPages).toContain(
-      '<TerritoryHomePage activeView="nearby" />',
-    );
-    expect(activeTerritorialPages).toContain(
-      '<TerritoryHomePage activeView="search" />',
-    );
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="map" />');
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="business" />');
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="nearby" />');
+    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="search" />');
     expect(activeTerritorialPages).not.toContain("@/app/pages/MapaPage");
 
     for (const pausedImport of [
