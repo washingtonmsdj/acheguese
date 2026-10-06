@@ -420,11 +420,22 @@ describe("MVP core module boundary", () => {
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("messaging")');
     expect(appRoutes).toContain('isPlatformCapabilityEnabled("notifications")');
 
-    expect(appRoutes).toContain('path="/empresas"');
-    expect(appRoutes).toContain('path="/empresas/cadastrar"');
-    expect(appRoutes).toContain('path="/mapa"');
-    expect(appRoutes).toContain('path="/perto-de-mim"');
-    expect(appRoutes).toContain('path="/busca"');
+    expect(appRoutes).toContain("buildAppModulePath(APP_MODULE_SLUGS.business)");
+    expect(appRoutes).toContain(
+      'buildAppModulePath(APP_MODULE_SLUGS.business, "cadastrar")',
+    );
+    expect(appRoutes).toContain("buildAppModulePath(APP_MODULE_SLUGS.map)");
+    expect(appRoutes).toContain("buildAppModulePath(APP_MODULE_SLUGS.nearby)");
+    expect(appRoutes).toContain("buildAppModulePath(APP_MODULE_SLUGS.search)");
+    for (const retiredLiteralOwner of [
+      'path="/empresas"',
+      'path="/empresas/cadastrar"',
+      'path="/mapa"',
+      'path="/perto-de-mim"',
+      'path="/busca"',
+    ]) {
+      expect(appRoutes).not.toContain(retiredLiteralOwner);
+    }
     expect(appRoutes).toContain("messagingRoutes.inbox()");
     expect(appRoutes).toContain("messagingRoutes.threadPattern()");
     expect(appRoutes).toContain('path="/notificacoes"');
