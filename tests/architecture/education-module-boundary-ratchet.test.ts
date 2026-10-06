@@ -603,6 +603,21 @@ describe("Education module hardening ratchet", () => {
     expect(service).not.toContain("Event title too short");
   });
 
+  it("keeps legacy Education debug E2E outside certification", () => {
+    for (const path of [
+      "tests/e2e/education/education-debug.spec.ts",
+      "tests/e2e/education/education-cookie-debug.spec.ts",
+      "tests/e2e/education/education-network-debug.spec.ts",
+      "tests/e2e/education/education-dashboard-debug.spec.ts",
+    ]) {
+      const source = read(path);
+      expect(source).toContain("test.skip(");
+      expect(source).toContain(
+        "Diagnóstico legado: não conta como certificação E2E de Education.",
+      );
+    }
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
