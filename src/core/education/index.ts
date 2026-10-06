@@ -65,6 +65,9 @@ export type {
 } from "@/core/education/profileValidation";
 
 export {
+  EDUCATION_LEAD_PIPELINE,
+  canMoveEducationLeadToStatus,
+  getEducationLeadNextStatuses,
   EDUCATION_LEAD_LOST_REASON_MAX_LENGTH,
   EDUCATION_LEAD_LOST_REASON_MIN_LENGTH,
   getEducationLeadLostReasonValidationError,
