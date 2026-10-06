@@ -502,6 +502,20 @@ durante a estabilização atual do data plane.
   não autoriza o recurso; nenhum plano é falsificado para produzir um “verde”.
 - Ratchet arquitetural impede o retorno dos padrões permissivos removidos.
 
+## Tranche adicional — E2E operacional de Leads
+
+- `education-leads.spec.ts` deixou de aceitar “qualquer conteúdo”, busca
+  inexistente e skips condicionais como prova de funcionamento.
+- A fixture técnica semeia leads; a UI autenticada prova:
+  - renderização no pipeline;
+  - transição `new → contacted` com `first_contact_at`;
+  - transição para `lost` somente com motivo operacional e persistência de
+    `lost_reason`;
+  - paginação administrativa de 25 itens com 26 leads reais.
+- As mutations são verificadas no banco pela fixture autorizada.
+- Ratchet arquitetural impede o retorno de waits fixos e asserts permissivos
+  removidos desta suite.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
