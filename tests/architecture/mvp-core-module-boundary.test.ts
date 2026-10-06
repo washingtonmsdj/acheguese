@@ -438,7 +438,7 @@ describe("MVP core module boundary", () => {
     }
     expect(appRoutes).toContain("messagingRoutes.inbox()");
     expect(appRoutes).toContain("messagingRoutes.threadPattern()");
-    expect(appRoutes).toContain('path="/notificacoes"');
+    expect(appRoutes).toContain("path={notificationRoutes.inbox()}");
     expect(appRoutes).toContain("P.NotificationsPage");
     expect(appRoutes).toContain("P.NotificationPreferencesPage");
 
