@@ -110,6 +110,7 @@ export { EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT } from "@/core/education/p
 
 export {
   getEducationInstitutionTypeForNiche,
+  getEducationProfileIdentityPatchError,
   isEducationInstitutionTypeForNiche,
 } from "@/core/education/profileIdentity";
 export type { EducationInstitutionType } from "@/core/education/profileIdentity";
