@@ -108,6 +108,19 @@ durante a estabilização atual do data plane.
   ações empilhadas no mobile para evitar campos ou botões inacessíveis em telas
   pequenas.
 
+## Tranche adicional — Setup e integridade do perfil
+
+- Setup passou a usar um único caminho de persistência: o botão principal é
+  `type="submit"` e delega ao `onSubmit` do formulário.
+- Faixa etária e código INEP ganharam validação canônica em
+  `src/core/education/profileValidation.ts`, consumida pelo frontend e pelo
+  write model.
+- Idades aceitas precisam ser inteiras entre 0 e 120 anos, e a idade mínima
+  não pode ser maior que a máxima.
+- Código INEP, quando informado, precisa conter exatamente 8 dígitos e é
+  normalizado com `trim()` antes da persistência.
+- Testes unitários e ratchet arquitetural protegem essas invariantes.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
