@@ -112,5 +112,6 @@ export {
   getEducationInstitutionTypeForNiche,
   getEducationProfileIdentityPatchError,
   isEducationInstitutionTypeForNiche,
+  resolveEducationInstitutionTypeForNiche,
 } from "@/core/education/profileIdentity";
 export type { EducationInstitutionType } from "@/core/education/profileIdentity";
