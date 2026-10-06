@@ -14,6 +14,12 @@ const CANONICAL_VISUAL_OWNERS = new Set([
   "tailwind.config.ts",
 ]);
 
+// Third-party identity assets must preserve the provider's official palette.
+// Keep this list exact and narrow: application UI never belongs here.
+const EXTERNAL_BRAND_ASSET_FILES = new Set([
+  "src/shared/components/branding/google-provider-mark.css",
+]);
+
 const IGNORED_GRAPH_PATH_PARTS = [
   "/__tests__/",
   "/tests/",
@@ -114,6 +120,7 @@ function collectActiveGraph(): string[] {
 
 function validateVisualFile(relative: string, violations: string[]): void {
   if (CANONICAL_VISUAL_OWNERS.has(relative)) return;
+  if (EXTERNAL_BRAND_ASSET_FILES.has(relative)) return;
 
   const absolute = path.join(ROOT, relative);
   const source = fs.readFileSync(absolute, "utf8");
@@ -164,7 +171,7 @@ function main(): void {
   }
 
   console.log(
-    `Active frontend visual SSOT valid: ${visualFiles.length} visual file(s) reachable from ${ENTRYPOINTS.join(", ")} contain no raw runtime colors, direct Tailwind palettes, or legacy/direct font stacks outside canonical owners.`,
+    `Active frontend visual SSOT valid: ${visualFiles.length} visual file(s) reachable from ${ENTRYPOINTS.join(", ")} contain no raw runtime colors, direct Tailwind palettes, or legacy/direct font stacks outside canonical owners and explicit third-party brand assets.`,
   );
 }
 
