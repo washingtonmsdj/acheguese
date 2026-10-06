@@ -436,6 +436,7 @@ describe("Education module hardening ratchet", () => {
     );
     expect(analyticsHook).not.toContain("period?: '7d'");
     expect(analyticsHook).not.toContain("period = '30d'");
+    expect(analyticsHook).not.toContain("queries: educationQueries");
     expect(analyticsHook).toContain("throw error;");
     expect(analyticsHook).toContain("getLeadPipelineMetrics");
     expect(analyticsHook).not.toContain("getProfileViewMetrics");
