@@ -223,6 +223,9 @@ durante a estabilização atual do data plane.
 - O helper sem base observada `calculateLeadConversionProbability` foi removido;
   a vertical não apresenta propensão de conversão hardcoded por etapa como se
   fosse uma métrica real.
+- O helper legado `isProgramAvailable` também foi removido: ele tratava
+  `available_slots = null` como `0`, confundindo quantidade de vagas não
+  informada com indisponibilidade real.
 
 ## Tranche adicional — Acessibilidade de movimento
 
