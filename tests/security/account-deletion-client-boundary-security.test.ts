@@ -44,22 +44,32 @@ describe("LGPD pending deletion client boundary", () => {
     );
   });
 
-  it("uses the reversible privacy broker as the deletion status authority", () => {
+  it("uses the self-only current-user RPC as the deletion status authority", () => {
     expect(privacySettingsService).not.toContain(
       '.from("user_deletion_schedule")',
     );
     expect(privacySettingsService).toContain(
       "PrivacyRpcService.getDeletionStatus()",
     );
+    expect(privacyRpcService).toContain(
+      '.rpc("get_current_account_deletion_status")',
+    );
+    expect(privacyRpcService).not.toContain(
+      'this.invoke<unknown>("getDeletionStatus"',
+    );
     expect(privacySettingsService).toContain('"failed"');
   });
 
-  it("keeps broker failures distinguishable from a clean no-request state", () => {
-    expect(privacyRpcService).toContain("invokeSupabaseBroker");
-    expect(privacyRpcService).not.toContain("invokeNullableSupabaseBroker");
+  it("keeps read failures distinguishable from a clean no-request state", () => {
+    expect(privacyRpcService).toContain("if (error)");
     expect(privacyRpcService).toContain(
-      "this.invoke<AccountDeletionStatusBrokerData | null>",
+      "Privacy deletion status query failed:",
     );
+    expect(privacyRpcService).toContain("if (data === null) return null;");
+    expect(privacyRpcService).toContain(
+      ".abortSignal(AbortSignal.timeout(TIMEOUTS.PRIVACY_ACCESS_GATE))",
+    );
+    expect(privacyRpcService).not.toContain("invokeNullableSupabaseBroker");
   });
 
   it("fails closed while account status is loading, refreshing, or unavailable", () => {
@@ -157,6 +167,7 @@ describe("LGPD pending deletion client boundary", () => {
     expect(mutation).toBeGreaterThan(normalization);
     expect(privacySettingsService).toContain("reason,");
   });
+
   it("keeps new account-deletion requests fail-closed until purge rollout is certified", () => {
     expect(privacyRollout).toContain(
       "PRIVACY_ACCOUNT_DELETION_RELEASE_CERTIFIED = false",
@@ -184,5 +195,4 @@ describe("LGPD pending deletion client boundary", () => {
       "Essa data não confirma processamento automático.",
     );
   });
-
 });
