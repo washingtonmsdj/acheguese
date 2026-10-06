@@ -17,7 +17,7 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
   const hasValidProfileId = Boolean(profileId && UUID_REGEX.test(profileId));
 
   const query = useQuery({
-    queryKey: ['education', 'leads', profileId, status, page],
+    queryKey: ['education', 'leads', profileId, status, page, pageSize],
     queryFn: async () => {
       if (!hasValidProfileId || !profileId) return { leads: [], totalCount: 0 };
       return EducationService.listLeads(profileId, { status, page, pageSize });
