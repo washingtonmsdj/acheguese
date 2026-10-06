@@ -16,41 +16,11 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import { Building2, Briefcase, Car, User, ChevronDown, Zap } from 'lucide-react';
+import { ChevronDown, Zap } from 'lucide-react';
 import { useMultiProfileContext } from '../contexts/multi-profile-runtime-context';
+import { getProfileTypePresentation } from '../presentation/profileTypePresentation';
 import { toast } from 'sonner';
-import type { ProfileType } from '../services/multi-profile/types';
 import { Link } from 'react-router-dom';
-
-function typeIcon(t: ProfileType) {
-  switch (t) {
-    case "personal":
-      return User;
-    case "business":
-      return Building2;
-    case "professional":
-      return Briefcase;
-    case "driver":
-      return Car;
-    default:
-      return User;
-  }
-}
-
-function typeColor(t: ProfileType): string {
-  switch (t) {
-    case "personal":
-      return "text-blue-500";
-    case "business":
-      return "text-emerald-500";
-    case "professional":
-      return "text-violet-500";
-    case "driver":
-      return "text-orange-500";
-    default:
-      return "text-muted-foreground";
-  }
-}
 
 function getInitials(name?: string | null): string {
   if (!name) return 'U';
@@ -71,26 +41,25 @@ export function MultiProfileSwitcher({ compact = false }: { compact?: boolean })
   if (allProfiles.length === 0) return null;
 
   const isContextual = !!contextualProfile;
-  const Icon = typeIcon(effectiveProfile.profile_type);
-  const color = typeColor(effectiveProfile.profile_type);
+  const presentation = getProfileTypePresentation(effectiveProfile.profile_type);
+  const Icon = presentation.icon;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button aria-label={`Trocar perfil: ${effectiveProfile.display_name}`} className="flex min-h-10 items-center gap-2 px-2.5 py-1.5 rounded-xl border border-border hover:bg-muted/50 transition-colors max-w-[180px]">
+        <button aria-label={`Trocar perfil: ${effectiveProfile.display_name}`} className="flex min-h-10 max-w-[180px] items-center gap-2 rounded-xl border border-border px-2.5 py-1.5 transition-colors hover:bg-muted/50">
           <Avatar className="h-6 w-6 flex-shrink-0">
             <AvatarImage src={effectiveProfile.avatar_url || undefined} />
             <AvatarFallback className="text-[10px]">{getInitials(effectiveProfile.display_name)}</AvatarFallback>
           </Avatar>
-          <div className={compact ? "hidden sm:flex items-center gap-1 min-w-0" : "flex items-center gap-1 min-w-0"}>
-            <Icon className={`h-3 w-3 flex-shrink-0 ${color}`} />
-            <span className="text-xs font-medium truncate">{effectiveProfile.display_name}</span>
-            {/* Indicador de contexto automático */}
+          <div className={compact ? "hidden min-w-0 items-center gap-1 sm:flex" : "flex min-w-0 items-center gap-1"}>
+            <Icon className={`h-3 w-3 flex-shrink-0 ${presentation.iconClassName}`} />
+            <span className="truncate text-xs font-medium">{effectiveProfile.display_name}</span>
             {isContextual && (
-              <Zap className="h-3 w-3 text-amber-500 flex-shrink-0" aria-label="Contexto automático do módulo" />
+              <Zap className="h-3 w-3 flex-shrink-0 text-warning" aria-label="Contexto automático do módulo" />
             )}
           </div>
-          <ChevronDown className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+          <ChevronDown className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
         </button>
       </DropdownMenuTrigger>
 
@@ -103,7 +72,7 @@ export function MultiProfileSwitcher({ compact = false }: { compact?: boolean })
         )}
         {isContextual && (
           <>
-            <DropdownMenuLabel className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 font-normal">
+            <DropdownMenuLabel className="flex items-center gap-1.5 text-xs font-normal text-warning">
               <Zap className="h-3 w-3" />
               Contexto automático do módulo
             </DropdownMenuLabel>
@@ -111,13 +80,13 @@ export function MultiProfileSwitcher({ compact = false }: { compact?: boolean })
           </>
         )}
 
-        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
           Trocar perfil global
         </DropdownMenuLabel>
 
         {allProfiles.map(profile => {
-          const PIcon = typeIcon(profile.profile_type);
-          const pColor = typeColor(profile.profile_type);
+          const profilePresentation = getProfileTypePresentation(profile.profile_type);
+          const PIcon = profilePresentation.icon;
           const isActive = activeProfile?.id === profile.id;
 
           return (
@@ -128,21 +97,21 @@ export function MultiProfileSwitcher({ compact = false }: { compact?: boolean })
                 await switchProfile(profile.id);
                 toast.success(`Perfil global: ${profile.display_name}`);
               }}
-              className="gap-2 cursor-pointer"
+              className="cursor-pointer gap-2"
             >
               <Avatar className="h-6 w-6 flex-shrink-0">
                 <AvatarImage src={profile.avatar_url || undefined} />
                 <AvatarFallback className="text-[10px]">{getInitials(profile.display_name)}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1">
-                  <PIcon className={`h-3 w-3 flex-shrink-0 ${pColor}`} />
-                  <span className="text-sm truncate">{profile.display_name}</span>
+                  <PIcon className={`h-3 w-3 flex-shrink-0 ${profilePresentation.iconClassName}`} />
+                  <span className="truncate text-sm">{profile.display_name}</span>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">@{profile.handle}</p>
+                <p className="truncate text-xs text-muted-foreground">@{profile.handle}</p>
               </div>
               {isActive && (
-                <div className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-primary" />
               )}
             </DropdownMenuItem>
           );
