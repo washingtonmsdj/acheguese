@@ -137,6 +137,15 @@ describe("education visual SSOT", () => {
     expect(marketing).not.toContain("level.replace(/_/g, ' ')");
   });
 
+  it("keeps public Education CTA motion accessible", () => {
+    const sidebar = readSource(
+      "src/modules/business/education/pages/EducationDetailSidebar.tsx",
+    );
+
+    expect(sidebar).toContain("useReducedMotion");
+    expect(sidebar).toContain("prefersReducedMotion ? 'auto' : 'smooth'");
+  });
+
   it("keeps public Education cards truthful and impression-based", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
