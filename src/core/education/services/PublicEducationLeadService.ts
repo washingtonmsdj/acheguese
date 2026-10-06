@@ -18,6 +18,8 @@ export interface PublicEducationLeadInput {
   studentAge?: number;
   desiredGrade?: string;
   desiredShift?: SchoolShift;
+  honeypot: string;
+  turnstileToken: string | null;
 }
 
 export interface PublicEducationLeadResult {
@@ -56,7 +58,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export const PublicEducationLeadService = {
   async create(input: PublicEducationLeadInput): Promise<PublicEducationLeadResult> {
     const { data, error } = await supabase.functions.invoke("education-lead-rpc", {
-      body: input,
+      body: {
+        ...input,
+        honeypot: input.honeypot,
+        turnstileToken: input.turnstileToken,
+      },
     });
 
     if (error) {
