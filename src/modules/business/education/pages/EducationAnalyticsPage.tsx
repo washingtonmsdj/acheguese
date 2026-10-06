@@ -84,6 +84,7 @@ export function EducationAnalyticsPage() {
     businessId: businessId || '',
     profileId: profile?.id,
     nicheKey: profile?.niche_key,
+    enrollmentOpen: profile?.enrollment_open ?? null,
     enabled: Boolean(businessId && profile?.id),
   });
 
