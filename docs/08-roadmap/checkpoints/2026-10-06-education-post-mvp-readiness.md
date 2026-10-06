@@ -604,8 +604,13 @@ durante a estabilização atual do data plane.
 - A suíte autenticada agora prova que INEP malformado não passa a validação do
   formulário, que fonte pública não-http(s) e faixa etária invertida são
   rejeitadas e que essas tentativas não persistem `education_profile`.
-- Rollback/compensação de falha parcial de criação continua pendente; nenhum
-  cenário artificial foi criado apenas para produzir um teste verde.
+- Compensação de falha parcial já é provada deterministicamente por
+  `EducationService.setup-compensation.test.ts`: draft criado pela tentativa
+  falha é removido, perfil preexistente é preservado e sucesso não dispara
+  cleanup.
+- Não existe fault injection remoto de produção apenas para simular falha; uma
+  prova remota adicional só deve existir se houver mecanismo explicitamente
+  seguro para induzir e isolar o erro.
 - Esta tranche prepara o caminho de certificação, mas **não conta como smoke de
   produção executado** até um workflow manual rodar contra o deployment do mesmo
   SHA candidato.
