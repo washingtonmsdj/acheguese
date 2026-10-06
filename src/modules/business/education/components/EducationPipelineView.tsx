@@ -95,7 +95,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                   const studentAge = lead.student_age ?? lead.child_age;
 
                   return (
-                  <article
+                    <article
                     key={lead.id}
                     className="rounded-xl border border-territory-border bg-territory-surface p-3 shadow-sm"
                   >
@@ -169,7 +169,7 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                       </span>
                       <EducationStatusBadge status={lead.status} type="lead" />
                     </div>
-                  </article>
+                    </article>
                   );
                 })}
               </div>
