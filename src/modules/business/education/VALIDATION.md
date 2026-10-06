@@ -1,8 +1,9 @@
 # Validação atual — Módulo Educação
 
-**Data do checkpoint:** 2026-09-05  
-**Checkpoint técnico:** `575a0da8ab0a00b868e890cfad88ff39f132c828`  
-**Status:** G6 PRÉ-CERTIFICAÇÃO DE SOURCE CONCLUÍDA — PUBLIC CANARY / HOSTED SAME-SHA BLOCKED
+**Data do checkpoint:** 2026-10-06  
+**Branch:** `education/post-mvp-readiness`  
+**PR:** #612 (draft)  
+**Status:** HARDENING PÓS-MVP — SOURCE GATES COM PROVA VERDE; ATIVAÇÃO AINDA BLOQUEADA
 
 Este arquivo substitui os relatórios históricos que declaravam Educação pronta
 para produção antes da Definition of Done atual. O módulo **não está READY** e
@@ -152,69 +153,86 @@ recriação.
 `tests/architecture/education-private-read-truthfulness.test.ts` protege esse
 contrato.
 
-## 9. Estado de provider / build
+## 9. Evidência de source / CI
 
-Evidências independentes já obtidas em Vercel:
+A frente pós-MVP já obteve uma prova conjunta de source no SHA
+`f1b2231344555c9ff440d78c69eeb54a60e0b7c0`:
 
-- `31377a685c51`: READY;
-- `3b23725a3a8f`: READY;
-- `5e1a26c46f9`: READY;
-- `750f2dd7f69a`: READY;
-- `6ad10de1b1a1`: READY;
-- `82a283998d42`: READY;
-- `0f1ef66487dd`: READY;
-- `331371cebe81`: READY.
+- Active Visual SSOT: **success**;
+- Security Scan: **success**;
+- Security Check: **success**;
+- SSOT Enforcement: **success**;
+- SSOT Territorial Tests: **success**;
+- Heavy PR Certification: **success**.
 
-Os commits posteriores de lifecycle/caller-census/read-truthfulness ainda
-precisam de build/deploy same-SHA observado.
+Depois desse SHA o hardening continuou. A correção específica do falso positivo
+histórico do Gitleaks foi provada isoladamente no SHA
+`475c8e823ff1998c8de8de91d1150c08cbcf449d`, com **Security Scan success**.
 
-GitHub Actions no HEAD `575a0da8...` permanece em falha de infraestrutura:
-Security, SSOT e Territorial retornaram `steps=null`. Isso não é PASS nem
-falha de source.
+Essas evidências demonstram que os gates funcionam e que a frente alcançou
+estados verdes reais. Elas **não** autorizam copiar o resultado para um head
+posterior: cada novo head relevante precisa ser revalidado no mesmo SHA.
+
+O checkpoint operacional detalhado desta frente está em
+`docs/08-roadmap/checkpoints/2026-10-06-education-post-mvp-readiness.md`.
 
 ## 10. O que ainda bloqueia Education READY
 
-### BLOCKED — public canary
+### BLOCKED — lifecycle / launch
 
-A rota pública real ainda está `launch-paused`. Não existe override test-only
-canônico para montar Explorer/Detail reais em Production sem expor a feature.
+Education permanece `paused` no registry canônico e fora dos lazy imports e
+rotas ativas do MVP. Isso é intencional.
 
-Não despausar apenas para “ver se funciona”. A próxima ativação pública deve
-ser um canary controlado ou uma decisão explícita de launch seguida de:
+Não retirar o gate apenas para executar testes. A ativação deve ser uma decisão
+explícita após certificação e precisa montar novamente, de forma controlada:
 
 - Explorer territorial;
 - Detail territorial;
-- programas públicos;
-- lead capture real;
+- programas/eventos públicos;
+- lead capture autorizado;
 - tracking público;
-- SEO/canonical/noindex conforme escopo;
-- mobile/acessibilidade.
+- SEO/canonical;
+- mobile, teclado e acessibilidade.
 
-### BLOCKED — hosted same-SHA
+### BLOCKED — specialist E2E same-SHA
 
-Ainda falta no mesmo SHA:
+Existe uma suite autenticada dedicada,
+`tests/e2e/education-lifecycle-authenticated.spec.ts`, que cria fixture
+Business Education, executa Setup e prova operações privadas sem service-role
+no browser. Ela foi fortalecida para validar também:
 
-- lint;
-- typecheck;
-- unit/integration/security;
+- INEP e URL de proveniência persistidos;
+- faixa etária incluindo idade mínima `0`;
+- programa com vagas `0`;
+- preço `0` preservado.
+
+Antes da ativação, essa suite precisa passar em execução hosted/autorizada no
+mesmo SHA candidato.
+
+As suites legadas em `tests/e2e/education/` são classificadas honestamente:
+Setup operacional quando o ambiente existe, público pausado, Programas/Leads
+como smoke legado e debug fora da certificação.
+
+### BLOCKED — data plane e deployment final
+
+Ainda são necessárias, no mesmo SHA candidato à ativação:
+
+- reconciliação final de schema/RLS/RPCs;
+- probes remotos de autorização;
 - lifecycle autenticado;
-- build/deploy;
-- smoke.
-
-O código não deve ser marcado READY por inferência a partir de SHAs anteriores.
+- build/deployment observado;
+- smoke do deployment;
+- E2E público depois da liberação do lifecycle.
 
 ## 11. Próximo passo
 
-Enquanto os runners hosted permanecem indisponíveis e o public launch continua
-pausado:
-
-1. manter Educação `PAUSED/BLOCKED`, sem reabrir source já fechado;
-2. observar o próximo build Vercel do HEAD e corrigir apenas erro concreto;
-3. executar o lifecycle autenticado assim que o runner receber steps reais;
-4. preparar canary/decisão de launch público antes de remover
-   `launch-paused`;
-5. avançar G6 para **Community** em paralelo, registrando Educação como blocker
-   externo de certificação final.
+1. manter Education `paused` enquanto o hardening continua;
+2. fechar qualquer regressão concreta indicada pelos gates do head;
+3. executar a suite autenticada dedicada em ambiente hosted autorizado quando
+   houver janela de certificação;
+4. reconciliar data plane/RLS/RPCs no SHA candidato;
+5. preparar canary/decisão explícita de launch;
+6. somente então executar E2E público e smoke de deployment no mesmo SHA.
 
 ## 12. Do not repeat
 
