@@ -58,7 +58,9 @@ describe("G6 Education lead pipeline write boundary", () => {
       ),
       "utf8",
     );
-    expect(view).toContain("lead.status !== 'enrolled'");
-    expect(view).toContain("lead.status !== 'lost'");
+    expect(view).toContain("getEducationLeadNextStatuses");
+    expect(view).toContain("nextForwardStatus");
+    expect(view).toContain("canMarkLost");
+    expect(view).not.toContain("PIPELINE_STAGES[index + 1].status");
   });
 });
