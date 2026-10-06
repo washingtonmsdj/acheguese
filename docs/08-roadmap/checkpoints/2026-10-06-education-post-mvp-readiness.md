@@ -204,6 +204,19 @@ durante a estabilização atual do data plane.
   `trackLeadSubmitted`, evitando inflar conversões com reenvios do mesmo lead.
 - Ratchet arquitetural protege essas semânticas e a minimização de dados.
 
+## Tranche adicional — Explorer/vitrine pública
+
+- A interface pública não expõe mais o sufixo interno **V3** em título ou badge.
+- Cards destacados e seções de marketing respeitam `prefers-reduced-motion`.
+- O bloco que apenas mostra uma amostra dos primeiros resultados deixou de se
+  apresentar como **curadoria/destaque** não comprovado.
+- Fallback de nome público usa nome do nicho ou **Instituição educacional**;
+  `institution_type` técnico não é exibido ao visitante.
+- Níveis educacionais usam labels pt-BR do owner compartilhado e não vazam
+  códigos como `early_childhood` ou `elementary_2`.
+- Rede escolar no bloco público usa o mapa de labels já existente.
+- Ratchets visual e de constantes protegem essas semânticas.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
