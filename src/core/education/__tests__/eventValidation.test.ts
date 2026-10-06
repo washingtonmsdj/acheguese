@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   EDUCATION_EVENT_LOCATION_MAX_LENGTH,
   EDUCATION_EVENT_TITLE_MAX_LENGTH,
+  areEducationEventTimesOverlapping,
   getEducationEventValidationError,
 } from '../eventValidation';
 
@@ -53,5 +54,68 @@ describe('Education event validation', () => {
         location: 'x'.repeat(EDUCATION_EVENT_LOCATION_MAX_LENGTH + 1),
       }),
     ).toContain('O local deve ter no máximo');
+  });
+});
+
+
+describe('Education event schedule overlap detection', () => {
+  it('detects overlapping ranges', () => {
+    expect(
+      areEducationEventTimesOverlapping(
+        {
+          startsAt: '2026-10-10T10:00:00.000Z',
+          endsAt: '2026-10-10T12:00:00.000Z',
+        },
+        {
+          startsAt: '2026-10-10T11:00:00.000Z',
+          endsAt: '2026-10-10T13:00:00.000Z',
+        },
+      ),
+    ).toBe(true);
+  });
+
+  it('does not treat touching boundaries as overlap', () => {
+    expect(
+      areEducationEventTimesOverlapping(
+        {
+          startsAt: '2026-10-10T10:00:00.000Z',
+          endsAt: '2026-10-10T12:00:00.000Z',
+        },
+        {
+          startsAt: '2026-10-10T12:00:00.000Z',
+          endsAt: '2026-10-10T13:00:00.000Z',
+        },
+      ),
+    ).toBe(false);
+  });
+
+  it('detects an instant event inside a timed event', () => {
+    expect(
+      areEducationEventTimesOverlapping(
+        { startsAt: '2026-10-10T11:00:00.000Z' },
+        {
+          startsAt: '2026-10-10T10:00:00.000Z',
+          endsAt: '2026-10-10T12:00:00.000Z',
+        },
+      ),
+    ).toBe(true);
+  });
+
+  it('detects two instant events at the same time', () => {
+    expect(
+      areEducationEventTimesOverlapping(
+        { startsAt: '2026-10-10T11:00:00.000Z' },
+        { startsAt: '2026-10-10T11:00:00.000Z' },
+      ),
+    ).toBe(true);
+  });
+
+  it('ignores invalid timestamps instead of inventing a conflict', () => {
+    expect(
+      areEducationEventTimesOverlapping(
+        { startsAt: 'invalid' },
+        { startsAt: '2026-10-10T11:00:00.000Z' },
+      ),
+    ).toBe(false);
   });
 });
