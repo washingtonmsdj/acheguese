@@ -14,7 +14,10 @@ import {
   canMoveEducationLeadToStatus,
   getEducationLeadLostReasonValidationError,
 } from '../leadPipelineValidation';
-import { getEducationProfileSetupValidationErrors } from '../profileValidation';
+import {
+  getEducationProfileSetupValidationErrors,
+  resolveEducationSourceProvenance,
+} from '../profileValidation';
 import {
   EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
   getEducationProgramNameValidationError,
@@ -171,10 +174,12 @@ export async function createEducationProfile(
   payload: Omit<EducationProfile, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationProfile>> {
   payload.school_inep_code = payload.school_inep_code?.trim() || null;
-  payload.school_source_url = payload.school_source_url?.trim() || null;
-  payload.school_source_updated_at = payload.school_source_url
-    ? payload.school_source_updated_at ?? new Date().toISOString()
-    : null;
+  const sourceProvenance = resolveEducationSourceProvenance({
+    nextUrl: payload.school_source_url,
+  });
+  payload.school_source_url = sourceProvenance.schoolSourceUrl;
+  payload.school_source_updated_at =
+    sourceProvenance.schoolSourceUpdatedAt;
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
     return { data: null, error: handleValidationErrors(errors) };
@@ -247,18 +252,16 @@ export async function updateEducationProfile(
       };
     }
 
-    const normalizedSourceUrl = payload.school_source_url?.trim() || null;
-    const currentSourceUrl = currentSource.school_source_url?.trim() || null;
-    payload.school_source_url = normalizedSourceUrl;
-
-    if (normalizedSourceUrl !== currentSourceUrl) {
-      payload.school_source_updated_at = normalizedSourceUrl
-        ? new Date().toISOString()
-        : null;
-    } else {
-      payload.school_source_updated_at =
-        currentSource.school_source_updated_at ?? null;
-    }
+    const sourceProvenance = resolveEducationSourceProvenance({
+      currentUrl: currentSource.school_source_url,
+      currentUpdatedAt: currentSource.school_source_updated_at,
+      nextUrl: payload.school_source_url,
+    });
+    payload.school_source_url = sourceProvenance.schoolSourceUrl;
+    payload.school_source_updated_at =
+      sourceProvenance.schoolSourceUpdatedAt;
+  } else if (payload.school_source_updated_at !== undefined) {
+    delete payload.school_source_updated_at;
   }
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
