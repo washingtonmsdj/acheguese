@@ -241,6 +241,30 @@ describe("Education module hardening ratchet", () => {
     expect(queries).not.toContain("getEventMetrics");
   });
 
+  it("keeps Education setup validation owned by core and submitted through one form path", () => {
+    const setupPage = read(
+      "src/modules/business/education/pages/EducationSetupPage.tsx",
+    );
+    const setupControls = read(
+      "src/modules/business/education/pages/EducationSetupControls.tsx",
+    );
+    const profileValidation = read(
+      "src/core/education/profileValidation.ts",
+    );
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
+
+    expect(setupPage).toContain("getEducationProfileSetupValidationErrors");
+    expect(setupPage).toContain("formData.schoolInepCode.trim()");
+    expect(setupControls).toContain('type="submit"');
+    expect(setupControls).not.toContain("onSave: () => void");
+    expect(profileValidation).toContain("EDUCATION_PROFILE_MAX_AGE");
+    expect(profileValidation).toContain("O código INEP deve conter exatamente 8 dígitos.");
+    expect(mutations).toContain("getEducationProfileSetupValidationErrors");
+    expect(mutations).toContain("payload.school_inep_code?.trim() || null");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
