@@ -154,14 +154,38 @@ function validateProfilePayload(payload: Partial<EducationProfile>): ValidationE
     });
   }
 
-  const validSchoolTypes = ['public', 'private', 'charter', 'community'];
-  if (payload.school_type !== undefined && payload.school_type !== null && !validSchoolTypes.includes(payload.school_type)) {
+  if (
+    payload.school_type !== undefined &&
+    payload.school_type !== null &&
+    !isEducationSchoolType(payload.school_type)
+  ) {
     errors.push({ field: 'school_type', message: 'Tipo de escola invalido' });
   }
 
-  const validSchoolNetworks = ['municipal', 'state', 'federal', 'private'];
-  if (payload.school_network !== undefined && payload.school_network !== null && !validSchoolNetworks.includes(payload.school_network)) {
+  if (
+    payload.school_network !== undefined &&
+    payload.school_network !== null &&
+    !isEducationSchoolNetwork(payload.school_network)
+  ) {
     errors.push({ field: 'school_network', message: 'Rede administrativa invalida' });
+  }
+
+  if (
+    payload.school_type !== undefined &&
+    payload.school_type !== null &&
+    isEducationSchoolType(payload.school_type) &&
+    payload.school_network !== undefined &&
+    payload.school_network !== null &&
+    isEducationSchoolNetwork(payload.school_network) &&
+    !isEducationSchoolNetworkCompatible(
+      payload.school_type,
+      payload.school_network,
+    )
+  ) {
+    errors.push({
+      field: 'school_network',
+      message: 'Rede administrativa incompativel com o tipo de escola',
+    });
   }
 
   if (
