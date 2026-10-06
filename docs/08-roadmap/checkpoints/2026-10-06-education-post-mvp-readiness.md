@@ -436,6 +436,18 @@ durante a estabilização atual do data plane.
 - Esta suite é smoke operacional dependente de ambiente e **não** substitui o
   E2E autenticado de release com entitlement pago real.
 
+## Tranche adicional — filtro público de eventos ativos
+
+- O filtro SQL de eventos `active` continua amplo para reduzir leitura, mas o
+  read model revalida cada linha com `isEducationEventActive` antes de devolver
+  resultados ao detalhe público.
+- Eventos futuros ou em andamento válidos permanecem visíveis; registros
+  legados com cronologia inválida não escapam para a vitrine apenas porque
+  `starts_at` ainda está no futuro.
+- A semântica de Analytics `upcoming` permanece separada e não foi alterada.
+- Ratchet arquitetural exige que o filtro `active` continue passando pelo
+  owner temporal canônico.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
