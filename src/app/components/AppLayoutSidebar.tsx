@@ -42,8 +42,9 @@ const TERRITORY_PORTAL_MODULES = new Set<string>([
   MODULE_SLUGS.search,
 ]);
 
+const MESSAGING_INBOX_PATH = messagingRoutes.inbox();
 const CHILD_OWNED_MAIN_ROUTES = new Set<string>([
-  messagingRoutes.inbox(),
+  MESSAGING_INBOX_PATH,
   TERMS_OF_SERVICE_PATH,
   PRIVACY_POLICY_PATH,
   OFFLINE_SETTINGS_PATH,
@@ -108,7 +109,7 @@ export function AppLayoutSidebar() {
     isBusinessRegistrationRoute;
 
   const isConversationRoute =
-    pathSegments[0] === "mensagens" && pathSegments.length >= 3;
+    pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3;
   const childOwnsMainLandmark = CHILD_OWNED_MAIN_ROUTES.has(pathname);
   const useDocumentScrollPublicShell =
     pathname === "/" ||
