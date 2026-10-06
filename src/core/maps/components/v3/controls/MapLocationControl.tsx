@@ -1,6 +1,6 @@
 /**
  * MapLocationControl - Controle de localização GPS unificado
- * 
+ *
  * Combina:
  * - Botão de solicitar localização
  * - Indicador de precisão GPS
@@ -39,15 +39,14 @@ export function MapLocationControl({
   const [dismissed, setDismissed] = useState(false);
   return (
     <div className={cn('relative flex flex-col items-end gap-2', className)}>
-      {/* Botão de localização */}
       <Button
         variant="default"
         size="icon"
         onClick={() => { setDismissed(false); onRequestLocation(); }}
         disabled={isLoading}
         className={cn(
-          'h-11 w-11 shadow-lg shrink-0 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200',
-          hasLocation && 'text-blue-600 border-blue-300',
+          'h-11 w-11 shrink-0 border border-territory-border bg-territory-surface text-territory-muted shadow-lg hover:bg-territory-raised hover:text-territory-ink',
+          hasLocation && 'border-territory-brand/35 text-territory-brand',
           isLoading && 'opacity-70'
         )}
         aria-label="Minha localização"
@@ -61,26 +60,25 @@ export function MapLocationControl({
         )}
       </Button>
 
-      {/* Indicador de precisão */}
       {showAccuracy && hasLocation && accuracy !== undefined && (
-        <div title="Precisão informada pelo GPS" className="bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs shadow-lg flex items-center gap-1.5">
+        <div title="Precisão informada pelo GPS" className="flex items-center gap-1.5 rounded-lg border border-territory-border bg-territory-surface px-2 py-1 text-xs shadow-lg">
           <div
             className={cn(
-              'w-2 h-2 rounded-full shrink-0',
-              isHighAccuracy ? 'bg-green-500' : 'bg-yellow-500'
+              'h-2 w-2 shrink-0 rounded-full',
+              isHighAccuracy ? 'bg-success' : 'bg-warning'
             )}
           />
-          <span className="text-gray-700 font-medium whitespace-nowrap">
+          <span className="whitespace-nowrap font-medium text-territory-ink">
             ±{Math.round(accuracy)}m
           </span>
         </div>
       )}
       <span className="sr-only" role="status">{isLoading ? 'Buscando sua localização' : hasLocation && !error ? 'Localização encontrada. Mapa centralizado.' : ''}</span>
       {error && !dismissed && !isLoading ? (
-        <div role="alert" className="w-56 max-w-[calc(100vw-4rem)] rounded-xl border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-700 shadow-lg">
+        <div role="alert" className="w-56 max-w-[calc(100vw-4rem)] rounded-xl border border-territory-border bg-territory-surface p-3 text-xs leading-relaxed text-territory-ink shadow-lg">
           <div className="flex items-center justify-between gap-2">
             <strong>{permissionDenied ? 'Localização bloqueada' : 'Não foi possível localizar'}</strong>
-            <button type="button" aria-label="Fechar aviso de localização" onClick={() => setDismissed(true)} className="grid h-11 w-11 shrink-0 place-items-center"><X className="h-4 w-4" /></button>
+            <button type="button" aria-label="Fechar aviso de localização" onClick={() => setDismissed(true)} className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-territory-muted hover:bg-territory-raised hover:text-territory-ink"><X className="h-4 w-4" /></button>
           </div>
           <p>{permissionDenied ? 'Permita a localização nas configurações deste site no navegador. Depois, toque novamente em Minha localização.' : 'Confira se a localização do aparelho está ativada e tente novamente.'}</p>
         </div>
