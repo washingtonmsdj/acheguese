@@ -558,7 +558,11 @@ export async function moveLeadToStatus(
     lostReason?: string;
     ownerUserId?: string | null;
   } = {},
-): Promise<MutationResult<EducationLead>> {
+): Promise<
+  MutationResult<EducationLead> & {
+    previousStatus: EducationLeadStatus | null;
+  }
+> {
   const { data: currentLead, error: currentLeadError } = await supabase
     .from('education_leads')
     .select('status')
@@ -569,6 +573,7 @@ export async function moveLeadToStatus(
     return {
       data: null,
       error: new Error(currentLeadError?.message ?? 'Lead nao encontrado'),
+      previousStatus: null,
     };
   }
 
@@ -579,6 +584,7 @@ export async function moveLeadToStatus(
       error: new Error(
         `Transicao de lead invalida: ${currentStatus} -> ${newStatus}`,
       ),
+      previousStatus: currentStatus,
     };
   }
 
@@ -589,7 +595,11 @@ export async function moveLeadToStatus(
       options.lostReason,
     );
     if (lostReasonError) {
-      return { data: null, error: new Error(lostReasonError) };
+      return {
+        data: null,
+        error: new Error(lostReasonError),
+        previousStatus: currentStatus,
+      };
     }
 
     updatePayload.lost_reason = options.lostReason?.trim() ?? null;
@@ -599,7 +609,8 @@ export async function moveLeadToStatus(
     updatePayload.owner_user_id = options.ownerUserId;
   }
 
-  return updateEducationLead(id, updatePayload);
+  const result = await updateEducationLead(id, updatePayload);
+  return { ...result, previousStatus: currentStatus };
 }
 
 // ============================================================
