@@ -8,10 +8,8 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { getRecordValue, setRecordValue } from '@/shared/utils/recordLookup';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
-import { EDUCATION_LEAD_STATUS, EDUCATION_PROFILE_STATUS } from '../constants';
 import {
   EducationObservabilityService,
   trackLeadCreated,
@@ -19,10 +17,6 @@ import {
   trackProfilePublished,
   trackEducationError,
 } from '@/core/education/services/EducationObservabilityService';
-import {
-  canMoveEducationLeadToStatus,
-  getEducationLeadNextStatuses,
-} from '@/core/education';
 import type {
   EducationProfile,
   EducationProgram,
@@ -30,7 +24,6 @@ import type {
   EducationLeadAdminPatch,
   EducationEvent,
   EducationLeadStatus,
-  EducationProfileStatus,
   SchoolType,
   SchoolNetwork,
   EducationLevel,
@@ -612,117 +605,6 @@ export const EducationService = {
       return false;
     }
     return true;
-  },
-
-  // ==========================================================
-  // AUXILIARY / UTILITY METHODS (Business Logic)
-  // ==========================================================
-
-  /** Verifica se perfil pode ser gerenciado (status ativo) - versão síncrona */
-  isProfileManageable(profile: EducationProfile): boolean {
-    return profile.status === 'published' || profile.status === 'draft';
-  },
-
-  /** Verifica se perfil está publicado e visível publicamente */
-  isProfilePublic(profile: EducationProfile): boolean {
-    return profile.status === 'published';
-  },
-
-  /** Retorna label do status do perfil */
-  getProfileStatusLabel(status: EducationProfileStatus): string {
-    return getRecordValue(EDUCATION_PROFILE_STATUS, status)?.label ?? status;
-  },
-
-  /** Retorna cor do status do perfil */
-  getProfileStatusColor(status: EducationProfileStatus): string {
-    return getRecordValue(EDUCATION_PROFILE_STATUS, status)?.color ?? 'gray';
-  },
-
-  /** Formata preço do programa */
-  formatProgramPrice(price: number | null): string {
-    if (price === null || price === undefined) return 'Consultar';
-    if (price === 0) return 'Gratuito';
-    return `R$ ${price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  },
-
-  /** Ordena programas por display_order */
-  sortProgramsByDisplayOrder(programs: EducationProgram[]): EducationProgram[] {
-    return [...programs].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-  },
-
-  /** Retorna label do status do lead */
-  getLeadStatusLabel(status: EducationLeadStatus): string {
-    return getRecordValue(EDUCATION_LEAD_STATUS, status)?.label ?? status;
-  },
-
-  /** Retorna cor do status do lead */
-  getLeadStatusColor(status: EducationLeadStatus): string {
-    return getRecordValue(EDUCATION_LEAD_STATUS, status)?.color ?? 'gray';
-  },
-
-  /** Verifica se lead está em status ativo (não terminal) */
-  isLeadActive(lead: EducationLead): boolean {
-    return lead.status !== 'enrolled' && lead.status !== 'lost';
-  },
-
-  /** Verifica se transição de status é válida */
-  canMoveLeadToStatus(
-    from: EducationLeadStatus,
-    to: EducationLeadStatus,
-  ): boolean {
-    return canMoveEducationLeadToStatus(from, to);
-  },
-
-  /** Retorna próximos passos possíveis no pipeline */
-  getNextPipelineSteps(current: EducationLeadStatus): EducationLeadStatus[] {
-    return getEducationLeadNextStatuses(current);
-  },
-
-  /** Formata info de contato do lead */
-  formatLeadContactInfo(lead: EducationLead): string {
-    const contact = lead.email ?? lead.phone ?? 'Sem contato';
-    return `${lead.full_name} - ${contact}`;
-  },
-
-  /** Calcula resumo do pipeline (versão síncrona para dados já carregados) */
-  calculatePipelineSummary(leads: EducationLead[]): { total: number; byStatus: Record<string, number>; conversionRate: number; active: number; } {
-    const byStatus: Record<string, number> = {
-      new: 0,
-      contacted: 0,
-      visit_scheduled: 0,
-      proposal_sent: 0,
-      enrolled: 0,
-      lost: 0,
-    };
-
-    leads.forEach((lead) => {
-      const count = getRecordValue(byStatus, lead.status) ?? 0;
-      Object.assign(byStatus, setRecordValue(byStatus, lead.status, count + 1));
-    });
-
-    const total = leads.length;
-    const enrolled = byStatus.enrolled ?? 0;
-    const conversionRate = total > 0 ? Math.round((enrolled / total) * 100) : 0;
-    const active = total - enrolled - (byStatus.lost ?? 0);
-
-    return { total, byStatus, conversionRate, active };
-  },
-
-  /** Verifica se evento está no futuro */
-  isEventUpcoming(startsAt: string): boolean {
-    return new Date(startsAt) > new Date();
-  },
-
-  /** Formata data do evento */
-  formatEventDateTime(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   },
 
 
