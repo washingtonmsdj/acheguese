@@ -7,6 +7,7 @@ const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const appShell = read("src/app/components/AppLayoutSidebar.tsx");
 const messagingInboxPage = read("src/app/pages/MessagingInboxPage.tsx");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
+const messagingCss = read("src/modules/messaging/pages/MensagensPage.css");
 const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
 );
@@ -93,14 +94,27 @@ describe("active AppLayout route boundary", () => {
   });
 
   it("keeps Messaging inbox in the app shell while threads use focused conversation mode", () => {
-    expect(appShell).toContain('pathSegments[0] === "mensagens" && pathSegments.length >= 3');
+    expect(appShell).toContain(
+      'pathSegments[0] === "mensagens" && pathSegments.length >= 3',
+    );
     expect(appShell).toContain("if (isConversationRoute)");
     expect(appShell).not.toContain("if (isMessagingRoute)");
+    expect(appShell).toContain(
+      'className="messaging-route-shell h-[100dvh] w-full overflow-hidden bg-territory-canvas"',
+    );
     expect(appShell).toContain("<AppSidebar />");
     expect(appShell).toContain("<AppTopbar />");
     expect(messagingInboxPage).toContain("getActiveMessagingProviderIds()");
     expect(messagingInboxPage).not.toContain("PublicBrandHeader");
     expect(messagingInboxPage).not.toContain("LAUNCH_URLS");
+
+    const inboxRule =
+      messagingCss.match(/\.messaging-inbox \{[\s\S]*?\n\}/)?.[0] ?? "";
+    expect(inboxRule).toContain("min-height: 0;");
+    expect(inboxRule).not.toContain("height: 100dvh");
+    expect(messagingCss).toContain(
+      ".messaging-route-shell .messaging-inbox {\n  height: 100%;\n}",
+    );
   });
 
   it("keeps prefetch and idle warmup limited to selected active chunks", () => {
@@ -193,10 +207,18 @@ describe("active AppLayout route boundary", () => {
   it("keeps active territorial wrappers on the canonical Territory portal owner", () => {
     expect(activeTerritorialPages).toContain("CategoryBusinessPage");
     expect(activeTerritorialPages).toContain("@/app/pages/TerritoryHomePage");
-    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="map" />');
-    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="business" />');
-    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="nearby" />');
-    expect(activeTerritorialPages).toContain('<TerritoryHomePage activeView="search" />');
+    expect(activeTerritorialPages).toContain(
+      '<TerritoryHomePage activeView="map" />',
+    );
+    expect(activeTerritorialPages).toContain(
+      '<TerritoryHomePage activeView="business" />',
+    );
+    expect(activeTerritorialPages).toContain(
+      '<TerritoryHomePage activeView="nearby" />',
+    );
+    expect(activeTerritorialPages).toContain(
+      '<TerritoryHomePage activeView="search" />',
+    );
     expect(activeTerritorialPages).not.toContain("@/app/pages/MapaPage");
 
     for (const pausedImport of [
