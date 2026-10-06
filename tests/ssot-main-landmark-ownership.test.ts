@@ -6,28 +6,43 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const appShell = read("src/app/components/AppLayoutSidebar.tsx");
+const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const platformSettings = read("src/core/routing/config/platformSettings.ts");
 const publicInfoShell = read(
   "src/app/components/public/PublicInfoPageShell.tsx",
 );
 const messagingPage = read("src/modules/messaging/pages/MensagensPage.tsx");
 
 describe("main landmark ownership SSOT", () => {
-  it("keeps child-owned main routes explicit at the App shell boundary", () => {
+  it("keeps child-owned main routes on canonical route owners", () => {
     const ownedRoutes =
       appShell.match(
         /const CHILD_OWNED_MAIN_ROUTES = new Set<string>\(\[[\s\S]*?\]\);/,
       )?.[0] ?? "";
 
-    for (const route of [
-      "/mensagens",
-      "/termos",
-      "/privacidade",
-      "/offline-settings",
-      "/dpo",
+    for (const routeOwner of [
+      "messagingRoutes.inbox()",
+      "TERMS_OF_SERVICE_PATH",
+      "PRIVACY_POLICY_PATH",
+      "OFFLINE_SETTINGS_PATH",
+      "DATA_PROTECTION_CONTACT_PATH",
     ]) {
-      expect(ownedRoutes, route).toContain(`"${route}"`);
+      expect(ownedRoutes, routeOwner).toContain(routeOwner);
+      expect(appRoutes, routeOwner).toContain(`path={${routeOwner}}`);
     }
 
+    expect(platformSettings).toContain(
+      'export const OFFLINE_SETTINGS_PATH = "/offline-settings";',
+    );
+    expect(appShell).not.toMatch(
+      /["']\/(?:mensagens|termos|privacidade|offline-settings|dpo)["']/,
+    );
+    expect(appRoutes).not.toMatch(
+      /path=["']\/(?:termos|privacidade|offline-settings|dpo)["']/,
+    );
+  });
+
+  it("delegates the global shell main landmark only for child-owned routes", () => {
     expect(appShell).toContain(
       "const childOwnsMainLandmark = CHILD_OWNED_MAIN_ROUTES.has(pathname);",
     );
