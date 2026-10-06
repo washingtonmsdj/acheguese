@@ -331,6 +331,8 @@ export function EducationEventsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return 'Data inválida';
+
     return date.toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
