@@ -37,6 +37,8 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(spec).toContain(".maybeSingle()");
     expect(spec).toContain("expect(inactiveProgram?.available_slots).toBe(0)");
     expect(spec).toContain("expect(Number(inactiveProgram?.price_from)).toBe(0)");
+    expect(spec).toContain("expect(unspecifiedProgram?.available_slots).toBeNull()");
+    expect(spec).toContain("expect(unspecifiedProgram?.price_from).toBeNull()");
     expect(spec).toContain('getByRole("heading", { name: "Excluir programa" })');
     expect(spec).toContain("deletedProgramError");
     expect(spec).toContain("expect(deletedProgram).toBeNull()");
