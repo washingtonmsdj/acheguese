@@ -1,0 +1,44 @@
+name: Active Visual SSOT
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tools/architecture/validate-active-visual-import-graph.ts'
+      - '.github/workflows/active-visual-ssot.yml'
+      - 'package.json'
+      - 'package-lock.json'
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tools/architecture/validate-active-visual-import-graph.ts'
+      - '.github/workflows/active-visual-ssot.yml'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: read
+
+jobs:
+  active-visual-import-graph:
+    name: Active Visual Import Graph
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate transitive active visual SSOT
+        run: npx tsx tools/architecture/validate-active-visual-import-graph.ts
