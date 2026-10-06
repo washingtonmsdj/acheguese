@@ -9,7 +9,7 @@
  */
 
 import { useNavigate, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   Check,
@@ -70,6 +70,7 @@ export function EducationPlansPage() {
   const dashboardContext = useOptionalBusinessDashboardContext();
   const businessDataId = dashboardContext?.businessDataId;
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const { permissions, loading: loadingAccess } = useDashboardAccess(businessId);
   const canManageBilling = permissions.role === 'owner';
@@ -184,8 +185,9 @@ export function EducationPlansPage() {
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8"
       >
         <Button
@@ -326,9 +328,11 @@ export function EducationPlansPage() {
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={
+                  prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }
+                }
               >
                 <Card
                   className={`flex h-full flex-col overflow-hidden border-territory-border bg-territory-surface text-territory-ink shadow-sm ${
