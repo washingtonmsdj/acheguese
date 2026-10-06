@@ -7,6 +7,9 @@ const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const appShell = read("src/app/components/AppLayoutSidebar.tsx");
 const messagingInboxPage = read("src/app/pages/MessagingInboxPage.tsx");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
+const notificationRoutes = read(
+  "src/core/notifications/routes/notificationRoutes.ts",
+);
 const messagingCss = read("src/modules/messaging/pages/MensagensPage.css");
 const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
@@ -96,6 +99,7 @@ describe("active AppLayout route boundary", () => {
       "path={ACCOUNT_PATHS.security}",
       "path={ACCOUNT_PATHS.addresses}",
       "path={ACCOUNT_PATHS.notifications}",
+      "path={notificationRoutes.inbox()}",
     ]) {
       expect(appLayout).toContain(ownedRoute);
     }
@@ -113,11 +117,12 @@ describe("active AppLayout route boundary", () => {
       'path="/conta/perfil/configuracoes"',
       'path="/conta/seguranca"',
       'path="/conta/enderecos"',
+      'path="/notificacoes"',
     ]) {
       expect(appLayout).not.toContain(duplicatedLiteral);
     }
 
-    expect(appLayout).toContain('path="/notificacoes"');
+    expect(notificationRoutes).toContain('inbox: () => "/notificacoes"');
     expect(appLayout).toContain("messagingRoutes.inbox()");
     expect(appLayout).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
