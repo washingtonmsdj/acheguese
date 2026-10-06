@@ -26,6 +26,10 @@ describe("public catalog mount boundary", () => {
     };
     expect(config.rewrites).toEqual([
       {
+        source: "/catalogo-api/:path*",
+        destination: "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev/:path*",
+      },
+      {
         source: "/catalogo",
         destination: "https://washingtonmsdj.github.io/catalogo/",
       },
@@ -46,10 +50,11 @@ describe("public catalog mount boundary", () => {
     expect(source).toContain("Public catalog rewrites drifted from publicExternalApps SSOT");
   });
 
-  it("authorizes the catalog Worker through the security SSOT", () => {
+  it("keeps the browser CSP first-party for catalog API traffic", () => {
     const security = read("src/shared/config/security.config.ts");
-    expect(security).toContain("CATALOG_API");
-    expect(security).toContain("tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev");
-    expect(security).toContain("SECURITY_DOMAINS.CATALOG_API.url");
+    expect(security).not.toContain("CATALOG_API");
+    expect(security).not.toContain("tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev");
+    expect(security).toContain("'connect-src': [");
+    expect(security).toContain(""'self'"");
   });
 });
