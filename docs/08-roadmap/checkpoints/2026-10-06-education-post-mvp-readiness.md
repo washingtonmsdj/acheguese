@@ -131,8 +131,8 @@ durante a estabilização atual do data plane.
 - Diálogos de Programas e Eventos ganharam altura máxima, rolagem interna e
   ações empilhadas no mobile para evitar campos ou botões inacessíveis em telas
   pequenas.
-- Programas e Eventos respeitam `prefers-reduced-motion` no shell
-  administrativo.
+- Programas e Eventos respeitam `prefers-reduced-motion` no shell e nos
+  cards administrativos.
 - Tipos de evento usam o owner compartilhado de `../constants`; a página de
   Eventos deixou de manter uma segunda tabela local de labels/opções.
 
