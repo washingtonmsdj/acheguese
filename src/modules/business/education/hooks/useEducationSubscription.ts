@@ -39,7 +39,7 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
 
   const status = statusQuery.data;
   const entitlements = status?.entitlements;
-  const planTier = status?.planTier ?? PlanTier.FREE;
+  const planTier = status?.planTier;
 
   const permissions = {
     canUsePremiumPublicPage: entitlements?.canUsePremiumPublicPage ?? false,
@@ -62,8 +62,8 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
     entitlements,
     planTier,
     /** @deprecated Compatibilidade de apresentação. Prefira planTier para regras. */
-    planType: status?.planType ?? 'free',
-    isActive: status?.isActive ?? false,
+    planType: status?.planType,
+    isActive: status?.isActive,
     expiresAt: status?.expiresAt,
     permissions,
     refresh: refreshMutation.mutate,
