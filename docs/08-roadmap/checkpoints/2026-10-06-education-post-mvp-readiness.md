@@ -591,6 +591,25 @@ durante a estabilização atual do data plane.
 - Ratchet arquitetural protege a semântica acessível sem duplicar a regra de
   mínimo/máximo na UI.
 
+## Tranche adicional — opt-in de lifecycle autenticado
+
+- O workflow canônico `.github/workflows/ssot-tests.yml` ganhou o input manual
+  `run_education_lifecycle`, desligado por padrão.
+- O lifecycle autenticado de Education só é executado quando um
+  `workflow_dispatch` solicita explicitamente esse input; pull requests e pushes
+  normais não passam a executar a vertical pausada.
+- O passo reutiliza `test:e2e:education-lifecycle-authenticated`, a fixture
+  autenticada dedicada e o transporte GitHub OIDC já usados pelo release; não
+  introduz service-role no job do navegador.
+- A suíte autenticada agora prova que INEP malformado não passa a validação do
+  formulário, que fonte pública não-http(s) e faixa etária invertida são
+  rejeitadas e que essas tentativas não persistem `education_profile`.
+- Rollback/compensação de falha parcial de criação continua pendente; nenhum
+  cenário artificial foi criado apenas para produzir um teste verde.
+- Esta tranche prepara o caminho de certificação, mas **não conta como smoke de
+  produção executado** até um workflow manual rodar contra o deployment do mesmo
+  SHA candidato.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
