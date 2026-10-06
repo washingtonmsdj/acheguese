@@ -421,6 +421,19 @@ describe("Education module hardening ratchet", () => {
     expect(hook).toContain("payload: EducationLeadAdminPatch");
   });
 
+  it("keeps EducationService focused on orchestration", () => {
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+
+    expect(service).not.toContain("AUXILIARY / UTILITY METHODS");
+    expect(service).not.toContain("calculatePipelineSummary");
+    expect(service).not.toContain("formatLeadContactInfo");
+    expect(service).not.toContain("getProfileStatusColor");
+    expect(service).not.toContain("getLeadStatusColor");
+    expect(service).not.toContain("sortProgramsByDisplayOrder");
+  });
+
   it("keeps Education validation out of the business facade", () => {
     const service = read(
       "src/modules/business/education/services/EducationService.ts",
