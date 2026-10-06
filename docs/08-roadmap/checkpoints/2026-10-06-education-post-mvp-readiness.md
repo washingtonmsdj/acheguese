@@ -569,6 +569,9 @@ durante a estabilização atual do data plane.
   `PIPELINE_STAGES`.
 - `EducationPipelineView` consome `getEducationLeadNextStatuses` do core para
   decidir seta, ação **Avançar** e disponibilidade de **Perdido**.
+- Ações repetidas no pipeline têm nomes acessíveis únicos, incluindo o nome do
+  lead e, no avanço, a etapa de destino; leitores de tela não recebem uma lista
+  ambígua de botões chamados apenas “Avançar”/“Perdido”.
 - A etapa terminal **Matriculado** não mostra mais seta visual apontando para
   **Perdido**, eliminando uma affordance incompatível com a máquina de estados.
 - Ratchet arquitetural impede o retorno do acesso
