@@ -753,6 +753,22 @@ Ainda são obrigatórios antes de qualquer despausa:
 - O teste `public-education-lead-intake-g6.test.ts` protege o contrato
   browser → service → Edge → policy para impedir novo drift.
 
+### Cutover remoto do broker público
+
+O rename do source **não autoriza deploy nesta frente**. Quando o data plane for
+liberado para a ativação pós-MVP, o cutover precisa ser atômico no mesmo
+candidate SHA:
+
+1. publicar `education-lead-intake` com `verify_jwt=false` e os secrets
+   `TURNSTILE_SECRET_KEY` / `ALLOWED_ORIGINS` válidos;
+2. provar origin, rate limit, honeypot, Turnstile action/hostname, elegibilidade,
+   deduplicação e INSERT server-side;
+3. validar o frontend publicado apontando para `education-lead-intake`;
+4. somente após os probes verdes, retirar/desativar o broker remoto legado
+   `education-lead-rpc`;
+5. preservar a migration histórica que cita o nome anterior; ela não deve ser
+   reescrita apenas por causa do rename.
+
 ## Próximas etapas
 
 1. manter o PR em draft e Education em `paused`;
