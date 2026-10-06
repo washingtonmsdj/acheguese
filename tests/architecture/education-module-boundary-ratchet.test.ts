@@ -412,6 +412,17 @@ describe("Education module hardening ratchet", () => {
     expect(hook).toContain("payload: EducationLeadAdminPatch");
   });
 
+  it("keeps Education validation out of the business facade", () => {
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+
+    expect(service).not.toContain("validateProfilePayload(");
+    expect(service).not.toContain("validateProgramPayload(");
+    expect(service).not.toContain("validateLeadPayload(");
+    expect(service).not.toContain("validateEventPayload(");
+  });
+
   it("keeps Education domain contracts owned by core", () => {
     const contracts = read("src/core/education/contracts.ts");
 
