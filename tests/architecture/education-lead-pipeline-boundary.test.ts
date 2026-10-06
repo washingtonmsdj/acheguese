@@ -12,8 +12,8 @@ describe("G6 Education lead pipeline write boundary", () => {
     );
     expect(mutations).toContain("isAllowedLeadTransition");
     expect(mutations).toContain("Transicao de lead invalida");
-    expect(mutations).toContain("EducationLeadEditablePatch");
-    expect(mutations).toContain("Omit<EducationLead, 'status'>");
+    expect(mutations).toContain("EducationLeadAdminPatch");
+    expect(mutations).toContain("payload: EducationLeadAdminPatch");
     expect(mutations).toContain("Mudanca de status deve usar moveLeadToStatus");
     expect(mutations).toContain("persistEducationLeadUpdate");
     expect(mutations).toContain("newStatus === 'contacted' && currentStatus !== 'contacted'");
