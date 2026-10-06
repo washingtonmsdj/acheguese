@@ -294,7 +294,13 @@ export function EducationDetailPage() {
           title: 'Link copiado',
           description: 'O link desta instituição foi copiado para a área de transferência.',
         });
+        return;
       }
+
+      toast({
+        title: 'Compartilhamento indisponível',
+        description: 'Copie o endereço desta página pela barra do navegador.',
+      });
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       toast({
