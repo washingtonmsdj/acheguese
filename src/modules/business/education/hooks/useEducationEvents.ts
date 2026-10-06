@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
-import type { EducationEvent, SchoolEventType } from '@/core/education';
+import type {
+  EducationEventAdminPatch,
+  SchoolEventType,
+} from '@/core/education';
 
 export interface EventFilters {
   isPublic?: boolean;
@@ -59,7 +62,7 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
       payload,
     }: {
       eventId: string;
-      payload: Partial<EducationEvent>;
+      payload: EducationEventAdminPatch;
     }) => {
       const updated = await EducationService.updateEvent(eventId, payload);
       if (!updated) throw new Error('Falha ao atualizar evento');
