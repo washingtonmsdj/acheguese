@@ -165,6 +165,13 @@ function validateProfilePayload(payload: Partial<EducationProfile>): ValidationE
     errors.push({ field: 'school_network', message: 'Rede administrativa invalida' });
   }
 
+  if (
+    payload.support_level !== undefined &&
+    !isEducationSupportLevel(payload.support_level)
+  ) {
+    errors.push({ field: 'support_level', message: 'Nivel de suporte invalido' });
+  }
+
   const validStatuses: EducationProfileStatus[] = ['draft', 'published', 'paused'];
   if (payload.status !== undefined && !validStatuses.includes(payload.status)) {
     errors.push({ field: 'status', message: 'Status invalido' });
