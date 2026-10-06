@@ -6,7 +6,7 @@
  */
 
 import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   GraduationCap,
   Users,
@@ -24,6 +24,7 @@ import { useEducationNiche } from '../niches/hooks/useEducationNiche';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
+import { EducationStatusBadge } from '../components/EducationStatusBadge';
 
 export function EducationDashboardPage() {
   const { businessId } = useParams<{ businessId: string }>();
@@ -34,6 +35,7 @@ export function EducationDashboardPage() {
     error,
     refetch,
   } = useEducationProfile(businessId);
+  const prefersReducedMotion = useReducedMotion();
   const nicheData = useEducationNiche(profile?.niche_key);
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
   const adminUrls = businessId
@@ -91,36 +93,49 @@ export function EducationDashboardPage() {
 
   const menuItems = [
     {
+      key: 'setup',
       icon: Settings,
       label: 'Configuração',
       href: adminUrls?.setup,
       description: 'Dados da instituição e perfil',
     },
     {
+      key: 'programs',
       icon: BookOpen,
       label: 'Programas',
       href: adminUrls?.programs,
       description: 'Gerenciar turmas e programas',
     },
     {
+      key: 'leads',
       icon: Users,
       label: 'Leads',
       href: adminUrls?.leads,
       description: 'Pipeline de matrículas',
     },
     {
+      key: 'events',
       icon: Calendar,
       label: 'Eventos',
       href: adminUrls?.events,
       description: 'Eventos e visitas agendadas',
     },
     {
+      key: 'analytics',
       icon: TrendingUp,
       label: 'Analytics',
       href: adminUrls?.analytics,
       description: 'Estatísticas e relatórios',
     },
-  ].flatMap((item) => (item.href ? [{ ...item, href: item.href }] : []));
+  ].flatMap((item) =>
+    item.href && (profile || item.key === 'setup')
+      ? [{ ...item, href: item.href }]
+      : [],
+  );
+
+  const formatInfrastructureCount = (
+    values: readonly unknown[] | null | undefined,
+  ): string => (values == null ? 'Não informado' : String(values.length));
 
   if (isLoading) {
     return (
@@ -148,8 +163,9 @@ export function EducationDashboardPage() {
   return (
     <div className="container mx-auto p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8"
       >
         <div className="mb-2 flex items-center gap-3">
@@ -159,7 +175,9 @@ export function EducationDashboardPage() {
           <div>
             <h1 className="font-heading text-2xl font-bold text-territory-ink">Educação</h1>
             <p className="text-sm text-territory-muted">
-              {profile?.institution_type ?? 'Instituição não configurada'}
+              {profile
+                ? nicheInfo?.displayName ?? 'Perfil educacional'
+                : 'Instituição não configurada'}
             </p>
           </div>
         </div>
@@ -213,7 +231,7 @@ export function EducationDashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold capitalize text-territory-ink">{profile.status}</p>
+              <EducationStatusBadge status={profile.status} type="profile" className="text-sm" />
             </CardContent>
           </Card>
           <Card className="border-territory-border bg-territory-surface text-territory-ink">
@@ -226,7 +244,7 @@ export function EducationDashboardPage() {
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate text-lg font-bold text-territory-ink">
-                    {nicheInfo?.displayName || profile.niche_key}
+                    {nicheInfo?.displayName ?? 'Nicho não reconhecido'}
                   </p>
                   <p className="text-xs text-territory-muted">
                     {nicheInfo
@@ -268,26 +286,26 @@ export function EducationDashboardPage() {
           <CardContent className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
               <div className="text-xs text-territory-muted">Recursos básicos</div>
-              <div className="text-xl font-bold text-territory-ink">
-                {profile.school_basic_resources?.length ?? 0}
+              <div className="text-base font-bold text-territory-ink sm:text-xl">
+                {formatInfrastructureCount(profile.school_basic_resources)}
               </div>
             </div>
             <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
               <div className="text-xs text-territory-muted">Acessibilidade</div>
-              <div className="text-xl font-bold text-territory-ink">
-                {profile.school_accessibility_features?.length ?? 0}
+              <div className="text-base font-bold text-territory-ink sm:text-xl">
+                {formatInfrastructureCount(profile.school_accessibility_features)}
               </div>
             </div>
             <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
               <div className="text-xs text-territory-muted">Equipamentos</div>
-              <div className="text-xl font-bold text-territory-ink">
-                {profile.school_equipment_features?.length ?? 0}
+              <div className="text-base font-bold text-territory-ink sm:text-xl">
+                {formatInfrastructureCount(profile.school_equipment_features)}
               </div>
             </div>
             <div className="rounded-lg border border-territory-border bg-territory-raised/45 p-3">
               <div className="text-xs text-territory-muted">Instalações</div>
-              <div className="text-xl font-bold text-territory-ink">
-                {profile.school_facility_features?.length ?? 0}
+              <div className="text-base font-bold text-territory-ink sm:text-xl">
+                {formatInfrastructureCount(profile.school_facility_features)}
               </div>
             </div>
           </CardContent>
@@ -298,9 +316,11 @@ export function EducationDashboardPage() {
         {menuItems.map((item, index) => (
           <motion.div
             key={item.label}
-            initial={{ opacity: 0, y: 20 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={
+              prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }
+            }
           >
             <Link to={item.href} className="block h-full rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2 focus-visible:ring-offset-territory-canvas">
               <Card className="group h-full cursor-pointer border-territory-border bg-territory-surface text-territory-ink transition-[border-color,box-shadow] hover:border-territory-brand/35 hover:shadow-md">
