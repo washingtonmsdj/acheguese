@@ -180,6 +180,12 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(eventsSpec).toContain("createTestEvent");
     expect(eventsSpec).toContain("smoke operacional");
     expect(eventsSpec).toContain("NAO certifica criacao de evento pela UI");
+    expect(eventsSpec).toContain("rejects an end time that is not after the start");
+    expect(eventsSpec).toContain(
+      "O término do evento deve ser posterior ao início.",
+    );
+    expect(eventsSpec).toContain("expect(after?.starts_at).toBe(before?.starts_at)");
+    expect(eventsSpec).toContain("expect(after?.ends_at).toBe(before?.ends_at)");
     expect(eventsSpec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(eventsSpec).not.toContain("E2E_EDUCATION_OWNER_PASSWORD");
   });
