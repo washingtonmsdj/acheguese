@@ -223,7 +223,7 @@ export function EducationDataSection({
                   }
                   autoComplete="url"
                   maxLength={2048}
-                  placeholder="https://..." 
+                  placeholder="https://..."
                 />
               </div>
             </div>
