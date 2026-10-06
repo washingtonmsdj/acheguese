@@ -42,6 +42,18 @@ function publicLeadError(message: string): string {
   if (normalized.includes("daily_limit") || normalized.includes("rate")) {
     return "Muitas solicitacoes foram enviadas. Tente novamente mais tarde.";
   }
+  if (normalized.includes("turnstile_failed")) {
+    return "A verificacao anti-spam expirou ou foi rejeitada. Confirme novamente.";
+  }
+  if (normalized.includes("verification_unavailable")) {
+    return "A verificacao anti-spam esta temporariamente indisponivel. Tente novamente em instantes.";
+  }
+  if (normalized.includes("configuration_unavailable")) {
+    return "O envio de solicitacoes esta temporariamente indisponivel.";
+  }
+  if (normalized.includes("origin_not_allowed")) {
+    return "Nao foi possivel validar a origem desta solicitacao.";
+  }
   if (normalized.includes("not_available")) {
     return "Este perfil nao esta disponivel para receber solicitacoes.";
   }
