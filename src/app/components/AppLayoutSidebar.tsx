@@ -35,6 +35,14 @@ const TERRITORY_PORTAL_MODULES = new Set<string>([
   MODULE_SLUGS.search,
 ]);
 
+const CHILD_OWNED_MAIN_ROUTES = new Set<string>([
+  "/mensagens",
+  "/termos",
+  "/privacidade",
+  "/offline-settings",
+  "/dpo",
+]);
+
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
   const activeNavigationModeIds = getActiveTerritoryNavigationModeIds();
@@ -94,6 +102,7 @@ export function AppLayoutSidebar() {
 
   const isConversationRoute =
     pathSegments[0] === "mensagens" && pathSegments.length >= 3;
+  const childOwnsMainLandmark = CHILD_OWNED_MAIN_ROUTES.has(pathname);
   const useDocumentScrollPublicShell =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
@@ -187,6 +196,8 @@ export function AppLayoutSidebar() {
     );
   }
 
+  const MainContentElement = childOwnsMainLandmark ? "div" : "main";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-territory-canvas">
@@ -194,14 +205,14 @@ export function AppLayoutSidebar() {
 
         <div className="flex-1 flex flex-col min-w-0 w-full">
           <AppTopbar />
-          <main
-            id="main-content"
+          <MainContentElement
+            id={childOwnsMainLandmark ? undefined : "main-content"}
             className="flex-1 p-4 md:p-6 pb-20 md:pb-6 w-full overflow-y-auto"
-            tabIndex={-1}
+            tabIndex={childOwnsMainLandmark ? undefined : -1}
           >
             <TerritoryMismatchBanner />
             <Outlet />
-          </main>
+          </MainContentElement>
         </div>
       </div>
       {!hideMobileBottomNav ? (
