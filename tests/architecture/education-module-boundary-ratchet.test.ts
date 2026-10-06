@@ -173,8 +173,13 @@ describe("Education module hardening ratchet", () => {
 
     expect(programs).toContain("getEducationProgramNameValidationError");
     expect(programs).toContain("getEducationProgramNumericValidationError");
+    expect(programs).toContain("availableSlots: null as number | null");
+    expect(programs).toContain("priceFrom: null as number | null");
+    expect(programs).toContain("program.price_from === 0");
+    expect(programs).toContain("max-h-[90vh]");
     expect(programs).toContain("enabled: Boolean(profile?.id)");
     expect(events).toContain("enabled: Boolean(profile?.id)");
+    expect(events).toContain("max-h-[90vh]");
 
     const pipeline = read(
       "src/modules/business/education/components/EducationPipelineView.tsx",
