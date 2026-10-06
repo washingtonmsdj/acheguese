@@ -11,10 +11,9 @@ const platformSettings = read("src/core/routing/config/platformSettings.ts");
 const publicInfoShell = read(
   "src/app/components/public/PublicInfoPageShell.tsx",
 );
-const messagingPage = read("src/modules/messaging/pages/MensagensPage.tsx");
 
 describe("main landmark ownership SSOT", () => {
-  it("keeps child-owned main routes on canonical route owners", () => {
+  it("keeps child-owned public information routes on canonical route owners", () => {
     const ownedRoutes =
       appShell.match(
         /const CHILD_OWNED_MAIN_ROUTES = new Set<string>\(\[[\s\S]*?\]\);/,
@@ -23,7 +22,7 @@ describe("main landmark ownership SSOT", () => {
     expect(appShell).toContain(
       "const MESSAGING_INBOX_PATH = messagingRoutes.inbox();",
     );
-    expect(ownedRoutes).toContain("MESSAGING_INBOX_PATH");
+    expect(ownedRoutes).not.toContain("MESSAGING_INBOX_PATH");
     expect(appRoutes).toContain("path={messagingRoutes.inbox()}");
 
     for (const routeOwner of [
@@ -47,7 +46,7 @@ describe("main landmark ownership SSOT", () => {
     );
   });
 
-  it("delegates the global shell main landmark only for child-owned routes", () => {
+  it("delegates the global shell main landmark only for child-owned public information routes", () => {
     expect(appShell).toContain(
       "const childOwnsMainLandmark = CHILD_OWNED_MAIN_ROUTES.has(pathname);",
     );
@@ -62,17 +61,18 @@ describe("main landmark ownership SSOT", () => {
     );
   });
 
-  it("preserves the child main landmarks that own skip-link focus", () => {
+  it("preserves the PublicInfoPageShell main landmark and skip-link focus owner", () => {
     expect(publicInfoShell).toContain('<main\n        id="main-content"');
-    expect(messagingPage.match(/id="main-content"/g)?.length).toBeGreaterThanOrEqual(3);
+    expect(publicInfoShell).toContain("tabIndex={-1}");
   });
 
-  it("keeps focused message threads outside the global main wrapper", () => {
+  it("keeps protected Messaging outside generic child-owned delegation", () => {
     expect(appShell).toContain(
       "pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3",
     );
     expect(appShell).toContain(
       '<div className="messaging-route-shell h-[100dvh] w-full overflow-hidden bg-territory-canvas">',
     );
+    expect(appShell).toContain("expect").not;
   });
 });
