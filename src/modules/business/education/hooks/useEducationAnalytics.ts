@@ -100,7 +100,7 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
                       programMetrics.totalVacancies) *
                       100,
                   )
-                : 0,
+                : null,
             totalVacancies: programMetrics.totalVacancies,
             filledVacancies: programMetrics.filledVacancies,
           },
@@ -123,8 +123,12 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
           // Calcular métricas escolares adicionais
           const avgEnrollmentRate =
             programMetrics.totalVacancies > 0
-              ? Math.round((programMetrics.filledVacancies / programMetrics.totalVacancies) * 100)
-              : 0;
+              ? Math.round(
+                  (programMetrics.filledVacancies /
+                    programMetrics.totalVacancies) *
+                    100,
+                )
+              : null;
 
           const mostRequestedGrade =
             byGrade.length > 0 ? byGrade[0].grade : null;
