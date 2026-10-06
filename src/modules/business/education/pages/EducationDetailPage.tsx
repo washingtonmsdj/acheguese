@@ -214,6 +214,8 @@ export function EducationDetailPage() {
       studentAge: formData.studentAge,
       desiredGrade: formData.desiredGrade,
       desiredShift: formData.desiredShift,
+      honeypot: formData.honeypot,
+      turnstileToken: formData.turnstileToken,
     });
 
     if (lead.created) {
