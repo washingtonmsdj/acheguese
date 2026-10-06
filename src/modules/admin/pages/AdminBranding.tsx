@@ -37,7 +37,7 @@ export default function AdminBranding() {
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [faviconPreview, setFaviconPreview] = useState<string>('');
-  const [primaryColor, setPrimaryColor] = useState(DEFAULT_PRIMARY_COLOR);
+  const [primaryColor, setPrimaryColor] = useState<string>(DEFAULT_PRIMARY_COLOR);
 
   // Buscar configurações atuais
   const { data: settings, isLoading } = useQuery({
