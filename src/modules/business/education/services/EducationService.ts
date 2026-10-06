@@ -521,7 +521,7 @@ export const EducationService = {
 
   async updateLead(
     leadId: string,
-    payload: Partial<EducationLead>,
+    payload: Partial<Omit<EducationLead, 'status'>>,
   ): Promise<EducationLead | null> {
     const { data, error } = await mutations.updateEducationLead(leadId, payload);
     if (error) {
