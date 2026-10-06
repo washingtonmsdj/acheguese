@@ -220,6 +220,9 @@ durante a estabilização atual do data plane.
   `core/education/leadPipelineValidation.ts`; facade e write model usam o
   mesmo owner. `enrolled` e `lost` não expõem próximos passos, eliminando a
   divergência que antes sugeria `enrolled → lost` na helper de UI.
+- O helper sem base observada `calculateLeadConversionProbability` foi removido;
+  a vertical não apresenta propensão de conversão hardcoded por etapa como se
+  fosse uma métrica real.
 
 ## Tranche adicional — Acessibilidade de movimento
 
