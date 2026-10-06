@@ -43,6 +43,10 @@ const VERCEL_CONFIG_TEMPLATE = {
 
   rewrites: [
     {
+      source: `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*`,
+      destination: `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*`,
+    },
+    {
       source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
       destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/`,
     },
@@ -142,9 +146,11 @@ function generateVercelConfig() {
     throw new Error("Install command drifted from lockfile consistency guard");
   }
 
-  const [catalogIndexRewrite, catalogNestedRewrite, spaRewrite] =
+  const [catalogApiRewrite, catalogIndexRewrite, catalogNestedRewrite, spaRewrite] =
     generated.rewrites ?? [];
   if (
+    catalogApiRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*` ||
+    catalogApiRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*` ||
     catalogIndexRewrite?.source !== PUBLIC_EXTERNAL_APPS.catalog.mountPath ||
     catalogIndexRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/` ||
     catalogNestedRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*` ||
