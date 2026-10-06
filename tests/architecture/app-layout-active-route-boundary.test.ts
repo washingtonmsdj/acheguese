@@ -65,7 +65,7 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('<Route path="*" element={<P.NotFound />} />');
   });
 
-  it("derives mounted active surfaces from the canonical lifecycle", () => {
+  it("derives mounted active surfaces from the canonical lifecycle and route owners", () => {
     expect(appLayout).toContain('isProductModuleEnabled("business")');
     for (const capability of [
       "profiles",
@@ -82,10 +82,28 @@ describe("active AppLayout route boundary", () => {
       );
     }
 
-    expect(appLayout).toContain('path="/empresas"');
-    expect(appLayout).toContain('path="/mapa"');
-    expect(appLayout).toContain('path="/perto-de-mim"');
-    expect(appLayout).toContain('path="/busca"');
+    for (const ownedRoute of [
+      "buildAppModulePath(APP_MODULE_SLUGS.business)",
+      'buildAppModulePath(APP_MODULE_SLUGS.business, "cadastrar")',
+      "buildAppModulePath(APP_MODULE_SLUGS.map)",
+      "buildAppModulePath(APP_MODULE_SLUGS.nearby)",
+      "buildAppModulePath(APP_MODULE_SLUGS.search)",
+      "path={`/${TERRITORIAL_STATIC.searchAlias}`}",
+    ]) {
+      expect(appLayout).toContain(ownedRoute);
+    }
+
+    for (const duplicatedLiteral of [
+      'path="/empresas"',
+      'path="/empresas/cadastrar"',
+      'path="/mapa"',
+      'path="/perto-de-mim"',
+      'path="/busca"',
+      'path="/buscar"',
+    ]) {
+      expect(appLayout).not.toContain(duplicatedLiteral);
+    }
+
     expect(appLayout).toContain('path="/notificacoes"');
     expect(appLayout).toContain("path={ACCOUNT_PATHS.notifications}");
     expect(appLayout).toContain("messagingRoutes.inbox()");
