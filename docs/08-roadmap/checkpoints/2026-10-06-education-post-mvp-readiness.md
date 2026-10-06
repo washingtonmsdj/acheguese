@@ -281,6 +281,23 @@ durante a estabilização atual do data plane.
 - O pipeline administrativo prefere `student_name/student_age` aos campos
   legados e preserva idade `0`; teste de renderização cobre esse caso.
 
+## Tranche adicional — E2E autenticado e inventário de cobertura
+
+- O inventário em `tests/e2e/education/README.md` deixou de declarar cobertura
+  completa inexistente: separa suite operacional, smoke legado, público pausado
+  e diagnóstico não-certificante.
+- `education-dashboard-debug.spec.ts` fica explicitamente fora da certificação.
+- A suite autenticada dedicada do lifecycle continua operando sem service-role
+  no browser e foi ampliada para provar por UI + banco:
+  - persistência de INEP e fonte pública;
+  - idade mínima `0` e idade máxima;
+  - programa com `available_slots = 0`;
+  - preço `0` preservado em vez de virar ausência.
+- Ratchet de lifecycle exige essas provas e mantém a suite pública em
+  `describe.skip` enquanto Education estiver `paused`.
+- Essas mudanças fortalecem a prova disponível, mas a execução hosted same-SHA
+  da suite autenticada continua obrigatória antes de qualquer ativação.
+
 ### Gates ainda pendentes
 
 Os commits desta tranche **não** ativam Educação. São necessários typecheck,
