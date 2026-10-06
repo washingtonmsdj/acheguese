@@ -145,6 +145,31 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(helper).not.toContain("end_date: endDate");
   });
 
+  it("keeps the operational Leads smoke deterministic and failure-aware", () => {
+    const leadsSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-leads.spec.ts"),
+      "utf8",
+    );
+
+    expect(leadsSpec).toContain(
+      "renders student age zero without treating it as missing",
+    );
+    expect(leadsSpec).toContain(
+      "does not expose skip backward or terminal transitions",
+    );
+    expect(leadsSpec).toContain(
+      "shows mutation failure and preserves the lead status",
+    );
+    expect(leadsSpec).toContain("route.request().method() === 'PATCH'");
+    expect(leadsSpec).toContain(
+      "Não foi possível atualizar o lead",
+    );
+    expect(leadsSpec).toContain("expect(data?.status).toBe('new')");
+    expect(leadsSpec).toContain("expect(data?.first_contact_at).toBeNull()");
+    expect(leadsSpec).toContain("newStage.getByText('26'");
+    expect(leadsSpec).not.toContain("waitForTimeout(");
+  });
+
   it("keeps the operational Events smoke explicit about its fixture boundary", () => {
     const eventsSpec = readFileSync(
       join(ROOT, "tests/e2e/education/education-events.spec.ts"),
