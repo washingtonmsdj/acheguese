@@ -290,6 +290,32 @@ describe("Education module hardening ratchet", () => {
     expect(leads).toContain("Não foi possível atualizar o lead");
   });
 
+  it("keeps Education event temporal semantics centralized", () => {
+    const events = read(
+      "src/modules/business/education/pages/EducationEventsPage.tsx",
+    );
+    const eventsHook = read(
+      "src/modules/business/education/hooks/useEducationEvents.ts",
+    );
+    const queries = read(
+      "src/core/education/services/education.queries.ts",
+    );
+    const temporal = read(
+      "src/core/education/eventTemporalState.ts",
+    );
+
+    expect(temporal).toContain("getEducationEventTemporalState");
+    expect(temporal).toContain("'ongoing'");
+    expect(events).toContain("getEducationEventTemporalState");
+    expect(events).toContain("Em andamento");
+    expect(events).toContain("Revisar data");
+    expect(events).not.toContain("const isUpcoming =");
+    expect(eventsHook).toContain("active?: boolean");
+    expect(eventsHook).toContain("isPublic, upcoming, active");
+    expect(queries).toContain("active?: boolean");
+    expect(queries).toContain("ends_at.gte.");
+  });
+
   it("does not collapse unknown program vacancies into unavailable", () => {
     const service = read(
       "src/modules/business/education/services/EducationService.ts",
