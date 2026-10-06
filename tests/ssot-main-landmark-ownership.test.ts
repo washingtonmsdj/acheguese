@@ -14,7 +14,7 @@ const publicInfoShell = read(
 );
 
 describe("main landmark ownership SSOT", () => {
-  it("keeps child-owned public information routes on canonical route owners", () => {
+  it("keeps child-owned routes on canonical route owners", () => {
     const ownedRoutes =
       appShell.match(
         /const CHILD_OWNED_MAIN_ROUTES = new Set<string>\(\[[\s\S]*?\]\);/,
@@ -23,7 +23,7 @@ describe("main landmark ownership SSOT", () => {
     expect(appShell).toContain(
       "const MESSAGING_INBOX_PATH = messagingRoutes.inbox();",
     );
-    expect(ownedRoutes).not.toContain("MESSAGING_INBOX_PATH");
+    expect(ownedRoutes).toContain("MESSAGING_INBOX_PATH");
     expect(appRoutes).toContain("path={messagingRoutes.inbox()}");
 
     for (const routeOwner of [
@@ -47,7 +47,7 @@ describe("main landmark ownership SSOT", () => {
     );
   });
 
-  it("delegates the global shell main landmark only for child-owned public information routes", () => {
+  it("delegates the global shell main landmark for child-owned routes", () => {
     expect(appShell).toContain(
       "const childOwnsMainLandmark = CHILD_OWNED_MAIN_ROUTES.has(pathname);",
     );
@@ -67,15 +67,35 @@ describe("main landmark ownership SSOT", () => {
     expect(publicInfoShell).toContain("tabIndex={-1}");
   });
 
-  it("keeps protected Messaging outside generic child-owned delegation", () => {
+  it("keeps protected Messaging with exactly one main owner during access gates", () => {
     const ownedRoutes =
       appShell.match(
         /const CHILD_OWNED_MAIN_ROUTES = new Set<string>\(\[[\s\S]*?\]\);/,
       )?.[0] ?? "";
 
-    expect(ownedRoutes).not.toContain("MESSAGING_INBOX_PATH");
-    expect(protectedRoute).toContain("function AccessLoading");
-    expect(protectedRoute).not.toContain("<main");
+    expect(ownedRoutes).toContain("MESSAGING_INBOX_PATH");
+    expect(protectedRoute).toContain(
+      "const MESSAGING_INBOX_PATH = messagingRoutes.inbox();",
+    );
+    expect(protectedRoute).toContain(
+      "const protectedRouteOwnsMainLandmark =",
+    );
+    expect(protectedRoute).toContain(
+      "location.pathname.startsWith(`${MESSAGING_INBOX_PATH}/`)",
+    );
+    expect(protectedRoute).toContain(
+      'const LoadingElement = ownsMainLandmark ? "main" : "div";',
+    );
+    expect(protectedRoute).toContain(
+      'id={ownsMainLandmark ? "main-content" : undefined}',
+    );
+    expect(protectedRoute).toContain(
+      'tabIndex={ownsMainLandmark ? -1 : undefined}',
+    );
+    expect(protectedRoute).toContain(
+      '<div role="status" aria-live="polite" className="space-y-3 text-center">',
+    );
+    expect(protectedRoute).not.toMatch(/["']\/mensagens(?:\/|["'])/);
     expect(appShell).toContain(
       "pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3",
     );
