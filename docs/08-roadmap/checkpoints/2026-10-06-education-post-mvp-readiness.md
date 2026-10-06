@@ -762,6 +762,15 @@ durante a estabilização atual do data plane.
   autoridade de domínio.
 - Teste unitário e ratchet arquitetural protegem o contrato.
 
+## Tranche adicional — remoção de limites UI paralelos
+
+- `UI_LIMITS` foi removido porque não tinha caller de produto e era validado
+  apenas por um teste autorreferente.
+- Contagens operacionais de Programas/Leads/Eventos continuam pertencendo ao
+  registry de nicho e aos entitlements efetivos.
+- Limites textuais continuam nos validadores canônicos do core.
+- Ratchet arquitetural impede o retorno dessa segunda autoridade morta.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
