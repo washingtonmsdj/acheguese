@@ -226,7 +226,9 @@ export function EducationDetailPage() {
   const cityLabel = effectiveCity.replace(/-/g, ' ');
   const districtLabel = (district ?? '').replace(/-/g, ' ');
   const institutionName =
-    profile?.business_name ?? profile?.institution_type ?? 'Instituição';
+    profile?.business_name ??
+    nicheConfig?.displayName ??
+    'Instituição educacional';
   const showcasePath = EducationUrlService.buildListingUrl({
     state: effectiveState,
     city: effectiveCity,
@@ -390,7 +392,7 @@ export function EducationDetailPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
                     <Icon className="mr-1 h-3 w-3" aria-hidden="true" />
-                    {nicheConfig?.displayName ?? profile.niche_key}
+                    {nicheConfig?.displayName ?? 'Instituição educacional'}
                   </Badge>
                   <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
                     <MapPin className="mr-1 h-3 w-3" aria-hidden="true" />
@@ -402,7 +404,7 @@ export function EducationDetailPage() {
                     profile.school_inep_code && (
                       <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
                         <Shield className="mr-1 h-3 w-3" aria-hidden="true" />
-                        Cadastro público · INEP {profile.school_inep_code}
+                        INEP {profile.school_inep_code}
                       </Badge>
                     )}
                   {profile.enrollment_open === true && (
@@ -427,7 +429,7 @@ export function EducationDetailPage() {
                   <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-territory-on-image/90">
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-4 w-4" aria-hidden="true" />
-                      Fonte revisada em{' '}
+                      Referência atualizada em{' '}
                       {formatDate(profile.school_source_updated_at)}
                     </span>
                   </div>
