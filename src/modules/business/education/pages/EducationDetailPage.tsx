@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen,
@@ -161,7 +161,16 @@ export function EducationDetailPage() {
     : 'from-territory-brand via-territory-brand/90 to-territory-info';
 
   const sections = getSections(labels);
+  const prefersReducedMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<string>('overview');
+
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSection(sectionId);
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  };
   const {
     trackProfileView,
     trackProgramView,
@@ -494,7 +503,7 @@ export function EducationDetailPage() {
 
       <StickyTabs
         active={activeSection}
-        onChange={setActiveSection}
+        onChange={handleSectionChange}
         sections={sections}
       />
 
