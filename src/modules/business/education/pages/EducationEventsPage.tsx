@@ -51,6 +51,7 @@ import { EducationUrlService } from '../services/EducationUrlService';
 import {
   EDUCATION_EVENT_LOCATION_MAX_LENGTH,
   EDUCATION_EVENT_TITLE_MAX_LENGTH,
+  getEducationEventTemporalState,
   getEducationEventValidationError,
   type EducationEvent,
   type SchoolEventType,
@@ -314,7 +315,11 @@ export function EducationEventsPage() {
     });
   };
 
-  const isUpcoming = (dateString: string) => new Date(dateString) > new Date();
+  const getTemporalState = (event: EducationEvent) =>
+    getEducationEventTemporalState({
+      startsAt: event.starts_at,
+      endsAt: event.ends_at,
+    });
 
   if (isProfileLoading || isLoading) {
     return (
@@ -351,8 +356,15 @@ export function EducationEventsPage() {
     );
   }
 
-  const upcomingEvents = events.filter((event) => isUpcoming(event.starts_at));
-  const pastEvents = events.filter((event) => !isUpcoming(event.starts_at));
+  const upcomingEvents = events.filter(
+    (event) => getTemporalState(event) === 'upcoming',
+  );
+  const ongoingEvents = events.filter(
+    (event) => getTemporalState(event) === 'ongoing',
+  );
+  const pastEvents = events.filter(
+    (event) => getTemporalState(event) === 'past',
+  );
   const publicEvents = events.filter((event) => event.is_public).length;
 
   return (
@@ -430,7 +442,7 @@ export function EducationEventsPage() {
         </div>
       )}
 
-      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-5">
         <Card className="border-territory-border bg-territory-surface shadow-sm">
           <CardContent className="p-4">
             <p className="text-sm text-territory-muted">Total</p>
@@ -442,6 +454,14 @@ export function EducationEventsPage() {
             <p className="text-sm text-territory-muted">Próximos</p>
             <p className="text-2xl font-bold text-territory-success">
               {upcomingEvents.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-territory-border bg-territory-surface shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-sm text-territory-muted">Em andamento</p>
+            <p className="text-2xl font-bold text-territory-brand">
+              {ongoingEvents.length}
             </p>
           </CardContent>
         </Card>
@@ -500,7 +520,7 @@ export function EducationEventsPage() {
               >
                 <Card
                   className={`border-territory-border bg-territory-surface shadow-sm ${
-                    isUpcoming(event.starts_at) ? '' : 'opacity-60'
+                    getTemporalState(event) === 'past' ? 'opacity-60' : ''
                   }`}
                 >
                   <CardContent className="p-4">
@@ -510,9 +530,17 @@ export function EducationEventsPage() {
                           <h3 className="text-lg font-semibold text-territory-ink">
                             {event.title}
                           </h3>
-                          {isUpcoming(event.starts_at) ? (
+                          {getTemporalState(event) === 'upcoming' ? (
                             <Badge className="border-territory-success/25 bg-territory-success/10 text-territory-success hover:bg-territory-success/15">
                               Em breve
+                            </Badge>
+                          ) : getTemporalState(event) === 'ongoing' ? (
+                            <Badge className="border-territory-brand/25 bg-territory-brand/10 text-territory-brand">
+                              Em andamento
+                            </Badge>
+                          ) : getTemporalState(event) === 'invalid' ? (
+                            <Badge className="border-territory-error/25 bg-territory-error/10 text-territory-error">
+                              Revisar data
                             </Badge>
                           ) : (
                             <Badge
