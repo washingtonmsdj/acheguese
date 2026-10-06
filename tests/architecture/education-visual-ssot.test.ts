@@ -181,6 +181,15 @@ describe("education visual SSOT", () => {
     expect(nicheChip).toContain("min-h-11");
   });
 
+  it("keeps public Education sharing fail-loud for unsupported browsers", () => {
+    const detail = readSource(
+      "src/modules/business/education/pages/EducationDetailPage.tsx",
+    );
+
+    expect(detail).toContain("Compartilhamento indisponível");
+    expect(detail).toContain("Copie o endereço desta página pela barra do navegador.");
+  });
+
   it("keeps public Education hero actions keyboard-visible", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
