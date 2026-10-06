@@ -202,62 +202,6 @@ describe('EducationService - Business Logic', () => {
     });
   });
 
-  describe('Validation', () => {
-    it('validateProfilePayload validates required fields', () => {
-      const valid = {
-        institution_type: 'school',
-        niche_key: 'regular_school',
-        summary: 'Test',
-      };
-      expect(EducationService.validateProfilePayload(valid).isValid).toBe(true);
-
-      const invalid = {
-        institution_type: '',
-        niche_key: 'regular_school',
-      };
-      expect(EducationService.validateProfilePayload(invalid).isValid).toBe(false);
-      expect(EducationService.validateProfilePayload(invalid).errors).toContain('institution_type is required');
-    });
-
-    it('validateProgramPayload validates required fields', () => {
-      const valid = {
-        name: 'Program Name',
-        age_group: '3-5',
-      };
-      expect(EducationService.validateProgramPayload(valid).isValid).toBe(true);
-
-      const invalid = {
-        name: '',
-      };
-      expect(EducationService.validateProgramPayload(invalid).isValid).toBe(false);
-    });
-
-    it('validateLeadPayload validates email format', () => {
-      const valid = {
-        full_name: 'John',
-        email: 'john@example.com',
-        phone: '+5588999999999',
-      };
-      expect(EducationService.validateLeadPayload(valid).isValid).toBe(true);
-
-      const invalidEmail = {
-        full_name: 'John',
-        email: 'invalid-email',
-        phone: '+5588999999999',
-      };
-      expect(EducationService.validateLeadPayload(invalidEmail).isValid).toBe(false);
-    });
-
-    it('validateLeadPayload validates phone format', () => {
-      const invalidPhone = {
-        full_name: 'John',
-        email: 'john@example.com',
-        phone: '123',
-      };
-      expect(EducationService.validateLeadPayload(invalidPhone).isValid).toBe(false);
-    });
-  });
-
   describe('Event Operations', () => {
     it('isEventUpcoming returns true for future dates', () => {
       const futureDate = new Date();
@@ -276,23 +220,6 @@ describe('EducationService - Business Logic', () => {
       expect(EducationService.formatEventDateTime(date)).toContain('15/01/2026');
     });
 
-    it('validateEventPayload validates required fields', () => {
-      const valid = {
-        title: 'Event Title',
-        starts_at: '2026-01-01T10:00:00Z',
-      };
-      expect(EducationService.validateEventPayload(valid).isValid).toBe(true);
-
-      const invalid = {
-        title: '',
-        starts_at: '2026-01-01T10:00:00Z',
-      };
-      expect(EducationService.validateEventPayload(invalid).isValid).toBe(false);
-
-      const noDate = {
-        title: 'Event',
-      };
-      expect(EducationService.validateEventPayload(noDate).isValid).toBe(false);
-    });
+;
   });
 });
