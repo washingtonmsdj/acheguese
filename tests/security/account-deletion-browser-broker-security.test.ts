@@ -15,54 +15,60 @@ const broker = readFileSync(
   "utf8",
 );
 
-describe("account deletion browser broker boundary", () => {
-  it("keeps deletion status and request actions on the authenticated privacy broker", () => {
-    expect(privacyRpcService).toContain('"getDeletionStatus"');
-    expect(privacyRpcService).toContain('"requestAccountDeletion"');
+describe("account deletion browser authority boundary", () => {
+  it("uses the self-only PostgREST RPC for status and keeps deletion mutations on the authenticated broker", () => {
     expect(privacyRpcService).toContain(
-      'this.invoke<unknown>("getDeletionStatus")',
+      '.rpc("get_current_account_deletion_status")',
+    );
+    expect(privacyRpcService).not.toContain(
+      'this.invoke<unknown>("getDeletionStatus"',
     );
     expect(privacyRpcService).toContain(
       'this.invoke<unknown>("requestAccountDeletion"',
     );
+    expect(privacyRpcService).toContain(
+      'this.invoke<unknown>("cancelAccountDeletion")',
+    );
   });
 
-  it("does not convert deletion-status transport failures into a valid null status", () => {
+  it("keeps deletion-status transport and database failures distinct from a clean no-request state", () => {
+    expect(privacyRpcService).toContain("if (error)");
     expect(privacyRpcService).toContain(
-      'import { invokeSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker"',
+      "Privacy deletion status query failed:",
+    );
+    expect(privacyRpcService).toContain(
+      ".abortSignal(AbortSignal.timeout(TIMEOUTS.PRIVACY_ACCESS_GATE))",
     );
     expect(privacyRpcService).not.toContain("invokeNullableSupabaseBroker");
     expect(broker).toContain("export async function invokeNullableSupabaseBroker");
-    expect(broker).toContain("catch {");
-    expect(broker).toContain("return null;");
   });
 
-  it("allows only an explicit broker data null to represent no deletion request", () => {
-    expect(broker).toContain(
-      'Object.prototype.hasOwnProperty.call(response, "data")',
-    );
-    expect(privacyRpcService).toContain("if (result === null) return null;");
-    expect(privacyRpcService).toContain("return parseDeletionStatus(result);");
+  it("allows only an explicit RPC data null to represent no deletion request", () => {
+    expect(privacyRpcService).toContain("if (data === null) return null;");
+    expect(privacyRpcService).toContain("return parseDeletionStatusRead(data);");
   });
 
-  it("validates the deletion status identity, enum, dates and counters at runtime", () => {
-    expect(privacyRpcService).toContain("UUID_PATTERN.test(value.requestId)");
+  it("validates the self-only deletion status enum, date and counter at runtime", () => {
     expect(privacyRpcService).toContain("DELETION_STATUSES.has(");
-    expect(privacyRpcService).toContain("isIsoTimestamp(value.requestedAt)");
-    expect(privacyRpcService).toContain("isIsoTimestamp(value.scheduledPurgeAt)");
-    expect(privacyRpcService).toContain("isNonNegativeInteger(value.daysRemaining)");
-    expect(privacyRpcService).toContain('typeof value.exportRequested !== "boolean"');
+    expect(privacyRpcService).toContain(
+      "isIsoTimestamp(value.scheduledPurgeAt)",
+    );
+    expect(privacyRpcService).toContain(
+      "isNonNegativeInteger(value.daysRemaining)",
+    );
   });
 
-  it("requires the request receipt to be internally coherent", () => {
+  it("still validates privileged deletion mutation receipts completely", () => {
+    expect(privacyRpcService).toContain("UUID_PATTERN.test(value.requestId)");
+    expect(privacyRpcService).toContain("isIsoTimestamp(value.requestedAt)");
+    expect(privacyRpcService).toContain(
+      'typeof value.exportRequested !== "boolean"',
+    );
     expect(privacyRpcService).toContain(
       "value.daysUntilPurge !== base.daysRemaining",
     );
     expect(privacyRpcService).toContain(
       "value.recoveryPossibleUntil !== base.scheduledPurgeAt",
-    );
-    expect(privacyRpcService).toContain(
-      "Privacy broker returned invalid deletion request",
     );
   });
 
