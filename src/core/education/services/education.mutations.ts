@@ -31,9 +31,11 @@ import {
 import type {
   EducationProfile,
   EducationProgram,
+  EducationProgramAdminPatch,
   EducationLead,
   EducationLeadAdminPatch,
   EducationEvent,
+  EducationEventAdminPatch,
   EducationLeadStatus,
   EducationNicheKey,
   EducationProfileStatus,
@@ -52,6 +54,22 @@ interface ValidationError {
   field: string;
   message: string;
 }
+
+function hasForbiddenMutationKey(
+  payload: object,
+  keys: readonly string[],
+): boolean {
+  return keys.some((key) =>
+    Object.prototype.hasOwnProperty.call(payload, key),
+  );
+}
+
+const IMMUTABLE_EDUCATION_ENTITY_FIELDS = [
+  'id',
+  'education_profile_id',
+  'created_at',
+  'updated_at',
+] as const;
 
 function normalizeStageText(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -393,8 +411,14 @@ export async function createEducationProgram(
  */
 export async function updateEducationProgram(
   id: string,
-  payload: Partial<EducationProgram>,
+  payload: EducationProgramAdminPatch,
 ): Promise<MutationResult<EducationProgram>> {
+  if (hasForbiddenMutationKey(payload, IMMUTABLE_EDUCATION_ENTITY_FIELDS)) {
+    return {
+      data: null,
+      error: new Error('Campos imutaveis de programa nao podem ser alterados'),
+    };
+  }
   const { data: existingProgram, error: existingProgramError } = await supabase
     .from('education_programs')
     .select('education_profile_id,max_capacity,current_enrollment')
@@ -583,11 +607,19 @@ export async function updateEducationLead(
   id: string,
   payload: EducationLeadAdminPatch,
 ): Promise<MutationResult<EducationLead>> {
-  if ('status' in (payload as Record<string, unknown>)) {
+  const forbiddenFields = [
+    ...IMMUTABLE_EDUCATION_ENTITY_FIELDS,
+    'status',
+    'source_channel',
+    'first_contact_at',
+    'lost_reason',
+  ] as const;
+
+  if (hasForbiddenMutationKey(payload, forbiddenFields)) {
     return {
       data: null,
       error: new Error(
-        'Mudanca de status deve usar moveLeadToStatus',
+        'Campos controlados do lead nao podem ser alterados pelo patch administrativo',
       ),
     };
   }
@@ -707,8 +739,14 @@ export async function createEducationEvent(
  */
 export async function updateEducationEvent(
   id: string,
-  payload: Partial<EducationEvent>,
+  payload: EducationEventAdminPatch,
 ): Promise<MutationResult<EducationEvent>> {
+  if (hasForbiddenMutationKey(payload, IMMUTABLE_EDUCATION_ENTITY_FIELDS)) {
+    return {
+      data: null,
+      error: new Error('Campos imutaveis de evento nao podem ser alterados'),
+    };
+  }
   const shouldValidate =
     payload.title !== undefined ||
     payload.starts_at !== undefined ||
