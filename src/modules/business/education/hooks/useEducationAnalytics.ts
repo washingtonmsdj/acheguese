@@ -140,7 +140,7 @@ export function useEducationAnalytics(options: UseEducationAnalyticsOptions) {
               enrollmentFairCount: eventCounts.enrollmentFairCount,
             },
             schoolMetrics: {
-              enrollmentWindowOpen: profile?.enrollment_open ?? false,
+              enrollmentWindowOpen: profile?.enrollment_open ?? null,
               mostRequestedGrade,
               mostRequestedShift,
             },
