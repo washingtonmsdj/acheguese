@@ -83,6 +83,9 @@ durante a estabilização atual do data plane.
   Nenhuma resposta ausente é apresentada como cartões de contagem zero.
 - Planos distingue erro de assinatura e erro do catálogo: não escolhe mais o
   primeiro plano do catálogo como se fosse o plano atual do usuário.
+- Falha de resolução de autoridade owner/gestor ganhou estado de erro próprio
+  com retry; ausência de role por erro de infraestrutura não é mais apresentada
+  como **Gestor: assinatura somente leitura**.
 - O checkout é serializado por plano: enquanto uma sessão está sendo aberta,
   novas tentativas ficam bloqueadas e o botão mostra **Abrindo checkout...**.
 - `expiresAt = null` não é mais exibido como “Sem data de expiração”; a UI
