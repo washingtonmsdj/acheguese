@@ -24,7 +24,7 @@ describe("G6 public Education lead intake", () => {
     );
 
     expect(service).toContain(
-      'supabase.functions.invoke("education-lead-rpc"',
+      'supabase.functions.invoke("education-lead-intake"',
     );
     expect(service).not.toContain('.from("education_leads")');
     expect(hook).toContain("PublicEducationLeadService.create");
@@ -43,7 +43,7 @@ describe("G6 public Education lead intake", () => {
     const migration = read(
       "supabase/migrations/20260906100029_harden_public_education_lead_intake_g6.sql",
     );
-    const edge = read("supabase/functions/education-lead-rpc/index.ts");
+    const edge = read("supabase/functions/education-lead-intake/index.ts");
 
     expect(migration).toContain(
       "REVOKE INSERT ON public.education_leads FROM anon",
@@ -69,12 +69,12 @@ describe("G6 public Education lead intake", () => {
       "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
     );
 
-    expect(config).toContain("[functions.education-lead-rpc]");
+    expect(config).toContain("[functions.education-lead-intake]");
     expect(
-      config.slice(config.indexOf("[functions.education-lead-rpc]"))
+      config.slice(config.indexOf("[functions.education-lead-intake]"))
         .split("\n\n")[0],
     ).toContain("verify_jwt = false");
-    expect(policy).toContain('"education-lead-rpc"');
+    expect(policy).toContain('"education-lead-intake"');
     expect(policy).toContain('"public-registration-broker"');
     expect(policy).toContain("requireLeadEligibleProfile");
     expect(policy).toContain("verifyTurnstileToken\\s*\\(");
@@ -82,7 +82,7 @@ describe("G6 public Education lead intake", () => {
   });
 
   it("does not log submitted PII in the broker audit payload", () => {
-    const edge = read("supabase/functions/education-lead-rpc/index.ts");
+    const edge = read("supabase/functions/education-lead-intake/index.ts");
     const auditSection = edge.slice(edge.indexOf('action: "education_public_lead_created"'));
     expect(auditSection).not.toContain("fullName");
     expect(auditSection).not.toContain("email,");
