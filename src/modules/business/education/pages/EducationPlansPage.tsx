@@ -74,7 +74,12 @@ export function EducationPlansPage() {
   const prefersReducedMotion = useReducedMotion();
   const [checkoutPlanCode, setCheckoutPlanCode] = useState<string | null>(null);
   const { toast } = useToast();
-  const { permissions, loading: loadingAccess } = useDashboardAccess(businessId);
+  const {
+    permissions,
+    loading: loadingAccess,
+    error: accessError,
+    refetch: refetchAccess,
+  } = useDashboardAccess(businessId);
   const canManageBilling = permissions.role === 'owner';
   const {
     status,
@@ -167,6 +172,16 @@ export function EducationPlansPage() {
           ))}
         </div>
       </div>
+    );
+  }
+
+  if (accessError) {
+    return (
+      <EducationAdminReadError
+        title="Não foi possível verificar sua permissão de cobrança"
+        error={accessError}
+        onRetry={() => void refetchAccess()}
+      />
     );
   }
 
