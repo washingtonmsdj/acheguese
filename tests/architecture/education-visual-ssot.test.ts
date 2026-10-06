@@ -137,6 +137,21 @@ describe("education visual SSOT", () => {
     expect(marketing).not.toContain("level.replace(/_/g, ' ')");
   });
 
+  it("keeps the Education explorer states and niche toggles accessible", () => {
+    const explorer = readSource(
+      "src/modules/business/education/pages/EducationExplorerPage.tsx",
+    );
+    const marketing = readSource(
+      "src/modules/business/education/pages/explorerMarketingSections.tsx",
+    );
+
+    expect(explorer).toContain('role="alert"');
+    expect(explorer).toContain('aria-label="Carregando instituições de Educação"');
+    expect(explorer).toContain('aria-live="polite"');
+    expect(marketing).toContain("aria-pressed={selectedNiches.includes(niche.nicheKey)}");
+    expect(marketing).toContain("Filtrar por");
+  });
+
   it("keeps public Education CTA motion accessible", () => {
     const sidebar = readSource(
       "src/modules/business/education/pages/EducationDetailSidebar.tsx",
