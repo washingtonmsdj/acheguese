@@ -28,6 +28,7 @@ describe("G6 Education lead pipeline write boundary", () => {
     );
 
     expect(service).toContain("const { data, error, previousStatus }");
+    expect(service).toContain("previousStatus !== 'enrolled'");
     expect(service).toContain("{ previousStatus }");
     expect(service).not.toContain("previousStatus: data.status");
   });
