@@ -44,7 +44,9 @@ describe("active shell paused-domain boundary", () => {
 
     expect(appShell).toContain("MODULE_SLUGS.business");
     expect(appShell).toContain("MODULE_SLUGS.search");
-    expect(appShell).toContain('pathSegments[0] === "mensagens"');
+    expect(appShell).toContain("const MESSAGING_INBOX_PATH = messagingRoutes.inbox();");
+    expect(appShell).toContain("pathname.startsWith(`${MESSAGING_INBOX_PATH}/`)");
+    expect(appShell).not.toContain('pathSegments[0] === "mensagens"');
     expect(appShell).toContain('pathSegments[0] === "conta"');
   });
 
