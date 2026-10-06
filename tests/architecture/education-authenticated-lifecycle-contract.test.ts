@@ -16,6 +16,10 @@ describe("G6 Education authenticated lifecycle gate", () => {
     );
     const config = readFileSync(join(ROOT, "playwright.config.ts"), "utf8");
     const packageJson = readFileSync(join(ROOT, "package.json"), "utf8");
+    const workflow = readFileSync(
+      join(ROOT, ".github/workflows/ssot-tests.yml"),
+      "utf8",
+    );
 
     expect(spec).toContain(
       'const FIXTURE_MARKER = "account-authenticated-e2e"',
@@ -54,6 +58,16 @@ describe("G6 Education authenticated lifecycle gate", () => {
     );
     expect(packageJson).not.toContain(
       "npm run test:e2e:business-lifecycle-authenticated && npm run test:e2e:education-lifecycle-authenticated",
+    );
+
+    expect(workflow).toContain("run_education_lifecycle:");
+    expect(workflow).toContain("default: false");
+    expect(workflow).toContain("Run authenticated Education lifecycle E2E");
+    expect(workflow).toContain(
+      "if: github.event_name == 'workflow_dispatch' && inputs.run_education_lifecycle",
+    );
+    expect(workflow).toContain(
+      "run: npm run test:e2e:education-lifecycle-authenticated",
     );
   });
 
