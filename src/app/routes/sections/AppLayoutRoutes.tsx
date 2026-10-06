@@ -21,7 +21,10 @@ import {
   buildTerritorialModuleRoutePath,
   buildTerritorialRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
-import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+import {
+  APP_MODULE_SLUGS,
+  buildAppModulePath,
+} from "@/shared/config/moduleSlugs";
 import {
   DATA_PROTECTION_CONTACT_PATH,
   PRIVACY_POLICY_PATH,
@@ -128,9 +131,12 @@ export function AppLayoutRoutes() {
 
         {businessEnabled ? (
           <>
-            <Route path="/empresas" element={<P.EmpresasLandingPage />} />
             <Route
-              path="/empresas/cadastrar"
+              path={buildAppModulePath(APP_MODULE_SLUGS.business)}
+              element={<P.EmpresasLandingPage />}
+            />
+            <Route
+              path={buildAppModulePath(APP_MODULE_SLUGS.business, "cadastrar")}
               element={protectedElement(
                 <P.EmpresasCadastroLandingPage
                   header={<AuthBrandHeader showBack={false} />}
@@ -141,16 +147,30 @@ export function AppLayoutRoutes() {
           </>
         ) : null}
 
-        {mapEnabled ? <Route path="/mapa" element={<P.MapaPage />} /> : null}
+        {mapEnabled ? (
+          <Route
+            path={buildAppModulePath(APP_MODULE_SLUGS.map)}
+            element={<P.MapaPage />}
+          />
+        ) : null}
 
         {nearbyEnabled ? (
-          <Route path="/perto-de-mim" element={<P.NearbyPage />} />
+          <Route
+            path={buildAppModulePath(APP_MODULE_SLUGS.nearby)}
+            element={<P.NearbyPage />}
+          />
         ) : null}
 
         {searchEnabled ? (
           <>
-            <Route path="/busca" element={<P.BuscaPage />} />
-            <Route path="/buscar" element={<P.BuscarPage />} />
+            <Route
+              path={buildAppModulePath(APP_MODULE_SLUGS.search)}
+              element={<P.BuscaPage />}
+            />
+            <Route
+              path={`/${TERRITORIAL_STATIC.searchAlias}`}
+              element={<P.BuscarPage />}
+            />
             <Route
               path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
               element={<P.ActiveTerritorialLayout />}
