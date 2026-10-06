@@ -129,24 +129,6 @@ export const EducationService = {
   // ==========================================================
 
   /**
-   * Obtem ou cria perfil de educacao para um business
-   */
-  async getOrCreateProfile(businessId: string): Promise<EducationProfile | null> {
-    const profile = await queries.getEducationProfileByBusinessId(businessId);
-    if (profile) {
-      return profile;
-    }
-
-    const { data, error } = await createDraftEducationProfile(businessId);
-    if (error) {
-      logger.error('[EducationService] Error creating profile:', error);
-      return null;
-    }
-
-    return data;
-  },
-
-  /**
    * Salva configuracao inicial de educacao (create/update profile)
    */
   async saveSetupProfile(payload: EducationSetupPayload): Promise<EducationProfile | null> {
