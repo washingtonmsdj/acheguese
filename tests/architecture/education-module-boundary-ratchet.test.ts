@@ -178,6 +178,11 @@ describe("Education module hardening ratchet", () => {
     expect(plansPage).not.toMatch(/maxPrograms:\s*\d+/);
     expect(plansPage).toContain("checkoutPlanCode");
     expect(plansPage).toContain("Abrindo checkout...");
+    expect(plansPage).toContain("error: accessError");
+    expect(plansPage).toContain("refetch: refetchAccess");
+    expect(plansPage).toContain(
+      "Não foi possível verificar sua permissão de cobrança",
+    );
     expect(plansPage).toContain("Data de renovação não informada");
     expect(plansPage).toContain("Assinatura sem período ativo");
     expect(plansPage).not.toContain("Sem data de expiração");
