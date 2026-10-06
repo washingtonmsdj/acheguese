@@ -50,7 +50,12 @@ import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBan
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
-import type { EducationLevel, EducationProgram } from '@/core/education';
+import {
+  EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  EDUCATION_PROGRAM_NAME_MAX_LENGTH,
+  type EducationLevel,
+  type EducationProgram,
+} from '@/core/education';
 import {
   getSchoolStageOptions,
   isSchoolNiche,
@@ -670,6 +675,7 @@ export function EducationProgramsPage() {
                         setFormData({ ...formData, customGrade: event.target.value })
                       }
                       placeholder="Ex: Classe hospitalar, multisseriada..."
+                      maxLength={EDUCATION_PROGRAM_NAME_MAX_LENGTH}
                       required
                     />
                     <Button
@@ -697,6 +703,7 @@ export function EducationProgramsPage() {
                     setFormData({ ...formData, name: event.target.value })
                   }
                   placeholder="Ex: Curso Intensivo"
+                  maxLength={EDUCATION_PROGRAM_NAME_MAX_LENGTH}
                   required
                 />
               </div>
@@ -725,7 +732,7 @@ export function EducationProgramsPage() {
                     setFormData({ ...formData, ageGroup: event.target.value })
                   }
                   placeholder="Ex: 6-10 anos"
-                  maxLength={50}
+                  maxLength={EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH}
                 />
               </div>
               <div>
