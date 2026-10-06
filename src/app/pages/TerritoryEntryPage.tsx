@@ -9,6 +9,7 @@ import {
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
 import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
+import { PUBLIC_CATALOG_ANNOUNCEMENT_ENABLED, PUBLIC_CATALOG_PATH } from "@/shared/config/publicExternalApps.config";
 import "./TerritoryEntryPage.css";
 
 const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
@@ -200,6 +201,21 @@ export default function TerritoryEntryPage() {
       <a href="#conteudo" className="ag-skip-link">
         Pular para o conteúdo principal
       </a>
+
+      {PUBLIC_CATALOG_ANNOUNCEMENT_ENABLED && (
+        <aside className="ag-catalog-announcement" aria-label="Acesso temporário ao catálogo">
+          <div className="ag-container ag-catalog-announcement__inner">
+            <div>
+              <span>Enquanto o Achegue-se segue em evolução</span>
+              <strong>O Catálogo já está disponível neste mesmo site.</strong>
+            </div>
+            <a href={PUBLIC_CATALOG_PATH}>
+              Abrir catálogo
+              <ArrowIcon />
+            </a>
+          </div>
+        </aside>
+      )}
 
       <header className="ag-header">
         <div className="ag-container ag-header-inner">
