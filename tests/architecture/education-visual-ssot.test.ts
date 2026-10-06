@@ -108,6 +108,35 @@ describe("education visual SSOT", () => {
     expect(marketing).not.toContain("EducationCompareBar");
   });
 
+  it("keeps the Education explorer truthful and free of internal versioning", () => {
+    const explorer = readSource(
+      "src/modules/business/education/pages/EducationExplorerPage.tsx",
+    );
+    const cards = readSource(
+      "src/modules/business/education/pages/explorerCards.tsx",
+    );
+    const marketing = readSource(
+      "src/modules/business/education/pages/explorerMarketingSections.tsx",
+    );
+
+    expect(explorer).toContain("useReducedMotion");
+    expect(explorer).not.toContain("Vitrine V3");
+    expect(explorer).not.toContain("Vitrine educacional V3");
+    expect(explorer).not.toContain("profile.institution_type");
+
+    expect(cards).toContain("getEducationLevelLabel");
+    expect(cards).not.toContain("profile.institution_type");
+    expect(cards).not.toContain("level.replace(/_/g, ' ')");
+
+    expect(marketing).toContain("useReducedMotion");
+    expect(marketing).toContain("getEducationLevelLabel");
+    expect(marketing).toContain("SCHOOL_NETWORK_LABELS");
+    expect(marketing).toContain("Uma amostra dos perfis disponíveis");
+    expect(marketing).not.toContain("Curadoria com base");
+    expect(marketing).not.toContain("profile.institution_type");
+    expect(marketing).not.toContain("level.replace(/_/g, ' ')");
+  });
+
   it("keeps public Education cards truthful and impression-based", () => {
     const detail = readSource(
       "src/modules/business/education/pages/EducationDetailPage.tsx",
