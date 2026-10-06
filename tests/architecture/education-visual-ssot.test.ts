@@ -201,6 +201,7 @@ describe("education visual SSOT", () => {
 
     expect(sidebar).toContain("resolveSafeHttpUrl");
     expect(sidebar).toContain("education-institutional-claim");
+    expect(sidebar).toContain("forceHttps: false");
     expect(sidebar).toContain("hasInvalidInstitutionalEvidence");
     expect(sidebar).toContain("Informe uma URL pública válida usando http ou https.");
     expect(sidebar).toContain("normalizedInstitutionalEvidenceUrl ?? undefined");
