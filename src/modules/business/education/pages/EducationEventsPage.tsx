@@ -390,6 +390,9 @@ export function EducationEventsPage() {
   const pastEvents = events.filter(
     (event) => getTemporalState(event) === 'past',
   );
+  const invalidEvents = events.filter(
+    (event) => getTemporalState(event) === 'invalid',
+  );
   const publicEvents = events.filter((event) => event.is_public).length;
 
   return (
@@ -467,7 +470,7 @@ export function EducationEventsPage() {
         </div>
       )}
 
-      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-5">
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <Card className="border-territory-border bg-territory-surface shadow-sm">
           <CardContent className="p-4">
             <p className="text-sm text-territory-muted">Total</p>
@@ -495,6 +498,14 @@ export function EducationEventsPage() {
             <p className="text-sm text-territory-muted">Passados</p>
             <p className="text-2xl font-bold text-territory-muted">
               {pastEvents.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-territory-warning/30 bg-territory-warning/5 shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-sm text-territory-muted">Revisar</p>
+            <p className="text-2xl font-bold text-territory-warning">
+              {invalidEvents.length}
             </p>
           </CardContent>
         </Card>
