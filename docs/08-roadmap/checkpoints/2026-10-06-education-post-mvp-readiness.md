@@ -727,6 +727,18 @@ durante a estabilização atual do data plane.
 - O write model rejeita níveis fora do contrato antes de persistir.
 - Teste unitário e ratchet arquitetural protegem o ownership e os valores.
 
+## Tranche adicional — chaves de nicho canônicas
+
+- As chaves válidas de nicho passaram para
+  `src/core/education/nicheKey.ts`, alinhadas ao union
+  `EducationNicheKey`.
+- O type guard de `niches/types.ts` preserva a API/narrowing existente, mas
+  delega ao owner do core.
+- O write model não mantém mais uma lista local `validNiches`; criação e
+  atualização usam o mesmo guard canônico.
+- Teste unitário e ratchet arquitetural protegem a enumeração e evitam drift
+  entre frontend e persistência.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
