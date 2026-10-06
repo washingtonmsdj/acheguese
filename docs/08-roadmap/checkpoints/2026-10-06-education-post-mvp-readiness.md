@@ -338,6 +338,11 @@ durante a estabilização atual do data plane.
 - O facade volta a orquestrar operações sem manter uma segunda autoridade de
   validação.
 - Ratchet arquitetural impede o retorno desses quatro validadores locais.
+- O bloco legado `AUXILIARY / UTILITY METHODS` do `EducationService` foi
+  removido integralmente: labels, formatação, resumo síncrono de pipeline,
+  helpers de status e outros métodos sem caller real deixaram de ampliar a API
+  do facade. Os dois testes que existiam apenas para essa API auto-referencial
+  também foram removidos.
 
 ### Gates ainda pendentes
 
