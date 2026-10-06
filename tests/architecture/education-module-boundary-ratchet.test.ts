@@ -766,6 +766,17 @@ describe("Education module hardening ratchet", () => {
     expect(nicheTypes).not.toContain("| 'full_enabled'");
   });
 
+  it("keeps Education setup support level aligned with the niche registry", () => {
+    const service = read(
+      "src/modules/business/education/services/EducationService.ts",
+    );
+
+    expect(service).toContain("getNicheByKey(payload.nicheKey)");
+    expect(service).toContain("support_level: nicheConfig.supportLevel");
+    expect(service).not.toContain("support_level: 'basic_enabled'");
+    expect(service).toContain("Invalid niche key during setup");
+  });
+
   it("keeps Education support levels owned by core", () => {
     const constants = read(
       "src/modules/business/education/constants/index.ts",
