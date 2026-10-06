@@ -19,6 +19,7 @@ import type { EducationPublicProfile } from '@/core/education';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { AUTH_PATHS } from '@/core/auth/constants/authFlow';
 import { useToast } from '@/shared/hooks/use-toast';
+import { resolveSafeHttpUrl } from '@/shared/utils/safeRedirect';
 import { BusinessClaimService } from '@/core/business/services/BusinessClaimService';
 import { BusinessProfileCorrectionDialog } from '@/core/business/components/BusinessProfileCorrectionDialog';
 import {
@@ -59,6 +60,14 @@ export function EducationDetailSidebar({
   const [reportOpen, setReportOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [institutionalEvidenceUrl, setInstitutionalEvidenceUrl] = useState('');
+  const normalizedInstitutionalEvidenceUrl = institutionalEvidenceUrl.trim()
+    ? resolveSafeHttpUrl(institutionalEvidenceUrl, {
+        context: 'education-institutional-claim',
+      })
+    : null;
+  const hasInvalidInstitutionalEvidence =
+    institutionalEvidenceUrl.trim().length > 0 &&
+    normalizedInstitutionalEvidenceUrl === null;
 
   const isPublicInstitution = profile.school_type === 'public';
   const isUnclaimedDirectoryProfile = profile.is_claimable;
@@ -297,6 +306,14 @@ export function EducationDetailSidebar({
                 Secretaria de Educação, rede responsável ou Diário Oficial. Não envie
                 documentos pessoais ou dados de alunos por este campo.
               </p>
+              {hasInvalidInstitutionalEvidence ? (
+                <p
+                  role="alert"
+                  className="text-xs text-territory-error"
+                >
+                  Informe uma URL pública válida usando http ou https.
+                </p>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"
@@ -304,10 +321,10 @@ export function EducationDetailSidebar({
                 disabled={
                   isClaiming ||
                   claimSubmitted ||
-                  institutionalEvidenceUrl.trim().length === 0
+                  !normalizedInstitutionalEvidenceUrl
                 }
                 onClick={() =>
-                  void requestClaim(institutionalEvidenceUrl.trim())
+                  void requestClaim(normalizedInstitutionalEvidenceUrl ?? undefined)
                 }
               >
                 {claimSubmitted
