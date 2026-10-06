@@ -186,6 +186,7 @@ export function EducationSetupPage() {
       ageRangeMin,
       ageRangeMax,
       schoolInepCode: supportsSchoolIdentity ? formData.schoolInepCode : null,
+      schoolSourceUrl: supportsSchoolIdentity ? formData.schoolSourceUrl : null,
     });
 
     if (setupValidationErrors.length > 0) {
@@ -213,7 +214,7 @@ export function EducationSetupPage() {
           ? formData.schoolInepCode.trim() || undefined
           : undefined,
         schoolSourceUrl: supportsSchoolIdentity
-          ? formData.schoolSourceUrl || undefined
+          ? formData.schoolSourceUrl.trim() || undefined
           : undefined,
         educationLevels: supportsEducationLevels
           ? formData.educationLevels
