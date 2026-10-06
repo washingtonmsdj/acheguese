@@ -751,6 +751,17 @@ durante a estabilização atual do data plane.
   o estado persistido antes da validação, impedindo drift fora da UI.
 - Teste unitário e ratchet arquitetural protegem o contrato.
 
+## Tranche adicional — status de perfil canônico
+
+- Os estados válidos de perfil (`draft`, `published`, `paused`) passaram
+  para `src/core/education/profileStatus.ts`, alinhados ao enum existente no
+  banco.
+- O write model não mantém mais um array local de status; valida pelo guard do
+  core.
+- Labels e cores continuam no módulo de UI, porque são apresentação e não
+  autoridade de domínio.
+- Teste unitário e ratchet arquitetural protegem o contrato.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `8e3fd97533123eb785ad90bedf64e329f8a0d709`, o PR comprovou:
