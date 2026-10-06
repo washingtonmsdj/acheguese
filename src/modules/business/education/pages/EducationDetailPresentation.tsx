@@ -4,6 +4,10 @@ import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
 import type { EducationProgram } from "@/core/education";
 import {
+  getEducationProgramModalityLabel,
+  getEducationProgramShiftLabel,
+} from "../constants";
+import {
   formatPrice,
   getSections,
   sanitizePublicEducationText,
@@ -59,9 +63,13 @@ export function ProgramCard({
   const hasKnownSlots = program.available_slots !== null;
   const isSchoolProgram = Boolean(program.grade || program.class_name);
   const vacancyRate =
-    program.max_capacity && program.current_enrollment
+    program.max_capacity != null &&
+    program.max_capacity > 0 &&
+    program.current_enrollment != null
       ? Math.round((program.current_enrollment / program.max_capacity) * 100)
       : null;
+  const modalityLabel = getEducationProgramModalityLabel(program.modality);
+  const shiftLabel = getEducationProgramShiftLabel(program.shift);
 
   return (
     <motion.article
@@ -75,12 +83,14 @@ export function ProgramCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap gap-1.5">
-            <Badge
-              variant="secondary"
-              className="border-territory-border bg-territory-raised text-[11px] text-territory-ink"
-            >
-              {program.modality ?? "Presencial"}
-            </Badge>
+            {modalityLabel ? (
+              <Badge
+                variant="secondary"
+                className="border-territory-border bg-territory-raised text-[11px] text-territory-ink"
+              >
+                {modalityLabel}
+              </Badge>
+            ) : null}
             {isSchoolProgram && program.grade && (
               <Badge
                 variant="outline"
@@ -161,14 +171,14 @@ export function ProgramCard({
             </dd>
           </div>
         )}
-        {program.shift && (
+        {shiftLabel ? (
           <div className="rounded-lg bg-territory-raised px-3 py-2">
             <dt className="text-territory-muted">Turno</dt>
             <dd className="font-semibold text-territory-ink">
-              {program.shift}
+              {shiftLabel}
             </dd>
           </div>
-        )}
+        ) : null}
         {isSchoolProgram && program.schedule && (
           <div className="rounded-lg bg-territory-raised px-3 py-2">
             <dt className="text-territory-muted">Horário</dt>
