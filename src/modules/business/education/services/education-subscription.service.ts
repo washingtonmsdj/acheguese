@@ -16,7 +16,6 @@ import {
   BusinessSubscriptionService,
   EntitlementsService,
   PlanTier,
-  type BusinessSubscription,
   type PlanEntitlements,
 } from '@/core/billing';
 import { CatalogService } from '@/core/billing/services/CatalogService';
@@ -32,8 +31,6 @@ export interface EducationEntitlements {
 export interface EducationSubscriptionStatus {
   isActive: boolean;
   planTier: PlanTier;
-  /** @deprecated Compatibilidade de apresentação. Regras de autorização usam planTier. */
-  planType: 'free' | 'basic' | 'premium';
   entitlements: EducationEntitlements;
   expiresAt: string | null;
 }
@@ -75,7 +72,6 @@ export const EducationSubscriptionService = {
       }
 
       const subscription = result.data;
-      const planType = this.resolvePlanType(subscription);
       const entitlements = await resolveCanonicalEntitlements(
         subscription.plan_tier,
       );
@@ -83,7 +79,6 @@ export const EducationSubscriptionService = {
       return {
         isActive: subscription.status === 'active',
         planTier: subscription.plan_tier,
-        planType,
         entitlements,
         expiresAt: subscription.current_period_end || null,
       };
@@ -97,14 +92,6 @@ export const EducationSubscriptionService = {
       // erro com possibilidade de nova tentativa, nunca um upgrade fictício.
       throw error;
     }
-  },
-
-  resolvePlanType(
-    subscription: BusinessSubscription,
-  ): 'free' | 'basic' | 'premium' {
-    if (subscription.plan_tier === PlanTier.FREE) return 'free';
-    if (subscription.plan_tier === PlanTier.DELIVERY) return 'premium';
-    return 'basic';
   },
 
   async canUsePremiumPublicPage(businessProfileId: string): Promise<boolean> {
