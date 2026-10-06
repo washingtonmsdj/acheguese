@@ -604,6 +604,9 @@ durante a estabilização atual do data plane.
 - A suíte autenticada agora prova que INEP malformado não passa a validação do
   formulário, que fonte pública não-http(s) e faixa etária invertida são
   rejeitadas e que essas tentativas não persistem `education_profile`.
+- O mesmo lifecycle fecha CRUD real de Programas no entitlement FREE da
+  fixture: criação, edição, reativação e exclusão com confirmação; a remoção é
+  verificada pelo mesmo `program.id` no backend.
 - Compensação de falha parcial já é provada deterministicamente por
   `EducationService.setup-compensation.test.ts`: draft criado pela tentativa
   falha é removido, perfil preexistente é preservado e sucesso não dispara
