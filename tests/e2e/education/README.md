@@ -78,7 +78,10 @@ esperado deixar de funcionar.
    - contagens do pipeline inteiro.
 
 4. **Eventos**
-   - CRUD determinístico;
+   - helper técnico alinhado às colunas canônicas `starts_at/ends_at`;
+   - leitura/edição/exclusão determinísticas podem usar fixture técnica;
+   - criação pela UI continua dependente de entitlement pago real e não deve
+     ser simulada alterando plano fora do contrato;
    - datas impossíveis;
    - início/fim coerentes;
    - público/privado;
