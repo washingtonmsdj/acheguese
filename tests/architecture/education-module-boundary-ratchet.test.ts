@@ -282,6 +282,25 @@ describe("Education module hardening ratchet", () => {
     expect(programs).toContain("vagas disponíveis");
   });
 
+  it("keeps Education curriculum validation owned by core", () => {
+    const programs = read(
+      "src/modules/business/education/pages/EducationProgramsPage.tsx",
+    );
+    const mutations = read(
+      "src/core/education/services/education.mutations.ts",
+    );
+    const validation = read("src/core/education/programValidation.ts");
+
+    expect(validation).toContain("EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS");
+    expect(validation).toContain("EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH");
+    expect(validation).toContain("getEducationProgramCurriculumValidationError");
+    expect(validation).toContain("normalizeEducationProgramCurriculumTopics");
+    expect(mutations).toContain("getEducationProgramCurriculumValidationError");
+    expect(programs).toContain("getEducationProgramCurriculumValidationError");
+    expect(programs).toContain("normalizeEducationProgramCurriculumTopics");
+    expect(mutations).not.toContain("function normalizeCurriculumTopics");
+  });
+
   it("keeps Education admin empty states distinct from missing profile setup", () => {
     const programs = read(
       "src/modules/business/education/pages/EducationProgramsPage.tsx",
