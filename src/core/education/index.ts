@@ -58,10 +58,12 @@ export {
   EDUCATION_PROFILE_MAX_AGE,
   EDUCATION_PROFILE_MIN_AGE,
   getEducationProfileSetupValidationErrors,
+  resolveEducationSourceProvenance,
 } from "@/core/education/profileValidation";
 export type {
   EducationProfileSetupValidationError,
   EducationProfileSetupValidationInput,
+  EducationSourceProvenance,
 } from "@/core/education/profileValidation";
 
 export {
