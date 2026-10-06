@@ -178,6 +178,28 @@ export interface EducationProgram {
   curriculum_topics?: string[] | null; // Disciplinas, modulos ou conteudos
 }
 
+export type EducationProgramAdminPatch = Partial<
+  Pick<
+    EducationProgram,
+    | 'name'
+    | 'description'
+    | 'age_group'
+    | 'shift'
+    | 'modality'
+    | 'available_slots'
+    | 'price_from'
+    | 'is_active'
+    | 'display_order'
+    | 'education_level'
+    | 'grade'
+    | 'class_name'
+    | 'max_capacity'
+    | 'current_enrollment'
+    | 'schedule'
+    | 'curriculum_topics'
+  >
+>;
+
 export interface EducationLead {
   id: string;
   education_profile_id: string;
@@ -245,6 +267,19 @@ export interface EducationEvent {
   // Campo especifico para escolas regulares
   school_event_type?: SchoolEventType | null;
 }
+
+export type EducationEventAdminPatch = Partial<
+  Pick<
+    EducationEvent,
+    | 'title'
+    | 'description'
+    | 'starts_at'
+    | 'ends_at'
+    | 'location'
+    | 'is_public'
+    | 'school_event_type'
+  >
+>;
 
 export type EducationLeadStatus =
   | 'new'
