@@ -306,7 +306,7 @@ durante a estabilização atual do data plane.
   formulário; o usuário não precisa descobrir o erro apenas depois da chamada.
 - A URL normalizada é encaminhada ao `BusinessClaimService`, que permanece a
   autoridade final para limite, protocolo, normalização e persistência da
-  evidência.
+  evidência; o frontend não força HTTPS sobre uma fonte `http` válida.
 - A vertical não introduz parser próprio nem reduz as validações centrais.
 
 ### Gates ainda pendentes
