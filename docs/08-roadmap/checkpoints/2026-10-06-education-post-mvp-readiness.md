@@ -563,6 +563,17 @@ durante a estabilização atual do data plane.
 - Testes unitários e ratchet arquitetural protegem normalização, limites e
   ownership da validação.
 
+## Tranche adicional — ações do pipeline orientadas pelo core
+
+- A UI do pipeline deixou de inferir a próxima transição pela posição visual em
+  `PIPELINE_STAGES`.
+- `EducationPipelineView` consome `getEducationLeadNextStatuses` do core para
+  decidir seta, ação **Avançar** e disponibilidade de **Perdido**.
+- A etapa terminal **Matriculado** não mostra mais seta visual apontando para
+  **Perdido**, eliminando uma affordance incompatível com a máquina de estados.
+- Ratchet arquitetural impede o retorno do acesso
+  `PIPELINE_STAGES[index + 1].status` como regra de negócio.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
