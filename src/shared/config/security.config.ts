@@ -161,6 +161,13 @@ export const SECURITY_DOMAINS = {
     justification: 'Required for production anti-abuse verification on protected forms',
     alternatives: 'Replace Turnstile with an equivalent server-verified anti-abuse provider',
   },
+  CATALOG_API: {
+    url: 'https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev',
+    purpose: 'Tonecos public catalog API mounted under /catalogo',
+    risk: 'LOW',
+    justification: 'Required by the catalog frontend proxied through acheguese.com.br/catalogo',
+    alternatives: 'Move the catalog API behind the same first-party domain',
+  },
   STRIPE_CHECKOUT: {
     url: 'https://checkout.stripe.com',
     purpose: 'Stripe hosted checkout redirect',
@@ -279,6 +286,7 @@ export const CSP_DIRECTIVES = {
     SECURITY_DOMAINS.SENTRY_INGEST.url,
     SECURITY_DOMAINS.VERCEL_VITALS.url,
     SECURITY_DOMAINS.CLOUDFLARE_INSIGHTS_COLLECT.url,
+    SECURITY_DOMAINS.CATALOG_API.url,
   ],
   'worker-src': ["'self'", 'blob:'],
   'frame-src': [
@@ -430,7 +438,7 @@ export const INPUT_VALIDATION = {
 export const SECURITY_AUDIT_LOG = {
   lastReview: '2026-10-04',
   reviewer: 'OpenAI',
-  version: '2.25.0',
+  version: '2.26.0',
   changes: [
     'Production CSP follows active MVP runtime dependencies and keeps paused advertising origins unauthorized',
     'Inline HTML event-handler attributes are blocked by script-src-attr none',
@@ -438,6 +446,7 @@ export const SECURITY_AUDIT_LOG = {
     'HIBP k-Anonymity endpoint explicitly allowed in connect-src',
     'Historical change log moved out of executable configuration to keep the SSOT operational',
     'Production release identity is explicitly no-store so smoke gates observe deployment convergence',
+    'Catalog Worker origin is authorized only in connect-src for the /catalogo external app mount',
   ],
   nextReview: '2026-11-04',
 } as const;
@@ -498,7 +507,7 @@ export const CACHE_HEADERS = {
 export const SECURITY_CONFIG_METADATA = {
   version: '2.25.0',
   created: '2026-04-18',
-  lastModified: '2026-10-04',
+  lastModified: '2026-10-06',
   author: 'Achegue-se engineering',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
