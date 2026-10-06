@@ -72,3 +72,12 @@ export {
   EDUCATION_LEAD_LOST_REASON_MIN_LENGTH,
   getEducationLeadLostReasonValidationError,
 } from "@/core/education/leadPipelineValidation";
+
+export {
+  getEducationEventTemporalState,
+  isEducationEventActive,
+} from "@/core/education/eventTemporalState";
+export type {
+  EducationEventTemporalInput,
+  EducationEventTemporalState,
+} from "@/core/education/eventTemporalState";
