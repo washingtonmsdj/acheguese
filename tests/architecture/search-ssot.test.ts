@@ -125,6 +125,22 @@ describe("Federated Search ownership", () => {
     expect(hook).not.toContain("@/modules/");
   });
 
+  it("keeps global Search on one public shell while territorial Search stays embedded", () => {
+    const appShell = read("src/app/components/AppLayoutSidebar.tsx");
+    const page = read("src/app/pages/BuscaPage.tsx");
+    const territoryPortal = read("src/app/pages/TerritoryPortalPage.tsx");
+
+    expect(appShell).toContain(
+      'const isStandaloneGlobalSearchRoute = pathname === "/busca";',
+    );
+    expect(appShell.match(/isStandaloneGlobalSearchRoute/g)?.length).toBe(3);
+    expect(appShell).not.toContain('pathname === "/buscar"');
+    expect(page).toContain("{!embedded ? (");
+    expect(page).toContain("<TerritoryTopbar");
+    expect(page).toContain('className="min-h-[100dvh] text-territory-ink"');
+    expect(territoryPortal).toContain("<TerritorySearchExperience embedded />");
+  });
+
   it("applies community scope through canonical entity links", () => {
     const service = read("src/core/search/services/SearchService.ts");
     const providers = read("src/core/search/providers/searchProviders.ts");
