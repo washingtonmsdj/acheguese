@@ -48,7 +48,13 @@ import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilli
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
-import type { EducationEvent, SchoolEventType } from '@/core/education';
+import {
+  EDUCATION_EVENT_LOCATION_MAX_LENGTH,
+  EDUCATION_EVENT_TITLE_MAX_LENGTH,
+  getEducationEventValidationError,
+  type EducationEvent,
+  type SchoolEventType,
+} from '@/core/education';
 import {
   fromEventIsoToLocalInput,
   fromLocalInputToEventIso,
@@ -101,6 +107,10 @@ export function EducationEventsPage() {
     create,
     update,
     remove,
+    isCreating,
+    isUpdating,
+    isDeleting,
+    isMutating,
   } = useEducationEvents(profile?.id);
   const dashboardUrl = businessId
     ? EducationUrlService.buildAdminDashboardUrl(businessId)
@@ -129,6 +139,50 @@ export function EducationEventsPage() {
     schoolEventType: '' as SchoolEventType | '',
   });
 
+  const buildValidatedEventPayload = () => {
+    let startsAt: string;
+    let endsAt: string | undefined;
+
+    try {
+      startsAt = fromLocalInputToEventIso(formData.startsAt);
+      endsAt = formData.endsAt
+        ? fromLocalInputToEventIso(formData.endsAt)
+        : undefined;
+    } catch {
+      toast({
+        title: 'Revise as datas',
+        description: 'Informe datas e horários válidos para o evento.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    const validationError = getEducationEventValidationError({
+      title: formData.title,
+      startsAt,
+      endsAt,
+      location: formData.location,
+    });
+    if (validationError) {
+      toast({
+        title: 'Revise o evento',
+        description: validationError,
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    return {
+      title: formData.title.trim(),
+      description: formData.description,
+      startsAt,
+      endsAt,
+      location: formData.location.trim(),
+      isPublic: formData.isPublic,
+      schoolEventType: formData.schoolEventType || undefined,
+    };
+  };
+
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -152,18 +206,11 @@ export function EducationEventsPage() {
       return;
     }
 
+    const payload = buildValidatedEventPayload();
+    if (!payload) return;
+
     try {
-      await create({
-        title: formData.title,
-        description: formData.description,
-        startsAt: fromLocalInputToEventIso(formData.startsAt),
-        endsAt: formData.endsAt
-          ? fromLocalInputToEventIso(formData.endsAt)
-          : undefined,
-        location: formData.location,
-        isPublic: formData.isPublic,
-        schoolEventType: formData.schoolEventType || undefined,
-      });
+      await create(payload);
       toast({
         title: 'Evento criado',
         description: 'O evento foi criado com sucesso.',
@@ -183,19 +230,20 @@ export function EducationEventsPage() {
     event.preventDefault();
     if (!editingEvent) return;
 
+    const validated = buildValidatedEventPayload();
+    if (!validated) return;
+
     try {
       await update({
         eventId: editingEvent.id,
         payload: {
-          title: formData.title,
-          description: formData.description,
-          starts_at: fromLocalInputToEventIso(formData.startsAt),
-          ends_at: formData.endsAt
-            ? fromLocalInputToEventIso(formData.endsAt)
-            : null,
-          location: formData.location,
-          is_public: formData.isPublic,
-          school_event_type: formData.schoolEventType || null,
+          title: validated.title,
+          description: validated.description,
+          starts_at: validated.startsAt,
+          ends_at: validated.endsAt ?? null,
+          location: validated.location || null,
+          is_public: validated.isPublic,
+          school_event_type: validated.schoolEventType ?? null,
         },
       });
       toast({
@@ -343,7 +391,7 @@ export function EducationEventsPage() {
         <Button
           onClick={openNewDialog}
           className="gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
-          disabled={isEventsBlocked || isLimitBlocked}
+          disabled={isEventsBlocked || isLimitBlocked || isMutating}
           title={
             isEventsBlocked
               ? eventsCapability.upgradeMessage
@@ -430,7 +478,7 @@ export function EducationEventsPage() {
             </p>
             <Button
               onClick={openNewDialog}
-              disabled={isEventsBlocked || isLimitBlocked}
+              disabled={isEventsBlocked || isLimitBlocked || isMutating}
               className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -532,17 +580,22 @@ export function EducationEventsPage() {
                             variant="ghost"
                             size="sm"
                             aria-label={`Ações do evento ${event.title}`}
+                            disabled={isMutating}
                             className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                           >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDialog(event)}>
+                          <DropdownMenuItem
+                            disabled={isMutating}
+                            onClick={() => openEditDialog(event)}
+                          >
                             <Edit2 className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem
+                            disabled={isMutating}
                             onClick={() => handleDelete(event.id)}
                             className="text-territory-error focus:text-territory-error"
                           >
@@ -559,7 +612,14 @@ export function EducationEventsPage() {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (isMutating && !open) return;
+          setIsDialogOpen(open);
+          if (!open) setEditingEvent(null);
+        }}
+      >
         <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
@@ -579,6 +639,7 @@ export function EducationEventsPage() {
                   setFormData({ ...formData, title: event.target.value })
                 }
                 placeholder="Ex: Visita Aberta 2024"
+                maxLength={EDUCATION_EVENT_TITLE_MAX_LENGTH}
                 required
               />
             </div>
@@ -596,7 +657,7 @@ export function EducationEventsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="startsAt">Início *</Label>
                 <Input
@@ -631,6 +692,7 @@ export function EducationEventsPage() {
                   setFormData({ ...formData, location: event.target.value })
                 }
                 placeholder="Ex: Auditório Principal"
+                maxLength={EDUCATION_EVENT_LOCATION_MAX_LENGTH}
               />
             </div>
 
@@ -670,14 +732,20 @@ export function EducationEventsPage() {
             <div className="flex gap-4 pt-4">
               <Button
                 type="submit"
+                disabled={isMutating}
                 className="flex-1 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
               >
-                {editingEvent ? 'Salvar alterações' : 'Criar evento'}
+                {isCreating || isUpdating
+                  ? 'Salvando...'
+                  : editingEvent
+                    ? 'Salvar alterações'
+                    : 'Criar evento'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+                disabled={isMutating}
                 onClick={() => {
                   setIsDialogOpen(false);
                   setEditingEvent(null);
