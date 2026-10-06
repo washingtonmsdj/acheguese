@@ -314,6 +314,8 @@ durante a estabilização atual do data plane.
 - Breadcrumb, favorito e compartilhar no hero também expõem foco visível
   consistente; o breadcrumb ganhou rótulo de navegação para tecnologias
   assistivas.
+- Compartilhamento público tem fallback explícito quando o navegador não
+  oferece Web Share nem Clipboard API; o botão não termina silenciosamente.
 - Tabs do detalhe, favorito/compartilhar, chips de nicho e botão móvel de
   filtros usam alvo de toque mínimo de 44 px nas superfícies públicas
   principais.
