@@ -23,7 +23,10 @@ export function StickyTabs({
   sections: ReturnType<typeof getSections>;
 }) {
   return (
-    <div className="sticky top-0 z-30 -mx-4 border-b border-territory-border bg-territory-surface/90 px-4 text-territory-ink backdrop-blur-md md:-mx-6 md:px-6">
+    <nav
+      aria-label="Seções da instituição"
+      className="sticky top-0 z-30 -mx-4 border-b border-territory-border bg-territory-surface/90 px-4 text-territory-ink backdrop-blur-md md:-mx-6 md:px-6"
+    >
       <div className="container mx-auto flex gap-1 overflow-x-auto py-3">
         {sections.map((section) => {
           const Icon = section.icon;
@@ -33,8 +36,10 @@ export function StickyTabs({
               key={section.id}
               type="button"
               onClick={() => onChange(section.id)}
+              aria-controls={section.id}
+              aria-current={isActive ? 'location' : undefined}
               className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all",
+                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2",
                 isActive
                   ? "bg-territory-brand text-territory-on-image shadow-sm"
                   : "text-territory-muted hover:bg-territory-raised hover:text-territory-ink",
@@ -46,7 +51,7 @@ export function StickyTabs({
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }
 
