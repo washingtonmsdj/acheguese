@@ -86,6 +86,55 @@ test.describe('Education Events Management — operational smoke', () => {
     expect(data?.starts_at).toBeTruthy();
   });
 
+  test('rejects an end time that is not after the start', async ({
+    page,
+  }) => {
+    const title = 'Evento E2E Cronologia';
+    const eventId = await createTestEvent(businessId, { title });
+    expect(eventId).toBeTruthy();
+
+    const { data: before, error: beforeError } = await admin!
+      .from('education_events')
+      .select('starts_at,ends_at')
+      .eq('id', eventId!)
+      .single();
+    expect(beforeError).toBeNull();
+    expect(before?.starts_at).toBeTruthy();
+    expect(before?.ends_at).toBeTruthy();
+
+    await page.goto(eventsUrl, { waitUntil: 'domcontentloaded' });
+    await page
+      .getByRole('button', { name: `Ações do evento ${title}` })
+      .click();
+    await page.getByRole('menuitem', { name: 'Editar' }).click();
+
+    const startsAt = page.locator('#startsAt');
+    const endsAt = page.locator('#endsAt');
+    const startLocalValue = await startsAt.inputValue();
+    expect(startLocalValue).not.toBe('');
+
+    await endsAt.fill(startLocalValue);
+    await page.getByRole('button', { name: 'Salvar alterações' }).click();
+
+    await expect(
+      page.getByText(
+        'O término do evento deve ser posterior ao início.',
+        { exact: true },
+      ),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('dialog')).toBeVisible();
+
+    const { data: after, error: afterError } = await admin!
+      .from('education_events')
+      .select('starts_at,ends_at')
+      .eq('id', eventId!)
+      .single();
+
+    expect(afterError).toBeNull();
+    expect(after?.starts_at).toBe(before?.starts_at);
+    expect(after?.ends_at).toBe(before?.ends_at);
+  });
+
   test('warns about overlap without blocking intentional simultaneous events', async ({
     page,
   }) => {
