@@ -9,6 +9,10 @@ import {
 } from '@/shared/components/ui/dialog';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
+import {
+  EDUCATION_LEAD_LOST_REASON_MAX_LENGTH,
+  getEducationLeadLostReasonValidationError,
+} from '@/core/education';
 
 interface EducationLeadLostDialogProps {
   open: boolean;
@@ -27,7 +31,8 @@ export function EducationLeadLostDialog({
 }: EducationLeadLostDialogProps) {
   const [reason, setReason] = useState('');
   const normalizedReason = reason.trim();
-  const canSubmit = normalizedReason.length >= 3 && !isSubmitting;
+  const validationError = getEducationLeadLostReasonValidationError(reason);
+  const canSubmit = validationError === null && !isSubmitting;
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && isSubmitting) return;
@@ -72,7 +77,7 @@ export function EducationLeadLostDialog({
               id="education-lost-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              maxLength={500}
+              maxLength={EDUCATION_LEAD_LOST_REASON_MAX_LENGTH}
               rows={4}
               required
               placeholder="Ex: família optou por outra instituição"
