@@ -90,6 +90,20 @@ describe("G6 Education authenticated lifecycle gate", () => {
     expect(helper).not.toContain("end_date: endDate");
   });
 
+  it("keeps the operational Events smoke explicit about its fixture boundary", () => {
+    const eventsSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-events.spec.ts"),
+      "utf8",
+    );
+
+    expect(eventsSpec).toContain("authenticateAsBusinessOwner");
+    expect(eventsSpec).toContain("createTestEvent");
+    expect(eventsSpec).toContain("smoke operacional");
+    expect(eventsSpec).toContain("NAO certifica criacao de evento pela UI");
+    expect(eventsSpec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(eventsSpec).not.toContain("E2E_EDUCATION_OWNER_PASSWORD");
+  });
+
   it("keeps the public Education surface paused during authenticated certification", () => {
     const launchScope = readFileSync(
       join(ROOT, "src/app/config/launchScope.ts"),
