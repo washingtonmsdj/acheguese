@@ -63,6 +63,7 @@ export function EducationDetailSidebar({
   const normalizedInstitutionalEvidenceUrl = institutionalEvidenceUrl.trim()
     ? resolveSafeHttpUrl(institutionalEvidenceUrl, {
         context: 'education-institutional-claim',
+        forceHttps: false,
       })
     : null;
   const hasInvalidInstitutionalEvidence =
