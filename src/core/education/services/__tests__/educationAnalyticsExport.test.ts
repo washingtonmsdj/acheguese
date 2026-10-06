@@ -65,4 +65,19 @@ describe('buildEducationAnalyticsCsv', () => {
     expect(csv).toContain('"serie","leads","\'=1+1","4"');
     expect(csv).not.toContain('"serie","leads","=1+1","4"');
   });
+  it('neutralizes formulas hidden after spaces and control characters', () => {
+    const csv = buildEducationAnalyticsCsv({
+      ...fixture,
+      leads: {
+        ...fixture.leads,
+        byGrade: [
+          { grade: ' \\t=HYPERLINK(1)', leadCount: 4, enrollmentCount: 1 },
+        ],
+      },
+    });
+
+    expect(csv).toContain('"serie","leads","\\' \\t=HYPERLINK(1)","4"');
+    expect(csv).not.toContain('"serie","leads"," \\t=HYPERLINK(1)","4"');
+  });
+
 });
