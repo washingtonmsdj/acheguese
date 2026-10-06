@@ -438,7 +438,9 @@ describe("Education module hardening ratchet", () => {
     expect(profileValidation).toContain("EDUCATION_PROFILE_MAX_AGE");
     expect(profileValidation).toContain("O código INEP deve conter exatamente 8 dígitos.");
     expect(profileValidation).toContain("A fonte pública deve ser uma URL http ou https válida.");
+    expect(profileValidation).toContain("resolveEducationSourceProvenance");
     expect(mutations).toContain("getEducationProfileSetupValidationErrors");
+    expect(mutations).toContain("resolveEducationSourceProvenance");
     expect(mutations).toContain("payload.school_inep_code?.trim() || null");
     expect(mutations).toContain("payload.school_source_url?.trim() || null");
     expect(mutations).toContain("payload.whatsapp_number != null");
