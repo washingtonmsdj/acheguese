@@ -62,3 +62,9 @@ export type {
   EducationProfileSetupValidationError,
   EducationProfileSetupValidationInput,
 } from "@/core/education/profileValidation";
+
+export {
+  EDUCATION_LEAD_LOST_REASON_MAX_LENGTH,
+  EDUCATION_LEAD_LOST_REASON_MIN_LENGTH,
+  getEducationLeadLostReasonValidationError,
+} from "@/core/education/leadPipelineValidation";
