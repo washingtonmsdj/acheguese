@@ -755,6 +755,17 @@ describe("Education module hardening ratchet", () => {
     );
   });
 
+  it("keeps Education niche status aliased to the core support level", () => {
+    const nicheTypes = read(
+      "src/modules/business/education/niches/types.ts",
+    );
+
+    expect(nicheTypes).toContain(
+      "export type EducationNicheStatus = EducationSupportLevel",
+    );
+    expect(nicheTypes).not.toContain("| 'full_enabled'");
+  });
+
   it("keeps Education support levels owned by core", () => {
     const constants = read(
       "src/modules/business/education/constants/index.ts",
