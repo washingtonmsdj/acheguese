@@ -63,7 +63,11 @@ esperado deixar de funcionar.
    - a suite autenticada já prova formato inválido de INEP no formulário;
    - URL pública não-http(s) e faixa etária invertida são rejeitadas antes da persistência;
    - após cada tentativa inválida, a suite confirma ausência de `education_profile`;
-   - ainda falta provar compensação/rollback quando uma criação parcial falha.
+   - compensação de criação parcial é coberta deterministicamente em
+     `EducationService.setup-compensation.test.ts`: somente o draft criado pela
+     tentativa falha pode ser removido; perfil preexistente é preservado;
+   - não existe fault injection remoto de produção apenas para reproduzir erro;
+     qualquer prova remota adicional deve usar mecanismo explicitamente seguro.
 
 2. **Programas**
    - CRUD determinístico;
