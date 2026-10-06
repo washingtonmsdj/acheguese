@@ -29,46 +29,6 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
     enabled: hasValidProfileId,
   });
 
-  const createMutation = useMutation({
-    mutationFn: async (payload: {
-      fullName: string;
-      email: string;
-      phone: string;
-      childName?: string;
-      childAge?: number;
-      interestNote?: string;
-      sourceChannel?: string;
-      // Campos específicos para matrícula escolar
-      guardianName?: string;
-      studentName?: string;
-      studentAge?: number;
-      desiredGrade?: string;
-      desiredShift?: SchoolShift;
-    }) => {
-      if (!hasValidProfileId || !profileId) throw new Error('Valid profile ID required');
-      const created = await EducationService.createLead({
-        educationProfileId: profileId,
-        fullName: payload.fullName,
-        email: payload.email,
-        phone: payload.phone,
-        childName: payload.childName,
-        childAge: payload.childAge,
-        interestNote: payload.interestNote,
-        sourceChannel: payload.sourceChannel,
-        guardianName: payload.guardianName,
-        studentName: payload.studentName,
-        studentAge: payload.studentAge,
-        desiredGrade: payload.desiredGrade,
-        desiredShift: payload.desiredShift,
-      });
-      if (!created) throw new Error('Falha ao criar lead');
-      return created;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['education', 'leads', profileId] });
-    },
-  });
-
   const createPublicMutation = useMutation({
     mutationFn: async (payload: {
       fullName: string;
@@ -117,7 +77,6 @@ export function useEducationLeads(profileId?: string, filters: LeadFilters = {})
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
-    create: createMutation.mutateAsync,
     createPublic: createPublicMutation.mutateAsync,
     update: updateMutation.mutateAsync,
   };
