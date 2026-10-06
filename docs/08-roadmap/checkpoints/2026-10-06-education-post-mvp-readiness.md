@@ -93,6 +93,13 @@ durante a estabilização atual do data plane.
 - Analytics reutiliza `enrollment_open` do perfil já carregado pela página e
   inclui esse valor na chave da query; não faz uma segunda leitura do perfil
   apenas para compor a métrica escolar.
+- Média de dias até o primeiro contato agora é `null` quando não existe
+  nenhuma amostra válida, em vez de inventar `0 dias`; a UI mostra
+  **Sem contatos medidos** e o CSV mantém a célula vazia.
+- O card foi renomeado para **Distribuição do pipeline**, pois seus percentuais
+  representam participação atual por status, não taxa de passagem entre etapas.
+- Skeletons dos cards de Analytics usam animação apenas com
+  `motion-safe`.
 
 ## Tranche adicional — Programas, Eventos e Leads
 
