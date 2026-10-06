@@ -428,6 +428,30 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
       expect(deletedProgramError).toBeNull();
       expect(deletedProgram).toBeNull();
 
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(
+        `/central/empresas/${businessProfileId}/educacao/programas`,
+        { waitUntil: "domcontentloaded" },
+      );
+      await page.getByRole("button", { name: "Novo Programa" }).click();
+
+      const mobileProgramDialog = page.getByRole("dialog");
+      await expect(mobileProgramDialog).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Criar Programa" }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Cancelar" }),
+      ).toBeVisible();
+
+      const mobileProgramDialogBox = await mobileProgramDialog.boundingBox();
+      expect(mobileProgramDialogBox).not.toBeNull();
+      expect(mobileProgramDialogBox!.width).toBeLessThanOrEqual(390);
+      expect(mobileProgramDialogBox!.height).toBeLessThanOrEqual(844);
+
+      await page.getByRole("button", { name: "Cancelar" }).click();
+      await page.setViewportSize({ width: 1280, height: 900 });
+
       await page.goto(
         `/central/empresas/${businessProfileId}/educacao/leads`,
         { waitUntil: "domcontentloaded" },
