@@ -544,6 +544,25 @@ durante a estabilização atual do data plane.
   validava como legítimos.
 - Ratchet arquitetural protege os limites principais do intake público.
 
+## Tranche adicional — integridade de edição administrativa de Leads
+
+- O patch administrativo de Lead passou a reutilizar validação canônica em
+  `src/core/education/leadValidation.ts`.
+- Nome, e-mail, telefone, idades, textos opcionais, série/etapa, turno e
+  `owner_user_id` são revalidados no write model antes da persistência.
+- E-mail é normalizado para lowercase e textos administrativos têm espaços
+  normalizados; campos opcionais em branco viram `null` em vez de strings
+  vazias.
+- Edição de `desired_grade` continua respeitando o nicho real do perfil:
+  etapas oficiais ou custom válidas; nenhuma regra de série foi deslocada para
+  a UI.
+- `moveLeadToStatus` também valida `ownerUserId` antes de alterar o owner.
+- Criação interna e edição administrativa compartilham os mesmos limites
+  básicos do broker público: nomes até 160, e-mail até 254, telefone até 32,
+  observação até 1000, série até 120 e idades entre 0 e 120.
+- Testes unitários e ratchet arquitetural protegem normalização, limites e
+  ownership da validação.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
