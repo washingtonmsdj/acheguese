@@ -1,5 +1,5 @@
 import { isEducationNicheKey as isEducationNicheKeyCore } from '@/core/education';
-import type { EducationNicheKey } from '@/core/education';
+import type { EducationNicheKey, EducationSupportLevel } from '@/core/education';
 
 /**
  * Education Niches - Types
@@ -7,11 +7,7 @@ import type { EducationNicheKey } from '@/core/education';
  * Tipagens para o sistema de nichos de Education.
  */
 
-export type EducationNicheStatus = 
-  | 'full_enabled' 
-  | 'basic_enabled' 
-  | 'beta' 
-  | 'planned';
+export type EducationNicheStatus = EducationSupportLevel;
 
 export type EducationNicheCapability =
   | 'basic_programs_catalog'
