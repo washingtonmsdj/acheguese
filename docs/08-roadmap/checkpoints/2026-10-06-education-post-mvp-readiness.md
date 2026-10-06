@@ -479,6 +479,17 @@ durante a estabilização atual do data plane.
 - A UI apresenta os limites reais junto ao campo.
 - Testes unitários e ratchet arquitetural protegem normalização e ownership.
 
+## Tranche adicional — isolamento de suites de diagnóstico
+
+- `education-debug.spec.ts`, `education-cookie-debug.spec.ts`,
+  `education-network-debug.spec.ts` e `education-dashboard-debug.spec.ts`
+  ficam explicitamente em `test.skip`.
+- Esses arquivos continuam disponíveis para investigação manual, mas não podem
+  ser contabilizados como smoke, aceitação ou certificação da vertical.
+- O inventário E2E lista os quatro como diagnóstico não-certificante.
+- Ratchet arquitetural impede a remoção acidental do `skip` sem uma decisão
+  explícita de transformar o diagnóstico em teste determinístico.
+
 ### Gates comprovados e gates ainda pendentes
 
 No SHA `faaa97a21815090939afafefcd5b6c486c1bfbe0`, o PR comprovou:
