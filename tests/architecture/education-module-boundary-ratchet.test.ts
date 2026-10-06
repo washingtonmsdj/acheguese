@@ -333,6 +333,9 @@ describe("Education module hardening ratchet", () => {
     expect(conversionCard).toContain("motion-safe:animate-pulse");
     expect(conversionCard).not.toContain("avgDaysToConversion");
 
+    const contracts = read("src/core/education/contracts.ts");
+    expect(contracts).toContain("avgEnrollmentRate?: number | null");
+
     const queries = read(
       "src/core/education/services/education.queries.ts",
     );
