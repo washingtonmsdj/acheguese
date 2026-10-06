@@ -58,8 +58,10 @@ export function OfflineIndicator() {
 
   return (
     <div
-      className={`fixed top-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 text-white shadow-lg transition-[opacity,transform] duration-200 ${
-        isOnline ? "bg-green-500" : "bg-red-500"
+      className={`fixed left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full px-4 py-2 shadow-lg transition-[opacity,transform] duration-200 ${
+        isOnline
+          ? "bg-success text-success-foreground"
+          : "bg-destructive text-destructive-foreground"
       }`}
       role="status"
       aria-live="polite"
@@ -98,17 +100,17 @@ export function OfflineBanner() {
   if (isOnline) return null;
 
   return (
-    <div className="border-b border-yellow-500/30 bg-yellow-500/10 px-4 py-2">
+    <div className="border-b border-warning/30 bg-warning/10 px-4 py-2">
       <div className="mx-auto flex max-w-7xl items-center justify-between">
         <div className="flex items-center gap-2">
-          <WifiOff className="h-4 w-4 text-yellow-500" />
-          <span className="text-sm font-medium text-yellow-500">
+          <WifiOff className="h-4 w-4 text-warning" />
+          <span className="text-sm font-medium text-warning">
             Modo Offline - Alguns recursos podem estar limitados
           </span>
         </div>
         <button
           onClick={() => window.location.reload()}
-          className="text-xs text-yellow-500 underline hover:text-yellow-400"
+          className="text-xs text-warning underline transition-opacity hover:opacity-80"
         >
           Tentar reconectar
         </button>
