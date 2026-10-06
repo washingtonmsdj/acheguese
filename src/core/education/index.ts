@@ -46,3 +46,9 @@ export {
   getEducationEventValidationError,
 } from "@/core/education/eventValidation";
 export type { EducationEventValidationInput } from "@/core/education/eventValidation";
+export {
+  EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  EDUCATION_PROGRAM_NAME_MAX_LENGTH,
+  getEducationProgramNameValidationError,
+  getEducationProgramNumericValidationError,
+} from "@/core/education/programValidation";
