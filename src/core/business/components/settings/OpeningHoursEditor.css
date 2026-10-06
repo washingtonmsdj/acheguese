@@ -97,7 +97,7 @@
   border:0; border-radius:8px; background:transparent; color:hsl(var(--territory-muted)); cursor:pointer;
 }
 .opening-hours-editor__switch::before { content:""; width:34px; height:20px; border-radius:999px; background:hsl(var(--territory-muted)/.3); }
-.opening-hours-editor__switch::after { content:""; position:absolute; width:16px; height:16px; left:7px; top:14px; border-radius:50%; background:hsl(var(--territory-surface)); box-shadow:0 1px 3px #0002; transition:transform .15s; }
+.opening-hours-editor__switch::after { content:""; position:absolute; width:16px; height:16px; left:7px; top:14px; border-radius:50%; background:hsl(var(--territory-surface)); box-shadow:0 1px 3px hsl(var(--shadow-color)/.13); transition:transform .15s; }
 .opening-hours-editor__switch[aria-checked="true"]::before { background:hsl(var(--territory-brand)); }
 .opening-hours-editor__switch[aria-checked="true"]::after { transform:translateX(14px); }
 .opening-hours-editor__switch:focus-visible, .opening-hours-editor__unset:focus-visible { outline:2px solid hsl(var(--territory-brand)); outline-offset:2px; }

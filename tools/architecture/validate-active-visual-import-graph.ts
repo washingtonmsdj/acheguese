@@ -9,6 +9,7 @@ const SRC_ROOT = path.join(ROOT, "src");
 const ACTIVE_LAZY_IMPORTS_FILE = "src/app/routes/activeLazyImports.ts";
 const ACTIVE_VISUAL_COMPOSITION_FILES = [
   "src/app/routes/sections/AppLayoutRoutes.tsx",
+  "src/app/routes/sections/CentralRoutes.tsx",
   "src/app/components/AppLayoutSidebar.tsx",
 ] as const;
 
