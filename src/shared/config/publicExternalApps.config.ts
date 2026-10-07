@@ -9,6 +9,7 @@ export const PUBLIC_EXTERNAL_APPS = {
     publicPath: "/tonecosstudios/",
     mountPath: "/tonecosstudios",
     legacyMountPath: "/catalogo",
+    visitorRedirectSource: "/((?!tonecosstudios(?:/|$)|catalogo-api(?:/|$)|release\\.json$).*)",
     upstreamOrigin: "https://washingtonmsdj.github.io/catalogo",
     apiMountPath: "/catalogo-api",
     apiUpstreamOrigin: "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev",
