@@ -5,9 +5,9 @@ const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) 
 export const PUBLIC_EXTERNAL_APPS = {
   catalog: {
     id: "catalog",
-    label: "Catálogo",
-    publicPath: "/catalogo/",
-    mountPath: "/catalogo",
+    label: "Tonecos Studios",
+    publicPath: "/tonecosstudios/",
+    mountPath: "/tonecosstudios",
     upstreamOrigin: "https://washingtonmsdj.github.io/catalogo",
     apiMountPath: "/catalogo-api",
     apiUpstreamOrigin: "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev",
