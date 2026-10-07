@@ -45,7 +45,32 @@ const VERCEL_CONFIG_TEMPLATE = {
     {
       source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
       destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: true,
+      permanent: false,
+    },
+    {
+      source: PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/`,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/:path*`,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: "/",
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: PUBLIC_EXTERNAL_APPS.catalog.visitorRedirectSource,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
     },
   ],
 
@@ -155,13 +180,42 @@ function generateVercelConfig() {
     throw new Error("Install command drifted from lockfile consistency guard");
   }
 
-  const catalogRedirect = generated.redirects?.[0];
+  const expectedRedirects = [
+    {
+      source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/`,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/:path*`,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: "/",
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+    {
+      source: PUBLIC_EXTERNAL_APPS.catalog.visitorRedirectSource,
+      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      permanent: false,
+    },
+  ];
   const [catalogApiRewrite, catalogRootRewrite, catalogNestedRewrite, spaRewrite] =
     generated.rewrites ?? [];
   if (
-    catalogRedirect?.source !== PUBLIC_EXTERNAL_APPS.catalog.mountPath ||
-    catalogRedirect?.destination !== PUBLIC_EXTERNAL_APPS.catalog.publicPath ||
-    catalogRedirect?.permanent !== true ||
+    JSON.stringify(generated.redirects ?? []) !== JSON.stringify(expectedRedirects) ||
     catalogApiRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*` ||
     catalogApiRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*` ||
     catalogRootRewrite?.source !== PUBLIC_EXTERNAL_APPS.catalog.publicPath ||
@@ -171,7 +225,7 @@ function generateVercelConfig() {
     spaRewrite?.source !== "/(.*)" ||
     spaRewrite?.destination !== "/index.html"
   ) {
-    throw new Error("Public catalog rewrites drifted from publicExternalApps SSOT");
+    throw new Error("Public catalog routing drifted from publicExternalApps SSOT");
   }
 
   const cspCount = (generated.headers ?? [])
