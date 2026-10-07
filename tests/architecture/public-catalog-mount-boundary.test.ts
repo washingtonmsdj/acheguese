@@ -8,14 +8,14 @@ function read(path: string) {
   return readFileSync(resolve(root, path), "utf8");
 }
 
-describe("public catalog mount boundary", () => {
-  it("keeps the Achegue-se root owned by TerritoryEntryPage and only announces the catalog", () => {
+describe("temporary Tonecos Studios public routing boundary", () => {
+  it("keeps the Achegue-se application untouched behind the edge redirect", () => {
     const rootEntry = read("src/app/routes/RootRouteEntry.tsx");
     const entryPage = read("src/app/pages/TerritoryEntryPage.tsx");
 
     expect(rootEntry).toContain("return <TerritoryEntryPage />");
     expect(rootEntry).not.toContain('window.location');
-    expect(rootEntry).not.toContain('"/catalogo/"');
+    expect(rootEntry).not.toContain('"/tonecosstudios/"');
     expect(entryPage).toContain("PUBLIC_CATALOG_ANNOUNCEMENT_ENABLED");
     expect(entryPage).toContain("PUBLIC_CATALOG_PATH");
     expect(entryPage).toContain("Pré-lançamento");
@@ -24,16 +24,41 @@ describe("public catalog mount boundary", () => {
     expect(entryPage).toContain("Conhecer o Achegue-se");
   });
 
-  it("mounts catalog rewrites before the SPA catch-all", () => {
+  it("redirects every visitor page to Tonecos Studios while preserving infrastructure", () => {
     const config = JSON.parse(read("vercel.json")) as {
       redirects?: Array<{ source?: string; destination?: string; permanent?: boolean }>;
       rewrites?: Array<{ source?: string; destination?: string }>;
     };
     expect(config.redirects).toEqual([
       {
+        source: "/tonecosstudios",
+        destination: "/tonecosstudios/",
+        permanent: false,
+      },
+      {
         source: "/catalogo",
-        destination: "/catalogo/",
-        permanent: true,
+        destination: "/tonecosstudios/",
+        permanent: false,
+      },
+      {
+        source: "/catalogo/",
+        destination: "/tonecosstudios/",
+        permanent: false,
+      },
+      {
+        source: "/catalogo/:path*",
+        destination: "/tonecosstudios/",
+        permanent: false,
+      },
+      {
+        source: "/",
+        destination: "/tonecosstudios/",
+        permanent: false,
+      },
+      {
+        source: "/((?!tonecosstudios(?:/|$)|catalogo-api(?:/|$)|release\\.json$).*)",
+        destination: "/tonecosstudios/",
+        permanent: false,
       },
     ]);
     expect(config.rewrites).toEqual([
@@ -42,11 +67,11 @@ describe("public catalog mount boundary", () => {
         destination: "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev/:path*",
       },
       {
-        source: "/catalogo/",
+        source: "/tonecosstudios/",
         destination: "https://washingtonmsdj.github.io/catalogo/",
       },
       {
-        source: "/catalogo/:path*",
+        source: "/tonecosstudios/:path*",
         destination: "https://washingtonmsdj.github.io/catalogo/:path*",
       },
       {
@@ -72,7 +97,7 @@ describe("public catalog mount boundary", () => {
   it("keeps routing generated from the public external apps SSOT", () => {
     const source = read("tools/security/generate-vercel-config.ts");
     expect(source).toContain("PUBLIC_EXTERNAL_APPS");
-    expect(source).toContain("Public catalog rewrites drifted from publicExternalApps SSOT");
+    expect(source).toContain("Public catalog routing drifted from publicExternalApps SSOT");
   });
 
   it("keeps the browser CSP first-party for catalog API traffic", () => {
