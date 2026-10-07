@@ -12,11 +12,11 @@
       "destination": "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev/:path*"
     },
     {
-      "source": "/catalogo/",
+      "source": "/tonecosstudios/",
       "destination": "https://washingtonmsdj.github.io/catalogo/"
     },
     {
-      "source": "/catalogo/:path*",
+      "source": "/tonecosstudios/:path*",
       "destination": "https://washingtonmsdj.github.io/catalogo/:path*"
     },
     {
@@ -171,9 +171,34 @@
   },
   "redirects": [
     {
+      "source": "/tonecosstudios",
+      "destination": "/tonecosstudios/",
+      "permanent": false
+    },
+    {
       "source": "/catalogo",
-      "destination": "/catalogo/",
-      "permanent": true
+      "destination": "/tonecosstudios/",
+      "permanent": false
+    },
+    {
+      "source": "/catalogo/",
+      "destination": "/tonecosstudios/",
+      "permanent": false
+    },
+    {
+      "source": "/catalogo/:path*",
+      "destination": "/tonecosstudios/",
+      "permanent": false
+    },
+    {
+      "source": "/",
+      "destination": "/tonecosstudios/",
+      "permanent": false
+    },
+    {
+      "source": "/((?!tonecosstudios(?:/|$)|catalogo-api(?:/|$)|release\\.json$).*)",
+      "destination": "/tonecosstudios/",
+      "permanent": false
     }
   ]
 }
