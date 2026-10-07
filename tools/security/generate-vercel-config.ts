@@ -55,6 +55,10 @@ const VERCEL_CONFIG_TEMPLATE = {
       destination: `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*`,
     },
     {
+      source: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
+      destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/`,
+    },
+    {
       source: `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*`,
       destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/:path*`,
     },
@@ -152,7 +156,7 @@ function generateVercelConfig() {
   }
 
   const catalogRedirect = generated.redirects?.[0];
-  const [catalogApiRewrite, catalogNestedRewrite, spaRewrite] =
+  const [catalogApiRewrite, catalogRootRewrite, catalogNestedRewrite, spaRewrite] =
     generated.rewrites ?? [];
   if (
     catalogRedirect?.source !== PUBLIC_EXTERNAL_APPS.catalog.mountPath ||
@@ -160,6 +164,8 @@ function generateVercelConfig() {
     catalogRedirect?.permanent !== true ||
     catalogApiRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*` ||
     catalogApiRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*` ||
+    catalogRootRewrite?.source !== PUBLIC_EXTERNAL_APPS.catalog.publicPath ||
+    catalogRootRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/` ||
     catalogNestedRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*` ||
     catalogNestedRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/:path*` ||
     spaRewrite?.source !== "/(.*)" ||
