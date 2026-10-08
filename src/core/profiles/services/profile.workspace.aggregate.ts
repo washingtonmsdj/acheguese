@@ -28,7 +28,7 @@ interface PrivateWorkspaceDependencies {
   getUserLikesCount: (profileId: string) => Promise<number>;
   getUserBusinessesByProfiles: (profileIds: string[]) => Promise<BusinessRow[]>;
   getTerritoryLabel: (locationId: string) => Promise<string | null>;
-  resolvePermissions: (profileContext: ProfileContext | null) => ProfilePermissions;
+  resolvePermissions: (profileContext: ProfileContext) => ProfilePermissions;
 }
 
 const MVP_DISABLED_ENTITLEMENTS = {
