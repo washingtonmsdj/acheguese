@@ -12,6 +12,15 @@ export interface SupabaseBrokerResponse<T> {
   error?: string;
 }
 
+/** A response explicitly rejected by the broker (not a transport failure). */
+export class SupabaseBrokerRejectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SupabaseBrokerRejectedError";
+  }
+}
+
+
 interface InvokeSupabaseBrokerInput<TAction extends string> {
   action: TAction;
   client?: SupabaseBrokerClient;
@@ -70,7 +79,7 @@ async function invokeRawSupabaseBroker<T, TAction extends string>({
       action,
       message: data.error,
     });
-    throw new Error(data.error);
+    throw new SupabaseBrokerRejectedError(data.error);
   }
 
   return data ?? null;
