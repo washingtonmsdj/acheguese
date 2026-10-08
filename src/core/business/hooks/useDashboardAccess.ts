@@ -117,7 +117,8 @@ export function useDashboardAccess(profileId: string | undefined) {
   return {
     permissions: snapshotIsCurrent ? snapshot.permissions : NO_ACCESS,
     loading: !snapshotIsCurrent || snapshot.loading,
-    checkedProfileId: snapshotIsCurrent ? snapshot.profileId : null,
+    checkedProfileId:
+      snapshotIsCurrent && !snapshot.loading ? snapshot.profileId : null,
     error: snapshotIsCurrent ? snapshot.error : null,
     refetch: checkAccess,
   };
