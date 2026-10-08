@@ -13,6 +13,7 @@ export const LIVE_DOCS = [
   "docs/08-roadmap/README.md",
   "docs/08-roadmap/NEXT-STEPS.md",
   "src/modules/README.md",
+  "src/modules/business/README.md",
   "src/modules/business/VALIDATION.md",
 ] as const;
 
