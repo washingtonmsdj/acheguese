@@ -34,13 +34,14 @@ function createQuery(result: { data: unknown[] | null; error: Error | null }) {
     or: vi.fn(),
     order: vi.fn(),
     range: vi.fn(),
+    limit: vi.fn(),
     maybeSingle: vi.fn(),
     then: (
       resolve: (value: typeof result) => unknown,
       reject?: (error: unknown) => unknown,
     ) => Promise.resolve(result).then(resolve, reject),
   };
-  for (const key of ["select", "in", "eq", "or", "order", "range"] as const) {
+  for (const key of ["select", "in", "eq", "or", "order", "range", "limit"] as const) {
     query[key].mockReturnValue(query);
   }
   return query;
