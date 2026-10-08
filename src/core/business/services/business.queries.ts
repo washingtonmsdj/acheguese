@@ -826,10 +826,7 @@ export async function getBusinessesByIds(ids: string[]): Promise<
       )
       .in("profile_id", ids);
 
-    if (error) {
-      logger.error("Error getting businesses by IDs", error, { ids });
-      return [];
-    }
+    if (error) throw error;
 
     return ((data as unknown[]) || []).map((b: unknown) => {
       const typed = b as {
@@ -866,7 +863,7 @@ export async function getBusinessesByIds(ids: string[]): Promise<
     });
   } catch (error) {
     logger.error("Error getting businesses by IDs", error as Error, { ids });
-    return [];
+    throw error;
   }
 }
 
