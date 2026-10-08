@@ -83,6 +83,7 @@ import {
   deleteBusiness,
   updateBusiness,
 } from "../business.mutations";
+import { BusinessBrokerOutcomeUnknownError } from "../BusinessBrokerOutcomeUnknownError";
 
 const businessInput: CreateBusinessInput = {
   name: "Empresa Teste",
@@ -226,6 +227,32 @@ describe("business lifecycle broker", () => {
     });
     expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
     expect(mocks.getBusinessById).not.toHaveBeenCalled();
+  });
+
+  it("does not delete an Address if a dispatched create may already have committed", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-uncertain-create" });
+    mocks.createBusinessRpc.mockRejectedValue(new Error("Response lost after dispatch"));
+
+    await expect(
+      createBusiness({
+        ...businessInput,
+        address_street: "Rua Ambigua",
+        address_number: "11",
+      }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+
+    expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("does not compensate a successful broker response missing its receipt", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-missing-receipt" });
+    mocks.createBusinessRpc.mockResolvedValue({ success: true });
+
+    await expect(
+      createBusiness({ ...businessInput, address_street: "Rua Sem Recibo" }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
   });
 
   it("creates structured Address with owner_user_id and compensates it if broker rejects", async () => {
@@ -390,6 +417,22 @@ describe("business lifecycle broker", () => {
 
     expect(mocks.updateBusinessRpc).toHaveBeenCalledOnce();
     expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("preserves a possible committed Address after an ambiguous update", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-uncertain-update" });
+    mocks.updateBusinessRpc.mockRejectedValue(new Error("Connection dropped"));
+
+    await expect(
+      updateBusiness("profile-1", {
+        location_id: businessInput.location_id,
+        address_street: "Rua Atualizacao Incerta",
+        address_number: "24",
+      }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(1);
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
   });
 
