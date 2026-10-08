@@ -36,7 +36,6 @@ import { normalizeMediaAssetReference } from "@/core/media/references/mediaAsset
 import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
 import { ProfileRpcService } from "@/core/profiles/services/ProfileRpcService";
-import { SupabaseBrokerRejectedError } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { BusinessBrokerOutcomeUnknownError } from "./BusinessBrokerOutcomeUnknownError";
 import type {
   CreateBusinessInput,
@@ -444,11 +443,6 @@ export async function createBusiness(
       business_data_id: result.data.business_data_id ?? null,
     };
   } catch (error) {
-    // A broker-originated data.error proves a rejected command, unlike a
-    // dropped transport response whose transaction may have committed.
-    if (!businessWriteCompleted && error instanceof SupabaseBrokerRejectedError) {
-      safeToCompensateAddress = true;
-    }
     if (createdAddressId && !businessWriteCompleted && safeToCompensateAddress) {
       await cleanupUnattachedAddress(createdAddressId);
     }
@@ -596,11 +590,6 @@ export async function updateBusiness(
     // read-model outage must not turn this mutation into a false failure.
     return { profile_id: id };
   } catch (error) {
-    // A broker-originated data.error proves a rejected command, unlike a
-    // dropped transport response whose transaction may have committed.
-    if (!businessWriteCompleted && error instanceof SupabaseBrokerRejectedError) {
-      safeToCompensateAddress = true;
-    }
     if (createdAddressId && !businessWriteCompleted && safeToCompensateAddress) {
       await cleanupUnattachedAddress(createdAddressId);
     }
