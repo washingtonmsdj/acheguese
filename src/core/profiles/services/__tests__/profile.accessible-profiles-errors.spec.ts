@@ -18,7 +18,7 @@ vi.mock("@/shared/utils/errorTracking", () => ({
   trackError: mocks.trackError,
 }));
 
-import { getActiveProfile, getProfilesByUserId } from "../profile.queries";
+import { getActiveProfile, getProfileByType, getProfilesByUserId } from "../profile.queries";
 
 describe("Profile broker: vazio comprovado vs indisponibilidade", () => {
   beforeEach(() => {
@@ -72,4 +72,36 @@ describe("Profile broker: vazio comprovado vs indisponibilidade", () => {
 
     await expect(getActiveProfile("user-1")).rejects.toBe(failure);
   });
+  it("busca por tipo preserva ausencia real confirmada no broker", async () => {
+    mocks.getAccessibleProfiles.mockResolvedValueOnce([]);
+
+    await expect(getProfileByType("user-1", "business")).resolves.toBeNull();
+    expect(mocks.getAccessibleProfiles).toHaveBeenCalledWith({
+      targetUserId: "user-1",
+      profileType: "business",
+    });
+  });
+
+  it("busca por tipo retorna o perfil real sem outro caminho de leitura", async () => {
+    const result = [{ id: "profile-business-1", profile_type: "business" }];
+    mocks.getAccessibleProfiles.mockResolvedValueOnce(result);
+
+    await expect(getProfileByType("user-1", "business")).resolves.toBe(result[0]);
+  });
+
+  it("busca por tipo nao interpreta falha do broker como perfil inexistente", async () => {
+    const failure = new Error("profile-rpc unavailable");
+    mocks.getAccessibleProfiles.mockRejectedValueOnce(failure);
+
+    await expect(getProfileByType("user-1", "business")).rejects.toBe(failure);
+    expect(mocks.trackError).toHaveBeenCalledWith(
+      failure,
+      expect.objectContaining({
+        component: "profile.queries",
+        action: "getProfileByType",
+        metadata: { userId: "user-1", profileType: "business" },
+      }),
+    );
+  });
+
 });
