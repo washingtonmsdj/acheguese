@@ -130,6 +130,26 @@ describe("Contexto da Conta: estado conhecido versus falha de backend", () => {
     await expect(contextFor()).rejects.toBe(failure);
   });
 
+  it("falha ao ler papeis globais rejeita o contexto e nao fabrica canModerate=false", async () => {
+    const failure = new Error("role-rpc unavailable");
+    mocks.getUserRoles.mockRejectedValueOnce(failure);
+
+    await expect(contextFor()).rejects.toBe(failure);
+    expect(mocks.trackError).toHaveBeenCalledWith(
+      failure,
+      expect.objectContaining({ component: "profile.context.aggregate" }),
+    );
+  });
+
+  it("moderacao confirmada pelo broker continua refletida na UI", async () => {
+    mocks.getUserRoles.mockResolvedValueOnce(["moderator"]);
+
+    const context = await contextFor();
+
+    expect(context?.permissions.canModerate).toBe(true);
+    expect(mocks.getUserRoles).toHaveBeenCalledWith("user-1");
+  });
+
   it("preserva assinatura real quando o backend devolve plano valido", async () => {
     mocks.maybeSingle.mockResolvedValueOnce({
       data: { active: true, plan_type: "premium", expires_at: null },
