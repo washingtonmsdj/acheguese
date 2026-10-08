@@ -9,6 +9,7 @@ interface UseFavoritesResult {
   favorites: ProfileAssociatedBusiness[];
   favoriteIds: string[];
   loading: boolean;
+  error: Error | null;
   toggleFavorite: (itemId: string, itemType: string) => Promise<void>;
   isFavorite: (itemId: string) => boolean;
   fetchFavorites: () => void;
@@ -17,7 +18,7 @@ interface UseFavoritesResult {
 export function useFavorites(profileId?: string | null): UseFavoritesResult {
   const queryClient = useQueryClient();
 
-  const { data: favorites = [], refetch, isLoading, isFetching } = useQuery<ProfileAssociatedBusiness[]>({
+  const { data: favorites = [], refetch, isLoading, isFetching, error } = useQuery<ProfileAssociatedBusiness[]>({
     queryKey: ["profile", "business-favorites", profileId],
     queryFn: async () => {
       if (!profileId) {
@@ -73,6 +74,7 @@ export function useFavorites(profileId?: string | null): UseFavoritesResult {
     favorites,
     favoriteIds,
     loading: isLoading || isFetching,
+    error,
     toggleFavorite,
     isFavorite,
     fetchFavorites,
