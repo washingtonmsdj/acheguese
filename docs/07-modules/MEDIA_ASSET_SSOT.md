@@ -1,7 +1,7 @@
 # MediaAsset SSOT
 
-Status: ativo; dominios de imagem publica canonicos; CP-016 concluido; G4 global upload ownership fechado em 2026-08-29
-Data: 2026-07-17
+Status: contrato técnico vivo de mídias públicas; a segurança efetiva pertence ao broker/DB.
+Contexto histórico: estudo inicial 2026-07-17, CP-016 e marco G4 de ownership em 2026-08-29; esses marcos não substituem a prova do release vigente.
 Owner: `src/core/media`, `supabase/functions/media-assets` e lifecycle no banco
 
 ## 1. Decisao
