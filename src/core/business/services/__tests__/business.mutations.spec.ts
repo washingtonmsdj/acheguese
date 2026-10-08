@@ -466,6 +466,8 @@ describe("business lifecycle broker", () => {
     })).resolves.toEqual({ profile_id: "profile-1" });
 
     expect(mocks.getAddressById).toHaveBeenCalledWith("old-address");
+    expect(mocks.createAddress.mock.calls[0]?.[0]).not.toHaveProperty("verification_status");
+    expect(mocks.createAddress.mock.calls[0]?.[0]).not.toHaveProperty("verified_by");
     expect(mocks.updateAddress).not.toHaveBeenCalled();
     expect(mocks.createAddress).toHaveBeenCalledWith(expect.objectContaining({
       owner_user_id: "user-1",
@@ -523,6 +525,28 @@ describe("business lifecycle broker", () => {
         businessPatch: expect.objectContaining({ address_id: "staged-address" }),
       }),
     );
+  });
+
+  it("does not write either Address or Business if prior address cannot be read", async () => {
+    mocks.getBusinessById.mockResolvedValue({
+      ...currentBusiness, address_id: "old-address",
+    });
+    mocks.resolveAddress.mockResolvedValue({
+      locationId: businessInput.location_id,
+      postalCode: null,
+      street: "Rua Conservada",
+      number: "42",
+      complement: "Sala 14",
+    });
+    mocks.getAddressById.mockResolvedValue(null);
+
+    await expect(updateBusiness("profile-1", {
+      address_complement: "Sala 14",
+    })).rejects.toThrow("Endereco atual nao encontrado");
+
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+    expect(mocks.updateAddress).not.toHaveBeenCalled();
+    expect(mocks.updateBusinessRpc).not.toHaveBeenCalled();
   });
 
   it("fails before dispatch if the old geocoding evidence cannot be safely reused", async () => {
