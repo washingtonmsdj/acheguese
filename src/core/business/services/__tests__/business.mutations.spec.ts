@@ -327,15 +327,7 @@ describe("business lifecycle broker", () => {
     expect(mocks.updateBusinessRpc).not.toHaveBeenCalled();
   });
 
-  it("updates non-structural Business data through the broker and reloads canonical read model", async () => {
-    const updatedBusiness = {
-      ...currentBusiness,
-      name: "Empresa Renomeada",
-    } as Business;
-    mocks.getBusinessById
-      .mockResolvedValueOnce(currentBusiness)
-      .mockResolvedValueOnce(updatedBusiness);
-
+  it("confirms non-structural updates from the broker without a second read", async () => {
     const updated = await updateBusiness("profile-1", {
       name: "Empresa Renomeada",
     });
@@ -348,7 +340,21 @@ describe("business lifecycle broker", () => {
       businessHours: null,
     });
     expect(mocks.updateAddress).not.toHaveBeenCalled();
-    expect(updated.name).toBe("Empresa Renomeada");
+    expect(updated).toEqual({ profile_id: "profile-1" });
+    expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
+  });
+
+  it("never represents an already committed update as failed when detail reads are down", async () => {
+    mocks.getBusinessById
+      .mockResolvedValueOnce(currentBusiness)
+      .mockRejectedValueOnce(new Error("Public read model unavailable"));
+
+    await expect(
+      updateBusiness("profile-1", { description: "Descrição revisada" }),
+    ).resolves.toEqual({ profile_id: "profile-1" });
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(1);
+    expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
   });
 
   it("compensates a newly created Address when an update broker command fails", async () => {
