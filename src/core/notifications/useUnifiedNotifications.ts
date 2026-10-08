@@ -91,6 +91,7 @@ export function useUnifiedNotifications(
   const channelRef = useRef<RealtimeChannelLike | null>(null);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const fetchRequestRef = useRef(0);
+  const statsRequestRef = useRef(0);
   const activeUserIdRef = useRef(user?.id);
   const notificationsRef = useRef<Notification[]>([]);
   const seenNotificationIdsRef = useRef<Set<string>>(new Set());
@@ -116,9 +117,11 @@ export function useUnifiedNotifications(
   const fetchNotifications = useCallback(
     async (silent = false) => {
       const requestId = ++fetchRequestRef.current;
+      const statsRequestId = ++statsRequestRef.current;
       const requestUserId = user?.id;
 
       if (!requestUserId) {
+        ++statsRequestRef.current;
         updateNotifications(() => []);
         seenNotificationIdsRef.current.clear();
         setStats(createEmptyNotificationStats());
@@ -142,7 +145,9 @@ export function useUnifiedNotifications(
         }
         seenNotificationIdsRef.current = new Set(data.map((notification) => notification.id));
         updateNotifications(() => data);
-        setStats((prev) => ({ ...prev, ...statsData }));
+        if (statsRequestRef.current === statsRequestId) {
+          setStats((prev) => ({ ...prev, ...statsData }));
+        }
       } catch (err) {
         if (fetchRequestRef.current !== requestId) return;
         const message =
@@ -180,6 +185,7 @@ export function useUnifiedNotifications(
         }),
       );
       if (existing && !existing.read) {
+        ++statsRequestRef.current;
         setStats((prev) => ({
           ...prev,
           unread: Math.max(0, prev.unread - 1),
@@ -213,6 +219,7 @@ export function useUnifiedNotifications(
         }),
       );
 
+      ++statsRequestRef.current;
       setStats((prev) => ({
         ...prev,
         unread: 0,
@@ -242,6 +249,7 @@ export function useUnifiedNotifications(
       updateNotifications((current) =>
         current.filter((notification) => notification.id !== notificationId),
       );
+      ++statsRequestRef.current;
       setStats((prev) => {
         if (!existing) return prev;
         const priority = getNotificationPriority(existing);
@@ -294,15 +302,25 @@ export function useUnifiedNotifications(
                 : current.filter((item) => item.id !== notification.id);
             });
 
-            void notificationService.getStats(user.id).then((statsData) => {
-              if (activeUserIdRef.current === user.id) {
-                setStats((current) => ({ ...current, ...statsData }));
-              }
-            });
+            const statsRequestId = ++statsRequestRef.current;
+            void notificationService
+              .getStats(user.id)
+              .then((statsData) => {
+                if (
+                  activeUserIdRef.current === user.id &&
+                  statsRequestRef.current === statsRequestId
+                ) {
+                  setStats((current) => ({ ...current, ...statsData }));
+                }
+              })
+              .catch((err: unknown) => {
+                logger.error("Erro ao atualizar estatisticas de notificacoes:", err);
+              });
             return;
           }
 
           const newNotification = notification;
+          if (newNotification.deleted_at) return;
           if (seenNotificationIdsRef.current.has(newNotification.id)) return;
           seenNotificationIdsRef.current.add(newNotification.id);
 
@@ -317,10 +335,11 @@ export function useUnifiedNotifications(
             );
           }
 
+          ++statsRequestRef.current;
           setStats((prev) => ({
             ...prev,
             total: prev.total + 1,
-            unread: prev.unread + 1,
+            unread: prev.unread + (newNotification.read ? 0 : 1),
             by_type: {
               ...prev.by_type,
               [newNotification.type]:
