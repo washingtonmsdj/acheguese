@@ -357,6 +357,26 @@ describe("business lifecycle broker", () => {
     expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
   });
 
+  it("retains a newly attached address after broker-confirmed update without a second read", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-update-committed" });
+    mocks.getBusinessById
+      .mockResolvedValueOnce(currentBusiness)
+      .mockRejectedValueOnce(new Error("Read model timeout"));
+
+    await expect(
+      updateBusiness("profile-1", {
+        location_id: businessInput.location_id,
+        address_street: "Rua Confirmada",
+        address_number: "42",
+        postal_code: "40000-001",
+      }),
+    ).resolves.toEqual({ profile_id: "profile-1" });
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledOnce();
+    expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
   it("compensates a newly created Address when an update broker command fails", async () => {
     mocks.createAddress.mockResolvedValue({ id: "address-update-1" });
     mocks.updateBusinessRpc.mockResolvedValue({
