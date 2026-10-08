@@ -584,6 +584,11 @@ export async function updateBusiness(
       safeToCompensateAddress = true;
       throw new Error(result.error || "Broker rejeitou atualizacao da empresa");
     }
+    // A success flag without the matching transaction receipt does not prove
+    // that this target profile was updated. Never manufacture a commit.
+    if (result.data?.profile_id !== id) {
+      throw new Error("Broker nao retornou recibo valido da empresa atualizada");
+    }
 
     businessWriteCompleted = true;
     // A successful broker response is the commit acknowledgement. A later
