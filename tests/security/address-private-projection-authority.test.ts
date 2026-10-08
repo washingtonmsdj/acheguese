@@ -19,9 +19,13 @@ describe("Address private table / public projection SSOT", () => {
     expect(migration).toContain("COMMIT;");
   });
 
-  it("removes base table public SELECT without damaging owner-only CRUD", () => {
+  it("removes public row access while retaining FK-embedding permission", () => {
     expect(migration).toContain(
-      "REVOKE SELECT ON TABLE public.addresses FROM PUBLIC, anon;",
+      "preservar o GRANT SELECT de anon na tabela física",
+    );
+    expect(migration).toContain("SELECT retorna");
+    expect(migration).toContain(
+      "pg_has_role('anon', 'authenticated', 'member')",
     );
     expect(migration).toContain(
       'DROP POLICY "Addresses public verified read" ON public.addresses;',
