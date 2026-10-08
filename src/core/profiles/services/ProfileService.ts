@@ -304,14 +304,7 @@ export class ProfileService {
         const fullName = location.full_name.trim();
         return fullName.length > 0 ? fullName : null;
       },
-      resolvePermissions: (profileContext) =>
-        profileContext?.permissions ?? {
-          canPost: false,
-          canComment: false,
-          canMessage: false,
-          canCreateBusiness: false,
-          canModerate: false,
-        },
+      resolvePermissions: (profileContext) => profileContext.permissions,
     });
   }
   async getStats(userId: string) {
