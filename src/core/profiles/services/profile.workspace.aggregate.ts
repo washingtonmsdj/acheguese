@@ -359,6 +359,6 @@ export async function getPrivateWorkspaceAggregate(
     };
   } catch (error) {
     logger.error("Error in getPrivateWorkspaceAggregate:", error);
-    return emptyWorkspace;
+    throw error;
   }
 }
