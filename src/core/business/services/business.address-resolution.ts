@@ -100,6 +100,15 @@ function providerHouseNumberMatches(
   );
 }
 
+function providerPostalCodeMatches(
+  requestedPostalCode: string | null,
+  providerPostalCode: string | null | undefined,
+): boolean {
+  if (!requestedPostalCode || !providerPostalCode) return true;
+  const digits = (value: string) => value.replace(/\D/g, "");
+  return digits(requestedPostalCode) === digits(providerPostalCode);
+}
+
 function mapGeocodingSource(source: string): GeocodingSource {
   switch (source) {
     case "nominatim":
@@ -259,7 +268,8 @@ export async function resolveBusinessAddressForPersistence(
       (result) =>
         result.confidence >= BUSINESS_ADDRESS_MIN_GEOCODING_CONFIDENCE &&
         selectedTerritoryMatches(locationId, result) &&
-        providerHouseNumberMatches(number, result.providerAddress.number),
+        providerHouseNumberMatches(number, result.providerAddress.number) &&
+        providerPostalCodeMatches(postalCode, result.providerAddress.postalCode),
     )
     .sort((left, right) => right.confidence - left.confidence);
 
