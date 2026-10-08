@@ -7,7 +7,7 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessService, type BusinessCreationReceipt } from "@/core/business/services/BusinessService";
 import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
@@ -15,9 +15,7 @@ import { locationContextStore } from "@/core/location/stores/LocationContextStor
 import { mediaService } from "@/core/media/services/MediaService";
 import type { CreateBusinessInput } from "@/core/business/types";
 
-export interface BusinessCreateResult {
-  profile_id: string;
-  business_data_id: string | null;
+export interface BusinessCreateResult extends BusinessCreationReceipt {
   mediaSetupIncomplete?: boolean;
 }
 
