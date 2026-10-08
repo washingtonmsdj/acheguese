@@ -13,16 +13,23 @@ src/
 └── integrations/   # Adaptadores externos (Supabase, mapas, etc.)
 ```
 
-## Regra de Fluxo
-Para dados de negocio, o fluxo oficial deve ser:
+## Fluxos de leitura e escrita
+
+A origem de uma ação é a interface, mas o banco permanece autoridade persistente. A leitura pode consumir views públicas; a escrita sensível **sempre** deve passar pelo owner canônico e pela verificação do backend.
 
 ```text
-Database -> Service -> Hook -> Component
+Leitura: Banco/view autorizada -> Service/read model -> Hook/cache -> Page
+Escrita: Page -> Hook -> Service de domínio -> Broker/RPC/RLS -> Banco
+Resultado confirmado -> invalidação/refetch do cache da entidade
 ```
 
-- `Service`: dono de regra de negocio e acesso a dados.
-- `Hook`: estado, orquestracao de chamadas e cache de UI.
-- `Component/Page`: apenas apresentacao e interacao.
+- `Service`: valida regra de negócio, identidade e modelo de persistência no owner adequado;
+- `Hook`: orquestra sessão, estado, mutação, cache e apresentação de erros; não cria outro writer;
+- `Component/Page`: apresentação, interação e validação imediata de formulário;
+- `Broker/RPC/RLS`: valida ownership e commits de escrita; permissões de frontend não são autorização;
+- o retorno pós-commit não pode tratar indisponibilidade do read model como se o commit tivesse falhado.
+
+A localização canônica dos diretórios, a revisão de consumidores e o processo de remoção estão em [`MAINTENANCE.md`](./MAINTENANCE.md).
 
 ## SSOT por Dominio
 - Cada dominio deve ter um owner canonico para tabelas e regras.
