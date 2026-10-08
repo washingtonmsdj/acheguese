@@ -308,6 +308,7 @@ export function useUnifiedNotifications(
           }
 
           const newNotification = notification;
+          if (newNotification.deleted_at) return;
           if (seenNotificationIdsRef.current.has(newNotification.id)) return;
           seenNotificationIdsRef.current.add(newNotification.id);
 
@@ -325,7 +326,7 @@ export function useUnifiedNotifications(
           setStats((prev) => ({
             ...prev,
             total: prev.total + 1,
-            unread: prev.unread + 1,
+            unread: prev.unread + (newNotification.read ? 0 : 1),
             by_type: {
               ...prev.by_type,
               [newNotification.type]:
