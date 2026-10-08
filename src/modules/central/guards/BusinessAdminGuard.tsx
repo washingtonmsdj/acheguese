@@ -21,6 +21,7 @@ export function BusinessAdminGuard() {
     business,
     isLoading: loadingBusiness,
     error: businessError,
+    notFound: businessNotFound,
     retry: retryBusiness,
   } = useBusiness(businessId || "");
   const {
@@ -37,14 +38,15 @@ export function BusinessAdminGuard() {
   );
 
   useEffect(() => {
-    if (loadingBusiness || businessError) return;
+    if (loadingBusiness) return;
 
-    if (!businessId || !business) {
+    if (!businessId || businessNotFound) {
       toast.error("Empresa não encontrada.");
       navigate(businessManagementRoutes.list(), { replace: true });
       return;
     }
 
+    if (businessError || !business) return;
     if (!accessReady || accessError) return;
 
     if (!permissions.hasAccess) {
@@ -56,6 +58,7 @@ export function BusinessAdminGuard() {
     accessError,
     business,
     businessError,
+    businessNotFound,
     businessId,
     loadingBusiness,
     navigate,
@@ -97,7 +100,7 @@ export function BusinessAdminGuard() {
     );
   }
 
-  if (!businessId || !business || !permissions.hasAccess) {
+  if (!businessId || businessNotFound || !business || !permissions.hasAccess) {
     return null;
   }
 
