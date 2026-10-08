@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   extractRelativeLinks,
+  LIVE_DOCS,
   validateFile,
 } from "../../tools/architecture/validate-doc-live-links";
 
@@ -65,8 +66,12 @@ describe("links do SSOT documental", () => {
     }
   });
 
-  it("mantem os links dos documentos SSOT verificados resolvidos", () => {
-    expect(validateFile("docs/README.md")).toEqual([]);
-    expect(validateFile("docs/03-architecture/ARCHITECTURE.md")).toEqual([]);
+  it("mantém resolvidos os links dos índices e contratos documentais ativos", () => {
+    expect(LIVE_DOCS).toContain("docs/README.md");
+    expect(LIVE_DOCS).toContain("docs/03-architecture/MAINTENANCE.md");
+    expect(LIVE_DOCS).toContain("docs/08-roadmap/README.md");
+    for (const file of LIVE_DOCS) {
+      expect(validateFile(file), file).toEqual([]);
+    }
   });
 });
