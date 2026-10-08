@@ -543,8 +543,6 @@ export function useResidenceManager() {
           address_id: addressId,
           location_id: resolvedLocationId,
           country: "Brasil",
-          is_verified: false,
-          verification_requested_at: null,
         });
 
         toast.success("Residencia atualizada");
