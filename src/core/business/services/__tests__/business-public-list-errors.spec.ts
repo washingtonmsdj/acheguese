@@ -24,7 +24,7 @@ vi.mock("@/shared/utils/logger", () => ({
   logger: { warn: vi.fn(), error: vi.fn() },
 }));
 
-import { BusinessNotFoundError, getBusinessById, getBusinessBySlug, getBusinessDataIdByProfileId, getBusinessesList } from "../business.queries";
+import { BusinessNotFoundError, getBusinessById, getBusinessBySlug, getBusinessDataIdByProfileId, getBusinessesByIds, getBusinessesList } from "../business.queries";
 
 function createQuery(result: { data: unknown[] | null; error: Error | null }) {
   const query = {
@@ -126,6 +126,20 @@ describe("canonical public Business list read failures", () => {
     await expect(
       getBusinessDataIdByProfileId("00000000-0000-4000-8000-000000000001"),
     ).rejects.toBe(unavailable);
+  });
+
+  it("propagates aggregated read errors rather than silently dropping businesses", async () => {
+    const outage = new Error("Public catalog unavailable");
+    mocks.from.mockReturnValue(createQuery({ data: null, error: outage }));
+    await expect(
+      getBusinessesByIds(["00000000-0000-4000-8000-000000000001"]),
+    ).rejects.toBe(outage);
+    expect(mocks.from).toHaveBeenCalledWith("public_business_search");
+
+    mocks.from.mockReturnValue(createQuery({ data: [], error: null }));
+    await expect(
+      getBusinessesByIds(["00000000-0000-4000-8000-000000000001"]),
+    ).resolves.toEqual([]);
   });
 
   it("propagates a transport exception raised before the read", async () => {
