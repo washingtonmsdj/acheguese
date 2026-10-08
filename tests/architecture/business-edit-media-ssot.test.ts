@@ -70,6 +70,14 @@ describe("Business edit media and identity SSOT", () => {
     );
   });
 
+  it("does not retain an admin update facade that re-reads after the commit", () => {
+    const adminService = readFileSync(
+      "src/core/admin/services/AdminBusinessService.ts",
+      "utf8",
+    );
+    expect(adminService).not.toMatch(/async updateBusiness\\(/);
+  });
+
   it("does not retain the unused direct business_data settings writer", () => {
     expect(
       existsSync("src/core/business/services/BusinessSettingsService.ts"),
