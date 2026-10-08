@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useBusinessEdit, useBusinessEditImageUpload } from "@/modules/business/hooks/useBusinessEdit";
+import { shouldHydrateBusinessEditForm } from "@/modules/business/utils/shouldHydrateBusinessEditForm";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import type {
   UpdateBusinessInput,
@@ -81,6 +82,7 @@ export default function EditarEmpresaPage() {
   // Refs para upload de imagens
   const logoRef = useRef<HTMLInputElement>(null);
   const capaRef = useRef<HTMLInputElement>(null);
+  const initializedBusinessProfileIdRef = useRef<string | null>(null);
   const logoUploadSequenceRef = useRef(0);
   const capaUploadSequenceRef = useRef(0);
   const pendingMediaUploadsRef = useRef(0);
@@ -135,9 +137,23 @@ export default function EditarEmpresaPage() {
     },
   });
 
+  const formDirty = form.formState.isDirty;
+
   useEffect(() => {
-    if (business) {
-      form.reset({
+    if (
+      !business ||
+      !shouldHydrateBusinessEditForm({
+        routeProfileId: businessId,
+        loadedProfileId: business.profile_id,
+        initializedProfileId: initializedBusinessProfileIdRef.current,
+        hasUnsavedFields: formDirty,
+        hasUnsavedSlug: slug !== originalSlug,
+        hasPendingUploads: pendingMediaUploadsRef.current > 0,
+      })
+    ) return;
+
+    initializedBusinessProfileIdRef.current = businessId;
+    form.reset({
         name: business.name,
         description: business.description,
         category: normalizeCategoryValue(business.category),
@@ -168,8 +184,7 @@ export default function EditarEmpresaPage() {
       const businessSlug = business.slug ?? "";
       setSlug(businessSlug);
       setOriginalSlug(businessSlug);
-    }
-  }, [business, form]);
+  }, [business, businessId, form, formDirty, slug, originalSlug]);
 
   const handleNextStep1 = () => {
     form.trigger(["name", "description", "category"]).then((isValid) => {
