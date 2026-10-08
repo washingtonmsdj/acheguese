@@ -7,8 +7,8 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BusinessService, type BusinessCreationReceipt } from "@/core/business/services/BusinessService";
-import { BusinessBrokerOutcomeUnknownError } from "@/core/business/services/BusinessBrokerOutcomeUnknownError";
+import { BusinessService, BusinessBrokerOutcomeUnknownError, type BusinessCreationReceipt } from "@/core/business/services/BusinessService";
+
 import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
