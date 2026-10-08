@@ -6,6 +6,13 @@ type RoleRpcAction = "hasRole" | "getUserRoles" | "isAdmin" | "isSuperAdmin";
 const FUNCTION_NAME = "role-rpc";
 const SERVICE_NAME = "RoleRpcService";
 
+function requireBooleanResponse(value: unknown, field: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`Invalid role-rpc response: ${field} must be a boolean`);
+  }
+  return value;
+}
+
 export class RoleRpcService {
   private static async invoke<T>(
     action: RoleRpcAction,
@@ -25,7 +32,7 @@ export class RoleRpcService {
       userId,
       role,
     });
-    return result.hasRole === true;
+    return requireBooleanResponse(result?.hasRole, "hasRole");
   }
 
   static async getUserRoles(userId: string): Promise<AppRole[]> {
@@ -42,13 +49,13 @@ export class RoleRpcService {
     const result = await this.invoke<{ isAdmin: boolean }>("isAdmin", {
       userId,
     });
-    return result.isAdmin === true;
+    return requireBooleanResponse(result?.isAdmin, "isAdmin");
   }
 
   static async isSuperAdmin(userId: string): Promise<boolean> {
     const result = await this.invoke<{ isSuperAdmin: boolean }>("isSuperAdmin", {
       userId,
     });
-    return result.isSuperAdmin === true;
+    return requireBooleanResponse(result?.isSuperAdmin, "isSuperAdmin");
   }
 }
