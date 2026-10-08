@@ -23,7 +23,7 @@ export { useBusinessRecommendation } from "./hooks/useBusinessRecommendation";
 export { useBusinessForm } from "./hooks/useBusinessForm";
 export { useBusinessFormSteps } from "./hooks/useBusinessFormSteps";
 export { useBusinessGallery } from "./hooks/useBusinessGallery";
-export { useBusinessImageUpload } from "./hooks/useBusinessImageUpload";
+export { useBusinessImageUpload } from "@/core/business/hooks/useBusinessImageUpload";
 export { useBusinessList } from "./hooks/useBusinessList";
 export { useBusinessMetrics } from "./hooks/useBusinessMetrics";
 export { useBusinessNavigation } from "./hooks/useBusinessNavigation";
