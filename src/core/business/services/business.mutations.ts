@@ -341,9 +341,14 @@ async function cleanupUnattachedAddress(addressId?: string): Promise<void> {
   }
 }
 
+export interface BusinessCreationReceipt {
+  profile_id: string;
+  business_data_id: string | null;
+}
+
 export async function createBusiness(
   input: CreateBusinessInput,
-): Promise<Business> {
+): Promise<BusinessCreationReceipt> {
   let createdAddressId: string | undefined;
   let businessWriteCompleted = false;
 
@@ -422,7 +427,12 @@ export async function createBusiness(
     }
 
     businessWriteCompleted = true;
-    return await getBusinessById(result.data.profile_id);
+    // The broker is the authority for committed creation. A separate read
+    // must not turn a successful transaction into an apparent failure.
+    return {
+      profile_id: result.data.profile_id,
+      business_data_id: result.data.business_data_id ?? null,
+    };
   } catch (error) {
     if (createdAddressId && !businessWriteCompleted) {
       await cleanupUnattachedAddress(createdAddressId);
