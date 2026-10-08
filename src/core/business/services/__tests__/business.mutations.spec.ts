@@ -433,6 +433,26 @@ describe("business lifecycle broker", () => {
     expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
   });
 
+  it("never dispatches mixed explicit Address IDs and new physical address patches", async () => {
+    const addressId = "00000000-0000-4000-8000-000000000222";
+
+    await expect(updateBusiness("profile-1", {
+      address_id: addressId,
+      address_complement: "Sala que seria ignorada",
+    })).rejects.toThrow("Escolha um endereco existente ou informe novos dados fisicos");
+
+    await expect(createBusiness({
+      ...businessInput,
+      address_id: addressId,
+      address_street: "Rua que seria ignorada",
+    })).rejects.toThrow("Escolha um endereco existente ou informe novos dados fisicos");
+
+    expect(mocks.createBusinessRpc).not.toHaveBeenCalled();
+    expect(mocks.updateBusinessRpc).not.toHaveBeenCalled();
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+    expect(mocks.updateAddress).not.toHaveBeenCalled();
+  });
+
   it("stages changes to an existing address as a new version rather than mutating the old row", async () => {
     const previous = {
       id: "old-address",
