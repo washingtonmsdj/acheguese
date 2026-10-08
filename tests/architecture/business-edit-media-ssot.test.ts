@@ -50,6 +50,18 @@ describe("Business edit media and identity SSOT", () => {
     );
   });
 
+  it("does not save while a media upload is in flight or accept a late response", () => {
+    expect(editPage).toContain("const logoUploadSequenceRef = useRef(0);");
+    expect(editPage).toContain("const capaUploadSequenceRef = useRef(0);");
+    expect(editPage).toContain("if (uploadId !== logoUploadSequenceRef.current) return;");
+    expect(editPage).toContain("if (uploadId !== capaUploadSequenceRef.current) return;");
+    expect(editPage).toContain("if (pendingMediaUploadsRef.current > 0) {");
+    expect(editPage).toContain("Aguarde o envio das imagens antes de salvar a empresa.");
+    expect(editPage).toContain("saving={saving || pendingMediaUploads > 0}");
+    expect(editPage).not.toContain('toast.success("Logo atualizado!")');
+    expect(editPage).not.toContain('toast.success("Capa atualizada!")');
+  });
+
   it("does not retain the unused direct business_data settings writer", () => {
     expect(
       existsSync("src/core/business/services/BusinessSettingsService.ts"),
