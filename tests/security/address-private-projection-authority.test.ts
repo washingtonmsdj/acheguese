@@ -105,6 +105,7 @@ describe("Address private table / public projection SSOT", () => {
     expect(probe).toContain("FROM public.addresses;");
     expect(probe).toContain("v_visible <> 0");
     expect(probe).toContain("v_projection_columns <> 9");
+    expect(probe).toContain("ADDRESS_PRIVATE_PROBE_FAILED: contradictory verification exposed");
     expect(probe).toContain("FROM public.public_professional_search");
     expect(probe).toContain("FROM public.public_business_search AS business");
     expect(probe).toContain("LEFT JOIN public.addresses AS related_address");
