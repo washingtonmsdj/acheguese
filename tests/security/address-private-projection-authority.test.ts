@@ -102,6 +102,9 @@ describe("Address private table / public projection SSOT", () => {
     expect(probe).toContain("v_visible <> 0");
     expect(probe).toContain("v_projection_columns <> 9");
     expect(probe).toContain("FROM public.public_professional_search");
+    expect(probe).toContain("FROM public.public_business_search AS business");
+    expect(probe).toContain("LEFT JOIN public.addresses AS related_address");
+    expect(probe).toContain("related_address.id = business.address_id");
     expect(probe).toContain("ROLLBACK;");
     expect(probe).not.toMatch(/\\b(?:INSERT|UPDATE|DELETE)\\s+public\\.addresses\\b/i);
   });
