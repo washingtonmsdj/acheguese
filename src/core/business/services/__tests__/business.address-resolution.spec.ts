@@ -288,6 +288,20 @@ describe("Business address resolution", () => {
     expect(mocks.geocode).toHaveBeenCalledTimes(1);
   });
 
+  it("still accepts a location-matched provider result that does not report a CEP", async () => {
+    mocks.geocode.mockResolvedValue([geocodeResult({
+      providerAddress: {
+        ...geocodeResult().providerAddress,
+        postalCode: null,
+      },
+    })]);
+
+    const result = await resolveBusinessAddressForPersistence(input);
+    expect(result?.postalCode).toBe("40000-000");
+    expect(result?.latitude).toBe(-12.982);
+    expect(mocks.geocode).toHaveBeenCalledOnce();
+  });
+
   it("rejects a CEP-only alias patch when no existing physical Address exists", async () => {
     await expect(
       resolveBusinessAddressForPersistence({ cep: "40123-456" }),
