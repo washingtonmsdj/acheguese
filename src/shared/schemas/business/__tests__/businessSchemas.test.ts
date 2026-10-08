@@ -10,6 +10,61 @@ import fc from "fast-check";
 import { createBusinessSchema, updateBusinessSchema } from "../businessSchemas";
 
 describe("updateBusinessSchema Property-Based Tests", () => {
+  it("rejeita referencia Address com nova rua, CEP ou coordenadas no mesmo comando", () => {
+    const addressId = "00000000-0000-4000-8000-000000000222";
+    for (const patch of [
+      { address_street: "Rua Alternativa" },
+      { address_complement: "Sala 4" },
+      { cep: "40000-000" },
+      { latitude: -12.98, longitude: -38.45 },
+    ]) {
+      const result = updateBusinessSchema.safeParse({ address_id: addressId, ...patch });
+      expect(result.success, JSON.stringify(patch)).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues.some((issue) => issue.path[0] === "address_id")).toBe(true);
+      }
+    }
+  });
+
+  it("exige logradouro no cadastro físico mesmo quando só há coordenadas", () => {
+    const result = createBusinessSchema.safeParse({
+      name: "Empresa Teste",
+      description: "Descrição adequada para o cadastro da empresa",
+      category: "servicos",
+      location_id: "00000000-0000-4000-8000-000000000001",
+      email: "contato@exemplo.com",
+      latitude: -12.98,
+      longitude: -38.45,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === "address_street")).toBe(true);
+    }
+  });
+
+  it("permite vincular apenas uma referencia Address existente", () => {
+    const result = updateBusinessSchema.safeParse({
+      address_id: "00000000-0000-4000-8000-000000000222",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejeita dados físicos contraditorios tambem no cadastro", () => {
+    const result = createBusinessSchema.safeParse({
+      name: "Empresa Teste",
+      description: "Descrição adequada para o cadastro da empresa",
+      category: "servicos",
+      location_id: "00000000-0000-4000-8000-000000000001",
+      email: "contato@exemplo.com",
+      address_id: "00000000-0000-4000-8000-000000000222",
+      address_street: "Rua Alternativa",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === "address_id")).toBe(true);
+    }
+  });
+
   it("permite patch de complemento quando rua já está persistida", () => {
     expect(updateBusinessSchema.safeParse({
       address_complement: "Sala 12",
