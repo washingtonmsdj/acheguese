@@ -24,7 +24,7 @@ vi.mock("@/shared/utils/logger", () => ({
   logger: { warn: vi.fn(), error: vi.fn() },
 }));
 
-import { BusinessNotFoundError, getBusinessById, getBusinessBySlug, getBusinessesList } from "../business.queries";
+import { BusinessNotFoundError, getBusinessById, getBusinessBySlug, getBusinessDataIdByProfileId, getBusinessesList } from "../business.queries";
 
 function createQuery(result: { data: unknown[] | null; error: Error | null }) {
   const query = {
@@ -112,6 +112,20 @@ describe("canonical public Business list read failures", () => {
     const outage = new Error("service unavailable");
     query.maybeSingle.mockResolvedValue({ data: null, error: outage });
     await expect(getBusinessBySlug("empresa-teste")).rejects.toBe(outage);
+  });
+
+  it("separates a missing Business Data identity from a failed lookup", async () => {
+    const query = createQuery({ data: [], error: null });
+    mocks.from.mockReturnValue(query);
+    await expect(
+      getBusinessDataIdByProfileId("00000000-0000-4000-8000-000000000001"),
+    ).resolves.toBeNull();
+
+    const unavailable = new Error("Identity resolver unavailable");
+    mocks.from.mockReturnValue(createQuery({ data: null, error: unavailable }));
+    await expect(
+      getBusinessDataIdByProfileId("00000000-0000-4000-8000-000000000001"),
+    ).rejects.toBe(unavailable);
   });
 
   it("propagates a transport exception raised before the read", async () => {
