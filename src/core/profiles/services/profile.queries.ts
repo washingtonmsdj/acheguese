@@ -83,6 +83,7 @@ interface QueryBuilder<TRow> extends PromiseLike<QueryArrayResult<TRow>> {
   limit: (value: number) => QueryBuilder<TRow>;
   range: (from: number, to: number) => QueryBuilder<TRow>;
   single: () => Promise<QuerySingleResult<TRow>>;
+  maybeSingle: () => Promise<QuerySingleResult<TRow>>;
 }
 
 interface ProfileQueriesDbClient {
@@ -107,7 +108,7 @@ export async function getProfileById(profileId: string): Promise<Profile | null>
     .from<Profile>(PUBLIC_PROFILE_VIEW)
     .select(PUBLIC_PROFILE_COLUMNS)
     .eq("id", profileId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     trackError(error as Error, {
@@ -115,7 +116,7 @@ export async function getProfileById(profileId: string): Promise<Profile | null>
       action: "getProfileById",
       metadata: { profileId },
     });
-    return null;
+    throw error;
   }
 
   return (data as Profile) ?? null;
@@ -211,7 +212,7 @@ export async function getByUsername(username: string): Promise<Profile | null> {
     .from<Profile>("public_profiles")
     .select()
     .eq("username", username)
-    .single();
+    .maybeSingle();
 
   if (error) {
     trackError(error as Error, {
@@ -219,7 +220,7 @@ export async function getByUsername(username: string): Promise<Profile | null> {
       action: "getByUsername",
       metadata: { username },
     });
-    return null;
+    throw error;
   }
 
   return (data as Profile) ?? null;
@@ -233,7 +234,7 @@ export async function getPublicProfileById(profileId: string): Promise<Profile |
     .from<Profile>("public_profiles")
     .select()
     .eq("id", profileId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     trackError(error as Error, {
@@ -241,7 +242,7 @@ export async function getPublicProfileById(profileId: string): Promise<Profile |
       action: "getPublicProfileById",
       metadata: { profileId },
     });
-    return null;
+    throw error;
   }
 
   return (data as Profile) ?? null;
