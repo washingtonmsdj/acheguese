@@ -110,7 +110,7 @@ export function NotificationItem({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+                    className="h-11 w-11 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                     onClick={handleMarkAsRead}
                     disabled={isPending}
                     aria-label="Marcar notificação como lida"
@@ -122,7 +122,7 @@ export function NotificationItem({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+                  className="h-11 w-11 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                   onClick={handleDelete}
                   disabled={isPending}
                   aria-label="Remover notificação"
