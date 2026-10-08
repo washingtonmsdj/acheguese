@@ -267,6 +267,25 @@ describe("business lifecycle broker", () => {
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
   });
 
+  it("preserves ordinary validation failures before the command is sent", async () => {
+    mocks.checkAvailability.mockRejectedValue(new Error("Slug lookup unavailable"));
+
+    await expect(createBusiness(businessInput))
+      .rejects.toThrow("Erro ao criar empresa: Slug lookup unavailable");
+
+    expect(mocks.createBusinessRpc).not.toHaveBeenCalled();
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+  });
+
+  it("reports a dispatched create with no physical address as an unknown outcome", async () => {
+    mocks.createBusinessRpc.mockRejectedValue(new Error("Edge returned 500"));
+
+    await expect(createBusiness(businessInput))
+      .rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    expect(mocks.createBusinessRpc).toHaveBeenCalledOnce();
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
   it("creates structured Address with owner_user_id and compensates it if broker rejects", async () => {
     mocks.createAddress.mockResolvedValue({ id: "address-1" });
     mocks.createBusinessRpc.mockResolvedValue({
@@ -446,6 +465,16 @@ describe("business lifecycle broker", () => {
 
     expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(1);
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("keeps a preflight update read failure distinct from an uncertain commit", async () => {
+    mocks.getBusinessById.mockRejectedValue(new Error("Read model is unavailable"));
+
+    await expect(updateBusiness("profile-1", {
+      description: "Teste de leitura antes da atualizacao",
+    })).rejects.toThrow("Erro ao atualizar empresa: Read model is unavailable");
+
+    expect(mocks.updateBusinessRpc).not.toHaveBeenCalled();
   });
 
   it("compensates a newly created Address when an update broker command fails", async () => {
