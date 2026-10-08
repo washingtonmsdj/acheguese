@@ -29,11 +29,7 @@ describe("Business edit detail cache consistency", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.actor.user = { id: "manager-user" };
-    mocks.updateBusiness.mockResolvedValue({
-      id: "business-profile",
-      name: "Nome atualizado",
-      slug: "novo-slug",
-    });
+    mocks.updateBusiness.mockResolvedValue({ profile_id: "business-profile" });
   });
 
   it("requires an authenticated actor, not a matching active profile", async () => {
@@ -87,10 +83,9 @@ describe("Business edit detail cache consistency", () => {
     expect(invalidation).toHaveBeenCalledWith({ queryKey: ["businesses"] });
     expect(invalidation).toHaveBeenCalledWith({ queryKey: ["business"] });
     expect(client.getQueryState(["business", "slug-antigo"])?.isInvalidated).toBe(true);
-    expect(client.getQueryData(["business", "business-profile"])).toEqual({
-      id: "business-profile",
-      name: "Nome atualizado",
-      slug: "novo-slug",
-    });
+    // A receipt contains only the committed ID, not the complete read model.
+    // Cached details remain stale until the canonical query refetches.
+    expect(client.getQueryState(["business", "business-profile"])?.isInvalidated).toBe(true);
+    expect(client.getQueryData(["business", "business-profile"])).toEqual({ name: "Nome antigo" });
   });
 });
