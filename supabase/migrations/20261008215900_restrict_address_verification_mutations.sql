@@ -86,6 +86,20 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Mesmo dentro de RPC SECURITY DEFINER, uma requisição com identidade
+  -- do usuário não pode escrever a prova trusted. Alterações postais
+  -- continuam permitidas e invalidam a prova automaticamente abaixo.
+  IF (current_user = 'authenticated' OR auth.uid() IS NOT NULL)
+    AND ROW(NEW.is_verified, NEW.verification_status, NEW.verified_at,
+            NEW.verified_by, NEW.verified_reason)
+      IS DISTINCT FROM
+        ROW(OLD.is_verified, OLD.verification_status, OLD.verified_at,
+            OLD.verified_by, OLD.verified_reason)
+  THEN
+    RAISE EXCEPTION 'ADDRESS_VERIFICATION_SERVER_ONLY'
+      USING ERRCODE = '42501';
+  END IF;
+
   IF ROW(
     NEW.location_id, NEW.postal_code, NEW.street, NEW.number,
     NEW.complement, NEW.address_type, NEW.latitude, NEW.longitude,
@@ -242,6 +256,13 @@ BEGIN
       NEW.verification_requested_at := NULL;
     END IF;
     RETURN NEW;
+  END IF;
+
+  IF (current_user = 'authenticated' OR auth.uid() IS NOT NULL)
+     AND NEW.is_verified IS DISTINCT FROM OLD.is_verified
+  THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFICATION_SERVER_ONLY'
+      USING ERRCODE = '42501';
   END IF;
 
   IF ROW(NEW.address_id, NEW.location_id, NEW.country)
