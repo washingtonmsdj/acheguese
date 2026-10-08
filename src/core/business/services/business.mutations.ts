@@ -271,7 +271,10 @@ async function syncAddress(
     ) {
       throw new Error("Endereco alterado precisa de nova verificacao de geolocalizacao");
     }
-    if (previous.latitude !== null && previous.longitude !== null) {
+    if (
+      typeof previous.latitude === "number" && Number.isFinite(previous.latitude) &&
+      typeof previous.longitude === "number" && Number.isFinite(previous.longitude)
+    ) {
       retainedGeocoding = {
         latitude: previous.latitude,
         longitude: previous.longitude,
