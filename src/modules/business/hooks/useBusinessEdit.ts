@@ -57,8 +57,11 @@ export function useBusinessEdit(
     },
 
     onSuccess: (business) => {
-      queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      void queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      // The canonical detail query is also keyed by slug, not only by ID.
+      // Invalidate the entire Business detail family after a committed edit.
       queryClient.setQueryData(["business", business.id], business);
+      void queryClient.invalidateQueries({ queryKey: ["business"] });
       toast.success("Empresa atualizada com sucesso!");
       options.onSuccess?.(business);
     },
