@@ -53,6 +53,39 @@ recriado. Lookup postal usado por fluxos territoriais passa por
 - `location_id`/território público não equivale a autorização para ler o
   endereço privado.
 
+## Autoridade de leitura pública versus privada
+
+A tabela `public.addresses` armazena dados físicos e privados de endereço,
+incluindo rua, número, complemento, CEP, proprietário e metadados.
+A autorização de leitura/gravação da linha detalhada pertence à política
+`Users manage own addresses`, vinculada à identidade autenticada.
+`anon` não recebe `SELECT` sobre a tabela física.
+
+`public.addresses_public` é o **read model canônico existente**, sem copiar
+ou persistir endereços: expõe somente `id`, `location_id`, `address_type`,
+`latitude`, `longitude`, `precision`, `is_verified`,
+`verification_status` e `created_at`, restritos a endereços verificados.
+Não inclui rua, número, complemento, CEP ou `owner_user_id`.
+A segurança dessa projeção é obrigatória no **PostgreSQL**, independentemente
+do DTO `AddressPrivacyGuard.toPublic()` usado na interface.
+
+**Exceção explícita e mínima:** como a view pública deve servir usuários
+anônimos e autenticados sem lhes conceder permissão à tabela privada, essa
+view específica usa o dono `postgres` e
+`security_invoker=false, security_barrier=true`. Essa exceção só é segura
+porque a projeção tem lista fixa de colunas permitidas, filtro SQL de
+verificação e privilégio de **somente leitura**; não deve ser reproduzida
+genericamente em outras views. `public.public_professional_search` preserva
+`security_invoker=true` e consulta as coordenadas via
+`public.addresses_public`, não diretamente na tabela privada.
+
+A migração versionada
+`20261008220000_enforce_address_private_read_projection.sql` registra
+pré-condições contra drift, mudança transacional e pós-condições de RLS/ACL.
+A mudança só é válida para produção após aplicação controlada, verificação
+real de `anon`/usuário proprietário/terceiro e smoke das superfícies
+públicas. Um merge por si só **não** prova que o banco já aplica a regra.
+
 ## Separação de responsabilidades
 
 - **Address**: entidade postal, persistência, privacidade e lifecycle;
