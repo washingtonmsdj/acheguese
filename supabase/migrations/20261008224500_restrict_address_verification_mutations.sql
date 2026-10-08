@@ -72,16 +72,17 @@ SECURITY INVOKER
 SET search_path = pg_catalog, pg_temp
 AS $address_verification_owner_guard$
 BEGIN
-  IF current_user <> 'authenticated' THEN
-    RETURN NEW;
-  END IF;
-
+  -- Na inclusão, somente serviço privilegiado pode atribuir prova trusted.
+  -- Na atualização, QUALQUER alteração física invalida a prova antiga,
+  -- inclusive quando a operação foi iniciada pelo servidor.
   IF TG_OP = 'INSERT' THEN
-    NEW.is_verified := false;
-    NEW.verification_status := 'pending'::public.address_verification_status;
-    NEW.verified_at := NULL;
-    NEW.verified_by := NULL;
-    NEW.verified_reason := NULL;
+    IF current_user = 'authenticated' THEN
+      NEW.is_verified := false;
+      NEW.verification_status := 'pending'::public.address_verification_status;
+      NEW.verified_at := NULL;
+      NEW.verified_by := NULL;
+      NEW.verified_reason := NULL;
+    END IF;
     RETURN NEW;
   END IF;
 
