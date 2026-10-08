@@ -7,7 +7,7 @@ const read = (...parts: string[]) =>
 const migration = read(
   "supabase",
   "migrations",
-  "20261008224500_restrict_address_verification_mutations.sql",
+  "20261008215900_restrict_address_verification_mutations.sql",
 );
 const client = read("src", "core", "residence", "hooks", "useResidenceManager.ts");
 const types = read("src", "core", "address", "types", "index.ts");
