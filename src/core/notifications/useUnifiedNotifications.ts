@@ -294,11 +294,16 @@ export function useUnifiedNotifications(
                 : current.filter((item) => item.id !== notification.id);
             });
 
-            void notificationService.getStats(user.id).then((statsData) => {
-              if (activeUserIdRef.current === user.id) {
-                setStats((current) => ({ ...current, ...statsData }));
-              }
-            });
+            void notificationService
+              .getStats(user.id)
+              .then((statsData) => {
+                if (activeUserIdRef.current === user.id) {
+                  setStats((current) => ({ ...current, ...statsData }));
+                }
+              })
+              .catch((err: unknown) => {
+                logger.error("Erro ao atualizar estatisticas de notificacoes:", err);
+              });
             return;
           }
 
