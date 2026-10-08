@@ -6,6 +6,11 @@ const migration = readFileSync(
   "utf8",
 );
 
+const notificationOutboxMigration = readFileSync(
+  "supabase/migrations/20260714113000_create_notification_outbox_core.sql",
+  "utf8",
+);
+
 const thirtySecondFunctions = [
   "private.process_notification_outbox(integer, text)",
   "private.invoke_emergency_delivery_worker()",
@@ -19,6 +24,15 @@ const sixtySecondFunctions = [
 ];
 
 describe("pg_cron worker runtime hardening", () => {
+  it("keeps the canonical notification dispatcher on a one-minute schedule with a bounded batch", () => {
+    expect(notificationOutboxMigration).toContain(
+      "$cron$SELECT private.process_notification_outbox(500, 'pg_cron');$cron$",
+    );
+    expect(notificationOutboxMigration).toMatch(
+      /cron\.schedule\(\s*'acheguese-notification-outbox-dispatch',\s*'\* \* \* \* \*',/,
+    );
+  });
+
   it("bounds minute and HTTP workers to thirty seconds", () => {
     for (const signature of thirtySecondFunctions) {
       expect(migration).toContain(
