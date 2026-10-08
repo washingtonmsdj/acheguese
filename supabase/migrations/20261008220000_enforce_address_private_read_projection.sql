@@ -11,6 +11,30 @@ DECLARE
   v_columns text[];
   v_definition text;
 BEGIN
+  -- Ordem canônica: a migração 20261008215900 precisa ter revogado a
+  -- autoridade do cliente sobre provas antes de permitir novas leituras
+  -- públicas pela projeção. Não ativar um read model sobre autoverificação.
+  IF has_column_privilege('authenticated', 'public.addresses', 'is_verified', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.addresses', 'verification_status', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.addresses', 'verified_at', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.addresses', 'verified_by', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.user_residences', 'is_verified', 'UPDATE')
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_trigger
+       WHERE tgrelid = 'public.addresses'::regclass
+         AND tgname = 'address_verification_owner_guard'
+         AND tgenabled = 'O'
+     )
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_trigger
+       WHERE tgrelid = 'public.user_residences'::regclass
+         AND tgname = 'residence_verification_owner_guard'
+         AND tgenabled = 'O'
+     )
+  THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: trusted write guard must be applied first';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM pg_class c
     WHERE c.oid = 'public.addresses'::regclass
