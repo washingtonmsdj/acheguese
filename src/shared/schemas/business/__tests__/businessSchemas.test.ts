@@ -42,6 +42,27 @@ describe("updateBusinessSchema Property-Based Tests", () => {
     }
   });
 
+  it("rejeita CEP e postal_code divergentes no mesmo patch", () => {
+    const result = updateBusinessSchema.safeParse({
+      cep: "40123-456",
+      postal_code: "40000-000",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === "cep")).toBe(true);
+    }
+  });
+
+  it("aceita os dois aliases quando representam o mesmo CEP", () => {
+    expect(updateBusinessSchema.safeParse({
+      cep: "40123456",
+      postal_code: "40123-456",
+    }).success).toBe(true);
+    expect(updateBusinessSchema.safeParse({
+      cep: "40123-456",
+    }).success).toBe(true);
+  });
+
   it("permite vincular apenas uma referencia Address existente", () => {
     const result = updateBusinessSchema.safeParse({
       address_id: "00000000-0000-4000-8000-000000000222",
