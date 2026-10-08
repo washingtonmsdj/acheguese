@@ -688,16 +688,13 @@ export async function getBusinessDataIdByProfileId(
       .order("updated_at", { ascending: false })
       .limit(1);
 
-    if (error) {
-      logger.error("Error fetching business_data id by profile_id:", error);
-      return null;
-    }
+    if (error) throw error;
 
     const rows = (data as Array<{ id?: string }> | null) ?? [];
     return rows[0]?.id ?? null;
   } catch (error) {
     logger.error("Error in getBusinessDataIdByProfileId:", error);
-    return null;
+    throw error;
   }
 }
 
