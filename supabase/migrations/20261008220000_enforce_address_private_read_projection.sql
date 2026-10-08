@@ -85,8 +85,22 @@ DROP POLICY "Addresses public verified read" ON public.addresses;
 -- A view JÁ EXISTENTE é o único read model de endereços verificados.
 -- A exceção de privilégios do owner fica confinada à lista explícita
 -- de nove colunas existente, com filtro de verificação e security barrier.
-ALTER VIEW public.addresses_public
-  SET (security_invoker = false, security_barrier = true);
+CREATE OR REPLACE VIEW public.addresses_public
+WITH (security_invoker = false, security_barrier = true)
+AS
+SELECT
+  address.id,
+  address.location_id,
+  address.address_type,
+  address.latitude,
+  address.longitude,
+  address.precision,
+  address.is_verified,
+  address.verification_status,
+  address.created_at
+FROM public.addresses AS address
+WHERE address.is_verified = true
+   OR address.verification_status = 'verified'::public.address_verification_status;
 
 REVOKE INSERT, UPDATE, DELETE ON TABLE public.addresses_public
   FROM PUBLIC, anon, authenticated;
