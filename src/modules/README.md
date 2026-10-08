@@ -1,10 +1,10 @@
-# Product Modules (SSOT)
+# Módulos de produto — SSOT
 
-`src/modules` contains product/UI bounded-context packages. Physical presence in this tree does not imply an active product lifecycle.
+`src/modules` contém contextos delimitados de produto e sua apresentação. A presença física de uma pasta não implica que o domínio esteja ativo.
 
-A module may remain versioned while its lifecycle is `paused`. Paused modules are preserved so they can be cleaned, hardened and reactivated incrementally without reintroducing legacy wrappers or rebuilding product UI from scratch. Runtime activation is owned by the lifecycle registries under `src/app/config`, not by the physical presence of a package in `src/modules`.
+Um módulo `paused` permanece versionado para manutenção e futura certificação. A ativação ocorre exclusivamente nos registries de `src/app/config`, nunca pela presença da pasta.
 
-## Canonical top-level modules
+## Módulos canônicos de primeiro nível
 
 - `admin`
 - `ai`
@@ -27,55 +27,36 @@ A module may remain versioned while its lifecycle is `paused`. Paused modules ar
 - `profile`
 - `work-opportunities`
 
-## Taxonomy rules
+## Regras de taxonomia
 
-- `business` is the base product domain for business entities.
-- `business` is **not** a vertical or a horizontal platform capability.
-- Official business verticals are declared only in `src/core/verticals/config.ts`.
-- Current official vertical state: `gastronomy` and `education`.
-- `billing` and `gamification` are canonical product/UI packages even while their launch lifecycle remains `paused`.
-- The preserved Community bounded context is centered on `Comunidade Local`; Community is `paused` in the MVP lifecycle.
-- Local Community identity belongs to `src/core/community-experience`, not to a
-  top-level aggregate module.
+- `business` é o domínio-base de entidades empresariais.
+- `business` **não** é vertical nem capability horizontal da plataforma.
+- Verticais empresariais oficiais são declaradas exclusivamente em `src/core/verticals/config.ts`.
+- Estado oficial das verticais: `gastronomy` e `education`.
+- `billing` e `gamification` são módulos canônicos, mesmo quando permanecem `paused`.
+- Community permanece `paused` no MVP; o seu conceito de produto é **Comunidade Local**.
+- A identidade da Comunidade Local pertence a `src/core/community-experience`, não a um módulo agregado paralelo.
 
-## Domain nesting rules
+## Organização dos subdomínios
 
-- Business-derived domains stay inside `business`.
-: `business/company`, `business/gastronomy`, `business/education`, `business/promotions`
-- Community product experiences use explicit top-level bounded contexts.
-: `community-feed`, `community-issues`,
-  `community-groups`, `community-events`, `community-lost-found`,
-  `community-recommendations`
-- Community alert infrastructure belongs directly to
-  `src/core/community/alerts`; it has no compatibility module facade.
-- Mobility derived domains stay inside `mobility`.
-: `mobility/delivery`
-- Quick work opportunities stay in the explicit top-level bounded context.
-: `work-opportunities`
-- Structured classified jobs stay inside `classifieds`.
-: `classifieds/jobs`
-- Services capability stays consolidated in `professionals`.
-: `professionals/services`
-- Private inbox/chat UI is the module-side surface of the horizontal `messaging` platform capability.
-: `messaging`
-  It consumes contracts/facades from `src/core/messaging`; Business,
-  Classifieds, Community and future domains provide their own messaging
-  aggregates/adapters without owning the global inbox shell.
+- Subdomínios empresariais permanecem sob `business`: `business/company`, `business/gastronomy`, `business/education`, `business/promotions`.
+- Experiências Community usam módulos explícitos: `community-feed`, `community-issues`, `community-groups`, `community-events`, `community-lost-found`, `community-recommendations`.
+- Alertas Community pertencem a `src/core/community/alerts`, sem facade de módulo de compatibilidade.
+- Subdomínios de mobilidade permanecem sob `mobility`: `mobility/delivery`.
+- Oportunidades rápidas permanecem em `work-opportunities`.
+- Vagas classificadas permanecem em `classifieds/jobs`.
+- A capacidade de Serviços permanece em `professionals/services`.
+- A UI de caixa de entrada utiliza `messaging` e consome contratos de `src/core/messaging`. Business, Classifieds, Community e futuros módulos podem fornecer adapters próprios sem recriar a caixa de entrada global.
 
-## Out of `src/modules`
+## Fora de `src/modules`
 
-App-level flows and landings do not belong to domain modules.
-They live under `src/app` (for example: onboarding, dashboard and landings); do not recreate a parallel `src/features` taxonomy.
+Fluxos e páginas de entrada de aplicação pertencem a `src/app` (onboarding, dashboard e landings). Não recriar uma taxonomia paralela em `src/features`.
 
-## Boundary rules
+## Regras de fronteira
 
-- Modules can import from `shared`, `core`, and `integrations` through approved boundaries.
-- Cross-module implementation imports are not allowed.
-- Shared contracts and canonical services must come from `core`.
-- `src/core` must not import or reexport `src/modules`. When a module UI/hook is
-  needed by more than one bounded context, promote the reusable contract to
-  `core` and migrate every consumer before removing the old module path.
-- `index.ts` files in modules must expose a real public contract. Empty
-  `export {};` indexes are prohibited because they create false SSOT surfaces.
-- There is no `src/core -> src/modules` allowlist. Shared Mobility UI and hooks
-  used by Central live in `src/core/mobility`.
+- Módulos podem consumir `shared`, `core` e `integrations` respeitando fronteiras aprovadas.
+- É proibido importar implementação interna de outro módulo.
+- Contratos compartilhados e serviços canônicos pertencem a `core`.
+- `src/core` não importa nem reexporta `src/modules`. Caso UI/hook precise servir a mais de um contexto, promover o contrato reutilizável ao owner apropriado e migrar todos os consumidores antes da remoção.
+- `index.ts` expõe somente API pública real; facades vazias (`export {};`) são proibidas.
+- Não existe allowlist `src/core -> src/modules`. UI/hooks de Mobilidade compartilhados com a Central pertencem a `src/core/mobility`.

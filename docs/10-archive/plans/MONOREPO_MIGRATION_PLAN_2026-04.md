@@ -1,5 +1,13 @@
 # 📦 Plano de Migração: Monorepo + Mobile (iOS/Android)
 
+> **ARQUIVADO — estudo histórico de abril de 2026, não executar.**
+> Este texto conserva estimativas, comandos e paths datados para rastreabilidade.
+> Não constitui plano vigente de mobile, mudança de stack, cronograma ou permissão
+> para instalar Capacitor/migrar a estrutura. Consulte `docs/README.md`,
+> `docs/03-architecture/CURRENT_RULES.md` e
+> `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` para as autoridades atuais.
+
+
 > **Data:** Abril 2026  
 > **Versão:** 1.0  
 > **Status:** Proposta para execução  

@@ -62,7 +62,7 @@
 
 ## D-015 — Não migrar para monorepo
 
-**Decisão:** entrega mobile via Capacitor no mesmo repositório. **Ref.:** `08-roadmap/MONOREPO_MIGRATION_PLAN.md`.
+**Decisão:** não executar migração para monorepo durante o MVP web. Estratégia de aplicativo mobile (incluindo eventual Capacitor) requer decisão e certificação próprias; não há aprovação implícita para instalar ou publicar mobile. **Contexto histórico, não normativo:** `10-archive/plans/MONOREPO_MIGRATION_PLAN_2026-04.md`.
 
 ## D-016 — Edge Functions: JWT + getClaims
 

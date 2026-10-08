@@ -2,11 +2,23 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-// docs/README.md e a unica porta de entrada documental.
-// A arquitetura viva referenciada pelo indice tambem tem seus links verificados.
-const LIVE_DOCS = [
+// docs/README.md permanece a única porta de entrada documental.
+// Validar também os índices ativos e o owner de manutenção evita a volta
+// silenciosa de links para caminhos renomeados/arquivados.
+export const LIVE_DOCS = [
+  "README.md",
   "docs/README.md",
   "docs/03-architecture/ARCHITECTURE.md",
+  "docs/03-architecture/MAINTENANCE.md",
+  "docs/07-modules/SEARCH_SSOT.md",
+  "docs/07-modules/MEDIA_ASSET_SSOT.md",
+  "docs/08-roadmap/README.md",
+  "docs/08-roadmap/NEXT-STEPS.md",
+  "src/modules/README.md",
+  "src/modules/business/README.md",
+  "src/modules/business/VALIDATION.md",
+  "src/core/location/README.md",
+  "src/core/billing/README.md",
 ] as const;
 
 /**

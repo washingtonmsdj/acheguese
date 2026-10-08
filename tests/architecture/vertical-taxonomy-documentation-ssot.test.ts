@@ -44,7 +44,7 @@ describe("vertical taxonomy documentation SSOT", () => {
     expect(
       backtickValuesOnLine(
         modulesReadme,
-        "- Current official vertical state:",
+        "- Estado oficial das verticais:",
       ),
     ).toEqual(expected);
 

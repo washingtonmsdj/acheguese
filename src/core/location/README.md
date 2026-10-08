@@ -1,6 +1,6 @@
 # Location Core
 
-**Status:** G4 HARDENED — GEOGRAPHIC AUTHORITY CLOSED  
+**Status:** contrato técnico canônico de Location (marco histórico G4 de hardening; release é certificado separadamente)  
 **Owner:** `src/core/location`  
 **Escopo:** hierarquia geográfica canônica e operações estruturais de `locations`.
 

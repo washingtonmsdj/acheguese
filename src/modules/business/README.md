@@ -1,85 +1,48 @@
-# Modulo de Empresas
+# Empresas — módulo de produto
 
-**Status:** G4 SSOT SOURCE CLOSED — NAO MVP CERTIFICADO  
-**Owner de UI/aplicacao:** `src/modules/business`  
-**Owner de dominio, persistencia e integracoes:** `src/core/business`
+**Lifecycle do domínio:** consultar `src/app/config/productModuleRegistry.ts`.  
+**Owner da interface:** `src/modules/business/`.  
+**Owner de domínio e persistência:** `src/core/business/`.  
+**Critérios e gates:** [`VALIDATION.md`](./VALIDATION.md).  
+**Prontidão/release:** `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`, sob `docs/README.md`.
 
-Empresas e o bounded context base para perfis comerciais. Gastronomy e Education especializam esse dominio, mas nao substituem o modulo geral.
+Este README é o índice técnico do módulo; não é um checkpoint G4/G6, não fixa SHA ou estado de produção e não duplica o Definition of Done operacional.
 
-## Escopo funcional atual
+## Escopo e estrutura
 
-- cadastro e edicao de empresa;
-- pagina publica e identidade/slug canonicos;
-- endereco e territorio;
-- contatos e canais publicos;
-- horario de funcionamento;
-- secoes de servicos, produtos, portfolio, promocoes e cardapio;
-- cobertura/area de atendimento;
-- gestao de imagens e galeria;
-- favoritos, reviews e metricas publicas;
-- integracao com verticais especializadas;
-- hooks e paginas de gestao/edicao.
+Empresas é o domínio-base de entidades comerciais, independente de Gastronomia e Educação, que permanecem subdomínios derivados quando seu lifecycle permitir.
 
-## Fronteira arquitetural
+| Área | Local canônico | Responsabilidade |
+| --- | --- | --- |
+| Cadastro de empresa | `hooks/useBusinessCreateMultiProfile.ts`, `pages/CriarEmpresaPage.tsx` | UI e fluxo; criação persistente delegada a `BusinessService.createBusiness()` |
+| Edição | `hooks/useBusinessEdit.ts`, `pages/EditarEmpresaPage.tsx` | Estado do formulário, upload e navegação |
+| Central de gestão | `src/modules/central/` | Rotas protegidas e superfície administrativa |
+| Identidade e URL | `src/core/business/services/BusinessUrlService.ts`, `src/core/public-identity/` | Slug e URL públicos |
+| Persistência | `src/core/business/services/business.mutations.ts` | Criação, atualização e desativação canônicas via broker |
+| Consulta | `src/core/business/services/business.queries.ts` | Read models e consultas públicas |
+| Ownership | `src/core/business/services/BusinessOwnershipService.ts` | Resolução de proprietário/gestor; backend mantém a autorização efetiva |
+| Redes e filiais | `src/core/business/services/NetworkService.ts` | Lifecycle de rede e unidades |
+| Mídias | `src/core/media/services/MediaService.ts` | Upload e referências canônicas |
+| Analytics | `src/core/analytics/AnalyticsService.ts` | Métricas e views autorizadas |
 
-Codigo em `src/modules/business` nao deve acessar `@/integrations/*` nem `@supabase/supabase-js` em runtime. Persistencia, RPCs, repositories e integracoes pertencem a `src/core/business` ou a outro owner `core` explicito.
+Arquivos de UI não acessam diretamente `@/integrations/*`, tabelas Supabase ou `@supabase/supabase-js`. O owner de mutations permanece `src/core/business/`; não criar writer duplicado sob páginas ou hooks.
 
-`tools/architecture/validate-business-module-boundaries.ts` protege essa regra para todo o modulo, incluindo Gastronomy e Education. O mesmo validator:
+## Identidade e segurança
 
-- exige que o cadastro delegue a `BusinessService.createBusiness()`;
-- bloqueia recriacao do antigo fluxo profile-first via `MultiProfileService`;
-- impede mutacoes runtime de `business_data` fora de `src/core/business`;
-- bloqueia a volta de `business_views` e dos RPCs `get_business_views_*` no runtime do owner;
-- exige que o adapter de analytics de Business delegue ao `AnalyticsService`.
+- `profiles.id` identifica o perfil público e a empresa no contexto de rota.
+- `business_data.id` identifica o agregado persistente e integrações que exigem seu ID.
+- Um gestor pode estar autenticado sem ter a empresa como **perfil ativo**. A permissão é determinada pelo serviço de domínio e pela autoridade do backend, não pela seleção visual do perfil.
+- Falha na consulta não equivale a dado ausente; ausência confirmada não equivale a indisponibilidade de RLS/RPC.
+- Upload de logo/banner não deve ser anunciado como atualização persistida até confirmação do comando de gravação.
+- Retorno de mutation após commit não deve mascarar gravação confirmada como falha por indisponibilidade do read model.
 
-## SSOTs principais
+## Contratos e manutenção
 
-- `src/core/business/services/BusinessService.ts`: facade publica do dominio;
-- `src/core/business/services/business.queries.ts`: read model geral;
-- `src/core/business/services/business.mutations.ts`: mutations gerais;
-- `src/core/business/services/NetworkService.ts`: lifecycle especializado de rede/filiais dentro do mesmo owner `core/business`;
-- `src/core/business/services/BusinessOwnershipService.ts`: ownership/autorizacao de dominio;
-- `src/core/business/services/BusinessUrlService.ts`: URL/slug;
-- `src/core/business/types`: contratos canonicos;
-- `src/core/public-identity`: identidade publica;
-- `src/core/analytics/AnalyticsService.ts`: analytics canonico;
-- `src/core/billing`: billing/assinaturas canonicas (`user_subscriptions`).
+- Contratos canônicos: `src/core/business/types/` e facade pública `src/core/business/services/BusinessService.ts`.
+- Validation: [`VALIDATION.md`](./VALIDATION.md) preserva invariantes e gates de release; seu status é separado da prontidão global.
+- Boundary checks: `tools/architecture/validate-business-module-boundaries.ts`, validators de SSOT e testes de segurança.
+- Frontend e documentação podem evoluir em módulos pausados sem reativá-los.
+- Não reintroduzir writes diretos de `business_data`, `business_views` legado, fluxo de criação paralelo em `MultiProfileService` ou facades vazias.
+- Histórico de fases G4/G6 e provas datadas pertencem a checkpoints, `docs/10-archive/` e ao Git; não reconstituem um segundo estado de MVP.
 
-## Hardening concluido em G4/G6
-
-- membership de criacao passou pelo owner `ProfileMembersService`;
-- `BusinessService.getStats()` incompleto foi aposentado depois de confirmar zero callers TypeScript;
-- `useBusinessCreateMultiProfile` deixou de criar Profile separadamente e passou a delegar a `BusinessService.createBusiness()`;
-- o wrapper legado `AdminBusinessService.createBusinessProfile()` foi aposentado apos confirmar zero callers runtime, mantendo `BusinessService.createBusiness()` como autoridade unica de criacao geral;
-- `AdminService.toggleBusinessStatus()` deixou de executar `UPDATE business_data` diretamente e passou pelo Business owner;
-- RLS remoto conhecido de `business_data`, produtos, servicos, galeria e stats foi revalidado contra a mesma autoridade `can_manage_profile`/wrapper compativel;
-- `business-analytics.service.ts`, `business.admin.ts` e Gastronomy deixaram de depender de `business_views`/RPCs legados de views e passaram ao Analytics SSOT;
-- a dashboard deixou de exibir agendamentos como metrica porque esse evento nao existe no contrato canonico atual;
-- ratchets impedem regressao dessas decisoes.
-
-## O que G4 NAO certifica
-
-Fechar Business em G4 significa ownership/SSOT de source reconciliado. Ainda permanecem blockers reais para G5/G6/G7:
-
-1. **Atomicidade/confiabilidade:** create sincroniza endereco, profile, membership, `business_data`, stats, horarios e contatos em sequencia; uploads de midia ocorrem depois. Falhas intermediarias precisam de compensacao/idempotencia comprovada.
-2. **Legados de banco:** `businesses`, `business_subscriptions`, `business_views` e RPCs historicos precisam de classificacao/provenance antes de qualquer retirada.
-3. **Higiene de dados:** profiles business sem `business_data` e outros residuos observados em checkpoints anteriores nao podem ser removidos por heuristica.
-4. **Certificacao funcional:** create -> edit -> pagina publica -> gestao, autorizacao negativa, E2E, mobile e smoke precisam ser provados.
-5. **Certificacao same-SHA:** lint/typecheck/test/security/build/deploy precisam executar de verdade; falha de runner/provider nao e PASS nem source failure.
-
-## Criterio de MVP READY do modulo
-
-Empresas so pode ser marcado como MVP certificado quando houver, no mesmo SHA:
-
-1. atomicidade ou compensacao/idempotencia comprovada para fluxos mutaveis relevantes;
-2. drift de migrations/schema/RLS/grants fechado no ambiente alvo;
-3. nenhum acesso runtime fora dos owners canonicos;
-4. fluxo create -> edit -> pagina publica -> gestao funcionando com dados reais;
-5. estados loading/empty/error/auth corretos;
-6. E2E sem fixtures confundidas com dados reais;
-7. higiene/provenance de dados tecnicos comprovada;
-8. casos negativos de autorizacao executados;
-9. lint/typecheck/test/build/security executados de verdade;
-10. deployment e smoke do mesmo SHA comprovados.
-
-O checkpoint tecnico detalhado fica em `VALIDATION.md`; o SSOT global de execucao permanece em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`, sob a precedência documental definida por `docs/README.md`.
+O status do produto vivo é resolvido pelos registries, a certificação do módulo por [`VALIDATION.md`](./VALIDATION.md) e o release global somente por `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.

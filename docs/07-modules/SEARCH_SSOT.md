@@ -1,7 +1,7 @@
 # Search SSOT
 
-Status: G4 source/authority fechado
-Data-base: 2026-08-29
+Status: contrato técnico vigente da capability horizontal Search; lifecycle executável em `src/app/config/platformCapabilityRegistry.ts`.
+Corte histórico de hardening: G4, 2026-08-29 (não equivale a certificação de release atual).
 Owner: `src/core/search`
 
 ## 1. Decisao
