@@ -20,7 +20,7 @@ describe("public federated search route", () => {
     expect(navigationModes).toContain("buildModuleTerritoryUrl(MODULE_SLUGS.search");
     expect(navigationModes).not.toContain("`/buscar${activeCityBase}`");
     expect(navigationModes).not.toContain("`/buscar/${communityContext.state}");
-    expect(navigationConfig).toContain("href: '/busca'");
+    expect(navigationConfig).toContain("href: NAV_MODULE_ROOTS.search");
     expect(appUrls).toContain("search: buildModuleTerritoryUrl(MODULE_SLUGS.search, cityBase)");
     expect(jsonLd).toContain("/busca?q={search_term_string}");
   });
