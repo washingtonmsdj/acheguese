@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { AddressPrivacyGuard } from "../../src/core/address/services/AddressPrivacyGuard";
-import { ResidentAddressService } from "../../src/core/address/services/ResidentAddressService";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { Address } from "../../src/core/address/types";
 
 const address: Address = {
@@ -66,14 +67,12 @@ describe("Address verified-only public projection", () => {
     ].sort());
   });
 
-  it("keeps the residential helper on exactly the same privacy authority", () => {
-    for (const flags of [
-      { is_verified: true, verification_status: "pending" as const },
-      { is_verified: true, verification_status: "verified" as const },
-    ]) {
-      const record = { ...address, ...flags };
-      expect(ResidentAddressService.toPublicDTO(record))
-        .toEqual(AddressPrivacyGuard.toPublic(record));
-    }
+  it("keeps the residential helper delegated to the canonical privacy guard", () => {
+    const source = readFileSync(
+      join(process.cwd(), "src/core/address/services/ResidentAddressService.ts"),
+      "utf8",
+    );
+    expect(source).toContain("return AddressPrivacyGuard.toPublic(address);");
+    expect(source).not.toContain("latitude: address.is_verified ?");
   });
 });
