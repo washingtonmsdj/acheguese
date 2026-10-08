@@ -39,6 +39,13 @@ describe("notification Realtime statistics failure boundary", () => {
     );
   });
 
+  it("rejects stale stats responses after a newer update", () => {
+    expect(hook).toContain("const statsRequestRef = useRef(0);");
+    expect(hook).toContain("const statsRequestId = ++statsRequestRef.current;");
+    expect(hook).toContain("statsRequestRef.current === statsRequestId");
+    expect(hook).toContain("++statsRequestRef.current;");
+  });
+
   it("does not apply stats after an account switch", () => {
     expect(hook).toContain("if (activeUserIdRef.current === user.id) {");
     expect(hook).toContain("setStats((current) => ({ ...current, ...statsData }));");
