@@ -383,20 +383,7 @@ export async function getBusinessesList(
   }
 
   try {
-    // FASE 1 IA: Usar view pública segura
-    const checkResult = await supabase
-      .from("public_business_search")
-      .select("profile_id")
-      .limit(1);
-
-    if (checkResult.error) {
-      logger.warn(
-        " public_business_search view not accessible:",
-        checkResult.error.message,
-      );
-      return { businesses: [], nextPage: undefined };
-    }
-
+    // A consulta real é a única verificação de acesso à view canônica.
     let query = supabase
       .from("public_business_search")
       .select(PUBLIC_BUSINESS_LIST_SELECT)
@@ -428,18 +415,11 @@ export async function getBusinessesList(
     // Hierárquico - resolve descendentes pelo owner canônico de Location.
     let resolvedFilter = filter;
     if (filter?.scope === "location") {
-      try {
-        const descendantIds =
-          await LocationHierarchyReadService.getDescendantIds(filter.location_id);
+      const descendantIds =
+        await LocationHierarchyReadService.getDescendantIds(filter.location_id);
 
-        if (descendantIds.length > 0) {
-          resolvedFilter = { scope: "group", location_ids: descendantIds };
-        }
-      } catch (error) {
-        logger.warn(
-          "[BusinessQueries] Failed to expand territory; using exact location filter",
-          { location_id: filter.location_id, error },
-        );
+      if (descendantIds.length > 0) {
+        resolvedFilter = { scope: "group", location_ids: descendantIds };
       }
     }
 
@@ -512,13 +492,7 @@ export async function getBusinessesList(
 
     const { data, error } = await query;
 
-    if (error) {
-      logger.warn(
-        " Error fetching businesses list:",
-        (error as { message?: string }).message,
-      );
-      return { businesses: [], nextPage: undefined };
-    }
+    if (error) throw error;
 
     // Fetch profiles
     const profileIds =
@@ -555,8 +529,8 @@ export async function getBusinessesList(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.warn(" Unexpected error in getBusinessesList:", message);
-    return { businesses: [], nextPage: undefined };
+    logger.error("Error in getBusinessesList:", message);
+    throw error;
   }
 }
 
