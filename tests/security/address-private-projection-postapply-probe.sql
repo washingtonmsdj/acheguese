@@ -22,6 +22,15 @@ BEGIN
   SELECT count(*) INTO v_projection_columns
   FROM information_schema.columns
   WHERE table_schema = 'public' AND table_name = 'addresses_public';
+  IF EXISTS (
+    SELECT 1 FROM public.addresses_public
+    WHERE is_verified IS DISTINCT FROM TRUE
+       OR verification_status IS DISTINCT FROM
+          'verified'::public.address_verification_status
+  ) THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROBE_FAILED: contradictory verification exposed';
+  END IF;
+
   IF v_projection_columns <> 9 OR EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'addresses_public'
