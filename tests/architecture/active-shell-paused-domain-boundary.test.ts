@@ -9,6 +9,10 @@ describe("active shell paused-domain boundary", () => {
   );
   const appShell = read("src/app/components/AppLayoutSidebar.tsx");
   const appSidebar = read("src/app/components/navigation/AppSidebar.tsx");
+  const appUrls = read("src/core/routing/hooks/useAppUrls.ts");
+  const notificationRoutes = read(
+    "src/core/notifications/routes/notificationRoutes.ts",
+  );
 
   it("does not import paused domain owners into active navigation config", () => {
     expect(navigationConfig).toContain("filterNavigationSections(RAW_NAV_SECTIONS)");
@@ -44,7 +48,9 @@ describe("active shell paused-domain boundary", () => {
 
     expect(appShell).toContain("MODULE_SLUGS.business");
     expect(appShell).toContain("MODULE_SLUGS.search");
-    expect(appShell).toContain('pathSegments[0] === "mensagens"');
+    expect(appShell).toContain("const MESSAGING_INBOX_PATH = messagingRoutes.inbox();");
+    expect(appShell).toContain("pathname.startsWith(`${MESSAGING_INBOX_PATH}/`)");
+    expect(appShell).not.toContain('pathSegments[0] === "mensagens"');
     expect(appShell).toContain('pathSegments[0] === "conta"');
   });
 
@@ -70,6 +76,18 @@ describe("active shell paused-domain boundary", () => {
     }
 
     expect(navigationConfig).toContain("lifecycle: { kind: 'always' }");
+  });
+
+  it("derives active navigation hrefs from canonical route owners", () => {
+    expect(notificationRoutes).toContain('inbox: () => "/notificacoes"');
+    expect(navigationConfig).toContain("href: notificationRoutes.inbox()");
+    expect(navigationConfig).toContain("href: centralRoutes.home");
+    expect(navigationConfig).toContain("href: NAV_MODULE_ROOTS.search");
+    expect(navigationConfig).not.toContain("href: '/notificacoes'");
+    expect(navigationConfig).not.toContain("href: '/central'");
+    expect(navigationConfig).not.toContain("href: '/busca'");
+    expect(appUrls).toContain("notifications: notificationRoutes.inbox()");
+    expect(appUrls).not.toContain("notifications: '/notificacoes'");
   });
 
   it("keeps the rendered desktop sidebar limited by lifecycle-filtered navigation", () => {
