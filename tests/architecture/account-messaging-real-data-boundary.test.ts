@@ -28,7 +28,7 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(routes).not.toContain("conceptMessagesPreview");
     expect(routes).not.toContain("conceptAccountPreview");
     expect(routes).not.toContain('get("concept-mock")');
-    expect(routes).toContain('path="/conta"');
+    expect(routes).toContain("path={ACCOUNT_PATHS.home}");
     expect(routes).toContain("protectedElement(<P.ContaPage />)");
     expect(routes).toContain("messagingRoutes.inbox()");
     expect(routes).toContain("messagingRoutes.threadPattern()");

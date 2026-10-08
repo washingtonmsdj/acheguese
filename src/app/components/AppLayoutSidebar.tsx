@@ -14,15 +14,22 @@ import { Outlet, useLocation } from "react-router-dom";
 import { getActiveTerritoryNavigationModeIds } from "@/app/config/territoryNavigationScope";
 import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
 import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
+import { messagingRoutes } from "@/core/messaging/routes/messagingRoutes";
 import { BottomNav } from "@/core/navigation/BottomNav";
 import {
   ACCOUNT_PATHS,
   ACCOUNT_SETTINGS_SHELL_PATHS,
 } from "@/core/routing/config/account";
+import { OFFLINE_SETTINGS_PATH } from "@/core/routing/config/platformSettings";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 import { getAppModuleSlugFromPath } from "@/shared/config/moduleSlugs";
+import {
+  DATA_PROTECTION_CONTACT_PATH,
+  PRIVACY_POLICY_PATH,
+  TERMS_OF_SERVICE_PATH,
+} from "@/shared/constants/legal";
 import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { AppSidebar } from "./navigation/AppSidebar";
 import { AppTopbar } from "./navigation/AppTopbar";
@@ -33,6 +40,15 @@ const TERRITORY_PORTAL_MODULES = new Set<string>([
   MODULE_SLUGS.map,
   MODULE_SLUGS.nearby,
   MODULE_SLUGS.search,
+]);
+
+const MESSAGING_INBOX_PATH = messagingRoutes.inbox();
+const CHILD_OWNED_MAIN_ROUTES = new Set<string>([
+  MESSAGING_INBOX_PATH,
+  TERMS_OF_SERVICE_PATH,
+  PRIVACY_POLICY_PATH,
+  OFFLINE_SETTINGS_PATH,
+  DATA_PROTECTION_CONTACT_PATH,
 ]);
 
 export function AppLayoutSidebar() {
@@ -72,6 +88,7 @@ export function AppLayoutSidebar() {
     pathSegments[0] === MODULE_SLUGS.business &&
     pathSegments[1] !== "cadastrar";
   const isBusinessRegistrationRoute = pathname === "/empresas/cadastrar";
+  const isStandaloneGlobalSearchRoute = pathname === `/${MODULE_SLUGS.search}`;
   const isAccountRoute = pathSegments[0] === "conta";
   const isAccountOverview = pathname === ACCOUNT_PATHS.home;
   const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
@@ -86,6 +103,7 @@ export function AppLayoutSidebar() {
 
   const hideGlobalSidebar =
     pathname === "/" ||
+    isStandaloneGlobalSearchRoute ||
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
     isTerritoryBusinessDetailRoute ||
@@ -93,9 +111,11 @@ export function AppLayoutSidebar() {
     isBusinessRegistrationRoute;
 
   const isConversationRoute =
-    pathSegments[0] === "mensagens" && pathSegments.length >= 3;
+    pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3;
+  const childOwnsMainLandmark = CHILD_OWNED_MAIN_ROUTES.has(pathname);
   const useDocumentScrollPublicShell =
     pathname === "/" ||
+    isStandaloneGlobalSearchRoute ||
     isBarePublicTerritorialRoute ||
     isTerritoryPortalModuleRoute ||
     isTerritoryBusinessDetailRoute ||
@@ -187,6 +207,8 @@ export function AppLayoutSidebar() {
     );
   }
 
+  const MainContentElement = childOwnsMainLandmark ? "div" : "main";
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-territory-canvas">
@@ -194,14 +216,14 @@ export function AppLayoutSidebar() {
 
         <div className="flex-1 flex flex-col min-w-0 w-full">
           <AppTopbar />
-          <main
-            id="main-content"
+          <MainContentElement
+            id={childOwnsMainLandmark ? undefined : "main-content"}
             className="flex-1 p-4 md:p-6 pb-20 md:pb-6 w-full overflow-y-auto"
-            tabIndex={-1}
+            tabIndex={childOwnsMainLandmark ? undefined : -1}
           >
             <TerritoryMismatchBanner />
             <Outlet />
-          </main>
+          </MainContentElement>
         </div>
       </div>
       {!hideMobileBottomNav ? (

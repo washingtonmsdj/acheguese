@@ -21,6 +21,7 @@ export function NotificationCenter() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const [pendingNotificationId, setPendingNotificationId] = useState<string | null>(null);
   const [isMarkingAll, setIsMarkingAll] = useState(false);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const {
     notifications,
     unreadCount,
@@ -39,27 +40,45 @@ export function NotificationCenter() {
   });
 
   const handleMarkAllAsRead = async () => {
+    setMutationError(null);
     setIsMarkingAll(true);
     try {
-      await markAllAsRead();
+      const updatedCount = await markAllAsRead();
+      if (updatedCount === null) {
+        setMutationError(
+          "Não foi possível marcar todas as notificações como lidas. Tente novamente.",
+        );
+      }
     } finally {
       setIsMarkingAll(false);
     }
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
+    setMutationError(null);
     setPendingNotificationId(notificationId);
     try {
-      await markAsRead(notificationId);
+      const marked = await markAsRead(notificationId);
+      if (!marked) {
+        setMutationError(
+          "Não foi possível marcar a notificação como lida. Tente novamente.",
+        );
+      }
     } finally {
       setPendingNotificationId(null);
     }
   };
 
   const handleDelete = async (notificationId: string) => {
+    setMutationError(null);
     setPendingNotificationId(notificationId);
     try {
-      await deleteNotification(notificationId);
+      const deleted = await deleteNotification(notificationId);
+      if (!deleted) {
+        setMutationError(
+          "Não foi possível remover a notificação. Tente novamente.",
+        );
+      }
     } finally {
       setPendingNotificationId(null);
     }
@@ -136,6 +155,7 @@ export function NotificationCenter() {
           </div>
           {hasUnread && (
             <Button
+              type="button"
               variant="outline"
               size="sm"
               className="w-full border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised sm:w-auto"
@@ -149,7 +169,7 @@ export function NotificationCenter() {
                 </>
               ) : (
                 <>
-                  <CheckCheck className="mr-2 h-4 w-4" />
+                  <CheckCheck className="mr-2 h-4 w-4" aria-hidden="true" />
                   Marcar todas como lidas
                 </>
               )}
@@ -158,9 +178,22 @@ export function NotificationCenter() {
         </div>
       </CardHeader>
       <CardContent>
+        {mutationError ? (
+          <div
+            className="mb-4 flex items-start gap-2 rounded-xl border border-territory-error/30 bg-territory-error/10 px-3 py-2.5 text-sm text-territory-error"
+            role="alert"
+          >
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>{mutationError}</p>
+          </div>
+        ) : null}
+
         <Tabs
           value={filter}
-          onValueChange={(value) => setFilter(value as "all" | "unread")}
+          onValueChange={(value) => {
+            setMutationError(null);
+            setFilter(value as "all" | "unread");
+          }}
         >
           <TabsList className="grid w-full grid-cols-2 bg-territory-raised text-territory-muted">
             <TabsTrigger

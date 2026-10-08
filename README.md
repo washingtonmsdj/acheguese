@@ -2,7 +2,7 @@
 
 Plataforma hiperlocal, territory-first e modular, construída para conectar moradores às empresas e serviços do próprio território.
 
-> **MVP atual — 2026-10-05**
+> **MVP atual — 2026-10-06**
 >
 > **Domínio de produto ativo:** Business / Empresas.
 >
@@ -14,11 +14,11 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 ## Estado de entrega
 
-O núcleo do MVP está funcional e o candidato vigente já comprovou os gates determinísticos de arquitetura, segurança, build, E2E público e smoke autenticado de produção. **Não há blocker externo ativo conhecido para o primeiro release.**
+O núcleo do MVP está funcional e o Release Candidate vigente está consolidado na PR `#621`. O candidate passa pelos gates determinísticos de arquitetura, segurança, build e E2E antes de qualquer promoção, mas **CI pré-produção não equivale a runtime de produção certificado**.
 
-Os antigos blockers de infraestrutura foram encerrados com prova real: `#305` após sessão autenticada + Conta + Business no runtime certificado, e `#445` após validação da identidade de release pela política canônica `exact/equivalent`, sem forçar deployment artificial. Regressão de infraestrutura ou delta deployável reabre o gate correspondente; issue encerrada não vira permissão para ignorar falha futura.
+Os gates externos do primeiro release são `#305` (Supabase/data plane e smoke autenticado) e `#445` (Vercel/identidade de release). O estado `open`/`closed` dessas issues, junto com suas evidências, é a autoridade operacional para promoção; este README não replica nem congela esse estado. Qualquer gate externo aberto bloqueia a promoção sem autorizar fallback, bypass ou redução dos critérios do MVP.
 
-A certificação vigente cobre Auth/Conta, Business lifecycle e Business Messaging no runtime aceito. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado; não se deve transformar ausência de um cenário específico no smoke agregado em afirmação de cobertura que o teste não executou.
+A certificação autenticada de produção de um runtime anterior permanece evidência histórica daquele conteúdo e não é reutilizada automaticamente para um novo delta deployável. O candidate vigente precisa satisfazer as provas aplicáveis ao seu próprio conteúdo conforme `EXECUCAO_MAIN_ONLY.md`. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado.
 
 O frontend ativo está em fase final de acabamento visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
 
