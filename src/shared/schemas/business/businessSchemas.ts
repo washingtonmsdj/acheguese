@@ -241,6 +241,20 @@ function applyBusinessRules<T extends z.AnyZodObject>(
       hasLongitude
     );
 
+    // CEP and postal_code are aliases. Never silently prioritize one when
+    // different values were supplied for the same physical address.
+    if (
+      data.cep !== undefined &&
+      data.postal_code !== undefined &&
+      data.cep.replace(/\\D/g, "") !== data.postal_code.replace(/\\D/g, "")
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["cep"],
+        message: "CEP e codigo postal informados sao diferentes",
+      });
+    }
+
     if (hasLatitude !== hasLongitude) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
