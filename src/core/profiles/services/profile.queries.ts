@@ -262,12 +262,12 @@ export async function getProfilesByIds(ids: string[]): Promise<Profile[]> {
     .in("id", uniqueIds);
 
   if (error) {
-    trackError(new Error("Error fetching profiles by ids"), {
+    trackError(error as Error, {
       component: "profile.queries",
       action: "getProfilesByIds",
-      metadata: { ids: uniqueIds, error },
+      metadata: { ids: uniqueIds },
     });
-    return [];
+    throw error;
   }
 
   return ((data || []) as Profile[]);
@@ -287,12 +287,12 @@ export async function getProfilesSummary(ids: string[]): Promise<ProfileSummary[
     .in("id", uniqueIds);
 
   if (error) {
-    trackError(new Error("Error fetching profiles summary"), {
+    trackError(error as Error, {
       component: "profile.queries",
       action: "getProfilesSummary",
-      metadata: { ids: uniqueIds, error },
+      metadata: { ids: uniqueIds },
     });
-    return [];
+    throw error;
   }
 
   return (data || []).map((profile) => ({
@@ -321,12 +321,12 @@ export async function getProfilesSummaryExtended(
     .in("id", uniqueIds);
 
   if (error) {
-    trackError(new Error("Error fetching profiles summary extended"), {
+    trackError(error as Error, {
       component: "profile.queries",
       action: "getProfilesSummaryExtended",
-      metadata: { ids: uniqueIds, error },
+      metadata: { ids: uniqueIds },
     });
-    return [];
+    throw error;
   }
 
   return (data || []).map((profile) => ({
