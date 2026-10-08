@@ -25,15 +25,12 @@ export class BusinessOwnershipService {
         .eq('id', businessId)
         .maybeSingle();
 
-      if (error) {
-        logger.error('[BusinessOwnershipService] Error resolving owner profile:', error);
-        return null;
-      }
+      if (error) throw error;
 
       return data?.profile_id || null;
     } catch (error) {
       logger.error('[BusinessOwnershipService] Unexpected error:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -71,7 +68,7 @@ export class BusinessOwnershipService {
         '[BusinessOwnershipService] Unexpected error resolving management role:',
         error,
       );
-      return null;
+      throw error;
     }
   }
 
