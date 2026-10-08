@@ -94,6 +94,7 @@ As pastas `docs/architecture/` e `docs/audits/` existem porque contêm artefatos
 - [`03-architecture/CORE_LAYER_SSOT.md`](./03-architecture/CORE_LAYER_SSOT.md)
 - [`03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md`](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
 - [`03-architecture/PRODUCT_MODULE_LIFECYCLE.md`](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md)
+- [`03-architecture/MAINTENANCE.md`](./03-architecture/MAINTENANCE.md) — guia de ownership físico, revisão de consumidores e limpeza sem legado
 - [`architecture/SSOT_REGISTRY.md`](./architecture/SSOT_REGISTRY.md) — registry técnico de owners
 
 [`03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) preserva a arquitetura de Community para evolução futura, mas **não** autoriza sua ativação no MVP.
@@ -135,7 +136,7 @@ Visões de arquitetura da informação declaradas como pós-MVP ou não executá
 
 ## Arquivo histórico
 
-Tudo em [`10-archive/`](./10-archive/) é histórico, checkpoint ou material supersedido. O conteúdo pode explicar decisões passadas, mas não representa automaticamente o produto atual.
+Tudo em [`10-archive/`](./10-archive/) é histórico, checkpoint ou material supersedido. O estudo desatualizado de monorepo/mobile foi preservado em [`10-archive/plans/MONOREPO_MIGRATION_PLAN_2026-04.md`](./10-archive/plans/MONOREPO_MIGRATION_PLAN_2026-04.md) e não integra o roadmap executável. O conteúdo pode explicar decisões passadas, mas não representa automaticamente o produto atual.
 
 Documentos concluídos não permanecem em `08-roadmap/` como se fossem trabalho pendente. Handoffs encerrados e roadmaps substituídos devem ser arquivados ou removidos da árvore viva.
 
