@@ -118,6 +118,13 @@ function requireAllowedTarget(auth: UserAuthResult, targetUserId: string) {
   throw new RequestAuthorizationError("User cannot read roles for this target");
 }
 
+function requireSqlBoolean(value: unknown, source: string): boolean {
+  if (typeof value !== "boolean") {
+    throw new Error(`${source} returned an invalid boolean result`);
+  }
+  return value;
+}
+
 async function handleHasRole(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -133,7 +140,7 @@ async function handleHasRole(
   });
 
   if (error) throw error;
-  return { hasRole: data === true };
+  return { hasRole: requireSqlBoolean(data, "has_role") };
 }
 
 async function handleGetUserRoles(
@@ -168,7 +175,7 @@ async function handleIsAdmin(
   });
 
   if (error) throw error;
-  return { isAdmin: data === true };
+  return { isAdmin: requireSqlBoolean(data, "is_admin") };
 }
 
 async function handleIsSuperAdmin(
@@ -184,7 +191,7 @@ async function handleIsSuperAdmin(
   });
 
   if (error) throw error;
-  return { isSuperAdmin: data === true };
+  return { isSuperAdmin: requireSqlBoolean(data, "is_super_admin") };
 }
 
 async function dispatchAction(
