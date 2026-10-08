@@ -14,6 +14,7 @@ import {
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { AddressService } from "@/core/address/services/AddressService";
+import type { CreateAddressInput } from "@/core/address/types";
 import {
   createBusinessSchema,
   updateBusinessSchema,
@@ -250,14 +251,15 @@ async function syncAddress(
   //
   // A complement-only edit can reuse the *existing geocoding evidence*, but
   // never reuses the old ID or copies its verification/ownership flags.
-  let retainedGeocoding: {
-    latitude?: number;
-    longitude?: number;
-    precision?: import("@/core/address/types").AddressPrecision;
-    geocoding_source?: import("@/core/address/types").GeocodingSource | null;
-    geocoding_confidence?: number | null;
-    geocoded_at?: string | null;
-  } = {};
+  let retainedGeocoding: Pick<
+    CreateAddressInput,
+    | "latitude"
+    | "longitude"
+    | "precision"
+    | "geocoding_source"
+    | "geocoding_confidence"
+    | "geocoded_at"
+  > = {};
   if (existingAddressId && resolution.latitude === undefined) {
     const previous = await addressService.getAddressById(existingAddressId);
     if (!previous) {
