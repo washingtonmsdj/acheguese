@@ -238,6 +238,12 @@ describe("Business address resolution", () => {
       },
     } as Business;
 
+    mocks.geocode.mockResolvedValue([geocodeResult({
+      providerAddress: {
+        ...geocodeResult().providerAddress,
+        postalCode: "40123-456",
+      },
+    })]);
     const result = await resolveBusinessAddressForPersistence(
       { cep: "40123-456" },
       current,
@@ -256,6 +262,30 @@ describe("Business address resolution", () => {
       longitude: -38.455,
       geocodingSource: "nominatim_osm",
     });
+  });
+
+  it("rejects coordinates from a provider whose known CEP contradicts the requested CEP", async () => {
+    const current = {
+      id: "profile-1",
+      profile_id: "profile-1",
+      business_data_id: "business-1",
+      location_id: locationId,
+      address_id: "address-1",
+      address: {
+        street: "Rua Teste",
+        number: "10",
+        postal_code: "40000-000",
+        latitude: -12.982,
+        longitude: -38.455,
+      },
+    } as Business;
+
+    // Default fixture is a high-confidence result in the correct territory
+    // but still carries the old postal code.
+    await expect(
+      resolveBusinessAddressForPersistence({ cep: "40123-456" }, current),
+    ).rejects.toThrow("Nao foi possivel localizar o endereco");
+    expect(mocks.geocode).toHaveBeenCalledTimes(1);
   });
 
   it("rejects a CEP-only alias patch when no existing physical Address exists", async () => {
