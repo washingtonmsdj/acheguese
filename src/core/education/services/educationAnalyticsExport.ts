@@ -2,9 +2,37 @@ import type { EducationAnalyticsData } from '@/core/education';
 
 type AnalyticsCsvValue = string | number | boolean | null | undefined;
 
+function hasSpreadsheetFormulaPrefix(value: string): boolean {
+  if (!value) return false;
+
+  const firstCode = value.charCodeAt(0);
+  if (firstCode === 9 || firstCode === 10 || firstCode === 13) {
+    return true;
+  }
+
+  let index = 0;
+  while (index < value.length) {
+    const character = value[index];
+    const code = value.charCodeAt(index);
+    if (code <= 31 || character.trim() === '') {
+      index += 1;
+      continue;
+    }
+    break;
+  }
+
+  const firstMeaningfulCharacter = value[index];
+  return (
+    firstMeaningfulCharacter === '=' ||
+    firstMeaningfulCharacter === '+' ||
+    firstMeaningfulCharacter === '-' ||
+    firstMeaningfulCharacter === '@'
+  );
+}
+
 function escapeCsvCell(value: AnalyticsCsvValue): string {
   const raw = value == null ? '' : String(value);
-  const formulaSafe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+  const formulaSafe = hasSpreadsheetFormulaPrefix(raw) ? `'${raw}` : raw;
   return `"${formulaSafe.replace(/"/g, '""')}"`;
 }
 

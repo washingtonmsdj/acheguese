@@ -109,7 +109,13 @@ describe('EducationUrlService', () => {
 
     it('cleans non-digit characters from phone', () => {
       const url = EducationUrlService.buildWhatsAppLink('(88) 99999-9999');
-      expect(url).toContain('wa.me/88999999999');
+      expect(url).toContain('wa.me/5588999999999');
     });
+
+    it('returns null when the phone has no usable digits', () => {
+      expect(EducationUrlService.buildWhatsAppLink('sem telefone')).toBeNull();
+    });
+
+
   });
 });

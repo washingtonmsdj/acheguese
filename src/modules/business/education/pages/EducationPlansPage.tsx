@@ -8,8 +8,9 @@
  * pertencem ao registry do nicho e são mostrados nas telas de operação.
  */
 
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowLeft,
   Check,
@@ -34,6 +35,7 @@ import { BillingService } from '@/core/billing';
 import { useBillingPlans } from '@/core/billing/hooks/useBillingPlans';
 import { BILLING_PATHS } from '@/core/billing/routes/billingRoutes';
 import { useEducationSubscription } from '../hooks/useEducationSubscription';
+import { EducationAdminReadError } from '../components/EducationAdminReadError';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { useOptionalBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { useDashboardAccess } from '@/core/business/hooks/useDashboardAccess';
@@ -69,23 +71,39 @@ export function EducationPlansPage() {
   const dashboardContext = useOptionalBusinessDashboardContext();
   const businessDataId = dashboardContext?.businessDataId;
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
+  const [checkoutPlanCode, setCheckoutPlanCode] = useState<string | null>(null);
   const { toast } = useToast();
-  const { permissions, loading: loadingAccess } = useDashboardAccess(businessId);
+  const {
+    permissions,
+    loading: loadingAccess,
+    error: accessError,
+    refetch: refetchAccess,
+  } = useDashboardAccess(businessId);
   const canManageBilling = permissions.role === 'owner';
-  const { status, entitlements, planTier, isLoading } =
-    useEducationSubscription({
-      businessId: businessId!,
-      enabled: Boolean(businessId),
-    });
-  const { data: billingPlans = [], isLoading: billingPlansLoading } =
-    useBillingPlans();
+  const {
+    status,
+    entitlements,
+    isLoading,
+    isError: isSubscriptionError,
+    error: subscriptionError,
+    refetch: refetchSubscription,
+  } = useEducationSubscription({
+    businessId: businessId ?? '',
+    enabled: Boolean(businessId),
+  });
+  const {
+    data: billingPlans = [],
+    isLoading: billingPlansLoading,
+    isError: isCatalogError,
+    error: catalogError,
+    refetch: refetchCatalog,
+  } = useBillingPlans();
 
-  const currentPlanCode = planTier;
-
-  const currentPlan =
-    billingPlans.find((plan) => plan.code === currentPlanCode) ??
-    billingPlans[0] ??
-    null;
+  const currentPlanCode = status?.planTier ?? null;
+  const currentPlan = currentPlanCode
+    ? billingPlans.find((plan) => plan.code === currentPlanCode) ?? null
+    : null;
   const dashboardUrl = businessId
     ? EducationUrlService.buildAdminDashboardUrl(businessId)
     : null;
@@ -94,6 +112,8 @@ export function EducationPlansPage() {
     : null;
 
   const handleUpgrade = async (planCode: string) => {
+    if (checkoutPlanCode) return;
+
     if (!canManageBilling) {
       toast({
         title: 'Ação restrita ao proprietário',
@@ -113,6 +133,8 @@ export function EducationPlansPage() {
       });
       return;
     }
+
+    setCheckoutPlanCode(planCode);
 
     try {
       toast({
@@ -135,6 +157,8 @@ export function EducationPlansPage() {
         description: 'Não foi possível abrir o checkout. Tente novamente.',
         variant: 'destructive',
       });
+    } finally {
+      setCheckoutPlanCode(null);
     }
   };
 
@@ -151,11 +175,42 @@ export function EducationPlansPage() {
     );
   }
 
+  if (accessError) {
+    return (
+      <EducationAdminReadError
+        title="Não foi possível verificar sua permissão de cobrança"
+        error={accessError}
+        onRetry={() => void refetchAccess()}
+      />
+    );
+  }
+
+  if (isSubscriptionError || !status) {
+    return (
+      <EducationAdminReadError
+        title="Não foi possível verificar a assinatura de Educação"
+        error={subscriptionError}
+        onRetry={() => void refetchSubscription()}
+      />
+    );
+  }
+
+  if (isCatalogError) {
+    return (
+      <EducationAdminReadError
+        title="Não foi possível carregar os planos disponíveis"
+        error={catalogError}
+        onRetry={() => void refetchCatalog()}
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8"
       >
         <Button
@@ -212,12 +267,16 @@ export function EducationPlansPage() {
                 ) : null}
               </div>
               <p className="text-2xl font-bold text-territory-brand">
-                {currentPlan?.name ?? 'Plano atual'}
+                {currentPlan?.name ?? 'Plano não identificado no catálogo'}
               </p>
               <p className="text-sm text-territory-muted">
-                {status?.expiresAt
-                  ? `Renova em: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
-                  : 'Sem data de expiração'}
+                {status.expiresAt
+                  ? status.isActive
+                    ? `Próxima renovação: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
+                    : `Fim do período informado: ${new Date(status.expiresAt).toLocaleDateString('pt-BR')}`
+                  : status.isActive
+                    ? 'Data de renovação não informada'
+                    : 'Assinatura sem período ativo'}
               </p>
             </div>
 
@@ -225,7 +284,7 @@ export function EducationPlansPage() {
               variant="outline"
               className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
               onClick={() => navigate(BILLING_PATHS.subscription)}
-              disabled={loadingAccess || !canManageBilling}
+              disabled={loadingAccess || !canManageBilling || checkoutPlanCode !== null}
             >
               Gerenciar assinatura
             </Button>
@@ -296,9 +355,11 @@ export function EducationPlansPage() {
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={
+                  prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }
+                }
               >
                 <Card
                   className={`flex h-full flex-col overflow-hidden border-territory-border bg-territory-surface text-territory-ink shadow-sm ${
@@ -370,11 +431,18 @@ export function EducationPlansPage() {
                           : 'w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90'
                       }
                       disabled={
-                        isCurrent || loadingAccess || !canManageBilling
+                        isCurrent ||
+                        loadingAccess ||
+                        !canManageBilling ||
+                        checkoutPlanCode !== null
                       }
                       onClick={() => handleUpgrade(plan.code)}
                     >
-                      {isCurrent ? 'Plano atual' : 'Escolher plano'}
+                      {isCurrent
+                        ? 'Plano atual'
+                        : checkoutPlanCode === plan.code
+                          ? 'Abrindo checkout...'
+                          : 'Escolher plano'}
                     </Button>
                   </CardContent>
                 </Card>

@@ -8,13 +8,10 @@
  */
 
 import { logger } from '@/shared/utils/logger';
-import { getRecordValue, setRecordValue } from '@/shared/utils/recordLookup';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { BusinessOwnershipService } from '@/core/business/services/BusinessOwnershipService';
-import { EDUCATION_LEAD_STATUS, EDUCATION_PROFILE_STATUS } from '../constants';
 import {
   EducationObservabilityService,
-  trackLeadCreated,
   trackLeadConverted,
   trackProfilePublished,
   trackEducationError,
@@ -22,10 +19,12 @@ import {
 import type {
   EducationProfile,
   EducationProgram,
+  EducationProgramAdminPatch,
   EducationLead,
+  EducationLeadAdminPatch,
   EducationEvent,
+  EducationEventAdminPatch,
   EducationLeadStatus,
-  EducationProfileStatus,
   SchoolType,
   SchoolNetwork,
   EducationLevel,
@@ -38,6 +37,7 @@ import type {
 } from '@/core/education';
 import * as queries from '@/core/education/services/education.queries';
 import * as mutations from '@/core/education/services/education.mutations';
+import { getNicheByKey } from '../niches/registry';
 
 // ============================================================
 // TIPOS
@@ -65,22 +65,6 @@ export interface EducationSetupPayload {
   schoolFacilityFeatures?: SchoolFacilityFeatureKey[];
 }
 
-export interface CreateLeadPayload {
-  educationProfileId: string;
-  fullName: string;
-  email: string;
-  phone: string;
-  childName?: string;
-  childAge?: number;
-  interestNote?: string;
-  sourceChannel?: string;
-  // Campos específicos para matrícula escolar
-  guardianName?: string;
-  studentName?: string;
-  studentAge?: number;
-  desiredGrade?: string;
-  desiredShift?: SchoolShift;
-}
 
 export interface LeadPipelineMove {
   leadId: string;
@@ -98,20 +82,12 @@ export interface EducationLeadsListOptions {
 export interface EducationEventsListOptions {
   isPublic?: boolean;
   upcoming?: boolean;
+  active?: boolean;
 }
 
 // ============================================================
 // VALIDACAO
 // ============================================================
-
-function validateEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function validatePhone(phone: string): boolean {
-  // Aceita formatos: +5588999999999, (88) 99999-9999, etc
-  return /^(\+?\d{10,15}|\(\d{2}\)\s?\d{4,5}-?\d{4})$/.test(phone);
-}
 
 function nullIfEmpty<T>(values: T[] | undefined): T[] | null {
   return values && values.length > 0 ? values : null;
@@ -156,27 +132,18 @@ export const EducationService = {
   // ==========================================================
 
   /**
-   * Obtem ou cria perfil de educacao para um business
-   */
-  async getOrCreateProfile(businessId: string): Promise<EducationProfile | null> {
-    const profile = await queries.getEducationProfileByBusinessId(businessId);
-    if (profile) {
-      return profile;
-    }
-
-    const { data, error } = await createDraftEducationProfile(businessId);
-    if (error) {
-      logger.error('[EducationService] Error creating profile:', error);
-      return null;
-    }
-
-    return data;
-  },
-
-  /**
    * Salva configuracao inicial de educacao (create/update profile)
    */
   async saveSetupProfile(payload: EducationSetupPayload): Promise<EducationProfile | null> {
+    const nicheConfig = getNicheByKey(payload.nicheKey);
+    if (!nicheConfig) {
+      logger.error(
+        '[EducationService] Invalid niche key during setup:',
+        payload.nicheKey,
+      );
+      return null;
+    }
+
     let profile = await queries.getEducationProfileByBusinessId(payload.businessId);
     let createdDuringSetup = false;
 
@@ -200,7 +167,6 @@ export const EducationService = {
       school_network: payload.schoolNetwork ?? null,
       school_inep_code: payload.schoolInepCode ?? null,
       school_source_url: payload.schoolSourceUrl ?? null,
-      school_source_updated_at: payload.schoolSourceUrl ? new Date().toISOString() : null,
       education_levels: nullIfEmpty(payload.educationLevels),
       shifts: nullIfEmpty(payload.shifts),
       age_range_min: payload.ageRangeMin ?? null,
@@ -210,7 +176,7 @@ export const EducationService = {
       school_accessibility_features: nullIfEmpty(payload.schoolAccessibilityFeatures),
       school_equipment_features: nullIfEmpty(payload.schoolEquipmentFeatures),
       school_facility_features: nullIfEmpty(payload.schoolFacilityFeatures),
-      support_level: 'basic_enabled',
+      support_level: nicheConfig.supportLevel,
     });
 
     if (error) {
@@ -299,7 +265,7 @@ export const EducationService = {
 
   async updateProgram(
     programId: string,
-    payload: Partial<EducationProgram>,
+    payload: EducationProgramAdminPatch,
   ): Promise<EducationProgram | null> {
     const { data, error } = await mutations.updateEducationProgram(programId, payload);
     if (error) {
@@ -341,11 +307,6 @@ export const EducationService = {
       curriculumTopics?: string[];
     },
   ): Promise<EducationProgram | null> {
-    if (!payload.name || payload.name.length < 3) {
-      logger.error('[EducationService] Program name too short');
-      return null;
-    }
-
     const { data, error } = await mutations.createEducationProgram({
       education_profile_id: profileId,
       name: payload.name,
@@ -379,71 +340,6 @@ export const EducationService = {
   // ==========================================================
 
   /**
-   * Cria lead com validacao completa
-   */
-  async createLead(payload: CreateLeadPayload): Promise<EducationLead | null> {
-    try {
-      // Validacao
-      if (!validateEmail(payload.email)) {
-        logger.error('[EducationService] Invalid email:', payload.email);
-        throw new Error('Email invalido');
-      }
-
-      if (!validatePhone(payload.phone)) {
-        logger.error('[EducationService] Invalid phone:', payload.phone);
-        throw new Error('Telefone invalido');
-      }
-
-      const { data, error } = await mutations.createEducationLead({
-        education_profile_id: payload.educationProfileId,
-        full_name: payload.fullName,
-        email: payload.email,
-        phone: payload.phone,
-        child_name: payload.childName ?? null,
-        child_age: payload.childAge ?? null,
-        interest_note: payload.interestNote ?? null,
-        source_channel: payload.sourceChannel ?? 'website',
-        status: 'new',
-        owner_user_id: null,
-        first_contact_at: null,
-        lost_reason: null,
-        guardian_name: payload.guardianName ?? null,
-        student_name: payload.studentName ?? null,
-        student_age: payload.studentAge ?? null,
-        desired_grade: payload.desiredGrade ?? null,
-        desired_shift: payload.desiredShift ?? null,
-      });
-
-      if (error) {
-        logger.error('[EducationService] Error creating lead:', error);
-        await trackEducationError('education_lead_save_failed', new Error(error.message), {
-          profileId: payload.educationProfileId,
-        });
-        return null;
-      }
-
-      // Track successful lead creation
-      if (data) {
-        // Get profile to get niche_key
-        const profile = await queries.getEducationProfileById(payload.educationProfileId);
-        if (profile) {
-          await trackLeadCreated(payload.educationProfileId, data.id, profile.niche_key, {
-            sourceChannel: payload.sourceChannel,
-          });
-        }
-      }
-
-      return data;
-    } catch (error) {
-      logger.error('[EducationService] Exception creating lead:', error);
-      await trackEducationError('education_lead_save_failed', error as Error, {
-        profileId: payload.educationProfileId,
-      });
-      return null;
-    }
-  },
-
-  /**
    * Move lead no pipeline
    */
   async moveLeadInPipeline(move: LeadPipelineMove): Promise<EducationLead | null> {
@@ -455,10 +351,11 @@ export const EducationService = {
         logger.warn('[EducationService] Moving lead to lost without reason');
       }
 
-      const { data, error } = await mutations.moveLeadToStatus(leadId, toStatus, {
-        lostReason,
-        ownerUserId,
-      });
+      const { data, error, previousStatus } =
+        await mutations.moveLeadToStatus(leadId, toStatus, {
+          lostReason,
+          ownerUserId,
+        });
 
       if (error) {
         logger.error('[EducationService] Error moving lead:', error);
@@ -466,12 +363,19 @@ export const EducationService = {
       }
 
       // Track conversion when lead is enrolled
-      if (data && toStatus === 'enrolled') {
+      if (
+        data &&
+        toStatus === 'enrolled' &&
+        previousStatus !== 'enrolled'
+      ) {
         const profile = await queries.getEducationProfileById(data.education_profile_id);
         if (profile) {
-          await trackLeadConverted(data.education_profile_id, data.id, profile.niche_key, {
-            previousStatus: data.status,
-          });
+          await trackLeadConverted(
+            data.education_profile_id,
+            data.id,
+            profile.niche_key,
+            { previousStatus },
+          );
         }
       }
 
@@ -513,7 +417,7 @@ export const EducationService = {
 
   async updateLead(
     leadId: string,
-    payload: Partial<EducationLead>,
+    payload: EducationLeadAdminPatch,
   ): Promise<EducationLead | null> {
     const { data, error } = await mutations.updateEducationLead(leadId, payload);
     if (error) {
@@ -531,7 +435,10 @@ export const EducationService = {
    * Lista proximos eventos publicos
    */
   async listUpcomingPublicEvents(profileId: string): Promise<EducationEvent[]> {
-    return queries.listEducationEvents(profileId, { isPublic: true, upcoming: true });
+    return queries.listEducationEvents(profileId, {
+      isPublic: true,
+      upcoming: true,
+    });
   },
 
   async listEvents(
@@ -556,11 +463,6 @@ export const EducationService = {
       schoolEventType?: SchoolEventType;
     },
   ): Promise<EducationEvent | null> {
-    if (!payload.title || payload.title.length < 3) {
-      logger.error('[EducationService] Event title too short');
-      return null;
-    }
-
     const { data, error } = await mutations.createEducationEvent({
       education_profile_id: profileId,
       title: payload.title,
@@ -582,7 +484,7 @@ export const EducationService = {
 
   async updateEvent(
     eventId: string,
-    payload: Partial<EducationEvent>,
+    payload: EducationEventAdminPatch,
   ): Promise<EducationEvent | null> {
     const { data, error } = await mutations.updateEducationEvent(eventId, payload);
     if (error) {
@@ -601,194 +503,5 @@ export const EducationService = {
     return true;
   },
 
-  // ==========================================================
-  // AUXILIARY / UTILITY METHODS (Business Logic)
-  // ==========================================================
 
-  /** Verifica se perfil pode ser gerenciado (status ativo) - versão síncrona */
-  isProfileManageable(profile: EducationProfile): boolean {
-    return profile.status === 'published' || profile.status === 'draft';
-  },
-
-  /** Verifica se perfil está publicado e visível publicamente */
-  isProfilePublic(profile: EducationProfile): boolean {
-    return profile.status === 'published';
-  },
-
-  /** Retorna label do status do perfil */
-  getProfileStatusLabel(status: EducationProfileStatus): string {
-    return getRecordValue(EDUCATION_PROFILE_STATUS, status)?.label ?? status;
-  },
-
-  /** Retorna cor do status do perfil */
-  getProfileStatusColor(status: EducationProfileStatus): string {
-    return getRecordValue(EDUCATION_PROFILE_STATUS, status)?.color ?? 'gray';
-  },
-
-  /** Verifica se programa está disponível (ativo e com vagas) */
-  isProgramAvailable(program: EducationProgram): boolean {
-    return program.is_active && (program.available_slots ?? 0) > 0;
-  },
-
-  /** Formata preço do programa */
-  formatProgramPrice(price: number | null): string {
-    if (price === null || price === undefined) return 'Consultar';
-    if (price === 0) return 'Gratuito';
-    return `R$ ${price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-  },
-
-  /** Ordena programas por display_order */
-  sortProgramsByDisplayOrder(programs: EducationProgram[]): EducationProgram[] {
-    return [...programs].sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
-  },
-
-  /** Retorna label do status do lead */
-  getLeadStatusLabel(status: EducationLeadStatus): string {
-    return getRecordValue(EDUCATION_LEAD_STATUS, status)?.label ?? status;
-  },
-
-  /** Retorna cor do status do lead */
-  getLeadStatusColor(status: EducationLeadStatus): string {
-    return getRecordValue(EDUCATION_LEAD_STATUS, status)?.color ?? 'gray';
-  },
-
-  /** Verifica se lead está em status ativo (não terminal) */
-  isLeadActive(lead: EducationLead): boolean {
-    return lead.status !== 'enrolled' && lead.status !== 'lost';
-  },
-
-  /** Verifica se transição de status é válida */
-  canMoveLeadToStatus(from: EducationLeadStatus, to: EducationLeadStatus): boolean {
-    if (from === to) return true;
-    if (from === 'enrolled' || from === 'lost') return false;
-    if (to === 'lost') return true;
-
-    const pipeline: EducationLeadStatus[] = [
-      'new',
-      'contacted',
-      'visit_scheduled',
-      'proposal_sent',
-      'enrolled',
-    ];
-    const fromIndex = pipeline.indexOf(from);
-    const toIndex = pipeline.indexOf(to);
-
-    return fromIndex >= 0 && toIndex === fromIndex + 1;
-  },
-
-  /** Retorna próximos passos possíveis no pipeline */
-  getNextPipelineSteps(current: EducationLeadStatus): EducationLeadStatus[] {
-    const pipeline: EducationLeadStatus[] = ['new', 'contacted', 'visit_scheduled', 'proposal_sent', 'enrolled'];
-    const index = pipeline.indexOf(current);
-    if (index === -1 || index === pipeline.length - 1) return ['lost'];
-    return [pipeline[index + 1], 'lost'];
-  },
-
-  /** Formata info de contato do lead */
-  formatLeadContactInfo(lead: EducationLead): string {
-    const contact = lead.email ?? lead.phone ?? 'Sem contato';
-    return `${lead.full_name} - ${contact}`;
-  },
-
-  /** Calcula probabilidade de conversão baseada no status */
-  calculateLeadConversionProbability(status: EducationLeadStatus): number {
-    const probabilities: Record<EducationLeadStatus, number> = {
-      new: 20,
-      contacted: 35,
-      visit_scheduled: 50,
-      proposal_sent: 75,
-      enrolled: 100,
-      lost: 0,
-    };
-    return getRecordValue(probabilities, status) ?? 0;
-  },
-
-  /** Calcula resumo do pipeline (versão síncrona para dados já carregados) */
-  calculatePipelineSummary(leads: EducationLead[]): { total: number; byStatus: Record<string, number>; conversionRate: number; active: number; } {
-    const byStatus: Record<string, number> = {
-      new: 0,
-      contacted: 0,
-      visit_scheduled: 0,
-      proposal_sent: 0,
-      enrolled: 0,
-      lost: 0,
-    };
-
-    leads.forEach((lead) => {
-      const count = getRecordValue(byStatus, lead.status) ?? 0;
-      Object.assign(byStatus, setRecordValue(byStatus, lead.status, count + 1));
-    });
-
-    const total = leads.length;
-    const enrolled = byStatus.enrolled ?? 0;
-    const conversionRate = total > 0 ? Math.round((enrolled / total) * 100) : 0;
-    const active = total - enrolled - (byStatus.lost ?? 0);
-
-    return { total, byStatus, conversionRate, active };
-  },
-
-  /** Valida payload de criação de perfil */
-  validateProfilePayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.institution_type || String(payload.institution_type).trim() === '') {
-      errors.push('institution_type is required');
-    }
-    if (!payload.niche_key || String(payload.niche_key).trim() === '') {
-      errors.push('niche_key is required');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
-
-  /** Valida payload de criação de programa */
-  validateProgramPayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.name || String(payload.name).trim() === '') {
-      errors.push('name is required');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
-
-  /** Valida payload de criação de lead */
-  validateLeadPayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.full_name || String(payload.full_name).trim() === '') {
-      errors.push('full_name is required');
-    }
-    if (payload.email && !validateEmail(String(payload.email))) {
-      errors.push('email is invalid');
-    }
-    if (payload.phone && !validatePhone(String(payload.phone))) {
-      errors.push('phone is invalid');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
-
-  /** Verifica se evento está no futuro */
-  isEventUpcoming(startsAt: string): boolean {
-    return new Date(startsAt) > new Date();
-  },
-
-  /** Formata data do evento */
-  formatEventDateTime(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  },
-
-  /** Valida payload de criação de evento */
-  validateEventPayload(payload: Record<string, unknown>): { isValid: boolean; errors: string[] } {
-    const errors: string[] = [];
-    if (!payload.title || String(payload.title).trim() === '') {
-      errors.push('title is required');
-    }
-    if (!payload.starts_at || String(payload.starts_at).trim() === '') {
-      errors.push('starts_at is required');
-    }
-    return { isValid: errors.length === 0, errors };
-  },
 };

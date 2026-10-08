@@ -45,7 +45,7 @@ export function EducationAnalyticsOverviewCard({
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="h-16 animate-pulse rounded-lg bg-territory-raised"
+              className="h-16 rounded-lg bg-territory-raised motion-safe:animate-pulse"
               aria-hidden="true"
             />
           ))}

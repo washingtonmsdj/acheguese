@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen,
@@ -102,7 +103,7 @@ export function EducationDetailPage() {
   const { programs } = useEducationPrograms(profile?.id);
   const { events } = useEducationEvents(profile?.id, {
     isPublic: true,
-    upcoming: true,
+    active: true,
   });
   const {
     isFavorite,
@@ -160,7 +161,16 @@ export function EducationDetailPage() {
     : 'from-territory-brand via-territory-brand/90 to-territory-info';
 
   const sections = getSections(labels);
+  const prefersReducedMotion = useReducedMotion();
   const [activeSection, setActiveSection] = useState<string>('overview');
+
+  const handleSectionChange = (sectionId: string) => {
+    setActiveSection(sectionId);
+    document.getElementById(sectionId)?.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  };
   const {
     trackProfileView,
     trackProgramView,
@@ -174,6 +184,20 @@ export function EducationDetailPage() {
     businessDataId: profile?.business_data_id ?? undefined,
   });
   const { createPublic: createLead } = useEducationLeads(profile?.id ?? undefined);
+  const trackedProgramViews = useRef(new Set<string>());
+  const trackedEventViews = useRef(new Set<string>());
+
+  const trackProgramImpression = (programId: string) => {
+    if (trackedProgramViews.current.has(programId)) return;
+    trackedProgramViews.current.add(programId);
+    trackProgramView(programId);
+  };
+
+  const trackEventImpression = (eventId: string) => {
+    if (trackedEventViews.current.has(eventId)) return;
+    trackedEventViews.current.add(eventId);
+    trackEventView(eventId);
+  };
 
   const handleLeadSubmit = async (formData: LeadFormData) => {
     if (!profile?.id) return;
@@ -190,9 +214,11 @@ export function EducationDetailPage() {
       studentAge: formData.studentAge,
       desiredGrade: formData.desiredGrade,
       desiredShift: formData.desiredShift,
+      honeypot: formData.honeypot,
+      turnstileToken: formData.turnstileToken,
     });
 
-    if (lead) {
+    if (lead.created) {
       trackLeadSubmitted(lead.id, {
         hasGuardian: Boolean(formData.guardianName),
         hasStudent: Boolean(formData.studentName),
@@ -211,7 +237,9 @@ export function EducationDetailPage() {
   const cityLabel = effectiveCity.replace(/-/g, ' ');
   const districtLabel = (district ?? '').replace(/-/g, ' ');
   const institutionName =
-    profile?.business_name ?? profile?.institution_type ?? 'Instituição';
+    profile?.business_name ??
+    nicheConfig?.displayName ??
+    'Instituição educacional';
   const showcasePath = EducationUrlService.buildListingUrl({
     state: effectiveState,
     city: effectiveCity,
@@ -268,7 +296,13 @@ export function EducationDetailPage() {
           title: 'Link copiado',
           description: 'O link desta instituição foi copiado para a área de transferência.',
         });
+        return;
       }
+
+      toast({
+        title: 'Compartilhamento indisponível',
+        description: 'Copie o endereço desta página pela barra do navegador.',
+      });
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       toast({
@@ -351,14 +385,20 @@ export function EducationDetailPage() {
             aria-hidden="true"
           />
           <div className="container relative mx-auto px-4">
-            <nav className="flex flex-wrap items-center gap-1 text-xs text-territory-on-image/80">
-              <Link to="/" className="hover:text-territory-on-image">
+            <nav
+              aria-label="Breadcrumb"
+              className="flex flex-wrap items-center gap-1 text-xs text-territory-on-image/80"
+            >
+              <Link
+                to="/"
+                className="rounded-sm hover:text-territory-on-image focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
+              >
                 Início
               </Link>
               <ChevronRight className="h-3 w-3" aria-hidden="true" />
               <Link
                 to={showcasePath}
-                className="hover:text-territory-on-image"
+                className="rounded-sm hover:text-territory-on-image focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
               >
                 Educação
               </Link>
@@ -375,7 +415,7 @@ export function EducationDetailPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
                     <Icon className="mr-1 h-3 w-3" aria-hidden="true" />
-                    {nicheConfig?.displayName ?? profile.niche_key}
+                    {nicheConfig?.displayName ?? 'Instituição educacional'}
                   </Badge>
                   <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
                     <MapPin className="mr-1 h-3 w-3" aria-hidden="true" />
@@ -387,7 +427,7 @@ export function EducationDetailPage() {
                     profile.school_inep_code && (
                       <Badge className="border-territory-on-image/30 bg-territory-on-image/15 text-territory-on-image backdrop-blur-sm">
                         <Shield className="mr-1 h-3 w-3" aria-hidden="true" />
-                        Cadastro público · INEP {profile.school_inep_code}
+                        INEP {profile.school_inep_code}
                       </Badge>
                     )}
                   {profile.enrollment_open === true && (
@@ -412,7 +452,7 @@ export function EducationDetailPage() {
                   <div className="mt-5 flex flex-wrap items-center gap-3 text-sm text-territory-on-image/90">
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-4 w-4" aria-hidden="true" />
-                      Fonte revisada em{' '}
+                      Referência atualizada em{' '}
                       {formatDate(profile.school_source_updated_at)}
                     </span>
                   </div>
@@ -426,7 +466,7 @@ export function EducationDetailPage() {
                     onClick={() => void toggleFavorite()}
                     disabled={favoriteLoading}
                     className={cn(
-                      'inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 backdrop-blur-sm transition disabled:cursor-not-allowed disabled:opacity-60',
+                      'inline-flex h-11 w-11 items-center justify-center rounded-full border border-territory-on-image/30 backdrop-blur-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand disabled:cursor-not-allowed disabled:opacity-60',
                       isFavorite
                         ? 'bg-territory-on-image text-territory-brand'
                         : 'bg-territory-on-image/15 hover:bg-territory-on-image/25',
@@ -448,7 +488,7 @@ export function EducationDetailPage() {
                 <button
                   type="button"
                   onClick={() => void handleShare()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-territory-on-image/30 bg-territory-on-image/15 backdrop-blur-sm transition hover:bg-territory-on-image/25"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-territory-on-image/30 bg-territory-on-image/15 backdrop-blur-sm transition hover:bg-territory-on-image/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-on-image focus-visible:ring-offset-2 focus-visible:ring-offset-territory-brand"
                   aria-label="Compartilhar"
                 >
                   <Share2 className="h-4 w-4" aria-hidden="true" />
@@ -477,7 +517,7 @@ export function EducationDetailPage() {
 
       <StickyTabs
         active={activeSection}
-        onChange={setActiveSection}
+        onChange={handleSectionChange}
         sections={sections}
       />
 
@@ -573,7 +613,7 @@ export function EducationDetailPage() {
                       key={program.id}
                       program={program}
                       showPrice={profile.school_type !== 'public'}
-                      onClick={() => trackProgramView(program.id)}
+                      onVisible={() => trackProgramImpression(program.id)}
                     />
                   ))}
                 </div>
@@ -663,10 +703,11 @@ export function EducationDetailPage() {
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {events.map((event) => (
-                    <article
+                    <motion.article
                       key={event.id}
-                      className="cursor-pointer rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm transition hover:border-territory-brand/30 hover:shadow-md"
-                      onClick={() => trackEventView(event.id)}
+                      viewport={{ once: true, amount: 0.5 }}
+                      onViewportEnter={() => trackEventImpression(event.id)}
+                      className="rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm"
                     >
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge className="border-territory-border bg-territory-raised text-[11px] text-territory-ink">
@@ -696,7 +737,7 @@ export function EducationDetailPage() {
                           {event.location}
                         </div>
                       )}
-                    </article>
+                    </motion.article>
                   ))}
                 </div>
               )}

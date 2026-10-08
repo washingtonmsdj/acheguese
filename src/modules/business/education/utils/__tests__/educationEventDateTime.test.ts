@@ -24,4 +24,16 @@ describe("Education event datetime conversion", () => {
       "Data/hora do evento invalida.",
     );
   });
+
+  it("rejects calendar values that JavaScript would otherwise normalize", () => {
+    expect(() => fromLocalInputToEventIso("2026-02-30T10:00")).toThrow(
+      "Data/hora local invalida.",
+    );
+    expect(() => fromLocalInputToEventIso("2026-13-01T10:00")).toThrow(
+      "Data/hora local invalida.",
+    );
+    expect(() => fromLocalInputToEventIso("2026-10-10T24:30")).toThrow(
+      "Data/hora local invalida.",
+    );
+  });
 });

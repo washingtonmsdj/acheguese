@@ -1,10 +1,12 @@
 import type React from "react";
-import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import type { EducationProgram } from "@/core/education";
+import {
+  getEducationProgramModalityLabel,
+  getEducationProgramShiftLabel,
+} from "../constants";
 import {
   formatPrice,
   getSections,
@@ -21,7 +23,10 @@ export function StickyTabs({
   sections: ReturnType<typeof getSections>;
 }) {
   return (
-    <div className="sticky top-0 z-30 -mx-4 border-b border-territory-border bg-territory-surface/90 px-4 text-territory-ink backdrop-blur-md md:-mx-6 md:px-6">
+    <nav
+      aria-label="Seções da instituição"
+      className="sticky top-0 z-30 -mx-4 border-b border-territory-border bg-territory-surface/90 px-4 text-territory-ink backdrop-blur-md md:-mx-6 md:px-6"
+    >
       <div className="container mx-auto flex gap-1 overflow-x-auto py-3">
         {sections.map((section) => {
           const Icon = section.icon;
@@ -31,8 +36,10 @@ export function StickyTabs({
               key={section.id}
               type="button"
               onClick={() => onChange(section.id)}
+              aria-controls={section.id}
+              aria-current={isActive ? 'location' : undefined}
               className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-all",
+                "inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2",
                 isActive
                   ? "bg-territory-brand text-territory-on-image shadow-sm"
                   : "text-territory-muted hover:bg-territory-raised hover:text-territory-ink",
@@ -44,43 +51,51 @@ export function StickyTabs({
           );
         })}
       </div>
-    </div>
+    </nav>
   );
 }
 
 export function ProgramCard({
   program,
-  onClick,
+  onVisible,
   showPrice = true,
 }: {
   program: EducationProgram;
-  onClick?: () => void;
+  onVisible?: () => void;
   showPrice?: boolean;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   const hasKnownSlots = program.available_slots !== null;
   const isSchoolProgram = Boolean(program.grade || program.class_name);
   const vacancyRate =
-    program.max_capacity && program.current_enrollment
+    program.max_capacity != null &&
+    program.max_capacity > 0 &&
+    program.current_enrollment != null
       ? Math.round((program.current_enrollment / program.max_capacity) * 100)
       : null;
+  const modalityLabel = getEducationProgramModalityLabel(program.modality);
+  const shiftLabel = getEducationProgramShiftLabel(program.shift);
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 8 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="group flex cursor-pointer flex-col rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink transition-all hover:-translate-y-0.5 hover:border-territory-brand/30 hover:shadow-md"
-      onClick={onClick}
+      viewport={{ once: true, amount: 0.5 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
+      onViewportEnter={onVisible}
+      className="flex flex-col rounded-2xl border border-territory-border bg-territory-surface p-5 text-territory-ink shadow-sm"
     >
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap gap-1.5">
-            <Badge
-              variant="secondary"
-              className="border-territory-border bg-territory-raised text-[11px] text-territory-ink"
-            >
-              {program.modality ?? "Presencial"}
-            </Badge>
+            {modalityLabel ? (
+              <Badge
+                variant="secondary"
+                className="border-territory-border bg-territory-raised text-[11px] text-territory-ink"
+              >
+                {modalityLabel}
+              </Badge>
+            ) : null}
             {isSchoolProgram && program.grade && (
               <Badge
                 variant="outline"
@@ -103,8 +118,16 @@ export function ProgramCard({
           </h4>
         </div>
         {hasKnownSlots ? (
-          <Badge className="border-territory-success/25 bg-territory-success/10 text-territory-success hover:bg-territory-success/15">
-            {program.available_slots} vagas
+          <Badge
+            className={
+              program.available_slots === 0
+                ? "border-territory-warning/30 bg-territory-warning/10 text-territory-warning"
+                : "border-territory-success/25 bg-territory-success/10 text-territory-success"
+            }
+          >
+            {program.available_slots === 0
+              ? 'Sem vagas'
+              : `${program.available_slots} vagas`}
           </Badge>
         ) : vacancyRate !== null ? (
           <Badge
@@ -161,14 +184,14 @@ export function ProgramCard({
             </dd>
           </div>
         )}
-        {program.shift && (
+        {shiftLabel ? (
           <div className="rounded-lg bg-territory-raised px-3 py-2">
             <dt className="text-territory-muted">Turno</dt>
             <dd className="font-semibold text-territory-ink">
-              {program.shift}
+              {shiftLabel}
             </dd>
           </div>
-        )}
+        ) : null}
         {isSchoolProgram && program.schedule && (
           <div className="rounded-lg bg-territory-raised px-3 py-2">
             <dt className="text-territory-muted">Horário</dt>
@@ -177,36 +200,35 @@ export function ProgramCard({
             </dd>
           </div>
         )}
-        {isSchoolProgram && program.max_capacity && (
+        {isSchoolProgram && program.max_capacity != null ? (
           <div className="rounded-lg bg-territory-raised px-3 py-2">
             <dt className="text-territory-muted">Capacidade</dt>
             <dd className="font-semibold text-territory-ink">
-              {program.current_enrollment ?? 0}/{program.max_capacity} alunos
+              {program.current_enrollment != null
+                ? `${program.current_enrollment}/${program.max_capacity} alunos`
+                : `${program.max_capacity} alunos`}
             </dd>
           </div>
-        )}
+        ) : null}
       </dl>
 
-      <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-        {showPrice && program.price_from ? (
-          <div>
-            <div className="text-[11px] text-territory-muted">A partir de</div>
-            <div className="text-base font-bold text-territory-ink">
-              {formatPrice(program.price_from)}
+      {showPrice && program.price_from != null ? (
+        <div className="mt-auto pt-4">
+          <div className="text-[11px] text-territory-muted">
+            {program.price_from === 0 ? 'Valor informado' : 'A partir de'}
+          </div>
+          <div className="text-base font-bold text-territory-ink">
+            {program.price_from === 0
+              ? 'Gratuito'
+              : formatPrice(program.price_from)}
+            {program.price_from > 0 ? (
               <span className="ml-1 text-xs font-normal text-territory-muted">
                 /mês
               </span>
-            </div>
+            ) : null}
           </div>
-        ) : null}
-        <Button
-          size="sm"
-          variant="ghost"
-          className="rounded-full text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
-        >
-          Ver detalhes <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
-        </Button>
-      </div>
+        </div>
+      ) : null}
     </motion.article>
   );
 }

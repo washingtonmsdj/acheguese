@@ -5,9 +5,12 @@ export type {
   EducationPublicRoute,
   EducationProfile,
   EducationProgram,
+  EducationProgramAdminPatch,
   EducationLead,
+  EducationLeadAdminPatch,
   EducationLeadEvent,
   EducationEvent,
+  EducationEventAdminPatch,
   EducationLeadStatus,
   EducationNicheKey,
 } from "./contracts";

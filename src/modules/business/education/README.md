@@ -40,13 +40,15 @@ Isso melhora a arquitetura, mas **não certifica o módulo para produção**. O 
 - read model canônico pertence a `src/core/education/services/education.queries.ts`;
 - write model canônico pertence a `src/core/education/services/education.mutations.ts`;
 - regra compartilhada de etapas escolares pertence a `src/core/education/constants/schoolStageOptions.ts`;
+- validação de perfil/setup pertence a `src/core/education/profileValidation.ts`;
+- validação de motivo de perda do pipeline pertence a `src/core/education/leadPipelineValidation.ts`;
 - não criar facade paralela que mantenha writers/read models concorrentes;
 - não recriar bridges aposentados em `src/modules/business/education`;
 - não remover `launch-paused` apenas porque a tela renderiza.
 
-## Critério para despausar o MVP
+## Critério para entrada pós-MVP
 
-Educação só sai de `launch-paused` quando houver evidência para, no mínimo:
+Educação só sai de `launch-paused` depois do MVP quando houver evidência para, no mínimo:
 
 1. entrypoint e URLs territoriais canônicos;
 2. read/write ownership sem acesso direto de infraestrutura na camada de módulo;
@@ -55,9 +57,10 @@ Educação só sai de `launch-paused` quando houver evidência para, no mínimo:
 5. fluxo público de listagem → detalhe funcional com dados reais e estados loading/empty/error;
 6. fluxo operacional mínimo de instituição definido para o escopo MVP e validado;
 7. testes de regressão relevantes executando de verdade;
-8. E2E que não trate placeholder, fallback ou `paused` como sucesso;
-9. smoke responsivo/mobile;
-10. deployment do mesmo SHA comprovado no provider.
+8. lifecycle autenticado dedicado passando no mesmo SHA candidato;
+9. E2E que não trate placeholder, fallback, smoke permissivo ou `paused` como sucesso;
+10. smoke responsivo/mobile e acessibilidade por teclado;
+11. deployment do mesmo SHA comprovado no provider.
 
 ## SSOT relacionado
 
@@ -65,6 +68,11 @@ Educação só sai de `launch-paused` quando houver evidência para, no mínimo:
 - `src/core/education/contracts.ts` — contratos do domínio;
 - `src/core/education/services/` — ownership canônico de read/write/observabilidade/tracking;
 - `src/core/education/constants/` — regras de domínio compartilhadas;
+- `src/core/education/profileValidation.ts` — invariantes de setup/perfil;
+- `src/core/education/leadPipelineValidation.ts` — motivo operacional de `lost`;
+- `tests/e2e/education-lifecycle-authenticated.spec.ts` — lifecycle privado dedicado;
+- `tests/e2e/education/README.md` — inventário factual das suites Playwright preservadas;
+- `docs/08-roadmap/checkpoints/2026-10-06-education-post-mvp-readiness.md` — checkpoint atual;
 - `tools/architecture/validate-education-module-boundaries.ts` — ratchet da fronteira do módulo e dos bridges aposentados;
 - `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — ordem e Definition of Done do MVP;
 - issue #50 — certificação funcional dos módulos;

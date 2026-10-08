@@ -53,6 +53,52 @@ describe("EducationService setup compensation", () => {
     });
   });
 
+  it("uses the niche registry support level when saving setup", async () => {
+    const technicalProfile = {
+      ...profile,
+      institution_type: "technical_school",
+      niche_key: "technical_school",
+      support_level: "beta",
+    } as EducationProfile;
+    queryMocks.getEducationProfileByBusinessId.mockResolvedValue(technicalProfile);
+    mutationMocks.updateEducationProfile.mockResolvedValue({
+      data: technicalProfile,
+      error: null,
+    });
+
+    await expect(
+      EducationService.saveSetupProfile({
+        ...payload,
+        institutionType: "technical_school",
+        nicheKey: "technical_school",
+      }),
+    ).resolves.toEqual(technicalProfile);
+
+    expect(mutationMocks.updateEducationProfile).toHaveBeenCalledWith(
+      technicalProfile.id,
+      expect.objectContaining({
+        niche_key: "technical_school",
+        institution_type: "technical_school",
+        support_level: "beta",
+      }),
+    );
+  });
+
+  it("rejects an unknown niche before creating or updating a profile", async () => {
+    await expect(
+      EducationService.saveSetupProfile({
+        ...payload,
+        nicheKey: "unknown_niche",
+        institutionType: "unknown",
+      }),
+    ).resolves.toBeNull();
+
+    expect(queryMocks.getEducationProfileByBusinessId).not.toHaveBeenCalled();
+    expect(mutationMocks.createEducationProfile).not.toHaveBeenCalled();
+    expect(mutationMocks.updateEducationProfile).not.toHaveBeenCalled();
+    expect(mutationMocks.deleteEducationProfile).not.toHaveBeenCalled();
+  });
+
   it("removes only a profile created by the failing setup", async () => {
     queryMocks.getEducationProfileByBusinessId.mockResolvedValue(null);
     mutationMocks.createEducationProfile.mockResolvedValue({

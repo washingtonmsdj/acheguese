@@ -16,12 +16,39 @@ describe("G6 Education authenticated lifecycle gate", () => {
     );
     const config = readFileSync(join(ROOT, "playwright.config.ts"), "utf8");
     const packageJson = readFileSync(join(ROOT, "package.json"), "utf8");
+    const workflow = readFileSync(
+      join(ROOT, ".github/workflows/ssot-tests.yml"),
+      "utf8",
+    );
 
     expect(spec).toContain(
       'const FIXTURE_MARKER = "account-authenticated-e2e"',
     );
     expect(spec).toContain('const EDUCATION_PREFIX = "G6 E2E Education"');
     expect(spec).toContain("cleanupEducationFixtures(client)");
+    expect(spec).toContain('getByTestId("education-school-inep")');
+    expect(spec).toContain('getByTestId("education-school-source-url")');
+    expect(spec).toContain('getByTestId("education-age-min").fill("0")');
+    expect(spec).toContain("checkValidity()");
+    expect(spec).toContain("A fonte pública deve ser uma URL http ou https válida.");
+    expect(spec).toContain("A idade mínima não pode ser maior que a idade máxima.");
+    expect(spec).toContain("invalidSourceProfile");
+    expect(spec).toContain("invalidAgeProfile");
+    expect(spec).toContain(".maybeSingle()");
+    expect(spec).toContain("expect(inactiveProgram?.available_slots).toBe(0)");
+    expect(spec).toContain("expect(Number(inactiveProgram?.price_from)).toBe(0)");
+    expect(spec).toContain("expect(unspecifiedProgram?.available_slots).toBeNull()");
+    expect(spec).toContain("expect(unspecifiedProgram?.price_from).toBeNull()");
+    expect(spec).toContain('getByRole("heading", { name: "Excluir programa" })');
+    expect(spec).toContain("deletedProgramError");
+    expect(spec).toContain("expect(deletedProgram).toBeNull()");
+    expect(spec).toContain("page.setViewportSize({ width: 390, height: 844 })");
+    expect(spec).toContain("mobileProgramDialog.boundingBox()");
+    expect(spec).toContain("mobileCreateProgram.scrollIntoViewIfNeeded()");
+    expect(spec).toContain("mobileCancelProgram.scrollIntoViewIfNeeded()");
+    expect(spec).toContain("toBeInViewport()");
+    expect(spec).toContain("mobileProgramDialogBox!.width");
+    expect(spec).toContain("mobileProgramDialogBox!.height");
     expect(spec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(spec).not.toContain("createOptionalOperationalAdminClient");
 
@@ -49,6 +76,182 @@ describe("G6 Education authenticated lifecycle gate", () => {
     );
     expect(packageJson).not.toContain(
       "npm run test:e2e:business-lifecycle-authenticated && npm run test:e2e:education-lifecycle-authenticated",
+    );
+
+    expect(workflow).toContain("run_education_lifecycle:");
+    expect(workflow).toContain("default: false");
+    expect(workflow).toContain("Run authenticated Education lifecycle E2E");
+    expect(workflow).toContain(
+      "if: github.event_name == 'workflow_dispatch' && inputs.run_education_lifecycle",
+    );
+    expect(workflow).toContain(
+      "run: npm run test:e2e:education-lifecycle-authenticated",
+    );
+  });
+
+  it("keeps preserved Education E2E suites truthful while the module is paused", () => {
+    const publicSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-public.spec.ts"),
+      "utf8",
+    );
+    const debugSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-dashboard-debug.spec.ts"),
+      "utf8",
+    );
+    const readme = readFileSync(
+      join(ROOT, "tests/e2e/education/README.md"),
+      "utf8",
+    );
+
+    expect(publicSpec).toContain("test.describe.skip('Education Public Pages'");
+    expect(debugSpec).toContain("Diagnóstico legado: não conta como certificação E2E de Education.");
+    expect(readme).toContain("não deve ser interpretada como prova de readiness de produção");
+    expect(readme).toContain("smoke legado");
+    expect(readme).not.toContain("✅ 69 testes criados e prontos para execução");
+  });
+
+  it("keeps Setup compensation proven without unsafe remote fault injection", () => {
+    const compensation = readFileSync(
+      join(
+        ROOT,
+        "src/modules/business/education/services/__tests__/EducationService.setup-compensation.test.ts",
+      ),
+      "utf8",
+    );
+
+    expect(compensation).toContain(
+      "removes only a profile created by the failing setup",
+    );
+    expect(compensation).toContain(
+      "never deletes a pre-existing profile when setup update fails",
+    );
+    expect(compensation).toContain(
+      "keeps a newly created profile when setup succeeds",
+    );
+    expect(compensation).toContain(
+      "deleteEducationProfile).toHaveBeenCalledWith(profile.id)",
+    );
+  });
+
+  it("keeps Education E2E event fixtures on canonical timestamp columns", () => {
+    const helper = readFileSync(
+      join(ROOT, "tests/helpers/education-setup.ts"),
+      "utf8",
+    );
+
+    expect(helper).toContain("starts_at: startDate");
+    expect(helper).toContain("ends_at: endDate");
+    expect(helper).not.toContain("start_date: startDate");
+    expect(helper).not.toContain("end_date: endDate");
+  });
+
+  it("keeps the operational Leads smoke deterministic and failure-aware", () => {
+    const leadsSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-leads.spec.ts"),
+      "utf8",
+    );
+
+    expect(leadsSpec).toContain(
+      "renders student age zero without treating it as missing",
+    );
+    expect(leadsSpec).toContain(
+      "does not expose skip backward or terminal transitions",
+    );
+    expect(leadsSpec).toContain(
+      "shows mutation failure and preserves the lead status",
+    );
+    expect(leadsSpec).toContain("route.request().method() === 'PATCH'");
+    expect(leadsSpec).toContain(
+      "Não foi possível atualizar o lead",
+    );
+    expect(leadsSpec).toContain("expect(data?.status).toBe('new')");
+    expect(leadsSpec).toContain("expect(data?.first_contact_at).toBeNull()");
+    expect(leadsSpec).toContain("newStage.getByText('26'");
+    expect(leadsSpec).not.toContain("waitForTimeout(");
+  });
+
+  it("keeps the operational Events smoke explicit about its fixture boundary", () => {
+    const eventsSpec = readFileSync(
+      join(ROOT, "tests/e2e/education/education-events.spec.ts"),
+      "utf8",
+    );
+
+    expect(eventsSpec).toContain("authenticateAsBusinessOwner");
+    expect(eventsSpec).toContain("createTestEvent");
+    expect(eventsSpec).toContain("smoke operacional");
+    expect(eventsSpec).toContain("NAO certifica criacao de evento pela UI");
+    expect(eventsSpec).toContain("rejects an end time that is not after the start");
+    expect(eventsSpec).toContain(
+      "O término do evento deve ser posterior ao início.",
+    );
+    expect(eventsSpec).toContain("expect(after?.starts_at).toBe(before?.starts_at)");
+    expect(eventsSpec).toContain("expect(after?.ends_at).toBe(before?.ends_at)");
+    expect(eventsSpec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(eventsSpec).not.toContain("E2E_EDUCATION_OWNER_PASSWORD");
+  });
+
+  it("keeps paid Education certification explicit, read-only, and opt-in", () => {
+    const spec = readFileSync(
+      join(ROOT, "tests/e2e/education-paid-lifecycle-authenticated.spec.ts"),
+      "utf8",
+    );
+    const runner = readFileSync(
+      join(
+        ROOT,
+        "tools/release/run-education-paid-lifecycle-authenticated.mjs",
+      ),
+      "utf8",
+    );
+    const config = readFileSync(join(ROOT, "playwright.config.ts"), "utf8");
+    const packageJson = readFileSync(join(ROOT, "package.json"), "utf8");
+    const workflow = readFileSync(
+      join(ROOT, ".github/workflows/ssot-tests.yml"),
+      "utf8",
+    );
+
+    expect(spec).toContain("E2E_EDUCATION_PAID_BUSINESS_ID");
+    expect(spec).toContain("No synthetic plan or entitlement fallback is allowed");
+    expect(spec).toContain("E2E_AUTH_FIXTURE_MARKER");
+    expect(spec).toContain('eq("role", "owner")');
+    expect(spec).toContain('getByRole("button", { name: "Exportar CSV" })');
+    expect(spec).toContain("download.suggestedFilename()");
+    expect(spec).toContain("Plano não identificado no catálogo");
+    expect(spec).not.toContain(".insert(");
+    expect(spec).not.toContain(".update(");
+    expect(spec).not.toContain(".delete(");
+    expect(spec).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+
+    expect(runner).toContain("E2E_EDUCATION_PAID_BUSINESS_ID");
+    expect(runner).toContain(
+      'E2E_EDUCATION_PAID_LIFECYCLE_AUTHENTICATED: "true"',
+    );
+    expect(runner).toContain(
+      '"tests/e2e/education-paid-lifecycle-authenticated.spec.ts"',
+    );
+    expect(runner).toContain('"--retries=0"');
+    expect(runner).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+
+    expect(config).toContain(
+      'process.env.E2E_EDUCATION_PAID_LIFECYCLE_AUTHENTICATED === "true"',
+    );
+    expect(config).toContain(
+      "education-paid-lifecycle-authenticated\\.spec\\.ts",
+    );
+
+    expect(packageJson).toContain(
+      '"test:e2e:education-paid-lifecycle-authenticated": "node tools/release/run-education-paid-lifecycle-authenticated.mjs"',
+    );
+
+    expect(workflow).toContain("run_education_paid_lifecycle:");
+    expect(workflow).toContain("E2E_EDUCATION_PAID_BUSINESS_ID");
+    expect(workflow).toContain(
+      "Run authenticated Education paid read-only E2E",
+    );
+    expect(workflow).toContain(
+      "inputs.run_education_paid_lifecycle",
+    );
+    expect(workflow).toContain(
+      "npm run test:e2e:education-paid-lifecycle-authenticated",
     );
   });
 

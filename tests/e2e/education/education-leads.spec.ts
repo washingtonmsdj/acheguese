@@ -1,121 +1,320 @@
 /**
- * E2E Tests - Education Module: Leads Management
+ * E2E smoke operacional — Education Leads
  *
- * Testa o fluxo completo de gestão de leads (pipeline).
- * Usa token injection para autenticação Supabase.
+ * A fixture técnica semeia leads autorizados; leitura, transições e paginação
+ * são provadas pela UI autenticada e conferidas no banco.
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
-  ensureEducationProfileExists,
-  createTestLead,
+  admin,
+  authenticateAsBusinessOwner,
   cleanupEducationData,
+  createTestLead,
+  ensureEducationProfileExists,
+  hasAdminClient,
+  hasE2ECredentials,
 } from '../../helpers/education-setup';
-import { gotoAuthenticated } from '../../helpers/education-auth-inject';
 
-const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400'; // profile_id do E2E business
+const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
 const leadsUrl = `/central/empresas/${businessId}/educacao/leads`;
 
-async function gotoAndWait(page: import('@playwright/test').Page, url: string) {
-  await gotoAuthenticated(page, url, 3000);
-}
+test.describe('Education Leads Management — operational smoke', () => {
+  test.beforeEach(async ({ page }) => {
+    test.skip(
+      !hasAdminClient() || !hasE2ECredentials(),
+      'Education Leads smoke exige fixture admin e credencial E2E autorizada.',
+    );
 
-test.describe('Education Leads Management', () => {
-  test.beforeEach(async () => {
+    await authenticateAsBusinessOwner(page, businessId);
     await ensureEducationProfileExists(businessId);
-  });
-
-  test.afterEach(async () => {
     await cleanupEducationData(businessId);
   });
 
-  test('should load leads page without error', async ({ page }) => {
-    await gotoAndWait(page, leadsUrl);
-
-    const currentUrl = page.url();
-    console.log('Current URL:', currentUrl);
-
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
-  });
-
-  test('should show some content on leads page', async ({ page }) => {
-    await gotoAndWait(page, leadsUrl);
-
-    const hasHeading = await page.getByRole('heading').first().isVisible({ timeout: 5000 }).catch(() => false);
-    const hasText = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-
-    expect(hasHeading || hasText).toBe(true);
-  });
-
-  test('should show leads pipeline or empty state', async ({ page }) => {
-    await gotoAndWait(page, leadsUrl);
-
-    const hasColumns = await page.getByText(/novo|contatado|matriculado|lead/i).first().isVisible({ timeout: 5000 }).catch(() => false);
-    const hasEmptyState = await page.getByText(/nenhum|sem leads|pipeline/i).first().isVisible({ timeout: 5000 }).catch(() => false);
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-
-    expect(hasColumns || hasEmptyState || hasContent).toBe(true);
-  });
-
-  test('should display lead card when lead exists', async ({ page }) => {
-    await createTestLead(businessId, { parent_name: 'Maria Silva Teste' });
-
-    await gotoAndWait(page, leadsUrl);
-
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
-  });
-
-  test('should show lead conversion metrics or pipeline', async ({ page }) => {
-    await gotoAndWait(page, leadsUrl);
-
-    const hasMetrics = await page.getByText(/total|conversão|leads|novo|contatado/i).first().isVisible({ timeout: 5000 }).catch(() => false);
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-
-    expect(hasMetrics || hasContent).toBe(true);
-  });
-
-  test('should search leads by name if search exists', async ({ page }) => {
-    await createTestLead(businessId, { parent_name: 'Responsável Busca Única' });
-
-    await gotoAndWait(page, leadsUrl);
-
-    const searchInput = page.getByPlaceholder(/buscar|pesquisar|search/i).first();
-    if (!(await searchInput.isVisible({ timeout: 3000 }).catch(() => false))) {
-      test.skip(true, 'Campo de busca não encontrado');
+  test.afterEach(async () => {
+    if (hasAdminClient()) {
+      await cleanupEducationData(businessId);
     }
-
-    await searchInput.fill('Busca Única');
-    await page.waitForTimeout(1000);
-    await expect(page.getByText('Responsável Busca Única')).toBeVisible({ timeout: 5000 });
   });
 
-  test('should show lead source channel', async ({ page }) => {
-    await createTestLead(businessId, { parent_name: 'Lead Canal Origem' });
+  test('renders a seeded lead in the canonical pipeline', async ({ page }) => {
+    const name = 'Responsável E2E Visível';
+    const leadId = await createTestLead(businessId, { parent_name: name });
+    expect(leadId).toBeTruthy();
 
-    await gotoAndWait(page, leadsUrl);
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
 
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
+    await expect(
+      page.getByRole('heading', { name: 'Gestão de Leads' }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(name, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByRole('heading', { name: 'Novo' }),
+    ).toBeVisible();
   });
 
-  test('should handle WhatsApp contact action', async ({ page }) => {
-    await createTestLead(businessId, {
-      parent_name: 'Lead WhatsApp',
-      parent_phone: '+5571999887766',
+  test('renders student age zero without treating it as missing', async ({
+    page,
+  }) => {
+    const name = 'Responsável E2E Idade Zero';
+    const childName = 'Aluno E2E Zero';
+    const leadId = await createTestLead(businessId, {
+      parent_name: name,
+      child_name: childName,
+      child_age: 0,
+    });
+    expect(leadId).toBeTruthy();
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+
+    const leadCard = page
+      .getByText(name, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(leadCard).toBeVisible({ timeout: 30_000 });
+    await expect(
+      leadCard.getByText(`Aluno: ${childName} (0 anos)`, { exact: true }),
+    ).toBeVisible();
+  });
+
+  test('advances a new lead to contacted and records first contact', async ({
+    page,
+  }) => {
+    const name = 'Responsável E2E Avançar';
+    const leadId = await createTestLead(businessId, {
+      parent_name: name,
+      status: 'new',
+    });
+    expect(leadId).toBeTruthy();
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText(name, { exact: true })).toBeVisible({
+      timeout: 30_000,
     });
 
-    await gotoAndWait(page, leadsUrl);
+    const leadCard = page
+      .getByText(name, { exact: true })
+      .locator('xpath=ancestor::article');
+    await leadCard.getByRole('button', { name: 'Avançar' }).click();
 
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
+    await expect(
+      page.getByRole('heading', { name: 'Contactado' }),
+    ).toBeVisible();
+    await expect(page.getByText(name, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const { data, error } = await admin!
+      .from('education_leads')
+      .select('status,first_contact_at')
+      .eq('id', leadId!)
+      .single();
+
+    expect(error).toBeNull();
+    expect(data?.status).toBe('contacted');
+    expect(data?.first_contact_at).toBeTruthy();
   });
 
-  test('should respect niche limits for leads per month', async ({ page }) => {
-    await gotoAndWait(page, leadsUrl);
+  test('does not expose skip backward or terminal transitions', async ({
+    page,
+  }) => {
+    const newName = 'Responsável E2E Sem Salto';
+    const contactedName = 'Responsável E2E Sem Retorno';
+    const enrolledName = 'Responsável E2E Terminal';
 
-    const hasContent = await page.locator('body').evaluate(el => el.innerText.trim().length > 10).catch(() => false);
-    expect(hasContent).toBe(true);
+    const [newLeadId, contactedLeadId, enrolledLeadId] = await Promise.all([
+      createTestLead(businessId, {
+        parent_name: newName,
+        status: 'new',
+      }),
+      createTestLead(businessId, {
+        parent_name: contactedName,
+        status: 'contacted',
+      }),
+      createTestLead(businessId, {
+        parent_name: enrolledName,
+        status: 'enrolled',
+      }),
+    ]);
+
+    expect(newLeadId).toBeTruthy();
+    expect(contactedLeadId).toBeTruthy();
+    expect(enrolledLeadId).toBeTruthy();
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+
+    const newLeadCard = page
+      .getByText(newName, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(
+      newLeadCard.getByRole('button', {
+        name: `Avançar ${newName} para Contactado`,
+      }),
+    ).toBeVisible();
+    await expect(
+      newLeadCard.getByRole('button', {
+        name: `Avançar ${newName} para Matriculado`,
+      }),
+    ).toHaveCount(0);
+
+    const contactedLeadCard = page
+      .getByText(contactedName, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(
+      contactedLeadCard.getByRole('button', {
+        name: `Avançar ${contactedName} para Visita agendada`,
+      }),
+    ).toBeVisible();
+    await expect(
+      contactedLeadCard.getByRole('button', {
+        name: `Avançar ${contactedName} para Novo`,
+      }),
+    ).toHaveCount(0);
+
+    const enrolledLeadCard = page
+      .getByText(enrolledName, { exact: true })
+      .locator('xpath=ancestor::article');
+    await expect(enrolledLeadCard.locator('button')).toHaveCount(0);
+  });
+
+  test('shows mutation failure and preserves the lead status', async ({
+    page,
+  }) => {
+    const name = 'Responsável E2E Falha';
+    const leadId = await createTestLead(businessId, {
+      parent_name: name,
+      status: 'new',
+    });
+    expect(leadId).toBeTruthy();
+
+    await page.route('**/rest/v1/education_leads*', async (route) => {
+      if (route.request().method() === 'PATCH') {
+        await route.abort('failed');
+        return;
+      }
+      await route.continue();
+    });
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+    const leadCard = page
+      .getByText(name, { exact: true })
+      .locator('xpath=ancestor::article');
+
+    await leadCard
+      .getByRole('button', { name: /Avançar .* para Contactado/i })
+      .click();
+
+    await expect(
+      page.getByText('Não foi possível atualizar o lead', { exact: true }),
+    ).toBeVisible({ timeout: 20_000 });
+
+    const { data, error } = await admin!
+      .from('education_leads')
+      .select('status,first_contact_at')
+      .eq('id', leadId!)
+      .single();
+
+    expect(error).toBeNull();
+    expect(data?.status).toBe('new');
+    expect(data?.first_contact_at).toBeNull();
+  });
+
+  test('requires and persists an operational reason when marking a lead lost', async ({
+    page,
+  }) => {
+    const name = 'Responsável E2E Perdido';
+    const leadId = await createTestLead(businessId, {
+      parent_name: name,
+      status: 'new',
+    });
+    expect(leadId).toBeTruthy();
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+    await expect(page.getByText(name, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const leadCard = page
+      .getByText(name, { exact: true })
+      .locator('xpath=ancestor::article');
+    await leadCard.getByRole('button', { name: 'Perdido' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(
+      dialog.getByRole('heading', { name: 'Marcar como perdido' }),
+    ).toBeVisible();
+
+    const confirmButton = dialog.getByRole('button', {
+      name: 'Marcar como perdido',
+    });
+    await expect(confirmButton).toBeDisabled();
+
+    const reason = 'Família optou por outra instituição';
+    await dialog.getByLabel('Motivo operacional *').fill(reason);
+    await expect(confirmButton).toBeEnabled();
+    await confirmButton.click();
+
+    await expect(dialog).toHaveCount(0, { timeout: 30_000 });
+    await expect(page.getByText(name, { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const { data, error } = await admin!
+      .from('education_leads')
+      .select('status,lost_reason')
+      .eq('id', leadId!)
+      .single();
+
+    expect(error).toBeNull();
+    expect(data?.status).toBe('lost');
+    expect(data?.lost_reason).toBe(reason);
+  });
+
+  test('paginates the administrative list at 25 leads', async ({ page }) => {
+    const profileId = await ensureEducationProfileExists(businessId);
+    expect(profileId).toBeTruthy();
+
+    const baseTime = Date.parse('2026-10-06T12:00:00.000Z');
+    const rows = Array.from({ length: 26 }, (_, index) => ({
+      education_profile_id: profileId!,
+      full_name: `Lead Paginação ${String(index + 1).padStart(2, '0')}`,
+      email: `lead-paginacao-${index + 1}@example.com`,
+      phone: '+5571999887766',
+      child_name: null,
+      child_age: null,
+      interest_note: null,
+      source_channel: 'website',
+      status: 'new',
+      created_at: new Date(baseTime + index * 1000).toISOString(),
+    }));
+
+    const inserted = await admin!.from('education_leads').insert(rows);
+    expect(inserted.error).toBeNull();
+
+    await page.goto(leadsUrl, { waitUntil: 'domcontentloaded' });
+
+    await expect(page.getByText('Página 1 de 2', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText(/Exibindo 25 leads nesta página de 26 no total/))
+      .toBeVisible();
+
+    const newStage = page
+      .getByRole('heading', { name: 'Novo' })
+      .locator('xpath=ancestor::section');
+    await expect(newStage.getByText('26', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Próxima' }).click();
+
+    await expect(page.getByText('Página 2 de 2', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText(/Exibindo 1 leads nesta página de 26 no total/))
+      .toBeVisible();
+    await expect(newStage.getByText('26', { exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Lead Paginação 01', { exact: true }),
+    ).toBeVisible();
   });
 });

@@ -16,6 +16,7 @@ import {
   buildModuleTerritoryUrlFromSegments,
 } from '@/core/routing/utils/territoryUrls';
 import { getVerticalPublicUrl } from '@/core/verticals/publicUrls';
+import { buildWhatsAppUrl } from '@/shared/utils/contactLinks';
 
 // ============================================================
 // TIPOS
@@ -143,7 +144,7 @@ export const EducationUrlService = {
       message?: string;
       institutionName?: string;
     } = {},
-  ): string {
+  ): string | null {
     const { message, institutionName } = options;
 
     let defaultMessage = 'Ola! Tenho interesse em conhecer mais sobre';
@@ -151,9 +152,6 @@ export const EducationUrlService = {
       defaultMessage += ` ${institutionName}`;
     }
 
-    const encodedMessage = encodeURIComponent(message ?? defaultMessage);
-    const cleanPhone = phoneNumber.replace(/\D/g, '');
-
-    return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+    return buildWhatsAppUrl(phoneNumber, message ?? defaultMessage);
   },
 };

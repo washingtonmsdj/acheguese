@@ -1,16 +1,26 @@
-import { memo } from 'react';
-import { motion } from 'framer-motion';
+import { memo, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Mail, Phone, Calendar } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import type { EducationLead, EducationLeadStatus } from '@/core/education';
+import {
+  getEducationLeadNextStatuses,
+  type EducationLead,
+  type EducationLeadStatus,
+} from '@/core/education';
 import { EducationStatusBadge } from './EducationStatusBadge';
+import { EducationLeadLostDialog } from './EducationLeadLostDialog';
 
 export interface EducationPipelineViewProps {
   leads: EducationLead[];
-  onMoveLead?: (leadId: string, toStatus: EducationLeadStatus) => void;
+  onMoveLead?: (
+    leadId: string,
+    toStatus: EducationLeadStatus,
+    lostReason?: string,
+  ) => Promise<boolean> | boolean;
   statusCounts?: Partial<Record<EducationLeadStatus, number>>;
+  isMoving?: boolean;
   className?: string;
 }
 
@@ -31,8 +41,11 @@ export const EducationPipelineView = memo(function EducationPipelineView({
   leads,
   onMoveLead,
   statusCounts,
+  isMoving = false,
   className,
 }: EducationPipelineViewProps) {
+  const prefersReducedMotion = useReducedMotion();
+  const [lostLead, setLostLead] = useState<EducationLead | null>(null);
   const leadsByStage = (status: EducationLeadStatus) =>
     leads.filter((lead) => lead.status === status);
 
@@ -40,12 +53,22 @@ export const EducationPipelineView = memo(function EducationPipelineView({
     <div className={cn('space-y-6', className)}>
       {PIPELINE_STAGES.map((stage, index) => {
         const stageLeads = leadsByStage(stage.status);
+        const totalStageCount =
+          statusCounts?.[stage.status] ?? stageLeads.length;
+        const nextStatuses = getEducationLeadNextStatuses(stage.status);
+        const nextForwardStatus = nextStatuses.find(
+          (status) => status !== 'lost',
+        );
+        const nextForwardStage = PIPELINE_STAGES.find(
+          (candidate) => candidate.status === nextForwardStatus,
+        );
+        const canMarkLost = nextStatuses.includes('lost');
         return (
           <motion.section
             key={stage.status}
-            initial={{ opacity: 0, y: 20 }}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }}
             className={cn(
               'rounded-2xl border p-4 text-territory-ink',
               stage.className,
@@ -64,10 +87,10 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                   variant="secondary"
                   className="border-territory-border bg-territory-surface/80 text-xs text-territory-ink"
                 >
-                  {statusCounts?.[stage.status] ?? stageLeads.length}
+                  {totalStageCount}
                 </Badge>
               </div>
-              {index < PIPELINE_STAGES.length - 1 ? (
+              {nextForwardStatus ? (
                 <ArrowRight
                   className="h-4 w-4 text-territory-muted"
                   aria-hidden="true"
@@ -77,16 +100,22 @@ export const EducationPipelineView = memo(function EducationPipelineView({
 
             {stageLeads.length === 0 ? (
               <p className="py-2 text-center text-xs text-territory-muted">
-                Nenhum lead nesta etapa
+                {totalStageCount > 0
+                  ? 'Nenhum lead desta etapa nesta página'
+                  : 'Nenhum lead nesta etapa'}
               </p>
             ) : (
               <div className="space-y-2">
-                {stageLeads.map((lead) => (
-                  <article
+                {stageLeads.map((lead) => {
+                  const studentName = lead.student_name ?? lead.child_name;
+                  const studentAge = lead.student_age ?? lead.child_age;
+
+                  return (
+                    <article
                     key={lead.id}
                     className="rounded-xl border border-territory-border bg-territory-surface p-3 shadow-sm"
                   >
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium text-territory-ink">
                           {lead.full_name}
@@ -103,31 +132,46 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                             </span>
                           ) : null}
                         </div>
-                        {lead.child_name ? (
+                        {studentName ? (
                           <p className="mt-1 text-xs text-territory-muted">
-                            Aluno: {lead.child_name}
-                            {lead.child_age ? ` (${lead.child_age} anos)` : ''}
+                            Aluno: {studentName}
+                            {studentAge != null ? ` (${studentAge} anos)` : ''}
                           </p>
                         ) : null}
                       </div>
 
-                      {onMoveLead &&
-                      lead.status !== 'enrolled' &&
-                      lead.status !== 'lost' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 shrink-0 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
-                          onClick={() =>
-                            onMoveLead(
-                              lead.id,
-                              PIPELINE_STAGES[index + 1].status,
-                            )
-                          }
-                        >
-                          Avançar
-                          <ArrowRight className="ml-1 h-3 w-3" aria-hidden="true" />
-                        </Button>
+                      {onMoveLead && nextStatuses.length > 0 ? (
+                        <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+                          {canMarkLost ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-territory-error hover:bg-territory-error/10 hover:text-territory-error"
+                              disabled={isMoving}
+                              aria-label={`Marcar ${lead.full_name} como perdido`}
+                              onClick={() => setLostLead(lead)}
+                            >
+                              Perdido
+                            </Button>
+                          ) : null}
+                          {nextForwardStatus ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-xs text-territory-brand hover:bg-territory-raised hover:text-territory-brand"
+                              disabled={isMoving}
+                              aria-label={`Avançar ${lead.full_name} para ${
+                                nextForwardStage?.label ?? nextForwardStatus
+                              }`}
+                              onClick={() =>
+                                void onMoveLead(lead.id, nextForwardStatus)
+                              }
+                            >
+                              {isMoving ? 'Atualizando...' : 'Avançar'}
+                              <ArrowRight className="ml-1 h-3 w-3" aria-hidden="true" />
+                            </Button>
+                          ) : null}
+                        </div>
                       ) : null}
                     </div>
 
@@ -144,13 +188,29 @@ export const EducationPipelineView = memo(function EducationPipelineView({
                       </span>
                       <EducationStatusBadge status={lead.status} type="lead" />
                     </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </motion.section>
         );
       })}
+
+      <EducationLeadLostDialog
+        open={Boolean(lostLead)}
+        leadName={lostLead?.full_name}
+        isSubmitting={isMoving}
+        onOpenChange={(open) => {
+          if (!open) setLostLead(null);
+        }}
+        onConfirm={async (reason) => {
+          if (!lostLead || !onMoveLead) return false;
+          const moved = await onMoveLead(lostLead.id, 'lost', reason);
+          if (moved) setLostLead(null);
+          return moved;
+        }}
+      />
     </div>
   );
 });

@@ -1,14 +1,13 @@
+import { isEducationNicheKey as isEducationNicheKeyCore } from '@/core/education';
+import type { EducationNicheKey, EducationSupportLevel } from '@/core/education';
+
 /**
  * Education Niches - Types
  * 
  * Tipagens para o sistema de nichos de Education.
  */
 
-export type EducationNicheStatus = 
-  | 'full_enabled' 
-  | 'basic_enabled' 
-  | 'beta' 
-  | 'planned';
+export type EducationNicheStatus = EducationSupportLevel;
 
 export type EducationNicheCapability =
   | 'basic_programs_catalog'
@@ -126,17 +125,6 @@ export interface EducationNicheValidationResult {
 // TYPE GUARDS
 // ============================================================================
 
-const EDUCATION_NICHE_KEYS = [
-  'regular_school',
-  'daycare',
-  'language_school',
-  'prep_course',
-  'technical_school',
-  'tutoring_center',
-  'music_school',
-  'sports_school',
-] as const;
-
 const EDUCATION_CAPABILITIES = [
   'basic_programs_catalog',
   'lead_capture',
@@ -155,8 +143,8 @@ const EDUCATION_CAPABILITIES = [
   'analytics_advanced',
 ] as const;
 
-export function isEducationNicheKey(key: string): key is typeof EDUCATION_NICHE_KEYS[number] {
-  return EDUCATION_NICHE_KEYS.includes(key as typeof EDUCATION_NICHE_KEYS[number]);
+export function isEducationNicheKey(key: string): key is EducationNicheKey {
+  return isEducationNicheKeyCore(key);
 }
 
 export function isEducationCapability(capability: string): capability is EducationNicheCapability {

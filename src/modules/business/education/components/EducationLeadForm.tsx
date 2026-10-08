@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Send,
   User,
@@ -11,14 +11,19 @@ import {
   Clock,
   AlertCircle,
   LifeBuoy,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
+import { TurnstileWidget } from '@/shared/components/security/TurnstileWidget';
 import { cn } from '@/shared/utils/cn';
 import { useLabels } from '../hooks/useEducationLabels';
+import { EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT } from '@/core/education';
 import type { EducationNicheKey, SchoolShift } from '@/core/education';
+import { onlyDigits } from '@/shared/utils/contactLinks';
+import { EDUCATION_PROGRAM_SHIFT_OPTIONS } from '../constants';
 import { getSchoolStageOptions, SCHOOL_STAGE_OTHER_VALUE } from '@/core/education/constants/schoolStageOptions';
 
 export interface EducationLeadFormProps {
@@ -38,14 +43,9 @@ export interface LeadFormData {
   studentAge?: number;
   desiredGrade?: string;
   desiredShift?: SchoolShift;
+  honeypot: string;
+  turnstileToken: string;
 }
-
-const SHIFT_OPTIONS: { value: SchoolShift; label: string }[] = [
-  { value: 'morning', label: 'Manhã' },
-  { value: 'afternoon', label: 'Tarde' },
-  { value: 'evening', label: 'Noite' },
-  { value: 'full_day', label: 'Integral' },
-];
 
 const FIELD_CLASS_NAME =
   'border-territory-border bg-territory-surface text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-brand focus-visible:ring-offset-territory-canvas';
@@ -53,16 +53,22 @@ const FIELD_CLASS_NAME =
 const SELECT_CLASS_NAME =
   'h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 py-2 text-sm text-territory-ink ring-offset-territory-canvas focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2';
 
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? '').trim();
+
 export function EducationLeadForm({
   nicheKey,
   onSubmit,
   className,
 }: EducationLeadFormProps) {
+  const prefersReducedMotion = useReducedMotion();
   const labels = useLabels((nicheKey ?? undefined) as EducationNicheKey | undefined);
   const isSchoolContext = nicheKey === 'regular_school' || nicheKey === 'daycare';
   const stageOptions = getSchoolStageOptions((nicheKey ?? undefined) as EducationNicheKey | undefined);
 
-  const [formData, setFormData] = useState<LeadFormData>({
+  const mountedAtRef = useRef(Date.now());
+  const [formData, setFormData] = useState<
+    Omit<LeadFormData, 'honeypot' | 'turnstileToken'>
+  >({
     fullName: '',
     email: '',
     phone: '',
@@ -79,11 +85,25 @@ export function EducationLeadForm({
   const [isLoading, setIsLoading] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [desiredStageOption, setDesiredStageOption] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [turnstileGeneration, setTurnstileGeneration] = useState(0);
+  const turnstileConfigured = TURNSTILE_SITE_KEY.length > 0;
+  const turnstileSatisfied =
+    !EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.turnstileRequired ||
+    (turnstileConfigured && Boolean(turnstileToken));
+
+  const resetTurnstile = () => {
+    setTurnstileToken(null);
+    setTurnstileGeneration((current) => current + 1);
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
+    if (submissionError) setSubmissionError(null);
     setFormData((prev) => ({
       ...prev,
       [name]:
@@ -97,16 +117,56 @@ export function EducationLeadForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     if (!formData.fullName || !formData.email || !formData.phone) return;
 
+    if (
+      Date.now() - mountedAtRef.current <
+      EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.minimumFillMs
+    ) {
+      setSubmissionError('Confira os dados por alguns segundos antes de enviar.');
+      return;
+    }
+
+    if (
+      EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.turnstileRequired &&
+      !turnstileConfigured
+    ) {
+      setTurnstileError(
+        'Solicitação temporariamente indisponível: proteção anti-spam não configurada.',
+      );
+      return;
+    }
+
+    if (!turnstileToken) {
+      setTurnstileError('Confirme a verificação anti-spam antes de enviar.');
+      return;
+    }
+
+    const phoneDigits = onlyDigits(formData.phone);
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      setSubmissionError(
+        'Informe um telefone válido com DDD e, quando necessário, código do país.',
+      );
+      return;
+    }
+
     setSubmissionError(null);
+    setTurnstileError(null);
     setIsLoading(true);
     try {
-      await onSubmit(formData);
+      await onSubmit({
+        ...formData,
+        honeypot,
+        turnstileToken,
+      });
       setIsSubmitted(true);
-    } catch {
+    } catch (error) {
+      resetTurnstile();
       setSubmissionError(
-        'Não foi possível registrar seu interesse. Revise os dados e tente novamente.',
+        error instanceof Error
+          ? error.message
+          : 'Não foi possível registrar seu interesse. Revise os dados e tente novamente.',
       );
     } finally {
       setIsLoading(false);
@@ -116,8 +176,11 @@ export function EducationLeadForm({
   if (isSubmitted) {
     return (
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
+        role="status"
+        aria-live="polite"
         className={cn(
           'rounded-xl border border-territory-success/25 bg-territory-success/10 p-6 text-center text-territory-ink',
           className,
@@ -129,7 +192,12 @@ export function EducationLeadForm({
         <h3 className="mb-1 font-heading font-semibold text-territory-ink">
           Interesse registrado!
         </h3>
-        <p className="text-sm text-territory-success">Entraremos em contato em breve.</p>
+        <p className="text-sm text-territory-success">
+          Sua solicitação foi registrada para análise pela instituição.
+        </p>
+        <p className="mt-1 text-xs text-territory-muted">
+          Este envio não confirma matrícula, vaga ou prazo de resposta.
+        </p>
       </motion.div>
     );
   }
@@ -137,15 +205,27 @@ export function EducationLeadForm({
   return (
     <motion.form
       id="education-lead-form"
-      initial={{ opacity: 0, y: 10 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       onSubmit={handleSubmit}
+      aria-busy={isLoading}
+      aria-describedby="education-lead-privacy-note"
       className={cn('space-y-4 text-territory-ink', className)}
     >
       <h3 className="flex items-center gap-2 font-heading font-semibold text-territory-ink">
         <MessageSquare className="h-5 w-5 text-territory-brand" aria-hidden="true" />
         {isSchoolContext ? labels.enrollmentLabel : 'Solicitar Informações'}
       </h3>
+
+      <p
+        id="education-lead-privacy-note"
+        className="rounded-lg border border-territory-border bg-territory-raised/55 px-3 py-2 text-xs leading-5 text-territory-muted"
+      >
+        Envie somente os dados necessários para este contato. Não informe CPF,
+        documentos, diagnóstico, prontuário ou outros dados sensíveis do aluno.
+        Este formulário registra interesse e não conclui matrícula.
+      </p>
 
       <div className="space-y-3">
         {isSchoolContext && (
@@ -164,6 +244,8 @@ export function EducationLeadForm({
                 value={formData.guardianName ?? ''}
                 onChange={handleChange}
                 placeholder="Quando diferente do nome acima"
+                autoComplete="name"
+                maxLength={160}
                 className={cn(FIELD_CLASS_NAME, 'pl-10')}
               />
             </div>
@@ -185,6 +267,9 @@ export function EducationLeadForm({
               value={formData.fullName}
               onChange={handleChange}
               placeholder="Seu nome"
+              autoComplete="name"
+              minLength={2}
+              maxLength={160}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
@@ -207,6 +292,8 @@ export function EducationLeadForm({
               value={formData.email}
               onChange={handleChange}
               placeholder="seu@email.com"
+              autoComplete="email"
+              maxLength={254}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
@@ -229,29 +316,33 @@ export function EducationLeadForm({
               value={formData.phone}
               onChange={handleChange}
               placeholder="(71) 99999-9999"
+              autoComplete="tel"
+              inputMode="tel"
+              maxLength={32}
               className={cn(FIELD_CLASS_NAME, 'pl-10')}
               required
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
             <Label htmlFor={isSchoolContext ? 'studentName' : 'childName'} className="text-sm">
-              Nome do aluno
+              Primeiro nome do aluno (opcional)
             </Label>
             <Input
               id={isSchoolContext ? 'studentName' : 'childName'}
               name={isSchoolContext ? 'studentName' : 'childName'}
               value={isSchoolContext ? (formData.studentName ?? '') : (formData.childName ?? '')}
               onChange={handleChange}
-              placeholder="Opcional"
+              placeholder="Primeiro nome"
+              maxLength={160}
               className={cn(FIELD_CLASS_NAME, 'mt-1')}
             />
           </div>
           <div>
             <Label htmlFor={isSchoolContext ? 'studentAge' : 'childAge'} className="text-sm">
-              {isSchoolContext ? 'Idade do aluno' : 'Idade'}
+              {isSchoolContext ? 'Idade do aluno (opcional)' : 'Idade (opcional)'}
             </Label>
             <Input
               id={isSchoolContext ? 'studentAge' : 'childAge'}
@@ -268,7 +359,7 @@ export function EducationLeadForm({
         </div>
 
         {isSchoolContext && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="desiredStageOption" className="flex items-center gap-1 text-sm">
                 <GraduationCap className="h-3.5 w-3.5 text-territory-muted" aria-hidden="true" />
@@ -302,6 +393,7 @@ export function EducationLeadForm({
                     value={formData.desiredGrade ?? ''}
                     onChange={handleChange}
                     placeholder="Informe a etapa/série"
+                    maxLength={120}
                     className={FIELD_CLASS_NAME}
                   />
                   <Button
@@ -332,7 +424,7 @@ export function EducationLeadForm({
                 className={cn(SELECT_CLASS_NAME, 'mt-1')}
               >
                 <option value="">Selecione...</option>
-                {SHIFT_OPTIONS.map((opt) => (
+                {EDUCATION_PROGRAM_SHIFT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
                   </option>
@@ -352,6 +444,7 @@ export function EducationLeadForm({
             value={formData.interestNote}
             onChange={handleChange}
             placeholder="Conte-nos o que procura..."
+            maxLength={1000}
             className={cn(FIELD_CLASS_NAME, 'mt-1 resize-none')}
             rows={3}
           />
@@ -369,13 +462,72 @@ export function EducationLeadForm({
         </div>
       )}
 
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: '-10000px',
+          width: 1,
+          height: 1,
+          overflow: 'hidden',
+        }}
+      >
+        <label htmlFor="education-lead-honeypot">
+          Não preencha este campo
+        </label>
+        <input
+          id="education-lead-honeypot"
+          name="company_website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(event) => setHoneypot(event.target.value)}
+        />
+      </div>
+
+      {turnstileConfigured ? (
+        <div className="space-y-1.5">
+          <TurnstileWidget
+            key={turnstileGeneration}
+            siteKey={TURNSTILE_SITE_KEY}
+            action={EDUCATION_PUBLIC_LEAD_INTAKE_CLIENT_CONTRACT.turnstileAction}
+            onVerify={(token) => {
+              setTurnstileToken(token);
+              setTurnstileError(null);
+            }}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => {
+              setTurnstileToken(null);
+              setTurnstileError(
+                'Não foi possível carregar a verificação. Recarregue a página.',
+              );
+            }}
+          />
+          {turnstileError ? (
+            <p className="text-xs text-territory-error" role="alert">
+              {turnstileError}
+            </p>
+          ) : (
+            <p className="flex items-center gap-1 text-[11px] text-territory-muted">
+              <ShieldCheck className="h-3 w-3" aria-hidden="true" />
+              Verificação anti-spam protegida por Cloudflare.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p className="text-xs text-territory-error" role="alert">
+          Solicitação temporariamente indisponível: proteção anti-spam não configurada.
+        </p>
+      )}
+
       <Button
         type="submit"
         className="w-full bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
-        disabled={isLoading}
+        disabled={isLoading || !turnstileSatisfied}
       >
         {isLoading ? (
-          <span className="animate-pulse">Enviando...</span>
+          <span className="motion-safe:animate-pulse">Enviando...</span>
         ) : (
           <>
             <Send className="mr-2 h-4 w-4" aria-hidden="true" />

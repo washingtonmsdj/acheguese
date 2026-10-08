@@ -1,10 +1,15 @@
 /**
  * Debug: verifica o que acontece quando o usuário acessa o dashboard
  */
-import { test, expect } from '@playwright/test';
+import { test } from '@playwright/test';
 import { loginViaUI } from '../../helpers/education-setup';
 
 const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
+
+test.skip(
+  true,
+  'Diagnóstico legado: não conta como certificação E2E de Education.',
+);
 
 test('debug - access business dashboard', async ({ page }) => {
   // Login via UI
@@ -42,6 +47,6 @@ test('debug - access business dashboard', async ({ page }) => {
   console.log('Page text:', bodyText);
 
   // Verificar se está na página correta
-  const isOnDashboard = page.url().includes('/education/programas');
+  const isOnDashboard = page.url().includes('/educacao/programas');
   console.log('Is on dashboard:', isOnDashboard);
 });

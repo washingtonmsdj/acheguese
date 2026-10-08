@@ -17,8 +17,9 @@ export function NicheChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={Boolean(active)}
       className={cn(
-        'group inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2',
+        'group inline-flex min-h-11 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand focus-visible:ring-offset-2',
         active
           ? 'border-territory-brand bg-territory-brand text-territory-on-image shadow-sm'
           : 'border-territory-border bg-territory-surface text-territory-muted hover:border-territory-brand/40 hover:bg-territory-raised hover:text-territory-ink'

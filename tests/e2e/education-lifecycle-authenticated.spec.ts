@@ -240,7 +240,66 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
         .getByTestId("education-summary")
         .fill("Escola técnica E2E configurada pelo owner autenticado.");
       await page.getByTestId("education-whatsapp").fill("+5571999999999");
-      await page.getByTestId("education-save-setup").click();
+
+      const inepInput = page.getByTestId("education-school-inep");
+      await inepInput.fill("1234");
+      expect(
+        await inepInput.evaluate(
+          (element) => (element as HTMLInputElement).checkValidity(),
+        ),
+      ).toBe(false);
+      await inepInput.fill("29193559");
+
+      const sourceInput = page.getByTestId("education-school-source-url");
+      const ageMinInput = page.getByTestId("education-age-min");
+      const ageMaxInput = page.getByTestId("education-age-max");
+      const saveSetup = page.getByTestId("education-save-setup");
+
+      await sourceInput.fill("javascript:alert(1)");
+      await ageMinInput.fill("0");
+      await ageMaxInput.fill("17");
+      await saveSetup.click();
+
+      await expect(
+        page.getByText(
+          "A fonte pública deve ser uma URL http ou https válida.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+
+      const { data: invalidSourceProfile, error: invalidSourceReadError } =
+        await client
+          .from("education_profiles")
+          .select("id")
+          .eq("business_id", businessProfileId!)
+          .maybeSingle();
+      expect(invalidSourceReadError).toBeNull();
+      expect(invalidSourceProfile).toBeNull();
+
+      await sourceInput.fill("https://example.com/education-e2e");
+      await ageMinInput.fill("18");
+      await ageMaxInput.fill("6");
+      await saveSetup.click();
+
+      await expect(
+        page.getByText(
+          "A idade mínima não pode ser maior que a idade máxima.",
+          { exact: true },
+        ),
+      ).toBeVisible();
+
+      const { data: invalidAgeProfile, error: invalidAgeReadError } =
+        await client
+          .from("education_profiles")
+          .select("id")
+          .eq("business_id", businessProfileId!)
+          .maybeSingle();
+      expect(invalidAgeReadError).toBeNull();
+      expect(invalidAgeProfile).toBeNull();
+
+      await ageMinInput.fill("0");
+      await ageMaxInput.fill("17");
+      await saveSetup.click();
 
       await expect(page).toHaveURL(
         new RegExp(
@@ -252,7 +311,9 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
       const { data: educationProfile, error: educationProfileError } =
         await client
           .from("education_profiles")
-          .select("id, niche_key, institution_type, status")
+          .select(
+            "id, niche_key, institution_type, status, school_inep_code, school_source_url, age_range_min, age_range_max",
+          )
           .eq("business_id", businessProfileId!)
           .single();
 
@@ -260,6 +321,12 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
       expect(educationProfile?.niche_key).toBe("regular_school");
       expect(educationProfile?.institution_type).toBe("school");
       expect(educationProfile?.status).toBe("draft");
+      expect(educationProfile?.school_inep_code).toBe("29193559");
+      expect(educationProfile?.school_source_url).toBe(
+        "https://example.com/education-e2e",
+      );
+      expect(educationProfile?.age_range_min).toBe(0);
+      expect(educationProfile?.age_range_max).toBe(17);
 
       await page.goto(
         `/central/empresas/${businessProfileId}/educacao/programas`,
@@ -302,8 +369,10 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
         name: "Programa ativo",
       });
       await expect(activeSwitch).toBeChecked();
+      await page.locator("#availableSlots").fill("0");
+      await page.locator("#priceFrom").fill("0");
       await activeSwitch.click();
-      await page.getByRole("button", { name: "Salvar Alterações" }).click();
+      await page.getByRole("button", { name: /Salvar alterações/i }).click();
 
       await expect(page.getByText("Inativo", { exact: true })).toBeVisible({
         timeout: 30_000,
@@ -311,18 +380,83 @@ test.describe("Education lifecycle — fixture autenticada remota", () => {
 
       const { data: inactiveProgram, error: inactiveError } = await client
         .from("education_programs")
-        .select("is_active")
+        .select("is_active, available_slots, price_from")
         .eq("id", program!.id)
         .single();
       expect(inactiveError).toBeNull();
       expect(inactiveProgram?.is_active).toBe(false);
+      expect(inactiveProgram?.available_slots).toBe(0);
+      expect(Number(inactiveProgram?.price_from)).toBe(0);
 
       await actions.click();
       await page.getByRole("menuitem", { name: "Editar" }).click();
       await expect(activeSwitch).not.toBeChecked();
+      await page.locator("#availableSlots").fill("");
+      await page.locator("#priceFrom").fill("");
       await activeSwitch.click();
-      await page.getByRole("button", { name: "Salvar Alterações" }).click();
+      await page.getByRole("button", { name: /Salvar alterações/i }).click();
       await expect(page.getByText("Inativo", { exact: true })).toHaveCount(0);
+
+      const { data: unspecifiedProgram, error: unspecifiedProgramError } =
+        await client
+          .from("education_programs")
+          .select("is_active,available_slots,price_from")
+          .eq("id", program!.id)
+          .single();
+      expect(unspecifiedProgramError).toBeNull();
+      expect(unspecifiedProgram?.is_active).toBe(true);
+      expect(unspecifiedProgram?.available_slots).toBeNull();
+      expect(unspecifiedProgram?.price_from).toBeNull();
+
+      await actions.click();
+      await page.getByRole("menuitem", { name: "Excluir" }).click();
+      await expect(
+        page.getByRole("heading", { name: "Excluir programa" }),
+      ).toBeVisible();
+      await page.getByRole("button", { name: "Excluir", exact: true }).click();
+
+      await expect(
+        page.getByText(programName, { exact: true }),
+      ).toHaveCount(0, { timeout: 30_000 });
+
+      const { data: deletedProgram, error: deletedProgramError } =
+        await client
+          .from("education_programs")
+          .select("id")
+          .eq("id", program!.id)
+          .maybeSingle();
+      expect(deletedProgramError).toBeNull();
+      expect(deletedProgram).toBeNull();
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto(
+        `/central/empresas/${businessProfileId}/educacao/programas`,
+        { waitUntil: "domcontentloaded" },
+      );
+      await page.getByRole("button", { name: "Novo Programa" }).click();
+
+      const mobileProgramDialog = page.getByRole("dialog");
+      await expect(mobileProgramDialog).toBeVisible();
+
+      const mobileCreateProgram = page.getByRole("button", {
+        name: "Criar Programa",
+      });
+      const mobileCancelProgram = page.getByRole("button", {
+        name: "Cancelar",
+      });
+
+      await mobileCreateProgram.scrollIntoViewIfNeeded();
+      await expect(mobileCreateProgram).toBeInViewport();
+      await mobileCancelProgram.scrollIntoViewIfNeeded();
+      await expect(mobileCancelProgram).toBeInViewport();
+
+      const mobileProgramDialogBox = await mobileProgramDialog.boundingBox();
+      expect(mobileProgramDialogBox).not.toBeNull();
+      expect(mobileProgramDialogBox!.width).toBeLessThanOrEqual(390);
+      expect(mobileProgramDialogBox!.height).toBeLessThanOrEqual(844);
+
+      await mobileCancelProgram.click();
+      await page.setViewportSize({ width: 1280, height: 900 });
 
       await page.goto(
         `/central/empresas/${businessProfileId}/educacao/leads`,

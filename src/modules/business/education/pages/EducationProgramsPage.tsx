@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   BookOpen,
   Plus,
@@ -50,43 +50,43 @@ import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBan
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
-import type { EducationLevel, EducationProgram } from '@/core/education';
+import {
+  EDUCATION_PROGRAM_MODALITY_OPTIONS,
+  EDUCATION_PROGRAM_SHIFT_OPTIONS,
+  getEducationProgramShiftLabel,
+} from '../constants';
+import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
+import {
+  EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS,
+  EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH,
+  EDUCATION_PROGRAM_NAME_MAX_LENGTH,
+  getEducationProgramCurriculumValidationError,
+  getEducationProgramNameValidationError,
+  getEducationProgramNumericValidationError,
+  normalizeEducationProgramCurriculumTopics,
+  type EducationLevel,
+  type EducationProgram,
+} from '@/core/education';
 import {
   getSchoolStageOptions,
   isSchoolNiche,
   SCHOOL_STAGE_OTHER_VALUE,
 } from '@/core/education/constants/schoolStageOptions';
 
-const SHIFTS = [
-  { value: 'morning', label: 'Manhã' },
-  { value: 'afternoon', label: 'Tarde' },
-  { value: 'evening', label: 'Noite' },
-  { value: 'full_day', label: 'Integral' },
-];
-
-const MODALITIES = [
-  { value: 'in_person', label: 'Presencial' },
-  { value: 'online', label: 'Online' },
-  { value: 'hybrid', label: 'Híbrido' },
-];
-
 const selectClassName =
   'h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink outline-none transition-colors focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20';
 
 function parseCurriculumTopics(value: string): string[] {
-  return Array.from(
-    new Set(
-      value
-        .split(',')
-        .map((topic) => topic.trim().replace(/\s+/g, ' '))
-        .filter(Boolean),
-    ),
+  return (
+    normalizeEducationProgramCurriculumTopics(value.split(',')) ?? []
   );
 }
 
 export function EducationProgramsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const {
@@ -105,6 +105,9 @@ export function EducationProgramsPage() {
     create,
     update,
     remove,
+    isCreating,
+    isUpdating,
+    isMutating,
   } = useEducationPrograms(profile?.id, { includeInactive: true });
   const dashboardUrl = businessId
     ? EducationUrlService.buildAdminDashboardUrl(businessId)
@@ -113,6 +116,7 @@ export function EducationProgramsPage() {
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
+    enabled: Boolean(profile?.id),
   });
 
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
@@ -129,8 +133,8 @@ export function EducationProgramsPage() {
     ageGroup: '',
     shift: '',
     modality: '',
-    availableSlots: 0,
-    priceFrom: 0,
+    availableSlots: null as number | null,
+    priceFrom: null as number | null,
     isActive: true,
     gradeOption: '',
     customGrade: '',
@@ -177,6 +181,18 @@ export function EducationProgramsPage() {
     };
   };
 
+  const getProgramFormValidationError = (name: string) => {
+    const curriculumTopics = parseCurriculumTopics(formData.curriculumTopics);
+    return (
+      getEducationProgramNameValidationError(name) ??
+      getEducationProgramNumericValidationError({
+        availableSlots: formData.availableSlots,
+        priceFrom: isPublicSchool ? null : formData.priceFrom,
+      }) ??
+      getEducationProgramCurriculumValidationError(curriculumTopics)
+    );
+  };
+
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -211,14 +227,24 @@ export function EducationProgramsPage() {
         return;
       }
 
+      const validationError = getProgramFormValidationError(stage.name);
+      if (validationError) {
+        toast({
+          title: 'Revise o programa',
+          description: validationError,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await create({
         name: stage.name,
         description: formData.description,
         ageGroup: formData.ageGroup,
         shift: formData.shift,
         modality: formData.modality,
-        availableSlots: formData.availableSlots,
-        priceFrom: isPublicSchool ? undefined : formData.priceFrom,
+        availableSlots: formData.availableSlots ?? undefined,
+        priceFrom: isPublicSchool ? undefined : formData.priceFrom ?? undefined,
         grade: stage.grade,
         educationLevel: stage.educationLevel,
         curriculumTopics: parseCurriculumTopics(formData.curriculumTopics),
@@ -253,21 +279,31 @@ export function EducationProgramsPage() {
         return;
       }
 
+      const validationError = getProgramFormValidationError(stage.name);
+      if (validationError) {
+        toast({
+          title: 'Revise o programa',
+          description: validationError,
+          variant: 'destructive',
+        });
+        return;
+      }
+
       await update({
         programId: editingProgram.id,
         payload: {
-          name: isSchoolContext ? stage.name : formData.name,
-          grade: isSchoolContext ? stage.grade : formData.name,
+          name: stage.name,
+          grade: stage.grade,
           education_level: isSchoolContext ? stage.educationLevel ?? null : null,
           description: formData.description || null,
           age_group: formData.ageGroup || null,
           shift: formData.shift || null,
           modality: formData.modality || null,
-          available_slots: formData.availableSlots || null,
-          price_from: isPublicSchool ? null : formData.priceFrom || null,
+          available_slots: formData.availableSlots,
+          price_from: isPublicSchool ? null : formData.priceFrom,
           curriculum_topics: parseCurriculumTopics(formData.curriculumTopics),
           is_active: formData.isActive,
-        } as Partial<EducationProgram>,
+        },
       });
       toast({
         title: 'Programa atualizado',
@@ -318,8 +354,8 @@ export function EducationProgramsPage() {
       ageGroup: program.age_group || '',
       shift: program.shift || '',
       modality: program.modality || '',
-      availableSlots: program.available_slots || 0,
-      priceFrom: isPublicSchool ? 0 : program.price_from || 0,
+      availableSlots: program.available_slots,
+      priceFrom: isPublicSchool ? null : program.price_from,
       isActive: program.is_active,
       gradeOption: '',
       customGrade: '',
@@ -350,8 +386,8 @@ export function EducationProgramsPage() {
       ageGroup: '',
       shift: '',
       modality: '',
-      availableSlots: 0,
-      priceFrom: 0,
+      availableSlots: null,
+      priceFrom: null,
       isActive: true,
       gradeOption: '',
       customGrade: '',
@@ -390,11 +426,22 @@ export function EducationProgramsPage() {
     );
   }
 
+  if (!profile) {
+    return (
+      <EducationProfileRequiredState
+        businessId={businessId}
+        title="Configure Educação antes de gerenciar programas"
+        description="Não existe um perfil Education configurado para cadastrar programas nesta instituição."
+      />
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="flex items-center gap-3">
@@ -422,7 +469,7 @@ export function EducationProgramsPage() {
         <Button
           onClick={openNewDialog}
           className="gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
-          disabled={isProgramsBlocked || isLimitBlocked}
+          disabled={isProgramsBlocked || isLimitBlocked || isMutating}
           title={
             isProgramsBlocked
               ? programsCapability.upgradeMessage
@@ -478,7 +525,7 @@ export function EducationProgramsPage() {
             </p>
             <Button
               onClick={openNewDialog}
-              disabled={isProgramsBlocked || isLimitBlocked}
+              disabled={isProgramsBlocked || isLimitBlocked || isMutating}
               className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -491,9 +538,11 @@ export function EducationProgramsPage() {
           {programs.map((program, index) => (
             <motion.div
               key={program.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={
+                prefersReducedMotion ? { duration: 0 } : { delay: index * 0.1 }
+              }
             >
               <Card
                 className={`border-territory-border bg-territory-surface text-territory-ink shadow-sm ${
@@ -521,17 +570,22 @@ export function EducationProgramsPage() {
                           variant="ghost"
                           size="sm"
                           aria-label={`Ações do programa ${program.name}`}
+                          disabled={isMutating}
                           className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(program)}>
+                        <DropdownMenuItem
+                          disabled={isMutating}
+                          onClick={() => openEditDialog(program)}
+                        >
                           <Edit2 className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem
+                          disabled={isMutating}
                           onClick={() => handleDelete(program.id)}
                           className="text-territory-error focus:text-territory-error"
                         >
@@ -562,17 +616,18 @@ export function EducationProgramsPage() {
                         className="gap-1 border-territory-border text-territory-muted"
                       >
                         <Clock className="h-3 w-3" />
-                        {SHIFTS.find((shift) => shift.value === program.shift)?.label ||
-                          program.shift}
+                        {getEducationProgramShiftLabel(program.shift)}
                       </Badge>
                     )}
-                    {!isPublicSchool && program.price_from && (
+                    {!isPublicSchool && program.price_from != null && (
                       <Badge
                         variant="outline"
                         className="gap-1 border-territory-border text-territory-muted"
                       >
                         <DollarSign className="h-3 w-3" />
-                        A partir de {formatBrl(program.price_from)}
+                        {program.price_from === 0
+                          ? 'Gratuito'
+                          : `A partir de ${formatBrl(program.price_from)}`}
                       </Badge>
                     )}
                   </div>
@@ -598,8 +653,16 @@ export function EducationProgramsPage() {
                     </div>
                   )}
                   {program.available_slots !== null && (
-                    <p className="mt-2 text-sm text-territory-muted">
-                      {program.available_slots} vagas disponíveis
+                    <p
+                      className={
+                        program.available_slots === 0
+                          ? 'mt-2 text-sm font-medium text-territory-warning'
+                          : 'mt-2 text-sm text-territory-muted'
+                      }
+                    >
+                      {program.available_slots === 0
+                        ? 'Sem vagas'
+                        : `${program.available_slots} vagas disponíveis`}
                     </p>
                   )}
                 </CardContent>
@@ -609,8 +672,15 @@ export function EducationProgramsPage() {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (isMutating && !open) return;
+          setIsDialogOpen(open);
+          if (!open) setEditingProgram(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
               {editingProgram ? 'Editar programa' : 'Novo programa'}
@@ -655,6 +725,7 @@ export function EducationProgramsPage() {
                         setFormData({ ...formData, customGrade: event.target.value })
                       }
                       placeholder="Ex: Classe hospitalar, multisseriada..."
+                      maxLength={EDUCATION_PROGRAM_NAME_MAX_LENGTH}
                       required
                     />
                     <Button
@@ -682,6 +753,7 @@ export function EducationProgramsPage() {
                     setFormData({ ...formData, name: event.target.value })
                   }
                   placeholder="Ex: Curso Intensivo"
+                  maxLength={EDUCATION_PROGRAM_NAME_MAX_LENGTH}
                   required
                 />
               </div>
@@ -700,7 +772,7 @@ export function EducationProgramsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="ageGroup">Faixa etária</Label>
                 <Input
@@ -710,6 +782,7 @@ export function EducationProgramsPage() {
                     setFormData({ ...formData, ageGroup: event.target.value })
                   }
                   placeholder="Ex: 6-10 anos"
+                  maxLength={EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH}
                 />
               </div>
               <div>
@@ -723,7 +796,7 @@ export function EducationProgramsPage() {
                   className={selectClassName}
                 >
                   <option value="">Selecione...</option>
-                  {SHIFTS.map((shift) => (
+                  {EDUCATION_PROGRAM_SHIFT_OPTIONS.map((shift) => (
                     <option key={shift.value} value={shift.value}>
                       {shift.label}
                     </option>
@@ -732,7 +805,7 @@ export function EducationProgramsPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="modality">Modalidade</Label>
                 <select
@@ -744,7 +817,7 @@ export function EducationProgramsPage() {
                   className={selectClassName}
                 >
                   <option value="">Selecione...</option>
-                  {MODALITIES.map((modality) => (
+                  {EDUCATION_PROGRAM_MODALITY_OPTIONS.map((modality) => (
                     <option key={modality.value} value={modality.value}>
                       {modality.label}
                     </option>
@@ -756,11 +829,13 @@ export function EducationProgramsPage() {
                 <Input
                   id="availableSlots"
                   type="number"
-                  value={formData.availableSlots}
+                  min="0"
+                  value={formData.availableSlots ?? ''}
                   onChange={(event) =>
                     setFormData({
                       ...formData,
-                      availableSlots: parseInt(event.target.value, 10) || 0,
+                      availableSlots:
+                        event.target.value === '' ? null : Number(event.target.value),
                     })
                   }
                 />
@@ -779,7 +854,8 @@ export function EducationProgramsPage() {
                 rows={2}
               />
               <p className="mt-1 text-xs text-territory-muted">
-                Separe por vírgulas. Em cursos, use módulos ou conteúdos principais.
+                Separe por vírgulas. Máximo de {EDUCATION_PROGRAM_CURRICULUM_MAX_TOPICS}{' '}
+                itens e {EDUCATION_PROGRAM_CURRICULUM_TOPIC_MAX_LENGTH} caracteres por item.
               </p>
             </div>
 
@@ -791,11 +867,12 @@ export function EducationProgramsPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.priceFrom}
+                  value={formData.priceFrom ?? ''}
                   onChange={(event) =>
                     setFormData({
                       ...formData,
-                      priceFrom: parseFloat(event.target.value) || 0,
+                      priceFrom:
+                        event.target.value === '' ? null : Number(event.target.value),
                     })
                   }
                 />
@@ -815,17 +892,23 @@ export function EducationProgramsPage() {
               </div>
             )}
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col gap-3 pt-4 sm:flex-row">
               <Button
                 type="submit"
+                disabled={isMutating}
                 className="flex-1 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
               >
-                {editingProgram ? 'Salvar alterações' : 'Criar programa'}
+                {isCreating || isUpdating
+                  ? 'Salvando...'
+                  : editingProgram
+                    ? 'Salvar alterações'
+                    : 'Criar programa'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+                disabled={isMutating}
                 onClick={() => {
                   setIsDialogOpen(false);
                   setEditingProgram(null);

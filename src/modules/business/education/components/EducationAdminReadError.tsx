@@ -1,18 +1,11 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { getEducationAdminReadErrorMessage } from "./educationAdminErrorMessage";
 
 interface EducationAdminReadErrorProps {
   title: string;
   error?: unknown;
   onRetry?: () => void | Promise<void>;
-}
-
-function errorMessage(error: unknown): string {
-  if (error instanceof Error && error.message.trim()) {
-    return error.message;
-  }
-
-  return "A leitura dos dados falhou. Nenhum estado vazio artificial foi exibido.";
 }
 
 export function EducationAdminReadError({
@@ -22,13 +15,17 @@ export function EducationAdminReadError({
 }: EducationAdminReadErrorProps) {
   return (
     <div className="container mx-auto max-w-3xl p-6 text-territory-ink">
-      <div className="rounded-xl border border-territory-error/25 bg-territory-error/10 p-6">
+      <div
+        role="alert"
+        aria-live="assertive"
+        className="rounded-xl border border-territory-error/25 bg-territory-error/10 p-6"
+      >
         <div className="mb-3 flex items-center gap-2 text-territory-error">
           <AlertCircle className="h-5 w-5" aria-hidden="true" />
           <h1 className="font-heading font-semibold">{title}</h1>
         </div>
         <p className="mb-4 text-sm text-territory-muted">
-          {errorMessage(error)}
+          {getEducationAdminReadErrorMessage(error)}
         </p>
         {onRetry ? (
           <Button

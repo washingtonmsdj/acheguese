@@ -3,6 +3,11 @@
  */
 import { test, expect } from '@playwright/test';
 
+test.skip(
+  true,
+  'Diagnóstico legado: não conta como certificação E2E de Education.',
+);
+
 test('debug - check auth cookie', async ({ page, context }) => {
   // Verificar cookies antes de navegar
   const cookiesBefore = await context.cookies();

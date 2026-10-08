@@ -6,7 +6,6 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlanTier } from '@/core/billing/types';
 import { EducationSubscriptionService } from '../services/education-subscription.service';
 import type { EducationSubscriptionStatus } from '../services/education-subscription.service';
 
@@ -39,32 +38,20 @@ export function useEducationSubscription(options: UseEducationSubscriptionOption
 
   const status = statusQuery.data;
   const entitlements = status?.entitlements;
-  const planTier = status?.planTier ?? PlanTier.FREE;
+  const planTier = status?.planTier;
 
-  const permissions = {
-    canUsePremiumPublicPage: entitlements?.canUsePremiumPublicPage ?? false,
-    canUseShortPremiumLink: entitlements?.canUseShortPremiumLink ?? false,
-    canUseShortLink: entitlements?.canUseShortPremiumLink ?? false,
-    canUsePremiumSite: entitlements?.canUsePremiumPublicPage ?? false,
-    canUseAnalytics: entitlements?.canUseAnalytics ?? false,
-    canExportData: entitlements?.canExportData ?? false,
-    isPremium: planTier === PlanTier.DELIVERY,
-    isBasic: planTier === PlanTier.PRO,
-    isFree: planTier === PlanTier.FREE,
-  };
+
 
   return {
     status,
     isLoading: statusQuery.isLoading,
     isError: statusQuery.isError,
     error: statusQuery.error,
+    refetch: statusQuery.refetch,
     entitlements,
     planTier,
-    /** @deprecated Compatibilidade de apresentação. Prefira planTier para regras. */
-    planType: status?.planType ?? 'free',
-    isActive: status?.isActive ?? false,
+    isActive: status?.isActive,
     expiresAt: status?.expiresAt,
-    permissions,
     refresh: refreshMutation.mutate,
     isRefreshing: refreshMutation.isPending,
   };

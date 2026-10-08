@@ -1,21 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
-import type { EducationEvent, SchoolEventType } from '@/core/education';
+import type {
+  EducationEventAdminPatch,
+  SchoolEventType,
+} from '@/core/education';
 
 export interface EventFilters {
   isPublic?: boolean;
   upcoming?: boolean;
+  active?: boolean;
 }
 
 export function useEducationEvents(profileId?: string, filters: EventFilters = {}) {
   const queryClient = useQueryClient();
-  const { isPublic, upcoming } = filters;
+  const { isPublic, upcoming, active } = filters;
 
   const query = useQuery({
-    queryKey: ['education', 'events', profileId, isPublic, upcoming],
+    queryKey: ['education', 'events', profileId, isPublic, upcoming, active],
     queryFn: async () => {
       if (!profileId) return [];
-      return EducationService.listEvents(profileId, { isPublic, upcoming });
+      return EducationService.listEvents(profileId, {
+        isPublic,
+        upcoming,
+        active,
+      });
     },
     enabled: Boolean(profileId),
   });
@@ -54,7 +62,7 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
       payload,
     }: {
       eventId: string;
-      payload: Partial<EducationEvent>;
+      payload: EducationEventAdminPatch;
     }) => {
       const updated = await EducationService.updateEvent(eventId, payload);
       if (!updated) throw new Error('Falha ao atualizar evento');
@@ -84,5 +92,12 @@ export function useEducationEvents(profileId?: string, filters: EventFilters = {
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
     remove: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isMutating:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
   };
 }

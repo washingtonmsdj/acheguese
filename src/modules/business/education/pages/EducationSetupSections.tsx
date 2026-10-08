@@ -204,6 +204,9 @@ export function EducationDataSection({
                   onChange={(event) =>
                     onPatch({ schoolInepCode: event.target.value })
                   }
+                  inputMode="numeric"
+                  maxLength={8}
+                  pattern="[0-9]{8}"
                   placeholder="Ex: 29193559"
                 />
               </div>
@@ -213,11 +216,14 @@ export function EducationDataSection({
                 <Input
                   id="schoolSourceUrl"
                   data-testid="education-school-source-url"
+                  type="url"
                   value={formData.schoolSourceUrl}
                   onChange={(event) =>
                     onPatch({ schoolSourceUrl: event.target.value })
                   }
-                  placeholder="URL do Censo, secretaria ou diretório público"
+                  autoComplete="url"
+                  maxLength={2048}
+                  placeholder="https://..."
                 />
               </div>
             </div>
@@ -446,6 +452,10 @@ export function EducationContactSection({
           <Input
             id="whatsappNumber"
             data-testid="education-whatsapp"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            maxLength={20}
             value={whatsappNumber}
             onChange={(event) => onPatch({ whatsappNumber: event.target.value })}
             placeholder="+5588999999999"

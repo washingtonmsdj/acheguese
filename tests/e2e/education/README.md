@@ -1,267 +1,164 @@
-# Education Module - E2E Tests
+# Education — testes E2E preservados
 
-Testes end-to-end completos para o módulo Education usando Playwright.
+**Status:** pós-MVP / não certificante para ativação  
+**Lifecycle:** Education permanece `paused`
 
-## 📁 Estrutura
+Esta pasta preserva testes Playwright úteis para evolução da vertical Education,
+mas **não deve ser interpretada como prova de readiness de produção**. A
+certificação final exige banco/RLS/RPCs reconciliados, ambiente autenticado,
+E2E determinístico e deployment do mesmo SHA.
 
-```
-tests/e2e/education/
-├── README.md                      # Este arquivo
-├── education-setup.spec.ts        # 11 testes - Fluxo de cadastro
-├── education-programs.spec.ts     # 13 testes - Gestão de programas
-├── education-leads.spec.ts        # 20 testes - Pipeline de leads
-└── education-public.spec.ts       # 25 testes - Páginas públicas
-```
+## Inventário atual
 
-**Total**: 69 testes E2E
+| Suite | Estado | O que prova hoje |
+| --- | --- | --- |
+| `education-setup.spec.ts` | operacional, dependente de ambiente | fluxo real de setup e persistência quando credenciais/ambiente operacional estão disponíveis |
+| `education-public.spec.ts` | `describe.skip` por lifecycle | cenários preservados para Explorer/Detail; não roda enquanto Education estiver pausado |
+| `education-programs.spec.ts` | smoke operacional, dependente de ambiente | fixture técnica semeia programas; UI autenticada prova leitura, edição, estado `0` vagas e exclusão confirmada; criação pela UI depende de entitlement real |
+| `education-leads.spec.ts` | smoke operacional, dependente de ambiente | fixture técnica semeia leads; UI autenticada prova renderização, avanço `new → contacted`, `lost` com motivo obrigatório e paginação 25/26 |
+| `education-events.spec.ts` | smoke operacional, dependente de ambiente | fixture técnica semeia eventos; UI autenticada prova leitura, edição público/privado, aviso consultivo de sobreposição e exclusão; criação paga pela UI continua fora do escopo |
+| `education-debug.spec.ts` | diagnóstico, `skip` | captura manual de conteúdo/screenshot; não conta como teste de aceitação |
+| `education-cookie-debug.spec.ts` | diagnóstico, `skip` | inspeção manual de autenticação/cookies; não conta como teste de aceitação |
+| `education-network-debug.spec.ts` | diagnóstico, `skip` | inspeção manual de conectividade; não conta como teste de aceitação |
+| `education-dashboard-debug.spec.ts` | diagnóstico, `skip` | investigação manual histórica; não conta como teste de aceitação |
+| `global-setup.ts` | suporte | preparação da autenticação/fixture quando aplicável |
 
-## 🧪 Arquivos de Teste
+## O que já tem cobertura fora do Playwright legado
 
-### 1. education-setup.spec.ts (11 testes)
-Testa o fluxo completo de cadastro inicial de uma instituição de ensino.
+A prontidão de código é protegida também por testes unitários, de componentes,
+segurança e ratchets arquiteturais. Entre os comportamentos já cobertos estão:
 
-**Cenários**:
-- ✅ Exibição da página de setup com todos os campos
-- ✅ Validação de campos obrigatórios
-- ✅ Cadastro bem-sucedido - Escola Regular
-- ✅ Cadastro bem-sucedido - Creche/Berçário
-- ✅ Contador de caracteres na descrição
-- ✅ Limite de 500 caracteres na descrição
-- ✅ Banner de upgrade para nichos beta
-- ✅ Cancelamento e retorno ao dashboard
-- ✅ Navegação com botão voltar
-- ✅ Persistência de dados ao navegar
-- ✅ Redirecionamento após salvar
+- validação canônica de perfil, faixa etária, INEP e URL de proveniência;
+- validação de programas e eventos;
+- datas locais impossíveis em eventos;
+- pipeline de leads e transições permitidas;
+- motivo obrigatório para `lost` no write model;
+- renderização de idade `0` e preferência por campos escolares canônicos;
+- minimização de dados no formulário público;
+- Analytics sem zeros/fallbacks sintéticos para estados desconhecidos;
+- exportação CSV com neutralização de fórmulas;
+- Billing/assinatura sem plano fictício;
+- reduced-motion e semântica acessível em superfícies-chave;
+- boundaries que mantêm Education fora do grafo ativo do MVP.
 
-### 2. education-programs.spec.ts (13 testes)
-Testa a gestão completa de programas educacionais.
+Essas provas reduzem risco de regressão, mas **não substituem E2E de produção**.
 
-**Cenários**:
-- ✅ Exibição da página de programas
-- ✅ Empty state quando não há programas
-- ✅ Abertura do modal de criar programa
-- ✅ Criação de programa com sucesso
-- ✅ Validação de campos obrigatórios
-- ✅ Edição de programa existente
-- ✅ Exclusão de programa com confirmação
-- ✅ Toggle de status ativo/inativo
-- ✅ Respeito aos limites do nicho
-- ✅ Filtro por status
-- ✅ Busca por nome
-- ✅ Reordenação com drag & drop
-- ✅ Tratamento de erros de API
+## Suites que não podem ser promovidas a “verdes” por permissividade
 
-### 3. education-leads.spec.ts (20 testes)
-Testa o pipeline completo de gestão de leads.
+Antes da ativação pós-MVP, os smoke tests de Programas e Leads precisam deixar
+de depender de padrões como:
 
-**Cenários**:
-- ✅ Exibição do pipeline com todas as colunas
-- ✅ Empty state quando não há leads
-- ✅ Card de lead com todas as informações
-- ✅ Modal de detalhes do lead
-- ✅ Mover lead para próximo status
-- ✅ Marcar lead como perdido com motivo
-- ✅ Adicionar nota ao lead
-- ✅ Atribuir responsável ao lead
-- ✅ Filtro por status
-- ✅ Busca por nome/email
-- ✅ Métricas de conversão
-- ✅ Drag & drop entre colunas
-- ✅ Exibição do canal de origem
-- ✅ Data de criação do lead
-- ✅ Informações da criança/estudante
-- ✅ Exportação para CSV
-- ✅ Respeito aos limites mensais
-- ✅ Timeline/histórico do lead
-- ✅ Contato via WhatsApp
+- “há qualquer texto no body”;
+- `test.skip()` porque um botão/campo esperado não apareceu;
+- `waitForTimeout()` como sincronização principal;
+- seletores opcionais para funcionalidades que deveriam ser obrigatórias;
+- asserts que aceitam múltiplos resultados sem comprovar a operação realizada.
 
-### 4. education-public.spec.ts (25 testes)
-Testa as páginas públicas (vitrine e detalhes).
+Um teste só conta como certificação quando falha se o comportamento real
+esperado deixar de funcionar.
 
-**Vitrine (Explorer) - 10 testes**:
-- ✅ Exibição da página de exploração
-- ✅ Listagem de instituições
-- ✅ Card com informações principais
-- ✅ Filtro por nicho
-- ✅ Filtro por modalidade
-- ✅ Filtro por turno
-- ✅ Busca por nome
-- ✅ Limpar filtros
-- ✅ Scroll infinito
-- ✅ Empty state
-- ✅ Navegação para detalhes
+## Certificação paga read-only preparada
 
-**Detalhes - 15 testes**:
-- ✅ Exibição da página de detalhes
-- ✅ Hero section
-- ✅ Descrição da instituição
-- ✅ Lista de programas
-- ✅ Detalhes dos programas
-- ✅ Eventos próximos
-- ✅ CTA WhatsApp destacado
-- ✅ Abertura do formulário de lead
-- ✅ Envio de lead com sucesso
-- ✅ Validação de campos obrigatórios
-- ✅ Validação de formato de email
-- ✅ Validação de formato de telefone
-- ✅ Breadcrumbs de navegação
-- ✅ Informações de contato
-- ✅ Meta tags SEO
+A suite `tests/e2e/education-paid-lifecycle-authenticated.spec.ts` cobre a
+parte de release que exige um Business realmente pago, sem fabricar
+entitlement:
 
-## 🛠️ Helpers
+- requer `E2E_EDUCATION_PAID_BUSINESS_ID`;
+- exige owner real da fixture autenticada;
+- não faz `insert`, `update` ou `delete`;
+- prova acesso a Analytics e download CSV no navegador;
+- prova plano atual ativo e resolvido pelo Billing canônico;
+- não inicia checkout automaticamente.
 
-Os testes utilizam helpers em `tests/helpers/education-setup.ts`:
+O runner é
+`npm run test:e2e:education-paid-lifecycle-authenticated` e só é incluído no
+workflow quando o input manual `run_education_paid_lifecycle` é solicitado.
+Ausência da fixture paga é falha de configuração, não sucesso nem skip.
 
-### Autenticação
-```typescript
-await authenticateAsBusinessOwner(page, businessId);
-```
+## Gaps E2E obrigatórios antes da ativação
 
-### Setup de Dados
-```typescript
-await ensureEducationProfileExists(businessId);
-await createTestProgram(businessId, { name: 'Programa Teste' });
-await createTestLead(businessId, { parent_name: 'Maria Silva' });
-await createTestEvent(businessId, { title: 'Evento Teste' });
-```
+1. **Setup**
+   - a suite autenticada já prova formato inválido de INEP no formulário;
+   - URL pública não-http(s) e faixa etária invertida são rejeitadas antes da persistência;
+   - após cada tentativa inválida, a suite confirma ausência de `education_profile`;
+   - compensação de criação parcial é coberta deterministicamente em
+     `EducationService.setup-compensation.test.ts`: somente o draft criado pela
+     tentativa falha pode ser removido; perfil preexistente é preservado;
+   - não existe fault injection remoto de produção apenas para reproduzir erro;
+     qualquer prova remota adicional deve usar mecanismo explicitamente seguro.
 
-### Publicação
-```typescript
-await publishEducationProfile(businessId);
-```
+2. **Programas**
+   - lifecycle autenticado prova criação, edição, reativação e exclusão com confirmação;
+   - a exclusão é verificada pelo mesmo `program.id` no backend;
+   - preço/vagas `0` são preservados e campos limpos são persistidos como `null`, provando zero versus ausente;
+   - entitlement FREE real é usado para a criação, sem falsificar plano;
+   - o mesmo lifecycle abre o diálogo em `390×844`, verifica dimensões, rolagem interna e ações alcançáveis no viewport, fechando sem persistir dados extras.
 
-### Limpeza
-```typescript
-await cleanupEducationData(businessId);
-```
+3. **Leads**
+   - smoke operacional prova paginação 25/26 e mantém a contagem global da etapa nas duas páginas;
+   - prova `new → contacted` com `first_contact_at` persistido;
+   - prova ausência de salto/backward e ausência de ações em `enrolled`;
+   - `lost` exige motivo operacional e persiste `lost_reason`;
+   - falha simulada somente no `PATCH` do navegador produz feedback e mantém o lead `new` no backend;
+   - idade `0` permanece visível como `0 anos`;
+   - esta fatia não tem gap funcional conhecido no source; ainda precisa executar no ambiente autorizado do candidato de release.
 
-## 🚀 Executando os Testes
+4. **Eventos**
+   - helper técnico usa as colunas canônicas `starts_at/ends_at`;
+   - smoke operacional prova leitura, edição público→privado, sobreposição consultiva e exclusão com confirmação;
+   - término igual/anterior ao início é rejeitado e o teste confirma que os timestamps persistidos não mudam;
+   - datas locais impossíveis permanecem cobertas pelos testes canônicos de `educationEventDateTime`/core;
+   - criação pela UI continua dependente de entitlement pago real e não é simulada alterando plano fora do contrato.
 
-### Todos os testes do módulo Education
-```bash
-npx playwright test tests/e2e/education
-```
+5. **Analytics**
+   - query canônica prova erro de leitura separado de dados reais e `null` quando não há amostra de primeiro contato;
+   - CSV prova célula vazia para métricas não mensuráveis e neutralização de fórmulas;
+   - source/ratchets distinguem falha de assinatura, acesso negado e dados carregados;
+   - ainda falta E2E de release com entitlement pago real para acesso autorizado, empty state real e download CSV pelo navegador.
 
-### Teste específico
+6. **Planos/Billing**
+   - teste dedicado prova que falhas de identidade Business, assinatura e catálogo não viram plano Free sintético;
+   - ausência de policy no catálogo usa baseline somente do mesmo tier canônico;
+   - plano atual e entitlements continuam vindo das autoridades de Billing;
+   - falha ao resolver owner/gestor tem estado de erro próprio com retry e não é apresentada como gestor read-only;
+   - ainda faltam E2E de release para owner versus gestor, checkout único e falhas reais de catálogo/checkout;
+   - nenhum desses cenários deve ser produzido adulterando plano/entitlement da fixture.
+
+7. **Explorer e Detail**
+   - só podem ser reativados depois do lifecycle;
+   - responsividade;
+   - teclado e foco;
+   - estados loading/error/empty;
+   - filtros acessíveis;
+   - formulário público e autoridade de atendimento;
+   - smoke público contra deployment do mesmo SHA.
+
+## Execução
+
+As suites devem ser executadas apenas no ambiente que fornece suas dependências
+explícitas. Consulte os helpers de `tests/helpers` e a configuração do
+Playwright do repositório; não crie credenciais de fallback e não transforme
+ausência de ambiente em sucesso.
+
+Exemplo para uma suite específica:
+
 ```bash
 npx playwright test tests/e2e/education/education-setup.spec.ts
 ```
 
-### Com UI interativa
-```bash
-npx playwright test tests/e2e/education --ui
-```
+A suite pública continua pausada enquanto o módulo estiver `paused`.
 
-### Modo debug
-```bash
-npx playwright test tests/e2e/education --debug
-```
+## Critério de certificação
 
-### Apenas um teste específico
-```bash
-npx playwright test tests/e2e/education/education-setup.spec.ts -g "should successfully create education profile"
-```
+Education só pode ser candidata a ativação quando:
 
-## ⚙️ Configuração
+- source gates estiverem verdes no SHA exato;
+- schema/RLS/RPCs estiverem reconciliados;
+- probes remotos autorizados passarem;
+- E2E administrativos forem determinísticos;
+- E2E públicos forem executados após a liberação do lifecycle;
+- mobile, teclado e acessibilidade estiverem comprovados;
+- o deployment testado corresponder ao mesmo SHA.
 
-### Variáveis de Ambiente Necessárias
-
-Certifique-se de que `.env.test` contém:
-
-```env
-VITE_SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-PLAYWRIGHT_BASE_URL=http://localhost:8080
-```
-
-### Pré-requisitos
-
-1. **Business de Teste**: Os testes esperam que exista um business com ID `test-business-education-001`
-2. **Usuário Owner**: O business deve ter um usuário owner/admin associado
-3. **Servidor Dev**: O servidor de desenvolvimento deve estar rodando na porta 8080
-
-## 📊 Cobertura
-
-### Fluxos Cobertos
-- ✅ Cadastro inicial (setup)
-- ✅ Gestão de programas (CRUD completo)
-- ✅ Gestão de leads (pipeline completo)
-- ✅ Gestão de eventos (CRUD completo)
-- ✅ Páginas públicas (vitrine + detalhes)
-- ✅ Formulário de lead público
-- ✅ Filtros e buscas
-- ✅ Validações de formulário
-- ✅ Limites por nicho
-- ✅ Estados de loading e erro
-
-### Não Coberto (Futuro)
-- ⏳ Dashboard (EducationDashboardPage)
-- ⏳ Analytics (EducationAnalyticsPage)
-- ⏳ Planos (EducationPlansPage)
-- ⏳ Testes de performance
-- ⏳ Testes de acessibilidade
-- ⏳ Testes mobile/responsivo
-
-## 🐛 Troubleshooting
-
-### Testes falhando com timeout
-- Verifique se o servidor dev está rodando
-- Aumente o timeout no `playwright.config.ts`
-- Use `--timeout=60000` na linha de comando
-
-### Erro de autenticação
-- Verifique se `SUPABASE_SERVICE_ROLE_KEY` está configurada
-- Confirme que o business de teste existe
-- Verifique se o usuário tem permissões corretas
-
-### Seletores não encontrados
-- Os seletores podem precisar de ajuste baseado na implementação real
-- Use Playwright Inspector para debug: `npx playwright test --debug`
-- Verifique se os componentes têm os `data-testid` esperados
-
-### Dados não persistindo
-- Verifique as RLS policies no Supabase
-- Confirme que as migrations foram aplicadas
-- Use o helper `cleanupEducationData` no afterEach
-
-## 📝 Convenções
-
-### Nomenclatura de Testes
-```typescript
-test('should [ação] [resultado esperado]', async ({ page }) => {
-  // ...
-});
-```
-
-### Seletores
-- Preferir `getByRole` e `getByLabel` (acessibilidade)
-- Usar `data-testid` para elementos específicos
-- Evitar seletores CSS complexos
-
-### Asserções
-```typescript
-await expect(element).toBeVisible();
-await expect(element).toHaveText('texto');
-await expect(page).toHaveURL(/pattern/);
-```
-
-## 🎯 Próximos Passos
-
-1. **Executar testes**: Rodar suite completa e ajustar seletores
-2. **Adicionar testes faltantes**: Dashboard, Analytics, Planos
-3. **Testes de acessibilidade**: Usar `@axe-core/playwright`
-4. **Testes mobile**: Adicionar viewports mobile
-5. **CI/CD**: Integrar no pipeline de deploy
-6. **Visual regression**: Adicionar screenshots de comparação
-
-## 📚 Recursos
-
-- [Playwright Docs](https://playwright.dev/)
-- [Best Practices](https://playwright.dev/docs/best-practices)
-- [Debugging](https://playwright.dev/docs/debug)
-- [Selectors](https://playwright.dev/docs/selectors)
-
----
-
-**Status**: ✅ 69 testes criados e prontos para execução  
-**Última atualização**: 2026-04-28
+Até lá, esta pasta representa **material de manutenção e preparação**, não uma
+certificação concluída.

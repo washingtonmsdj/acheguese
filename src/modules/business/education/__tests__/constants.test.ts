@@ -3,7 +3,13 @@ import {
   EDUCATION_PROFILE_STATUS,
   EDUCATION_LEAD_STATUS,
   EDUCATION_SUPPORT_LEVELS,
-  UI_LIMITS,
+  EDUCATION_LEVEL_OPTIONS,
+  EDUCATION_PROGRAM_MODALITY_OPTIONS,
+  EDUCATION_PROGRAM_SHIFT_OPTIONS,
+  getEducationLevelLabel,
+  getEducationProgramModalityLabel,
+  getEducationProgramShiftLabel,
+
 } from '../constants';
 
 describe('Education Constants', () => {
@@ -47,6 +53,49 @@ describe('Education Constants', () => {
     });
   });
 
+  describe('education level labels', () => {
+    it('maps canonical education level codes to pt-BR labels', () => {
+      expect(getEducationLevelLabel('early_childhood')).toBe('Educação Infantil');
+      expect(getEducationLevelLabel('elementary_2')).toBe(
+        'Ensino Fundamental - Anos Finais',
+      );
+      expect(getEducationLevelLabel('youth_adult_education')).toBe(
+        'EJA - Educação de Jovens e Adultos',
+      );
+      expect(getEducationLevelLabel('unknown_level')).toBeNull();
+    });
+
+    it('keeps setup options derived from the same owner', () => {
+      expect(EDUCATION_LEVEL_OPTIONS).toContainEqual({
+        key: 'high_school',
+        label: 'Ensino Médio',
+      });
+    });
+  });
+
+  describe('program presentation labels', () => {
+    it('maps known technical values to pt-BR labels without inventing missing data', () => {
+      expect(getEducationProgramModalityLabel('in_person')).toBe('Presencial');
+      expect(getEducationProgramModalityLabel('hybrid')).toBe('Híbrido');
+      expect(getEducationProgramModalityLabel(null)).toBeNull();
+
+      expect(getEducationProgramShiftLabel('morning')).toBe('Manhã');
+      expect(getEducationProgramShiftLabel('full_day')).toBe('Integral');
+      expect(getEducationProgramShiftLabel(null)).toBeNull();
+    });
+
+    it('keeps selector options aligned with the same label owners', () => {
+      expect(EDUCATION_PROGRAM_MODALITY_OPTIONS).toContainEqual({
+        value: 'online',
+        label: 'Online',
+      });
+      expect(EDUCATION_PROGRAM_SHIFT_OPTIONS).toContainEqual({
+        value: 'evening',
+        label: 'Noite',
+      });
+    });
+  });
+
   describe('EDUCATION_SUPPORT_LEVELS', () => {
     it('should have all support levels', () => {
       expect(EDUCATION_SUPPORT_LEVELS.FULL_ENABLED).toBe('full_enabled');
@@ -56,18 +105,5 @@ describe('Education Constants', () => {
     });
   });
 
-  describe('UI_LIMITS', () => {
-    it('should have reasonable limits', () => {
-      expect(UI_LIMITS.MAX_PROGRAMS_PER_PROFILE).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_LEADS_PER_PAGE).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_EVENTS_PER_PROFILE).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_SUMMARY_LENGTH).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_PROGRAM_NAME_LENGTH).toBeGreaterThan(0);
-      expect(UI_LIMITS.MAX_NOTE_LENGTH).toBeGreaterThan(0);
-    });
 
-    it('should have MAX_LEADS_PER_PAGE as 25', () => {
-      expect(UI_LIMITS.MAX_LEADS_PER_PAGE).toBe(25);
-    });
-  });
 });

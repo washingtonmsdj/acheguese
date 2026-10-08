@@ -9,6 +9,39 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { getEducationEventValidationError } from '../eventValidation';
+import { isEducationNicheKey } from '../nicheKey';
+import {
+  getEducationProfileIdentityPatchError,
+  isEducationInstitutionTypeForNiche,
+} from '../profileIdentity';
+import { isEducationProfileStatus } from '../profileStatus';
+import {
+  getEducationSchoolIdentityPatchError,
+  isEducationSchoolNetwork,
+  isEducationSchoolNetworkCompatible,
+  isEducationSchoolType,
+} from '../schoolIdentity';
+import { isEducationSupportLevel } from '../supportLevel';
+import {
+  canMoveEducationLeadToStatus,
+  getEducationLeadLostReasonValidationError,
+} from '../leadPipelineValidation';
+import {
+  getEducationLeadContactValidationError,
+  normalizeEducationLeadAdminPatch,
+} from '../leadValidation';
+import {
+  getEducationProfileSetupValidationErrors,
+  resolveEducationSourceProvenance,
+} from '../profileValidation';
+import {
+  EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH,
+  getEducationProgramCurriculumValidationError,
+  getEducationProgramNameValidationError,
+  getEducationProgramNumericValidationError,
+  normalizeEducationProgramCurriculumTopics,
+} from '../programValidation';
 import {
   getSchoolStageOptions,
   isSchoolNiche,
@@ -17,12 +50,15 @@ import {
 import type {
   EducationProfile,
   EducationProgram,
+  EducationProgramAdminPatch,
   EducationLead,
+  EducationLeadAdminPatch,
   EducationEvent,
+  EducationEventAdminPatch,
   EducationLeadStatus,
   EducationNicheKey,
-  EducationProfileStatus,
 } from '../types';
+import type { SchoolNetwork, SchoolType } from '../contracts';
 
 // ============================================================
 // TIPOS INTERNOS
@@ -38,6 +74,22 @@ interface ValidationError {
   message: string;
 }
 
+function hasForbiddenMutationKey(
+  payload: object,
+  keys: readonly string[],
+): boolean {
+  return keys.some((key) =>
+    Object.prototype.hasOwnProperty.call(payload, key),
+  );
+}
+
+const IMMUTABLE_EDUCATION_ENTITY_FIELDS = [
+  'id',
+  'education_profile_id',
+  'created_at',
+  'updated_at',
+] as const;
+
 function normalizeStageText(value: string | null | undefined): string | null {
   if (!value) return null;
   const normalized = value.trim().replace(/\s+/g, ' ');
@@ -46,30 +98,6 @@ function normalizeStageText(value: string | null | undefined): string | null {
 
 function validateCustomStageText(value: string): boolean {
   return value.length >= 3 && value.length <= 120 && value !== SCHOOL_STAGE_OTHER_VALUE;
-}
-
-function normalizeCurriculumTopics(
-  topics: string[] | null | undefined,
-): string[] | null | undefined {
-  if (topics === undefined) return undefined;
-  if (topics === null) return null;
-
-  const normalized = Array.from(
-    new Set(
-      topics
-        .map((topic) => topic.trim().replace(/\s+/g, ' '))
-        .filter(Boolean),
-    ),
-  );
-
-  if (normalized.length > 50) {
-    throw new Error('Curriculo excede o limite de 50 disciplinas/conteudos');
-  }
-  if (normalized.some((topic) => topic.length > 80)) {
-    throw new Error('Cada disciplina/conteudo deve ter no maximo 80 caracteres');
-  }
-
-  return normalized.length > 0 ? normalized : null;
 }
 
 function isOfficialStageLabel(
@@ -100,34 +128,90 @@ async function getProfileNicheKey(profileId: string): Promise<EducationNicheKey 
 function validateProfilePayload(payload: Partial<EducationProfile>): ValidationError[] {
   const errors: ValidationError[] = [];
 
-  if (payload.whatsapp_number !== undefined && payload.whatsapp_number.length > 20) {
+  const setupErrors = getEducationProfileSetupValidationErrors({
+    ageRangeMin: payload.age_range_min,
+    ageRangeMax: payload.age_range_max,
+    schoolInepCode: payload.school_inep_code,
+    schoolSourceUrl: payload.school_source_url,
+  });
+  errors.push(...setupErrors);
+
+
+  if (payload.whatsapp_number != null && payload.whatsapp_number.length > 20) {
     errors.push({ field: 'whatsapp_number', message: 'Maximo 20 caracteres' });
   }
 
-  if (payload.summary !== undefined && payload.summary.length > 500) {
+  if (payload.summary != null && payload.summary.length > 500) {
     errors.push({ field: 'summary', message: 'Maximo 500 caracteres' });
   }
 
-  const validNiches = [
-    'regular_school', 'daycare', 'language_school', 'prep_course',
-    'technical_school', 'tutoring_center', 'music_school', 'sports_school',
-  ];
-  if (payload.niche_key !== undefined && !validNiches.includes(payload.niche_key)) {
+  if (
+    payload.niche_key !== undefined &&
+    !isEducationNicheKey(payload.niche_key)
+  ) {
     errors.push({ field: 'niche_key', message: 'Nicho invalido' });
   }
 
-  const validSchoolTypes = ['public', 'private', 'charter', 'community'];
-  if (payload.school_type !== undefined && payload.school_type !== null && !validSchoolTypes.includes(payload.school_type)) {
+  if (
+    payload.niche_key !== undefined &&
+    isEducationNicheKey(payload.niche_key) &&
+    payload.institution_type !== undefined &&
+    !isEducationInstitutionTypeForNiche(
+      payload.institution_type,
+      payload.niche_key,
+    )
+  ) {
+    errors.push({
+      field: 'institution_type',
+      message: 'Tipo de instituicao incompativel com o nicho',
+    });
+  }
+
+  if (
+    payload.school_type !== undefined &&
+    payload.school_type !== null &&
+    !isEducationSchoolType(payload.school_type)
+  ) {
     errors.push({ field: 'school_type', message: 'Tipo de escola invalido' });
   }
 
-  const validSchoolNetworks = ['municipal', 'state', 'federal', 'private'];
-  if (payload.school_network !== undefined && payload.school_network !== null && !validSchoolNetworks.includes(payload.school_network)) {
+  if (
+    payload.school_network !== undefined &&
+    payload.school_network !== null &&
+    !isEducationSchoolNetwork(payload.school_network)
+  ) {
     errors.push({ field: 'school_network', message: 'Rede administrativa invalida' });
   }
 
-  const validStatuses: EducationProfileStatus[] = ['draft', 'published', 'paused'];
-  if (payload.status !== undefined && !validStatuses.includes(payload.status)) {
+  if (
+    payload.school_type !== undefined &&
+    payload.school_type !== null &&
+    isEducationSchoolType(payload.school_type) &&
+    payload.school_network !== undefined &&
+    payload.school_network !== null &&
+    isEducationSchoolNetwork(payload.school_network) &&
+    !isEducationSchoolNetworkCompatible(
+      payload.school_type,
+      payload.school_network,
+    )
+  ) {
+    errors.push({
+      field: 'school_network',
+      message: 'Rede administrativa incompativel com o tipo de escola',
+    });
+  }
+
+  if (
+    payload.support_level !== undefined &&
+    !isEducationSupportLevel(payload.support_level)
+  ) {
+    errors.push({ field: 'support_level', message: 'Nivel de suporte invalido' });
+  }
+
+  if (
+    payload.status !== undefined &&
+    !isEducationProfileStatus(payload.status)
+  ) {
     errors.push({ field: 'status', message: 'Status invalido' });
   }
 
@@ -149,6 +233,13 @@ function handleValidationErrors(errors: ValidationError[]): Error {
 export async function createEducationProfile(
   payload: Omit<EducationProfile, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationProfile>> {
+  payload.school_inep_code = payload.school_inep_code?.trim() || null;
+  const sourceProvenance = resolveEducationSourceProvenance({
+    nextUrl: payload.school_source_url,
+  });
+  payload.school_source_url = sourceProvenance.schoolSourceUrl;
+  payload.school_source_updated_at =
+    sourceProvenance.schoolSourceUpdatedAt;
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
     return { data: null, error: handleValidationErrors(errors) };
@@ -198,9 +289,115 @@ export async function updateEducationProfile(
   id: string,
   payload: Partial<EducationProfile>,
 ): Promise<MutationResult<EducationProfile>> {
+  if (payload.school_inep_code !== undefined) {
+    payload.school_inep_code = payload.school_inep_code?.trim() || null;
+  }
+  if (payload.school_source_url !== undefined) {
+    const { data: currentSource, error: currentSourceError } = await supabase
+      .from('education_profiles')
+      .select('school_source_url,school_source_updated_at')
+      .eq('id', id)
+      .single();
+
+    if (currentSourceError || !currentSource) {
+      logger.error(
+        '[EducationMutations] Error loading profile source provenance:',
+        currentSourceError,
+      );
+      return {
+        data: null,
+        error: new Error(
+          currentSourceError?.message ?? 'Perfil de educacao nao encontrado',
+        ),
+      };
+    }
+
+    const sourceProvenance = resolveEducationSourceProvenance({
+      currentUrl: currentSource.school_source_url,
+      currentUpdatedAt: currentSource.school_source_updated_at,
+      nextUrl: payload.school_source_url,
+    });
+    payload.school_source_url = sourceProvenance.schoolSourceUrl;
+    payload.school_source_updated_at =
+      sourceProvenance.schoolSourceUpdatedAt;
+  } else if (payload.school_source_updated_at !== undefined) {
+    delete payload.school_source_updated_at;
+  }
   const errors = validateProfilePayload(payload);
   if (errors.length > 0) {
     return { data: null, error: handleValidationErrors(errors) };
+  }
+
+  if (
+    payload.institution_type !== undefined ||
+    payload.niche_key !== undefined
+  ) {
+    const { data: currentIdentity, error: currentIdentityError } = await supabase
+      .from('education_profiles')
+      .select('institution_type,niche_key')
+      .eq('id', id)
+      .single();
+
+    if (currentIdentityError || !currentIdentity) {
+      logger.error(
+        '[EducationMutations] Error loading profile identity:',
+        currentIdentityError,
+      );
+      return {
+        data: null,
+        error: new Error(
+          currentIdentityError?.message ?? 'Perfil de educacao nao encontrado',
+        ),
+      };
+    }
+
+    const identityError = getEducationProfileIdentityPatchError({
+      currentInstitutionType: currentIdentity.institution_type,
+      currentNicheKey: currentIdentity.niche_key as EducationNicheKey,
+      nextInstitutionType: payload.institution_type,
+      nextNicheKey: payload.niche_key,
+    });
+    if (identityError) {
+      return { data: null, error: new Error(identityError) };
+    }
+  }
+
+  if (
+    payload.school_type !== undefined ||
+    payload.school_network !== undefined
+  ) {
+    const { data: currentSchoolIdentity, error: currentSchoolIdentityError } =
+      await supabase
+        .from('education_profiles')
+        .select('school_type,school_network')
+        .eq('id', id)
+        .single();
+
+    if (currentSchoolIdentityError || !currentSchoolIdentity) {
+      logger.error(
+        '[EducationMutations] Error loading school identity:',
+        currentSchoolIdentityError,
+      );
+      return {
+        data: null,
+        error: new Error(
+          currentSchoolIdentityError?.message ??
+            'Perfil de educacao nao encontrado',
+        ),
+      };
+    }
+
+    const schoolIdentityError = getEducationSchoolIdentityPatchError({
+      currentSchoolType:
+        (currentSchoolIdentity.school_type as SchoolType | null) ?? null,
+      currentSchoolNetwork:
+        (currentSchoolIdentity.school_network as SchoolNetwork | null) ?? null,
+      nextSchoolType: payload.school_type,
+      nextSchoolNetwork: payload.school_network,
+    });
+    if (schoolIdentityError) {
+      return { data: null, error: new Error(schoolIdentityError) };
+    }
   }
 
   // Atualiza published_at automaticamente se status muda para published
@@ -259,6 +456,36 @@ export async function createEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
+  const programNameError = getEducationProgramNameValidationError(payload.name);
+  if (programNameError) {
+    return { data: null, error: new Error(programNameError) };
+  }
+
+  const numericError = getEducationProgramNumericValidationError({
+    availableSlots: payload.available_slots,
+    priceFrom: payload.price_from,
+    maxCapacity: payload.max_capacity,
+    currentEnrollment: payload.current_enrollment,
+  });
+  if (numericError) {
+    return { data: null, error: new Error(numericError) };
+  }
+
+  if (
+    payload.age_group &&
+    payload.age_group.trim().length > EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH
+  ) {
+    return {
+      data: null,
+      error: new Error(
+        `A faixa etária deve ter no máximo ${EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH} caracteres.`,
+      ),
+    };
+  }
+
+  payload.name = payload.name.trim();
+  payload.age_group = payload.age_group?.trim() || null;
+
   if (isSchoolNiche(nicheKey)) {
     const stageName = normalizeStageText(payload.name);
     const stageGrade = normalizeStageText(payload.grade ?? null);
@@ -277,7 +504,14 @@ export async function createEducationProgram(
     payload.grade = stageGrade ?? stageName;
   }
 
-  payload.curriculum_topics = normalizeCurriculumTopics(payload.curriculum_topics) ?? null;
+  const curriculumError = getEducationProgramCurriculumValidationError(
+    payload.curriculum_topics,
+  );
+  if (curriculumError) {
+    return { data: null, error: new Error(curriculumError) };
+  }
+  payload.curriculum_topics =
+    normalizeEducationProgramCurriculumTopics(payload.curriculum_topics) ?? null;
 
   const { data, error } = await supabase
     .from('education_programs')
@@ -298,11 +532,17 @@ export async function createEducationProgram(
  */
 export async function updateEducationProgram(
   id: string,
-  payload: Partial<EducationProgram>,
+  payload: EducationProgramAdminPatch,
 ): Promise<MutationResult<EducationProgram>> {
+  if (hasForbiddenMutationKey(payload, IMMUTABLE_EDUCATION_ENTITY_FIELDS)) {
+    return {
+      data: null,
+      error: new Error('Campos imutaveis de programa nao podem ser alterados'),
+    };
+  }
   const { data: existingProgram, error: existingProgramError } = await supabase
     .from('education_programs')
-    .select('education_profile_id')
+    .select('education_profile_id,max_capacity,current_enrollment')
     .eq('id', id)
     .single();
 
@@ -315,12 +555,61 @@ export async function updateEducationProgram(
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
   }
 
+  if (payload.name !== undefined) {
+    const programNameError = getEducationProgramNameValidationError(payload.name);
+    if (programNameError) {
+      return { data: null, error: new Error(programNameError) };
+    }
+    payload.name = payload.name.trim();
+  }
+
+  const capacityTouched =
+    payload.max_capacity !== undefined ||
+    payload.current_enrollment !== undefined;
+  const numericError = getEducationProgramNumericValidationError({
+    availableSlots: payload.available_slots,
+    priceFrom: payload.price_from,
+    maxCapacity: capacityTouched
+      ? payload.max_capacity === undefined
+        ? existingProgram.max_capacity
+        : payload.max_capacity
+      : undefined,
+    currentEnrollment: capacityTouched
+      ? payload.current_enrollment === undefined
+        ? existingProgram.current_enrollment
+        : payload.current_enrollment
+      : undefined,
+  });
+  if (numericError) {
+    return { data: null, error: new Error(numericError) };
+  }
+
+  if (
+    payload.age_group &&
+    payload.age_group.trim().length > EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH
+  ) {
+    return {
+      data: null,
+      error: new Error(
+        `A faixa etária deve ter no máximo ${EDUCATION_PROGRAM_AGE_GROUP_MAX_LENGTH} caracteres.`,
+      ),
+    };
+  }
+  if (payload.age_group !== undefined) {
+    payload.age_group = payload.age_group?.trim() || null;
+  }
+
   if (isSchoolNiche(nicheKey)) {
     const updatedName = normalizeStageText(payload.name ?? null);
     const updatedGrade = normalizeStageText(payload.grade ?? null);
     const candidate = updatedName ?? updatedGrade;
 
     if (candidate) {
+      const programNameError = getEducationProgramNameValidationError(candidate);
+      if (programNameError) {
+        return { data: null, error: new Error(programNameError) };
+      }
+
       const official = isOfficialStageLabel(candidate, nicheKey);
       const custom = validateCustomStageText(candidate);
       if (!official && !custom) {
@@ -332,7 +621,14 @@ export async function updateEducationProgram(
   }
 
   if (payload.curriculum_topics !== undefined) {
-    payload.curriculum_topics = normalizeCurriculumTopics(payload.curriculum_topics) ?? null;
+    const curriculumError = getEducationProgramCurriculumValidationError(
+      payload.curriculum_topics,
+    );
+    if (curriculumError) {
+      return { data: null, error: new Error(curriculumError) };
+    }
+    payload.curriculum_topics =
+      normalizeEducationProgramCurriculumTopics(payload.curriculum_topics) ?? null;
   }
 
   const { data, error } = await supabase
@@ -379,6 +675,13 @@ export async function deleteEducationProgram(
 export async function createEducationLead(
   payload: Omit<EducationLead, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationLead>> {
+  const contactValidationError = getEducationLeadContactValidationError(payload);
+  if (contactValidationError) {
+    return { data: null, error: new Error(contactValidationError) };
+  }
+
+  Object.assign(payload, normalizeEducationLeadAdminPatch(payload));
+
   const nicheKey = await getProfileNicheKey(payload.education_profile_id);
   if (!nicheKey) {
     return { data: null, error: new Error('Perfil de educacao nao encontrado') };
@@ -410,42 +713,15 @@ export async function createEducationLead(
   return { data: data as EducationLead, error: null };
 }
 
-const EDUCATION_LEAD_PIPELINE: EducationLeadStatus[] = [
-  'new',
-  'contacted',
-  'visit_scheduled',
-  'proposal_sent',
-  'enrolled',
-];
-
-function isAllowedLeadTransition(
-  from: EducationLeadStatus,
-  to: EducationLeadStatus,
-): boolean {
-  if (from === to) return true;
-  if (from === 'enrolled' || from === 'lost') return false;
-  if (to === 'lost') return true;
-
-  const fromIndex = EDUCATION_LEAD_PIPELINE.indexOf(from);
-  const toIndex = EDUCATION_LEAD_PIPELINE.indexOf(to);
-  return fromIndex >= 0 && toIndex === fromIndex + 1;
-}
-
-/**
- * Atualiza lead (incluindo mudanca de status)
- */
-export async function updateEducationLead(
+async function persistEducationLeadUpdate(
   id: string,
   payload: Partial<EducationLead>,
 ): Promise<MutationResult<EducationLead>> {
-  // Se status mudou para 'contacted', registra first_contact_at
-  if (payload.status === 'contacted' && !payload.first_contact_at) {
-    payload.first_contact_at = new Date().toISOString();
-  }
+  const updatePayload: Partial<EducationLead> = { ...payload };
 
   const { data, error } = await supabase
     .from('education_leads')
-    .update(payload)
+    .update(updatePayload)
     .eq('id', id)
     .select()
     .single();
@@ -459,6 +735,69 @@ export async function updateEducationLead(
 }
 
 /**
+ * Atualiza campos editaveis do lead.
+ * Mudancas de status devem passar exclusivamente por moveLeadToStatus.
+ */
+export async function updateEducationLead(
+  id: string,
+  payload: EducationLeadAdminPatch,
+): Promise<MutationResult<EducationLead>> {
+  const forbiddenFields = [
+    ...IMMUTABLE_EDUCATION_ENTITY_FIELDS,
+    'status',
+    'source_channel',
+    'first_contact_at',
+    'lost_reason',
+  ] as const;
+
+  if (hasForbiddenMutationKey(payload, forbiddenFields)) {
+    return {
+      data: null,
+      error: new Error(
+        'Campos controlados do lead nao podem ser alterados pelo patch administrativo',
+      ),
+    };
+  }
+
+  const contactValidationError = getEducationLeadContactValidationError(payload);
+  if (contactValidationError) {
+    return { data: null, error: new Error(contactValidationError) };
+  }
+
+  const normalizedPayload = normalizeEducationLeadAdminPatch(payload);
+
+  if (normalizedPayload.desired_grade !== undefined) {
+    const { data: currentLead, error: currentLeadError } = await supabase
+      .from('education_leads')
+      .select('education_profile_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (currentLeadError || !currentLead?.education_profile_id) {
+      return {
+        data: null,
+        error: new Error(currentLeadError?.message ?? 'Lead nao encontrado'),
+      };
+    }
+
+    const nicheKey = await getProfileNicheKey(currentLead.education_profile_id);
+    if (!nicheKey) {
+      return { data: null, error: new Error('Perfil de educacao nao encontrado') };
+    }
+
+    if (isSchoolNiche(nicheKey) && normalizedPayload.desired_grade) {
+      const official = isOfficialStageLabel(normalizedPayload.desired_grade, nicheKey);
+      const custom = validateCustomStageText(normalizedPayload.desired_grade);
+      if (!official && !custom) {
+        return { data: null, error: new Error('Serie/etapa desejada invalida') };
+      }
+    }
+  }
+
+  return persistEducationLeadUpdate(id, normalizedPayload);
+}
+
+/**
  * Move lead para outro status no pipeline
  * Registra evento de auditoria automaticamente via trigger
  */
@@ -469,7 +808,11 @@ export async function moveLeadToStatus(
     lostReason?: string;
     ownerUserId?: string | null;
   } = {},
-): Promise<MutationResult<EducationLead>> {
+): Promise<
+  MutationResult<EducationLead> & {
+    previousStatus: EducationLeadStatus | null;
+  }
+> {
   const { data: currentLead, error: currentLeadError } = await supabase
     .from('education_leads')
     .select('status')
@@ -480,30 +823,58 @@ export async function moveLeadToStatus(
     return {
       data: null,
       error: new Error(currentLeadError?.message ?? 'Lead nao encontrado'),
+      previousStatus: null,
     };
   }
 
   const currentStatus = currentLead.status as EducationLeadStatus;
-  if (!isAllowedLeadTransition(currentStatus, newStatus)) {
+  if (!canMoveEducationLeadToStatus(currentStatus, newStatus)) {
     return {
       data: null,
       error: new Error(
         `Transicao de lead invalida: ${currentStatus} -> ${newStatus}`,
       ),
+      previousStatus: currentStatus,
     };
   }
 
   const updatePayload: Partial<EducationLead> = { status: newStatus };
 
-  if (options.lostReason && newStatus === 'lost') {
-    updatePayload.lost_reason = options.lostReason;
+  if (newStatus === 'contacted' && currentStatus !== 'contacted') {
+    updatePayload.first_contact_at = new Date().toISOString();
+  }
+
+  if (newStatus === 'lost') {
+    const lostReasonError = getEducationLeadLostReasonValidationError(
+      options.lostReason,
+    );
+    if (lostReasonError) {
+      return {
+        data: null,
+        error: new Error(lostReasonError),
+        previousStatus: currentStatus,
+      };
+    }
+
+    updatePayload.lost_reason = options.lostReason?.trim() ?? null;
   }
 
   if (options.ownerUserId !== undefined) {
+    const ownerValidationError = getEducationLeadContactValidationError({
+      owner_user_id: options.ownerUserId,
+    });
+    if (ownerValidationError) {
+      return {
+        data: null,
+        error: new Error(ownerValidationError),
+        previousStatus: currentStatus,
+      };
+    }
     updatePayload.owner_user_id = options.ownerUserId;
   }
 
-  return updateEducationLead(id, updatePayload);
+  const result = await persistEducationLeadUpdate(id, updatePayload);
+  return { ...result, previousStatus: currentStatus };
 }
 
 // ============================================================
@@ -516,6 +887,19 @@ export async function moveLeadToStatus(
 export async function createEducationEvent(
   payload: Omit<EducationEvent, 'id' | 'created_at' | 'updated_at'>,
 ): Promise<MutationResult<EducationEvent>> {
+  const validationError = getEducationEventValidationError({
+    title: payload.title,
+    startsAt: payload.starts_at,
+    endsAt: payload.ends_at,
+    location: payload.location,
+  });
+  if (validationError) {
+    return { data: null, error: new Error(validationError) };
+  }
+
+  payload.title = payload.title.trim();
+  payload.location = payload.location?.trim() || null;
+
   const { data, error } = await supabase
     .from('education_events')
     .insert(payload)
@@ -535,8 +919,54 @@ export async function createEducationEvent(
  */
 export async function updateEducationEvent(
   id: string,
-  payload: Partial<EducationEvent>,
+  payload: EducationEventAdminPatch,
 ): Promise<MutationResult<EducationEvent>> {
+  if (hasForbiddenMutationKey(payload, IMMUTABLE_EDUCATION_ENTITY_FIELDS)) {
+    return {
+      data: null,
+      error: new Error('Campos imutaveis de evento nao podem ser alterados'),
+    };
+  }
+  const shouldValidate =
+    payload.title !== undefined ||
+    payload.starts_at !== undefined ||
+    payload.ends_at !== undefined ||
+    payload.location !== undefined;
+
+  if (shouldValidate) {
+    const { data: currentEvent, error: currentEventError } = await supabase
+      .from('education_events')
+      .select('title, starts_at, ends_at, location')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (currentEventError || !currentEvent) {
+      return {
+        data: null,
+        error: new Error(currentEventError?.message ?? 'Evento nao encontrado'),
+      };
+    }
+
+    const validationError = getEducationEventValidationError({
+      title: payload.title ?? currentEvent.title,
+      startsAt: payload.starts_at ?? currentEvent.starts_at,
+      endsAt:
+        payload.ends_at === undefined ? currentEvent.ends_at : payload.ends_at,
+      location:
+        payload.location === undefined ? currentEvent.location : payload.location,
+    });
+    if (validationError) {
+      return { data: null, error: new Error(validationError) };
+    }
+
+    if (payload.title !== undefined) {
+      payload.title = payload.title.trim();
+    }
+    if (payload.location !== undefined) {
+      payload.location = payload.location?.trim() || null;
+    }
+  }
+
   const { data, error } = await supabase
     .from('education_events')
     .update(payload)

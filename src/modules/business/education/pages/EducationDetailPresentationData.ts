@@ -159,7 +159,7 @@ export const FACILITY_LABELS: Record<SchoolFacilityFeatureKey, string> = {
 };
 
 export function formatPrice(value: number | null) {
-  if (!value) return null;
+  if (value == null) return null;
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 

@@ -1,7 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { EducationService } from '../services';
 import * as educationQueries from '@/core/education/services/education.queries';
-import type { EducationLevel, EducationProgram } from '@/core/education';
+import type {
+  EducationLevel,
+  EducationProgramAdminPatch,
+} from '@/core/education';
 
 export interface EducationProgramQueryOptions {
   includeInactive?: boolean;
@@ -60,7 +63,7 @@ export function useEducationPrograms(
       payload,
     }: {
       programId: string;
-      payload: Partial<EducationProgram>;
+      payload: EducationProgramAdminPatch;
     }) => {
       const updated = await EducationService.updateProgram(programId, payload);
       if (!updated) throw new Error('Falha ao atualizar programa');
@@ -90,5 +93,12 @@ export function useEducationPrograms(
     create: createMutation.mutateAsync,
     update: updateMutation.mutateAsync,
     remove: deleteMutation.mutateAsync,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+    isMutating:
+      createMutation.isPending ||
+      updateMutation.isPending ||
+      deleteMutation.isPending,
   };
 }

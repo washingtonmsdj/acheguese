@@ -1,3 +1,8 @@
+import {
+  isEducationSchoolNetworkCompatible,
+  normalizeEducationSchoolNetwork,
+  resolveEducationInstitutionTypeForNiche,
+} from '@/core/education';
 import type {
   EducationLevel,
   EducationNicheKey,
@@ -5,7 +10,9 @@ import type {
   SchoolBasicResourceKey,
   SchoolEquipmentFeatureKey,
   SchoolFacilityFeatureKey,
+  SchoolNetwork,
   SchoolShift,
+  SchoolType,
 } from '@/core/education';
 
 export type EducationSetupFormData = {
@@ -145,19 +152,8 @@ function resolveEducationInfrastructurePreset(
   }
 }
 
-const INSTITUTION_TYPE_BY_NICHE: Record<EducationNicheKey, string> = {
-  regular_school: 'school',
-  daycare: 'daycare',
-  language_school: 'language_school',
-  prep_course: 'prep_course',
-  technical_school: 'technical_school',
-  tutoring_center: 'tutoring_center',
-  music_school: 'music_school',
-  sports_school: 'sports_school',
-};
-
 export function getInstitutionTypeForNiche(nicheKey: string): string {
-  return INSTITUTION_TYPE_BY_NICHE[nicheKey as EducationNicheKey] ?? '';
+  return resolveEducationInstitutionTypeForNiche(nicheKey) ?? '';
 }
 
 const SCHOOL_PROFILE_NICHES: EducationNicheKey[] = ['regular_school', 'daycare', 'technical_school'];
@@ -171,14 +167,14 @@ export function hasEducationLevels(nicheKey: string): nicheKey is EducationNiche
   return EDUCATION_LEVEL_NICHES.includes(nicheKey as EducationNicheKey);
 }
 
-export const SCHOOL_TYPES = [
+export const SCHOOL_TYPES: { value: SchoolType; label: string }[] = [
   { value: 'public', label: 'Pública' },
   { value: 'private', label: 'Privada' },
   { value: 'community', label: 'Comunitária' },
   { value: 'charter', label: 'Conveniada' },
 ];
 
-export const SCHOOL_NETWORKS = [
+export const SCHOOL_NETWORKS: { value: SchoolNetwork; label: string }[] = [
   { value: 'municipal', label: 'Municipal' },
   { value: 'state', label: 'Estadual' },
   { value: 'federal', label: 'Federal' },
@@ -186,32 +182,31 @@ export const SCHOOL_NETWORKS = [
 ];
 
 export function getSchoolNetworkOptions(schoolType: string) {
-  if (schoolType === 'public') {
-    return SCHOOL_NETWORKS.filter((network) => network.value !== 'private');
-  }
-  if (schoolType === 'private') {
-    return SCHOOL_NETWORKS.filter((network) => network.value === 'private');
-  }
-  return SCHOOL_NETWORKS;
+  return SCHOOL_NETWORKS.filter((network) => {
+    if (
+      schoolType !== 'public' &&
+      schoolType !== 'private' &&
+      schoolType !== 'community' &&
+      schoolType !== 'charter'
+    ) {
+      return true;
+    }
+
+    return isEducationSchoolNetworkCompatible(
+      schoolType,
+      network.value,
+    );
+  });
 }
 
 export function normalizeSchoolNetworkForType(
   schoolType: string,
   schoolNetwork: string,
 ): string {
-  if (schoolType === 'private') return 'private';
-  if (schoolType === 'public' && schoolNetwork === 'private') return '';
-  return schoolNetwork;
+  return normalizeEducationSchoolNetwork(schoolType, schoolNetwork);
 }
 
-export const EDUCATION_LEVEL_OPTIONS: { key: EducationLevel; label: string }[] = [
-  { key: 'early_childhood', label: 'Educação Infantil' },
-  { key: 'elementary_1', label: 'Ensino Fundamental - Anos Iniciais' },
-  { key: 'elementary_2', label: 'Ensino Fundamental - Anos Finais' },
-  { key: 'youth_adult_education', label: 'EJA - Educacao de Jovens e Adultos' },
-  { key: 'high_school', label: 'Ensino Médio' },
-  { key: 'technical', label: 'Técnico' },
-];
+export { EDUCATION_LEVEL_OPTIONS } from '../constants';
 
 export const SHIFT_OPTIONS: { key: SchoolShift; label: string }[] = [
   { key: 'morning', label: 'Manhã' },

@@ -10,6 +10,7 @@
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
+import { isEducationEventActive } from '../eventTemporalState';
 import type {
   EducationPublicProfile,
   EducationPublicRoute,
@@ -461,6 +462,7 @@ export async function listEducationEvents(
   options: {
     isPublic?: boolean;
     upcoming?: boolean;
+    active?: boolean;
   } = {},
 ): Promise<EducationEvent[]> {
   let query = supabase
@@ -472,8 +474,12 @@ export async function listEducationEvents(
     query = query.eq('is_public', options.isPublic);
   }
 
+  const nowIso = new Date().toISOString();
+
   if (options.upcoming) {
-    query = query.gte('starts_at', new Date().toISOString());
+    query = query.gte('starts_at', nowIso);
+  } else if (options.active) {
+    query = query.or(`starts_at.gte.${nowIso},ends_at.gte.${nowIso}`);
   }
 
   const { data, error } = await query
@@ -483,7 +489,15 @@ export async function listEducationEvents(
     educationQueryError('Error listing events', error);
   }
 
-  return (data ?? []) as EducationEvent[];
+  const events = (data ?? []) as EducationEvent[];
+  return options.active
+    ? events.filter((event) =>
+        isEducationEventActive({
+          startsAt: event.starts_at,
+          endsAt: event.ends_at,
+        }),
+      )
+    : events;
 }
 
 /**
@@ -804,7 +818,7 @@ export async function countEventsByType(
  */
 export async function getLeadPipelineMetrics(
   profileId: string,
-): Promise<{ conversionRate: number; avgDaysToFirstContact: number }> {
+): Promise<{ conversionRate: number; avgDaysToFirstContact: number | null }> {
   requireAnalyticsProfileId(profileId);
 
   const { data, error } = await supabase
@@ -838,7 +852,7 @@ export async function getLeadPipelineMetrics(
           firstContactDays.reduce((sum, days) => sum + days, 0) /
             firstContactDays.length,
         )
-      : 0;
+      : null;
 
   return { conversionRate, avgDaysToFirstContact };
 }

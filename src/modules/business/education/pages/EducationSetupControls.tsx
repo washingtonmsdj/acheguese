@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowLeft, Save, Settings } from 'lucide-react';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -13,10 +13,13 @@ type EducationSetupHeaderProps = {
 };
 
 export function EducationSetupHeader({ onBack }: EducationSetupHeaderProps) {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
+      transition={prefersReducedMotion ? { duration: 0 } : undefined}
       className="mb-8"
     >
       <Button
@@ -169,21 +172,18 @@ export function EducationOptionCheckboxGroup<T extends string>({
 type EducationSetupActionsProps = {
   isSaving: boolean;
   onCancel: () => void;
-  onSave: () => void;
 };
 
 export function EducationSetupActions({
   isSaving,
   onCancel,
-  onSave,
 }: EducationSetupActionsProps) {
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col gap-3 sm:flex-row">
       <Button
-        type="button"
+        type="submit"
         data-testid="education-save-setup"
         disabled={isSaving}
-        onClick={onSave}
         className="flex-1 gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
       >
         <Save className="h-4 w-4" />

@@ -187,6 +187,25 @@
         "signInWithPassword\\s*\\(",
         "resource:\\s*[\"']ci-auth-fixture-session[\"']"
       ]
+    },
+    "education-lead-intake": {
+      "kind": "public-registration-broker",
+      "label": "public authoritative Education lead intake broker",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "isOriginAllowed\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "readJsonBody<RequestBody>\\s*\\(",
+        "getRequiredEnv\\s*\\(\\s*[\"']TURNSTILE_SECRET_KEY[\"']\\s*\\)",
+        "verifyTurnstileToken\\s*\\(",
+        "requireLeadEligibleProfile\\s*\\(",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "education_leads",
+        "public_directory_form",
+        "getTrustedClientIp\\s*\\(",
+        "body\\.honeypot",
+        "body\\.turnstileToken"
+      ]
     }
   },
   "serviceRoleAllowlist": {
@@ -723,17 +742,6 @@
         "auth\\.getUser\\s*\\("
       ]
     },
-    "education-lead-rpc": {
-      "kind": "public-registration-broker",
-      "risk": "Critical",
-      "label": "public Education lead intake service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "requireLeadEligibleProfile\\s*\\(",
-        "education_leads",
-        "public_directory_form"
-      ]
-    },
     "business-network-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
@@ -742,6 +750,23 @@
         "auth\\.getUser\\s*\\(",
         "requireOperationalAccount\\s*\\(",
         "business_network_rpc_"
+      ]
+    },
+    "education-lead-intake": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public authoritative Education lead service_role broker",
+      "requiredPatterns": [
+        "isOriginAllowed\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
+        "requireLeadEligibleProfile\\s*\\(",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "education_leads",
+        "public_directory_form",
+        "getTrustedClientIp\\s*\\(",
+        "body\\.honeypot",
+        "body\\.turnstileToken"
       ]
     }
   },

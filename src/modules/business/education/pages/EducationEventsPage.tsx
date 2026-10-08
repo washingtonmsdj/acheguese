@@ -5,9 +5,9 @@
  * Rota: /central/empresas/:businessId/educacao/eventos
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   Calendar,
   Plus,
@@ -48,34 +48,25 @@ import { useEducationNicheBilling } from '../niches/hooks/useEducationNicheBilli
 import { EducationUpgradeBanner } from '../niches/components/EducationUpgradeBanner';
 import { getNicheByKey } from '../niches/registry';
 import { EducationUrlService } from '../services/EducationUrlService';
-import type { EducationEvent, SchoolEventType } from '@/core/education';
+import {
+  EDUCATION_EVENT_LOCATION_MAX_LENGTH,
+  EDUCATION_EVENT_TITLE_MAX_LENGTH,
+  areEducationEventTimesOverlapping,
+  getEducationEventTemporalState,
+  getEducationEventValidationError,
+  type EducationEvent,
+  type SchoolEventType,
+} from '@/core/education';
+import {
+  SCHOOL_EVENT_TYPE_LABELS,
+  SCHOOL_EVENT_TYPE_OPTIONS,
+} from '../constants';
 import {
   fromEventIsoToLocalInput,
   fromLocalInputToEventIso,
 } from '../utils/educationEventDateTime';
 import { EducationAdminReadError } from '../components/EducationAdminReadError';
-
-const SCHOOL_EVENT_TYPE_LABELS: Record<SchoolEventType, string> = {
-  open_house: 'Portas Abertas',
-  enrollment_fair: 'Feira de Matrícula',
-  parent_meeting: 'Reunião de Pais',
-  trial_class: 'Aula Experimental',
-  school_tour: 'Visita Escolar',
-  cultural_event: 'Evento Cultural',
-  sports_event: 'Evento Esportivo',
-  other: 'Outro',
-};
-
-const SCHOOL_EVENT_TYPE_OPTIONS: { value: SchoolEventType; label: string }[] = [
-  { value: 'open_house', label: 'Portas Abertas' },
-  { value: 'enrollment_fair', label: 'Feira de Matrícula' },
-  { value: 'parent_meeting', label: 'Reunião de Pais' },
-  { value: 'trial_class', label: 'Aula Experimental' },
-  { value: 'school_tour', label: 'Visita Escolar' },
-  { value: 'cultural_event', label: 'Evento Cultural' },
-  { value: 'sports_event', label: 'Evento Esportivo' },
-  { value: 'other', label: 'Outro' },
-];
+import { EducationProfileRequiredState } from '../components/EducationProfileRequiredState';
 
 const selectClassName =
   'mt-1 h-10 w-full rounded-md border border-territory-border bg-territory-surface px-3 py-2 text-sm text-territory-ink outline-none transition-colors focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20';
@@ -83,6 +74,7 @@ const selectClassName =
 export function EducationEventsPage() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const {
@@ -101,6 +93,9 @@ export function EducationEventsPage() {
     create,
     update,
     remove,
+    isCreating,
+    isUpdating,
+    isMutating,
   } = useEducationEvents(profile?.id);
   const dashboardUrl = businessId
     ? EducationUrlService.buildAdminDashboardUrl(businessId)
@@ -109,6 +104,7 @@ export function EducationEventsPage() {
   const nicheBilling = useEducationNicheBilling({
     nicheKey: profile?.niche_key,
     businessId: businessId || '',
+    enabled: Boolean(profile?.id),
   });
 
   const nicheInfo = profile?.niche_key ? getNicheByKey(profile.niche_key) : null;
@@ -128,6 +124,74 @@ export function EducationEventsPage() {
     isPublic: true,
     schoolEventType: '' as SchoolEventType | '',
   });
+
+  const scheduleConflicts = useMemo(() => {
+    if (!formData.startsAt) return [];
+
+    let startsAt: string;
+    let endsAt: string | undefined;
+    try {
+      startsAt = fromLocalInputToEventIso(formData.startsAt);
+      endsAt = formData.endsAt
+        ? fromLocalInputToEventIso(formData.endsAt)
+        : undefined;
+    } catch {
+      return [];
+    }
+
+    const candidate = { startsAt, endsAt };
+    return events.filter((existingEvent) => {
+      if (existingEvent.id === editingEvent?.id) return false;
+      return areEducationEventTimesOverlapping(candidate, {
+        startsAt: existingEvent.starts_at,
+        endsAt: existingEvent.ends_at,
+      });
+    });
+  }, [editingEvent?.id, events, formData.endsAt, formData.startsAt]);
+
+  const buildValidatedEventPayload = () => {
+    let startsAt: string;
+    let endsAt: string | undefined;
+
+    try {
+      startsAt = fromLocalInputToEventIso(formData.startsAt);
+      endsAt = formData.endsAt
+        ? fromLocalInputToEventIso(formData.endsAt)
+        : undefined;
+    } catch {
+      toast({
+        title: 'Revise as datas',
+        description: 'Informe datas e horários válidos para o evento.',
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    const validationError = getEducationEventValidationError({
+      title: formData.title,
+      startsAt,
+      endsAt,
+      location: formData.location,
+    });
+    if (validationError) {
+      toast({
+        title: 'Revise o evento',
+        description: validationError,
+        variant: 'destructive',
+      });
+      return null;
+    }
+
+    return {
+      title: formData.title.trim(),
+      description: formData.description,
+      startsAt,
+      endsAt,
+      location: formData.location.trim(),
+      isPublic: formData.isPublic,
+      schoolEventType: formData.schoolEventType || undefined,
+    };
+  };
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -152,18 +216,11 @@ export function EducationEventsPage() {
       return;
     }
 
+    const payload = buildValidatedEventPayload();
+    if (!payload) return;
+
     try {
-      await create({
-        title: formData.title,
-        description: formData.description,
-        startsAt: fromLocalInputToEventIso(formData.startsAt),
-        endsAt: formData.endsAt
-          ? fromLocalInputToEventIso(formData.endsAt)
-          : undefined,
-        location: formData.location,
-        isPublic: formData.isPublic,
-        schoolEventType: formData.schoolEventType || undefined,
-      });
+      await create(payload);
       toast({
         title: 'Evento criado',
         description: 'O evento foi criado com sucesso.',
@@ -183,19 +240,20 @@ export function EducationEventsPage() {
     event.preventDefault();
     if (!editingEvent) return;
 
+    const validated = buildValidatedEventPayload();
+    if (!validated) return;
+
     try {
       await update({
         eventId: editingEvent.id,
         payload: {
-          title: formData.title,
-          description: formData.description,
-          starts_at: fromLocalInputToEventIso(formData.startsAt),
-          ends_at: formData.endsAt
-            ? fromLocalInputToEventIso(formData.endsAt)
-            : null,
-          location: formData.location,
-          is_public: formData.isPublic,
-          school_event_type: formData.schoolEventType || null,
+          title: validated.title,
+          description: validated.description,
+          starts_at: validated.startsAt,
+          ends_at: validated.endsAt ?? null,
+          location: validated.location || null,
+          is_public: validated.isPublic,
+          school_event_type: validated.schoolEventType ?? null,
         },
       });
       toast({
@@ -273,6 +331,8 @@ export function EducationEventsPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return 'Data inválida';
+
     return date.toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',
@@ -282,7 +342,11 @@ export function EducationEventsPage() {
     });
   };
 
-  const isUpcoming = (dateString: string) => new Date(dateString) > new Date();
+  const getTemporalState = (event: EducationEvent) =>
+    getEducationEventTemporalState({
+      startsAt: event.starts_at,
+      endsAt: event.ends_at,
+    });
 
   if (isProfileLoading || isLoading) {
     return (
@@ -309,15 +373,36 @@ export function EducationEventsPage() {
     );
   }
 
-  const upcomingEvents = events.filter((event) => isUpcoming(event.starts_at));
-  const pastEvents = events.filter((event) => !isUpcoming(event.starts_at));
+  if (!profile) {
+    return (
+      <EducationProfileRequiredState
+        businessId={businessId}
+        title="Configure Educação antes de gerenciar eventos"
+        description="Não existe um perfil Education configurado para cadastrar eventos nesta instituição."
+      />
+    );
+  }
+
+  const upcomingEvents = events.filter(
+    (event) => getTemporalState(event) === 'upcoming',
+  );
+  const ongoingEvents = events.filter(
+    (event) => getTemporalState(event) === 'ongoing',
+  );
+  const pastEvents = events.filter(
+    (event) => getTemporalState(event) === 'past',
+  );
+  const invalidEvents = events.filter(
+    (event) => getTemporalState(event) === 'invalid',
+  );
   const publicEvents = events.filter((event) => event.is_public).length;
 
   return (
     <div className="container mx-auto max-w-6xl p-6 text-territory-ink">
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={prefersReducedMotion ? { duration: 0 } : undefined}
         className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
       >
         <div className="flex items-center gap-3">
@@ -343,7 +428,7 @@ export function EducationEventsPage() {
         <Button
           onClick={openNewDialog}
           className="gap-2 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
-          disabled={isEventsBlocked || isLimitBlocked}
+          disabled={isEventsBlocked || isLimitBlocked || isMutating}
           title={
             isEventsBlocked
               ? eventsCapability.upgradeMessage
@@ -387,7 +472,7 @@ export function EducationEventsPage() {
         </div>
       )}
 
-      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <Card className="border-territory-border bg-territory-surface shadow-sm">
           <CardContent className="p-4">
             <p className="text-sm text-territory-muted">Total</p>
@@ -404,9 +489,25 @@ export function EducationEventsPage() {
         </Card>
         <Card className="border-territory-border bg-territory-surface shadow-sm">
           <CardContent className="p-4">
+            <p className="text-sm text-territory-muted">Em andamento</p>
+            <p className="text-2xl font-bold text-territory-brand">
+              {ongoingEvents.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-territory-border bg-territory-surface shadow-sm">
+          <CardContent className="p-4">
             <p className="text-sm text-territory-muted">Passados</p>
             <p className="text-2xl font-bold text-territory-muted">
               {pastEvents.length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-territory-warning/30 bg-territory-warning/5 shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-sm text-territory-muted">Revisar</p>
+            <p className="text-2xl font-bold text-territory-warning">
+              {invalidEvents.length}
             </p>
           </CardContent>
         </Card>
@@ -430,7 +531,7 @@ export function EducationEventsPage() {
             </p>
             <Button
               onClick={openNewDialog}
-              disabled={isEventsBlocked || isLimitBlocked}
+              disabled={isEventsBlocked || isLimitBlocked || isMutating}
               className="bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -449,13 +550,15 @@ export function EducationEventsPage() {
             .map((event, index) => (
               <motion.div
                 key={event.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
+                transition={
+                  prefersReducedMotion ? { duration: 0 } : { delay: index * 0.05 }
+                }
               >
                 <Card
                   className={`border-territory-border bg-territory-surface shadow-sm ${
-                    isUpcoming(event.starts_at) ? '' : 'opacity-60'
+                    getTemporalState(event) === 'past' ? 'opacity-60' : ''
                   }`}
                 >
                   <CardContent className="p-4">
@@ -465,9 +568,17 @@ export function EducationEventsPage() {
                           <h3 className="text-lg font-semibold text-territory-ink">
                             {event.title}
                           </h3>
-                          {isUpcoming(event.starts_at) ? (
+                          {getTemporalState(event) === 'upcoming' ? (
                             <Badge className="border-territory-success/25 bg-territory-success/10 text-territory-success hover:bg-territory-success/15">
                               Em breve
+                            </Badge>
+                          ) : getTemporalState(event) === 'ongoing' ? (
+                            <Badge className="border-territory-brand/25 bg-territory-brand/10 text-territory-brand">
+                              Em andamento
+                            </Badge>
+                          ) : getTemporalState(event) === 'invalid' ? (
+                            <Badge className="border-territory-error/25 bg-territory-error/10 text-territory-error">
+                              Revisar data
                             </Badge>
                           ) : (
                             <Badge
@@ -532,17 +643,22 @@ export function EducationEventsPage() {
                             variant="ghost"
                             size="sm"
                             aria-label={`Ações do evento ${event.title}`}
+                            disabled={isMutating}
                             className="text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
                           >
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEditDialog(event)}>
+                          <DropdownMenuItem
+                            disabled={isMutating}
+                            onClick={() => openEditDialog(event)}
+                          >
                             <Edit2 className="mr-2 h-4 w-4" />
                             Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem
+                            disabled={isMutating}
                             onClick={() => handleDelete(event.id)}
                             className="text-territory-error focus:text-territory-error"
                           >
@@ -559,8 +675,15 @@ export function EducationEventsPage() {
         </div>
       )}
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-lg border-territory-border bg-territory-surface text-territory-ink">
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          if (isMutating && !open) return;
+          setIsDialogOpen(open);
+          if (!open) setEditingEvent(null);
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-territory-border bg-territory-surface text-territory-ink">
           <DialogHeader>
             <DialogTitle>
               {editingEvent ? 'Editar evento' : 'Novo evento'}
@@ -579,6 +702,7 @@ export function EducationEventsPage() {
                   setFormData({ ...formData, title: event.target.value })
                 }
                 placeholder="Ex: Visita Aberta 2024"
+                maxLength={EDUCATION_EVENT_TITLE_MAX_LENGTH}
                 required
               />
             </div>
@@ -596,7 +720,32 @@ export function EducationEventsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {scheduleConflicts.length > 0 ? (
+              <div
+                role="status"
+                aria-live="polite"
+                className="rounded-lg border border-territory-warning/30 bg-territory-warning/10 p-3 text-sm text-territory-ink"
+              >
+                <p className="font-medium">
+                  Há {scheduleConflicts.length}{' '}
+                  {scheduleConflicts.length === 1 ? 'evento' : 'eventos'} com
+                  horário sobreposto.
+                </p>
+                <p className="mt-1 text-xs text-territory-muted">
+                  {scheduleConflicts
+                    .slice(0, 2)
+                    .map((event) => event.title)
+                    .join(' • ')}
+                  {scheduleConflicts.length > 2
+                    ? ` • +${scheduleConflicts.length - 2}`
+                    : ''}
+                  . O aviso é consultivo e não bloqueia atividades simultâneas
+                  intencionais.
+                </p>
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="startsAt">Início *</Label>
                 <Input
@@ -631,6 +780,7 @@ export function EducationEventsPage() {
                   setFormData({ ...formData, location: event.target.value })
                 }
                 placeholder="Ex: Auditório Principal"
+                maxLength={EDUCATION_EVENT_LOCATION_MAX_LENGTH}
               />
             </div>
 
@@ -667,17 +817,23 @@ export function EducationEventsPage() {
               <Label htmlFor="isPublic">Evento público (visível na página)</Label>
             </div>
 
-            <div className="flex gap-4 pt-4">
+            <div className="flex flex-col gap-3 pt-4 sm:flex-row">
               <Button
                 type="submit"
+                disabled={isMutating}
                 className="flex-1 bg-territory-brand text-territory-on-image hover:bg-territory-brand/90"
               >
-                {editingEvent ? 'Salvar alterações' : 'Criar evento'}
+                {isCreating || isUpdating
+                  ? 'Salvando...'
+                  : editingEvent
+                    ? 'Salvar alterações'
+                    : 'Criar evento'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 className="border-territory-border bg-territory-surface text-territory-ink hover:bg-territory-raised"
+                disabled={isMutating}
                 onClick={() => {
                   setIsDialogOpen(false);
                   setEditingEvent(null);

@@ -31,6 +31,10 @@ paths = [
     '''^\.env\.production$''',
     '''^\.env\.development$''',
     '''^dist/''',
+    '''^\.github/workflows/certify-heavy\.yml$''',
+    '''^\.github/workflows/ssot-tests\.yml$''',
+    '''^tests/architecture/mvp-core-module-boundary\.test\.ts$''',
+    '''^tests/ssot-authenticated-release-public-env\.test\.ts$''',
 ]
 
 [[rules]]
@@ -38,6 +42,26 @@ id = "postgresql-connection-string"
 description = "PostgreSQL connection string with password"
 regex = '''postgresql://[^:]+:[^@]+@[^/]+'''
 tags = ["database", "connection-string", "critical"]
+
+[[rules.allowlists]]
+description = "Runtime-composed Supabase DB URL uses an env-sourced password, never a tracked literal"
+condition = "AND"
+paths = [
+    '''^\.github/workflows/supabase-types-sync\.yml$''',
+]
+regexes = [
+    '''postgresql://postgres\.\$projectRef.*\$encodedPassword.*\$poolerHost''',
+]
+
+[[rules.allowlists]]
+description = "Education INEP stager tests use the literal word secret only as parser fixtures"
+condition = "AND"
+paths = [
+    '''^tests/scripts/public-education-inep-stager\.test\.ts$''',
+]
+regexes = [
+    '''postgresql://[^:]+:secret@''',
+]
 
 [[rules]]
 id = "supabase-anon-key-hardcoded"

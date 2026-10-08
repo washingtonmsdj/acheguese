@@ -22,7 +22,6 @@ vi.mock('../../hooks/useEducationSubscription', () => ({
   useEducationSubscription: vi.fn(() => ({
     status: {
       planTier: PlanTier.DELIVERY,
-      planType: 'premium',
       isActive: true,
       entitlements: {
         maxPrograms: 20,
@@ -31,7 +30,6 @@ vi.mock('../../hooks/useEducationSubscription', () => ({
       },
     },
     planTier: PlanTier.DELIVERY,
-    planType: 'premium',
     isLoading: false,
     isError: false,
     error: null,

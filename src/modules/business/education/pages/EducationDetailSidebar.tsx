@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useReducedMotion } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Building2,
@@ -18,6 +19,7 @@ import type { EducationPublicProfile } from '@/core/education';
 import { useAuth } from '@/core/auth/hooks/useAuth';
 import { AUTH_PATHS } from '@/core/auth/constants/authFlow';
 import { useToast } from '@/shared/hooks/use-toast';
+import { resolveSafeHttpUrl } from '@/shared/utils/safeRedirect';
 import { BusinessClaimService } from '@/core/business/services/BusinessClaimService';
 import { BusinessProfileCorrectionDialog } from '@/core/business/components/BusinessProfileCorrectionDialog';
 import {
@@ -49,6 +51,7 @@ export function EducationDetailSidebar({
   whatsappHref,
 }: EducationDetailSidebarProps) {
   const { user } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,6 +60,15 @@ export function EducationDetailSidebar({
   const [reportOpen, setReportOpen] = useState(false);
   const [correctionOpen, setCorrectionOpen] = useState(false);
   const [institutionalEvidenceUrl, setInstitutionalEvidenceUrl] = useState('');
+  const normalizedInstitutionalEvidenceUrl = institutionalEvidenceUrl.trim()
+    ? resolveSafeHttpUrl(institutionalEvidenceUrl, {
+        context: 'education-institutional-claim',
+        forceHttps: false,
+      })
+    : null;
+  const hasInvalidInstitutionalEvidence =
+    institutionalEvidenceUrl.trim().length > 0 &&
+    normalizedInstitutionalEvidenceUrl === null;
 
   const isPublicInstitution = profile.school_type === 'public';
   const isUnclaimedDirectoryProfile = profile.is_claimable;
@@ -162,7 +174,10 @@ export function EducationDetailSidebar({
   const focusLeadForm = (trackingLabel: string) => {
     trackEnrollmentCTAClick(trackingLabel);
     const form = document.getElementById('education-lead-form');
-    form?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    form?.scrollIntoView({
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      block: 'center',
+    });
     const nameInput = document.getElementById('fullName');
     if (nameInput instanceof HTMLElement) {
       nameInput.focus({ preventScroll: true });
@@ -292,6 +307,14 @@ export function EducationDetailSidebar({
                 Secretaria de Educação, rede responsável ou Diário Oficial. Não envie
                 documentos pessoais ou dados de alunos por este campo.
               </p>
+              {hasInvalidInstitutionalEvidence ? (
+                <p
+                  role="alert"
+                  className="text-xs text-territory-error"
+                >
+                  Informe uma URL pública válida usando http ou https.
+                </p>
+              ) : null}
               <Button
                 type="button"
                 variant="outline"
@@ -299,10 +322,10 @@ export function EducationDetailSidebar({
                 disabled={
                   isClaiming ||
                   claimSubmitted ||
-                  institutionalEvidenceUrl.trim().length === 0
+                  !normalizedInstitutionalEvidenceUrl
                 }
                 onClick={() =>
-                  void requestClaim(institutionalEvidenceUrl.trim())
+                  void requestClaim(normalizedInstitutionalEvidenceUrl ?? undefined)
                 }
               >
                 {claimSubmitted

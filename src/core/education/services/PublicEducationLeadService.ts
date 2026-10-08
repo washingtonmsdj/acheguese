@@ -18,6 +18,8 @@ export interface PublicEducationLeadInput {
   studentAge?: number;
   desiredGrade?: string;
   desiredShift?: SchoolShift;
+  honeypot: string;
+  turnstileToken: string | null;
 }
 
 export interface PublicEducationLeadResult {
@@ -40,6 +42,18 @@ function publicLeadError(message: string): string {
   if (normalized.includes("daily_limit") || normalized.includes("rate")) {
     return "Muitas solicitacoes foram enviadas. Tente novamente mais tarde.";
   }
+  if (normalized.includes("turnstile_failed")) {
+    return "A verificacao anti-spam expirou ou foi rejeitada. Confirme novamente.";
+  }
+  if (normalized.includes("verification_unavailable")) {
+    return "A verificacao anti-spam esta temporariamente indisponivel. Tente novamente em instantes.";
+  }
+  if (normalized.includes("configuration_unavailable")) {
+    return "O envio de solicitacoes esta temporariamente indisponivel.";
+  }
+  if (normalized.includes("origin_not_allowed")) {
+    return "Nao foi possivel validar a origem desta solicitacao.";
+  }
   if (normalized.includes("not_available")) {
     return "Este perfil nao esta disponivel para receber solicitacoes.";
   }
@@ -55,8 +69,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 export const PublicEducationLeadService = {
   async create(input: PublicEducationLeadInput): Promise<PublicEducationLeadResult> {
-    const { data, error } = await supabase.functions.invoke("education-lead-rpc", {
-      body: input,
+    const { data, error } = await supabase.functions.invoke("education-lead-intake", {
+      body: {
+        ...input,
+        honeypot: input.honeypot,
+        turnstileToken: input.turnstileToken,
+      },
     });
 
     if (error) {
