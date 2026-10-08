@@ -244,13 +244,48 @@ async function syncAddress(
       : {}),
   };
 
-  if (existingAddressId) {
-    const address = await addressService.updateAddress(existingAddressId, payload);
-    return { addressId: address.id, created: false };
+  // Physical address changes are staged as a new Address; modifying the
+  // old row here could affect a different Business (or survive a rejected
+  // Business update). The broker alone switches the Business reference.
+  //
+  // A complement-only edit can reuse the *existing geocoding evidence*, but
+  // never reuses the old ID or copies its verification/ownership flags.
+  let retainedGeocoding: {
+    latitude?: number;
+    longitude?: number;
+    precision?: import("@/core/address/types").AddressPrecision;
+    geocoding_source?: import("@/core/address/types").GeocodingSource | null;
+    geocoding_confidence?: number | null;
+    geocoded_at?: string | null;
+  } = {};
+  if (existingAddressId && resolution.latitude === undefined) {
+    const previous = await addressService.getAddressById(existingAddressId);
+    if (!previous) {
+      throw new Error("Endereco atual nao encontrado para gerar uma nova versao");
+    }
+    if (
+      previous.location_id !== resolution.locationId ||
+      previous.street?.trim().toLocaleLowerCase("pt-BR") !==
+        resolution.street.trim().toLocaleLowerCase("pt-BR") ||
+      (previous.number ?? null) !== resolution.number
+    ) {
+      throw new Error("Endereco alterado precisa de nova verificacao de geolocalizacao");
+    }
+    if (previous.latitude !== null && previous.longitude !== null) {
+      retainedGeocoding = {
+        latitude: previous.latitude,
+        longitude: previous.longitude,
+        precision: previous.precision,
+        geocoding_source: previous.geocoding_source,
+        geocoding_confidence: previous.geocoding_confidence,
+        geocoded_at: previous.geocoded_at,
+      };
+    }
   }
 
   const address = await addressService.createAddress({
     ...payload,
+    ...retainedGeocoding,
     owner_user_id: actorUserId,
   });
   return { addressId: address.id, created: true };
