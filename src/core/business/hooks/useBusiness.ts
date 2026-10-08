@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessService, BusinessNotFoundError } from "@/core/business/services/BusinessService";
 import type { Business } from "@/core/business/types";
 
 interface UseBusinessResult {
   business: Business | null;
   isLoading: boolean;
   error: Error | null;
+  notFound: boolean;
   retry: () => void;
 }
 
@@ -29,7 +30,7 @@ export function useBusiness(idOrSlug: string): UseBusinessResult {
 
       const slugData = await BusinessService.getBusinessBySlug(idOrSlug);
       if (!slugData) {
-        throw new Error("Empresa não encontrada");
+        throw new BusinessNotFoundError();
       }
 
       return BusinessService.getBusinessById(slugData.id);
@@ -49,6 +50,7 @@ export function useBusiness(idOrSlug: string): UseBusinessResult {
     business: query.data || null,
     isLoading: query.isLoading,
     error,
+    notFound: error instanceof BusinessNotFoundError,
     retry: () => { void query.refetch(); },
   };
 }
