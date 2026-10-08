@@ -12,7 +12,6 @@
  * - gestão administrativa, histórico e mutações pertencem ao domínio admin;
  * - components/pages não acessam user_roles nem AdminRolesService diretamente.
  */
-import { logger } from '@/shared/utils/logger';
 import { RoleRpcService } from './RoleRpcService';
 import type { AppRole } from '../types/roles.types';
 
@@ -22,12 +21,7 @@ export class RoleService {
    * Consulta via Edge Function `role-rpc`.
    */
   static async hasRole(userId: string, role: AppRole): Promise<boolean> {
-    try {
-      return RoleRpcService.hasRole(userId, role);
-    } catch (error) {
-      logger.error('Erro ao verificar role:', error);
-      return false;
-    }
+    return RoleRpcService.hasRole(userId, role);
   }
 
   /**
@@ -35,12 +29,7 @@ export class RoleService {
    * Consulta via Edge Function `role-rpc`.
    */
   static async isAdmin(userId: string): Promise<boolean> {
-    try {
-      return RoleRpcService.isAdmin(userId);
-    } catch (error) {
-      logger.error('Erro ao verificar admin:', error);
-      return false;
-    }
+    return RoleRpcService.isAdmin(userId);
   }
 
   /**
@@ -48,12 +37,7 @@ export class RoleService {
    * Consulta via Edge Function `role-rpc`.
    */
   static async isSuperAdmin(userId: string): Promise<boolean> {
-    try {
-      return RoleRpcService.isSuperAdmin(userId);
-    } catch (error) {
-      logger.error('Erro ao verificar super admin:', error);
-      return false;
-    }
+    return RoleRpcService.isSuperAdmin(userId);
   }
 
   /**
