@@ -28,7 +28,7 @@ interface PrivateWorkspaceDependencies {
   getUserLikesCount: (profileId: string) => Promise<number>;
   getUserBusinessesByProfiles: (profileIds: string[]) => Promise<BusinessRow[]>;
   getTerritoryLabel: (locationId: string) => Promise<string | null>;
-  resolvePermissions: (profileContext: ProfileContext | null) => ProfilePermissions;
+  resolvePermissions: (profileContext: ProfileContext) => ProfilePermissions;
 }
 
 const MVP_DISABLED_ENTITLEMENTS = {
@@ -120,11 +120,7 @@ export async function getPrivateWorkspaceAggregate(
       notificationStats,
       recentNotifications,
     ] = await Promise.all([
-      optionalWorkspaceRead(
-        "profile-context",
-        () => deps.getProfileContext(deps.userId),
-        null,
-      ),
+      deps.getProfileContext(deps.userId),
       optionalWorkspaceRead(
         "profiles",
         () => deps.getProfilesByUserId(deps.userId),
@@ -162,6 +158,12 @@ export async function getPrivateWorkspaceAggregate(
         [],
       ),
     ]);
+
+    // O perfil ativo foi confirmado acima: contexto ausente aqui indica
+    // uma leitura inconsistente, nunca permissões ou bloqueios conhecidos.
+    if (!profileContext) {
+      throw new Error("Profile context unavailable for the active account");
+    }
 
     // Paused domains never participate in the Account critical path.
     const postsCount = 0;
@@ -222,24 +224,9 @@ export async function getPrivateWorkspaceAggregate(
 
     const notificationPayload = normalizeNotificationPayload(notificationStats);
 
-    const profileStatus = profileContext?.status || {
-      isActive: Boolean(activeProfile.is_active),
-      isBlocked: false,
-      isSuspended: Boolean(activeProfile.is_suspended),
-      suspendedAt: activeProfile.suspended_at,
-      suspensionReason: activeProfile.suspension_reason,
-      suspendedUntil: activeProfile.suspended_until,
-    };
-
-    const profilePlan = profileContext?.plan || {
-      type: "basic",
-      isPremium: false,
-    };
-
-    const profileReputation = profileContext?.reputation || {
-      level: Math.floor((activeProfile.reputation || 0) / 100) + 1,
-      score: activeProfile.reputation || 0,
-    };
+    const profileStatus = profileContext.status;
+    const profilePlan = profileContext.plan;
+    const profileReputation = profileContext.reputation;
 
     const permissions = deps.resolvePermissions(profileContext);
 

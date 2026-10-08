@@ -113,7 +113,8 @@ function ContaHubLivePage() {
     );
   }
 
-  if (data.error && !resolvedProfile && !data.identity) {
+  // Cached profile data must not make a failed private-workspace refresh look healthy.
+  if (data.error) {
     return (
       <GuardCard
         icon={<CircleAlert className="mx-auto h-10 w-10 text-territory-warm" />}
