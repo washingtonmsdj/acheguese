@@ -83,26 +83,21 @@ export function useBusinessEdit(
 /**
  * Hook para upload de imagens durante edicao
  */
-export function useBusinessImageUpload() {
-  const { activeProfile } = useSessionContext();
-
+export function useBusinessEditImageUpload(ownerProfileId: string) {
   const uploadImage = async (input: {
     file: File;
     folder: "logos" | "banners";
-  } | File): Promise<string> => {
-    if (!activeProfile?.id) {
-      throw new Error("Perfil ativo nao encontrado");
+  }): Promise<string> => {
+    if (!ownerProfileId) {
+      throw new Error("Identidade da empresa nao encontrada");
     }
 
-    const normalized = input instanceof File
-      ? { file: input, folder: "logos" as const }
-      : input;
-    const preset = normalized.folder === "logos"
+    const preset = input.folder === "logos"
       ? "business_logo"
       : "business_banner";
     const result = await mediaService.uploadMediaAsset(
-      activeProfile.id,
-      normalized.file,
+      ownerProfileId,
+      input.file,
       preset,
     );
     return result.reference;
