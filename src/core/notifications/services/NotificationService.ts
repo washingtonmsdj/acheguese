@@ -187,7 +187,7 @@ export class NotificationService {
       };
     } catch (error) {
       logger.error("Error getting notification stats:", error);
-      return { total: 0, unread: 0 };
+      throw error;
     }
   }
 
