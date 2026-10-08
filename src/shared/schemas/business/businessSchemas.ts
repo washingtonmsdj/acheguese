@@ -246,7 +246,7 @@ function applyBusinessRules<T extends z.AnyZodObject>(
     if (
       data.cep !== undefined &&
       data.postal_code !== undefined &&
-      data.cep.replace(/\\D/g, "") !== data.postal_code.replace(/\\D/g, "")
+      data.cep.replace(/\D/g, "") !== data.postal_code.replace(/\D/g, "")
     ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
