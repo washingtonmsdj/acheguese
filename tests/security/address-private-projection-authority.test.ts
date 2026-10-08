@@ -91,6 +91,20 @@ describe("Address private table / public projection SSOT", () => {
     expect(professionalView).toContain("professional.is_accepting_clients = true");
   });
 
+  it("keeps the post-migration anon probe read-only and assertion-backed", () => {
+    const probe = read(
+      join(process.cwd(), "tests", "security", "address-private-projection-postapply-probe.sql"),
+    );
+    expect(probe).toContain("BEGIN TRANSACTION READ ONLY;");
+    expect(probe).toContain("SET LOCAL ROLE anon;");
+    expect(probe).toContain("FROM public.addresses;");
+    expect(probe).toContain("v_visible <> 0");
+    expect(probe).toContain("v_projection_columns <> 9");
+    expect(probe).toContain("FROM public.public_professional_search");
+    expect(probe).toContain("ROLLBACK;");
+    expect(probe).not.toMatch(/\\b(?:INSERT|UPDATE|DELETE)\\s+public\\.addresses\\b/i);
+  });
+
   it("rejects migrations that re-expose the private base table to anon", () => {
     const offenders = readdirSync(MIGRATIONS)
       .filter((name) => name.endsWith(".sql") && name > BASELINE)
