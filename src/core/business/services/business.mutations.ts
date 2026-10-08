@@ -432,10 +432,18 @@ export async function createBusiness(
   }
 }
 
+/**
+ * Broker-confirmed update. The complete Business read model is intentionally
+ * fetched by queries, never as a required second step after the commit.
+ */
+export interface BusinessUpdateReceipt {
+  profile_id: string;
+}
+
 export async function updateBusiness(
   id: string,
   input: UpdateBusinessInput,
-): Promise<Business> {
+): Promise<BusinessUpdateReceipt> {
   let createdAddressId: string | undefined;
   let businessWriteCompleted = false;
 
@@ -547,7 +555,9 @@ export async function updateBusiness(
     }
 
     businessWriteCompleted = true;
-    return await getBusinessById(id);
+    // A successful broker response is the commit acknowledgement. A later
+    // read-model outage must not turn this mutation into a false failure.
+    return { profile_id: id };
   } catch (error) {
     if (createdAddressId && !businessWriteCompleted) {
       await cleanupUnattachedAddress(createdAddressId);
