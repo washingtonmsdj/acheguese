@@ -10,7 +10,7 @@ import { Building2, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { useBusinessEdit, useBusinessImageUpload } from "@/modules/business/hooks/useBusinessEdit";
+import { useBusinessEdit, useBusinessEditImageUpload } from "@/modules/business/hooks/useBusinessEdit";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import type {
   UpdateBusinessInput,
@@ -93,7 +93,7 @@ export default function EditarEmpresaPage() {
     },
   });
 
-  const { mutateAsync: uploadImage, isPending: uploading } = useBusinessImageUpload();
+  const { mutateAsync: uploadImage, isPending: uploading } = useBusinessEditImageUpload(businessId);
   const uploadBusinessImage = (file: File, folder: "logos" | "banners") =>
     uploadImage({ file, folder });
 
