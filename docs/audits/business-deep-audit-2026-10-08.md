@@ -88,3 +88,11 @@ Antes, `syncAddress` executava `AddressService.updateAddress(existingAddressId, 
 Nesta branch, uma alteração física gera novo Address pelo **mesmo owner canônico `AddressService`**, com `owner_user_id` do ator; o broker passa a receber o novo ID e só troca a associação após confirmar a mutation. O Address anterior não sofre escrita in-place. Se a rejeição é explicitamente confirmada, a compensação atua **somente sobre o registro recém-criado**. Se o commit é incerto, mantém-se o registro staged até reconciliação, sem exclusão destrutiva. Para alteração apenas de complemento, a geolocalização já existente é lida e preservada após validar o mesmo logradouro/território, sem inventar nova proveniência; mudança de logradouro exige nova geocodificação.
 
 **Limites importantes:** ainda há duas operações persistentes separadas, não há chave de idempotência/estado consultável no broker, a rejeição pode deixar registros órfãos se a compensação falhar, e um gestor delegado depende das políticas efetivas de Address. Não declarar essa etapa como atomicidade ACID entre Address e Business. A solução persistente definitiva continua no issue **#649** e requer backend/DB com transação versionada, RLS, permissões de gestor e reconciliação segura. Não alterar migrations ou infraestrutura nesta PR.
+
+### Contrato de entrada: uma única origem de Address por operação
+
+Uma mutation de Empresa não pode vincular um `address_id` existente **e simultaneamente** solicitar alteração física via rua, número, complemento, CEP/alias `cep` ou coordenadas. Antes, `syncAddress` priorizava `address_id` e ignorava silenciosamente os demais campos, criando uma falsa impressão de salvamento.
+
+O schema canônico agora rejeita a combinação em **create** e **update**, antes de qualquer escrita. Referência isolada segue válida; atualização física isolada segue o versionamento de Address da PR #650. O cadastro exige logradouro para endereço novo; a atualização parcial pode herdar logradouro apenas quando já existe um Address, após resolver a entidade. Regressões no schema e na mutation verificam bloqueio antes do dispatch.
+
+Esse contrato não substitui autenticação, RLS, idempotência ou atomicidade do broker. O issue #649 permanece P0 para resolução backend.
