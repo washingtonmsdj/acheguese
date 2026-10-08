@@ -383,7 +383,7 @@ export async function getAdminProfilesList(
       action: "getAdminProfilesList",
       metadata: { filters },
     });
-    return [];
+    throw error;
   }
 
   return (data || []).map((profile) => ({
@@ -458,12 +458,12 @@ export async function getProfilesFiltered(filters: {
   const { data, error, count } = await query.range(from, from + limit - 1);
 
   if (error) {
-    trackError(new Error("Error fetching profiles filtered"), {
+    trackError(error as Error, {
       component: "profile.queries",
       action: "getProfilesFiltered",
-      metadata: { filters, error },
+      metadata: { filters },
     });
-    return { data: [], total: 0 };
+    throw error;
   }
 
   return { data: (data as ProfileFilterRow[] | null) ?? [], total: count ?? 0 };
@@ -473,12 +473,11 @@ export async function getAllProfileIds(): Promise<string[]> {
   const { data, error } = await supabase.from(TABLE).select("id");
 
   if (error) {
-    trackError(new Error("Error fetching all profile ids"), {
+    trackError(error as Error, {
       component: "profile.queries",
       action: "getAllProfileIds",
-      metadata: { error },
     });
-    return [];
+    throw error;
   }
 
   return (data ?? []).map((p: { id: string }) => p.id);
@@ -502,7 +501,7 @@ export async function getTotalProfilesCount(): Promise<number> {
         component: "profile.queries",
         action: "getTotalProfilesCount",
       });
-      return 0;
+      throw error;
     }
 
     return count || 0;
@@ -511,7 +510,7 @@ export async function getTotalProfilesCount(): Promise<number> {
       component: "profile.queries",
       action: "getTotalProfilesCount",
     });
-    return 0;
+    throw error;
   }
 }
 
@@ -532,7 +531,7 @@ export async function getRecentProfiles(limit = 10): Promise<RecentProfileRow[]>
         action: "getRecentProfiles",
         metadata: { limit },
       });
-      return [];
+      throw error;
     }
 
     return (data as RecentProfileRow[] | null) || [];
@@ -541,7 +540,7 @@ export async function getRecentProfiles(limit = 10): Promise<RecentProfileRow[]>
       component: "profile.queries",
       action: "getRecentProfiles",
     });
-    return [];
+    throw error;
   }
 }
 
@@ -568,7 +567,7 @@ export async function getProfilesCreatedInPeriod(
           endDate: endDate.toISOString(),
         },
       });
-      return 0;
+      throw error;
     }
 
     return count || 0;
@@ -577,7 +576,7 @@ export async function getProfilesCreatedInPeriod(
       component: "profile.queries",
       action: "getProfilesCreatedInPeriod",
     });
-    return 0;
+    throw error;
   }
 }
 
