@@ -35,6 +35,7 @@ export {
 } from "./business.queries";
 
 export type { BusinessCreationReceipt, BusinessUpdateReceipt } from "./business.mutations";
+export { BusinessBrokerOutcomeUnknownError } from "./BusinessBrokerOutcomeUnknownError";
 
 // Re-exports de mutations (alias via BusinessService)
 export {
