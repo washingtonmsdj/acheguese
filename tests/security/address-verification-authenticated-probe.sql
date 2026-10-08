@@ -27,6 +27,22 @@ BEGIN
     RAISE EXCEPTION 'ADDRESS_VERIFY_PROBE_FAILED: owner postal edit unavailable';
   END IF;
 
+  IF has_column_privilege(current_user,'public.user_residences','is_verified','UPDATE')
+     OR has_column_privilege(current_user,'public.user_residences','is_verified','INSERT')
+  THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFY_PROBE_FAILED: resident proof fields writable';
+  END IF;
+
+  IF NOT has_column_privilege(current_user,'public.user_residences','address_id','UPDATE')
+     OR NOT has_column_privilege(current_user,'public.user_residences','verification_requested_at','UPDATE')
+  THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFY_PROBE_FAILED: legitimate residence edits or requests lost';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.user_residences) THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFY_PROBE_FAILED: no-JWT session reads private residences';
+  END IF;
+
   IF EXISTS (SELECT 1 FROM public.addresses) THEN
     RAISE EXCEPTION 'ADDRESS_VERIFY_PROBE_FAILED: unauthenticated JWT context sees private rows';
   END IF;
