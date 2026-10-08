@@ -1,25 +1,22 @@
-﻿/**
- * BusinessCanonicalRoute - rota territorial canônica de empresa.
+/**
+ * BusinessCanonicalRoute — rota territorial canônica de empresa.
  *
- * URL canônica: /:state/:city/:territorySlug/empresas/:slug.
+ * O resolver de BusinessUrlService é a fonte única da identidade territorial:
+ * resultado nulo confirmado representa 404; falha de leitura representa erro.
  */
-import { logger } from '@/shared/utils/logger';
-import { useEffect, useState } from 'react';
-import type { ComponentType } from 'react';
-import { useParams } from 'react-router-dom';
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
-import { buildBusinessPublicUrlFromSegments } from '@/core/business/utils/businessPublicUrls';
-import { Loader2 } from 'lucide-react';
-import { logPageNotFound } from '@/core/public-identity/utils/identity-logger';
+import { useEffect } from "react";
+import type { ComponentType } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
+import { logger } from "@/shared/utils/logger";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { buildBusinessPublicUrlFromSegments } from "@/core/business/utils/businessPublicUrls";
+import { logPageNotFound } from "@/core/public-identity/utils/identity-logger";
 
 interface BusinessCanonicalRouteProps {
   BusinessDetailComponent?: ComponentType<{ businessId?: string }>;
 }
-
-type RouteState =
-  | { status: 'loading' }
-  | { status: 'found'; businessId: string }
-  | { status: 'not-found' };
 
 export default function BusinessCanonicalRoute({
   BusinessDetailComponent,
@@ -30,79 +27,40 @@ export default function BusinessCanonicalRoute({
     territorySlug: string;
     slug: string;
   }>();
-  const [routeState, setRouteState] = useState<RouteState>({ status: 'loading' });
 
+  const hasCanonicalSegments = Boolean(state && city && territorySlug && slug);
+  const lookup = useQuery({
+    queryKey: ["business", "canonical-route", state, city, territorySlug, slug],
+    enabled: hasCanonicalSegments,
+    queryFn: () => {
+      if (!state || !city || !territorySlug || !slug) {
+        throw new Error("Missing canonical business route segments");
+      }
+      return BusinessUrlService.resolveByTerritoryAndSlug(state, city, territorySlug, slug);
+    },
+  });
+
+  // Só registrar 404 quando o owner concluiu a consulta sem uma empresa.
+  // Falhas e tentativas de revalidação não são ausência de identidade.
   useEffect(() => {
-    let cancelled = false;
-
-    if (!state || !city || !territorySlug || !slug) {
-      setRouteState({ status: 'not-found' });
+    if (!state || !city || !territorySlug || !slug || !lookup.isSuccess || lookup.data) {
       return;
     }
 
-    async function resolve() {
-      try {
-        const attemptedUrl = buildBusinessPublicUrlFromSegments({
-          state,
-          city,
-          territorySlug,
-          slug,
-        });
-        const ctx = await BusinessUrlService.resolveByTerritoryAndSlug(
-          state,
-          city,
-          territorySlug,
-          slug,
-        );
+    const attemptedUrl = buildBusinessPublicUrlFromSegments({
+      state,
+      city,
+      territorySlug,
+      slug,
+    });
+    logPageNotFound({
+      entityType: "business",
+      identifier: slug,
+      attemptedUrl,
+    });
+  }, [state, city, territorySlug, slug, lookup.isSuccess, lookup.data]);
 
-        if (!ctx) {
-          if (import.meta.env.DEV) {
-            logger.info(
-              `[BusinessCanonicalRoute] Não encontrada: ${attemptedUrl}`,
-            );
-          }
-
-          logPageNotFound({
-            entityType: 'business',
-            identifier: slug,
-            attemptedUrl,
-          });
-          if (!cancelled) {
-            setRouteState({ status: 'not-found' });
-          }
-          return;
-        }
-
-        if (!cancelled) {
-          setRouteState({
-            status: 'found',
-            businessId: ctx.id,
-          });
-        }
-      } catch (err) {
-        logger.error('[BusinessCanonicalRoute] Erro:', err);
-        if (!cancelled) {
-          setRouteState({ status: 'not-found' });
-        }
-      }
-    }
-
-    resolve();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [state, city, territorySlug, slug]);
-
-  if (routeState.status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (routeState.status === 'not-found') {
+  if (!hasCanonicalSegments || (lookup.isSuccess && !lookup.data)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-md text-center">
@@ -119,10 +77,46 @@ export default function BusinessCanonicalRoute({
     );
   }
 
-  if (!BusinessDetailComponent) {
-    logger.error('[BusinessCanonicalRoute] BusinessDetailComponent não informado.');
+  if (lookup.isPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background" role="status">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="sr-only">Carregando empresa...</span>
+      </div>
+    );
+  }
+
+  if (lookup.error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <div className="max-w-md text-center" role="alert">
+          <p className="text-lg font-semibold text-foreground">Não foi possível carregar a empresa</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            A consulta está indisponível no momento. Tente novamente.
+          </p>
+          <button
+            type="button"
+            className="mt-4 inline-block text-sm text-primary underline disabled:opacity-50"
+            disabled={lookup.isFetching}
+            onClick={() => void lookup.refetch()}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!lookup.data) {
+    // Uma resposta nula só é um 404 após query.isSuccess; os outros estados
+    // são tratados acima. Este ramo impede que dados indefinidos sejam exibidos.
     return null;
   }
 
-  return <BusinessDetailComponent businessId={routeState.businessId} />;
+  if (!BusinessDetailComponent) {
+    logger.error("[BusinessCanonicalRoute] BusinessDetailComponent não informado.");
+    return null;
+  }
+
+  return <BusinessDetailComponent businessId={lookup.data.id} />;
 }

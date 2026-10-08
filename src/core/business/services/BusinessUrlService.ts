@@ -317,7 +317,8 @@ export class BusinessUrlService {
         .in('business_role', ['standalone', 'branch'])
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) throw error;
+      if (!data) return null;
 
       const geoPath: string = data.location?.geographic_path ?? '';
 
@@ -338,7 +339,7 @@ export class BusinessUrlService {
       };
     } catch (err) {
       logger.error('[BusinessUrlService] resolveByTerritoryAndSlug error:', err);
-      return null;
+      throw err;
     }
   }
 
