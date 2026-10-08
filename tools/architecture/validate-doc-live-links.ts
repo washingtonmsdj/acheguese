@@ -1,23 +1,50 @@
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-// Após Sprint DOCS.1, a porta de entrada única é docs/README.md.
-// Ele é o SSOT documental e o único doc validado por completude de links.
-const LIVE_DOCS = ["docs/README.md"] as const;
+// docs/README.md e a unica porta de entrada documental.
+// A arquitetura viva referenciada pelo indice tambem tem seus links verificados.
+const LIVE_DOCS = [
+  "docs/README.md",
+  "docs/03-architecture/ARCHITECTURE.md",
+] as const;
 
-function extractRelativeLinks(markdown: string): string[] {
-  const matches = [...markdown.matchAll(/\[[^\]]+\]\((\.[^)]+)\)/g)];
-  return matches.map((match) => match[1]).filter((link) => link.startsWith("./"));
+/**
+ * Captura links locais do Markdown, inclusive ../ e nomes sem prefixo ./.
+ * Links externos, rotas absolutas do site e ancora dentro do mesmo documento
+ * nao correspondem a arquivos versionados.
+ */
+export function extractRelativeLinks(markdown: string): string[] {
+  const matches = markdown.matchAll(
+    /!?\[[^\]]*\]\(\s*(?:<([^>]+)>|([^\s)]+))(?:\s+["'][^"']+["'])?\s*\)/g,
+  );
+
+  return [...matches]
+    .map((match) => match[1] ?? match[2])
+    .filter(
+      (link): link is string =>
+        Boolean(link) &&
+        !link.startsWith("#") &&
+        !link.startsWith("/") &&
+        !/^[a-z][a-z0-9+.-]*:/i.test(link),
+    );
 }
 
-function validateFile(filePath: string): string[] {
+export function validateFile(filePath: string): string[] {
   const content = readFileSync(filePath, "utf8");
-  const links = extractRelativeLinks(content);
   const missing: string[] = [];
 
-  for (const link of links) {
-    const target = resolve(dirname(filePath), link.slice(2));
-    if (!existsSync(target)) {
+  for (const link of extractRelativeLinks(content)) {
+    const pathname = link.split(/[?#]/, 1)[0];
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(pathname);
+    } catch {
+      missing.push(`${filePath} -> ${link} (URL malformada)`);
+      continue;
+    }
+
+    if (!decoded || !existsSync(resolve(dirname(filePath), decoded))) {
       missing.push(`${filePath} -> ${link}`);
     }
   }
@@ -47,4 +74,6 @@ function main(): void {
   console.log("Links dos docs vivos validados com sucesso.");
 }
 
-main();
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}
