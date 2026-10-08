@@ -154,36 +154,36 @@ export default function EditarEmpresaPage() {
 
     initializedBusinessProfileIdRef.current = businessId;
     form.reset({
-        name: business.name,
-        description: business.description,
-        category: normalizeCategoryValue(business.category),
-        phone: business.phone || "",
-        whatsapp: business.whatsapp || "",
-        email: business.email || "",
-        address:
-          business.business_address ||
-          [business.address?.street, business.address?.number, business.address?.complement]
-            .filter(Boolean)
-            .join(", "),
-        website: business.website || "",
-        instagram: business.instagram || "",
-        facebook: business.facebook || "",
-        formas_pagamento: business.formas_pagamento || [],
-        especialidades: business.especialidades || [],
-        facilidades: business.facilidades || [],
-        modos_atendimento: business.modos_atendimento || ["presencial"],
-        latitude: business.address?.latitude,
-        longitude: business.address?.longitude,
-      });
+      name: business.name,
+      description: business.description,
+      category: normalizeCategoryValue(business.category),
+      phone: business.phone || "",
+      whatsapp: business.whatsapp || "",
+      email: business.email || "",
+      address:
+        business.business_address ||
+        [business.address?.street, business.address?.number, business.address?.complement]
+          .filter(Boolean)
+          .join(", "),
+      website: business.website || "",
+      instagram: business.instagram || "",
+      facebook: business.facebook || "",
+      formas_pagamento: business.formas_pagamento || [],
+      especialidades: business.especialidades || [],
+      facilidades: business.facilidades || [],
+      modos_atendimento: business.modos_atendimento || ["presencial"],
+      latitude: business.address?.latitude,
+      longitude: business.address?.longitude,
+    });
 
-      // Inicializar previews de imagens
-      setLogoPreview(business.logo_url || "");
-      setCapaPreview(business.banner_url || "");
+    // Inicializar previews de imagens
+    setLogoPreview(business.logo_url || "");
+    setCapaPreview(business.banner_url || "");
 
-      // Reset both fields for every business identity, including empty slugs.
-      const businessSlug = business.slug ?? "";
-      setSlug(businessSlug);
-      setOriginalSlug(businessSlug);
+    // Reset both fields for every business identity, including empty slugs.
+    const businessSlug = business.slug ?? "";
+    setSlug(businessSlug);
+    setOriginalSlug(businessSlug);
   }, [business, businessId, form, formDirty, slug, originalSlug]);
 
   const handleNextStep1 = () => {
