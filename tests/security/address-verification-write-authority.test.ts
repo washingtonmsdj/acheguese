@@ -75,8 +75,8 @@ describe("Address verification write authority", () => {
     }
     expect(client).toContain("const updatePayload: UpdateAddressInput = addressPayload;");
     expect(client).toContain("addressService.updateAddress(addressId, updatePayload)");
-    expect(client).toContain("is_verified: false");
-    expect(client).toContain("verification_requested_at: null");
+    expect(client).not.toContain("is_verified: false,");
+    expect(client).not.toContain("verification_requested_at: null,");
     expect(client).not.toContain('verified_reason: "residence_address_updated"');
   });
 
