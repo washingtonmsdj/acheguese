@@ -52,7 +52,8 @@ describe("Address verification write authority", () => {
     expect(migration).toContain("CREATE TRIGGER address_verification_owner_guard");
     expect(migration).toContain("BEFORE INSERT OR UPDATE ON public.addresses");
     expect(migration).toContain("SECURITY INVOKER");
-    expect(migration).toContain("IF current_user <> 'authenticated' THEN");
+    expect(migration).toContain("IF current_user = 'authenticated' THEN");
+    expect(migration).toContain("Na atualização, QUALQUER alteração física invalida a prova antiga");
     expect(migration).toContain("IS DISTINCT FROM ROW(");
     expect(migration).toContain("NEW.is_verified := false;");
     expect(migration).toContain("NEW.verification_status := 'pending'");
