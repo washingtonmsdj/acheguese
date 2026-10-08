@@ -69,26 +69,17 @@ async function getActiveBanStatus(): Promise<ActiveBanStatus> {
 }
 
 async function getUserSubscription(userId: string) {
-  try {
-    const { data, error } = await supabase
-      .from("user_subscriptions")
-      .select("*")
-      .eq("user_id", userId)
-      .eq("active", true)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("user_subscriptions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("active", true)
+    .maybeSingle();
 
-    if (error) {
-      if (!["PGRST116", "42P01", "PGRST301"].includes(error.code || "")) {
-        logger.error("Error fetching user subscription:", error);
-      }
-      return null;
-    }
-
-    return data;
-  } catch (error) {
-    logger.error("Error in getUserSubscription:", error);
-    return null;
-  }
+  // A valid empty result means no active subscription; PostgREST failures
+  // must never be reported as a confirmed basic plan.
+  if (error) throw error;
+  return data;
 }
 
 export async function getProfileContextAggregate(
@@ -120,11 +111,11 @@ export async function getProfileContextAggregate(
     });
   } catch (error) {
     logger.error("Error getting profile context:", error);
-    trackError(new Error("Error getting profile context"), {
+    trackError(error instanceof Error ? error : new Error(String(error)), {
       component: "profile.context.aggregate",
       action: "getProfileContextAggregate",
       metadata: { userId },
     });
-    return null;
+    throw error;
   }
 }
