@@ -121,12 +121,8 @@ export async function getPrivateWorkspaceAggregate(
       recentNotifications,
     ] = await Promise.all([
       deps.getProfileContext(deps.userId),
-      optionalWorkspaceRead(
-        "profiles",
-        () => deps.getProfilesByUserId(deps.userId),
-        [activeProfile],
-      ),
-      optionalWorkspaceRead("roles", () => deps.getUserRoles(deps.userId), []),
+      deps.getProfilesByUserId(deps.userId),
+      deps.getUserRoles(deps.userId),
       optionalWorkspaceRead(
         "resident-verification",
         async () => {
