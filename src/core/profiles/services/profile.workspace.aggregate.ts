@@ -1,4 +1,3 @@
-import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import type {
@@ -28,6 +27,7 @@ interface PrivateWorkspaceDependencies {
   getUserRoles: (userId: string) => Promise<string[]>;
   getUserLikesCount: (profileId: string) => Promise<number>;
   getUserBusinessesByProfiles: (profileIds: string[]) => Promise<BusinessRow[]>;
+  getTerritoryLabel: (locationId: string) => Promise<string | null>;
   resolvePermissions: (profileContext: ProfileContext | null) => ProfilePermissions;
 }
 
@@ -245,18 +245,11 @@ export async function getPrivateWorkspaceAggregate(
 
     const permissionMatrix = buildPermissionMatrix(permissions);
 
-    let territoryLabel: string | null = null;
-    if (activeProfile.location_id) {
-      const { data: locationRow } = await supabase
-        .from("locations")
-        .select("full_name")
-        .eq("id", activeProfile.location_id)
-        .maybeSingle();
-      territoryLabel =
-        typeof locationRow?.full_name === "string" && locationRow.full_name.trim().length > 0
-          ? locationRow.full_name
-          : null;
-    }
+    // A resolução territorial pertence ao LocationService; ausência de ID é
+    // distinta de erro do data plane e de referência territorial inválida.
+    const territoryLabel = activeProfile.location_id
+      ? await deps.getTerritoryLabel(activeProfile.location_id)
+      : null;
 
     const verificationSummary = resolveVerificationStatus(verification);
     const stats: ProfileActivityStats = {
