@@ -150,6 +150,30 @@ describe("Account: Location SSOT para o rotulo territorial", () => {
     );
   });
 
+  it("falha na colecao de perfis nao pode usar o perfil ativo como lista completa", async () => {
+    const deps = createDeps();
+    const failure = new Error("profile-rpc unavailable");
+    (deps.getProfilesByUserId as ReturnType<typeof vi.fn>).mockRejectedValueOnce(failure);
+
+    await expect(getPrivateWorkspaceAggregate(deps)).rejects.toBe(failure);
+  });
+
+  it("falha no role-rpc nao equivale a usuario sem papeis", async () => {
+    const deps = createDeps();
+    const failure = new Error("role-rpc unavailable");
+    (deps.getUserRoles as ReturnType<typeof vi.fn>).mockRejectedValueOnce(failure);
+
+    await expect(getPrivateWorkspaceAggregate(deps)).rejects.toBe(failure);
+  });
+
+  it("lista de roles legitimamente vazia continua permitida", async () => {
+    const deps = createDeps();
+    const workspace = await getPrivateWorkspaceAggregate(deps);
+
+    expect(workspace.roles).toEqual([]);
+    expect(deps.getUserRoles).toHaveBeenCalledWith("user-1");
+  });
+
   it("impede consultas territoriais diretas no agregador de Profile", () => {
     const aggregate = readFileSync(
       resolve(process.cwd(), "src/core/profiles/services/profile.workspace.aggregate.ts"),
