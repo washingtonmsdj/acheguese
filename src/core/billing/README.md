@@ -1,7 +1,7 @@
 # Core Billing
 
-**Status:** G4 SSOT SOURCE CLOSED — NAO MVP CERTIFICADO  
-**Checkpoint:** 2026-08-29
+**Status:** owner técnico preservado para Billing (domínio pausado no MVP; sem certificação operacional implícita)  
+**Checkpoint histórico:** G4, 2026-08-29
 
 Este diretório é o owner horizontal de catálogo comercial, assinaturas e entitlements do Achegue-se. Fechar G4 significa consolidar autoridade de source e confirmar que o estado remoto conhecido não contradiz essa autoridade. Isso **não** certifica checkout real, webhook end-to-end, banco completo, deploy ou MVP; essas provas pertencem a G5/G6/G7.
 
