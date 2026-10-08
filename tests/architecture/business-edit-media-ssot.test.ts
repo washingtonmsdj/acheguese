@@ -62,6 +62,14 @@ describe("Business edit media and identity SSOT", () => {
     expect(editPage).not.toContain('toast.success("Capa atualizada!")');
   });
 
+  it("exports the Business image picker from the canonical core hook without a module shim", () => {
+    expect(existsSync("src/modules/business/hooks/useBusinessImageUpload.ts")).toBe(false);
+    const publicModule = readFileSync("src/modules/business/index.ts", "utf8");
+    expect(publicModule).toContain(
+      'export { useBusinessImageUpload } from "@/core/business/hooks/useBusinessImageUpload";',
+    );
+  });
+
   it("does not retain the unused direct business_data settings writer", () => {
     expect(
       existsSync("src/core/business/services/BusinessSettingsService.ts"),
