@@ -26,6 +26,22 @@ describe("updateBusinessSchema Property-Based Tests", () => {
     }
   });
 
+  it("exige logradouro no cadastro físico mesmo quando só há coordenadas", () => {
+    const result = createBusinessSchema.safeParse({
+      name: "Empresa Teste",
+      description: "Descrição adequada para o cadastro da empresa",
+      category: "servicos",
+      location_id: "00000000-0000-4000-8000-000000000001",
+      email: "contato@exemplo.com",
+      latitude: -12.98,
+      longitude: -38.45,
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === "address_street")).toBe(true);
+    }
+  });
+
   it("permite vincular apenas uma referencia Address existente", () => {
     const result = updateBusinessSchema.safeParse({
       address_id: "00000000-0000-4000-8000-000000000222",
