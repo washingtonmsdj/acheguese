@@ -15,6 +15,16 @@ const mediaService = readFileSync(
 );
 
 describe("Business edit media and identity SSOT", () => {
+  it("uses the route-bound hydration policy instead of unconditional form reset on refetch", () => {
+    expect(editPage).toContain("shouldHydrateBusinessEditForm({");
+    expect(editPage).toContain("initializedBusinessProfileIdRef.current");
+    expect(editPage).toContain("loadedProfileId: business.profile_id");
+    expect(editPage).toContain("hasUnsavedFields: formDirty");
+    expect(editPage).toContain("hasUnsavedSlug: slug !== originalSlug");
+    expect(editPage).toContain("hasPendingUploads: pendingMediaUploadsRef.current > 0");
+    expect(editPage).not.toContain("if (business) {\\n      form.reset({");
+  });
+
   it("never retains a previous Business slug when switching to a slugless company", () => {
     expect(editPage).toContain('const businessSlug = business.slug ?? "";');
     expect(editPage).toContain("setSlug(businessSlug);");
