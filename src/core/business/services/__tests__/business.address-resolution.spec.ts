@@ -220,6 +220,51 @@ describe("Business address resolution", () => {
     expect(result?.latitude).toBe(-12.982);
   });
 
+  it("re-geocodes a CEP-only alias update for an existing Business Address", async () => {
+    const current = {
+      id: "profile-1",
+      profile_id: "profile-1",
+      business_data_id: "business-1",
+      location_id: locationId,
+      address_id: "address-1",
+      business_city: "Salvador",
+      business_state: "BA",
+      address: {
+        street: "Rua Teste",
+        number: "10",
+        postal_code: "40000-000",
+        latitude: -12.982,
+        longitude: -38.455,
+      },
+    } as Business;
+
+    const result = await resolveBusinessAddressForPersistence(
+      { cep: "40123-456" },
+      current,
+    );
+
+    expect(mocks.geocode).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: expect.stringContaining("40123-456"),
+        country: "BR",
+      }),
+    );
+    expect(result).toMatchObject({
+      locationId,
+      postalCode: "40123-456",
+      latitude: -12.982,
+      longitude: -38.455,
+      geocodingSource: "nominatim_osm",
+    });
+  });
+
+  it("rejects a CEP-only alias patch when no existing physical Address exists", async () => {
+    await expect(
+      resolveBusinessAddressForPersistence({ cep: "40123-456" }),
+    ).rejects.toThrow("Informe a rua para cadastrar o endereco fisico");
+    expect(mocks.geocode).not.toHaveBeenCalled();
+  });
+
   it("does not geocode a non-locator edit when existing coordinates are already complete", async () => {
     const current = {
       id: "profile-1",
