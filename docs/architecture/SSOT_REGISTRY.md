@@ -1,7 +1,7 @@
 # SSOT Registry — Single Source of Truth
 
 > Mapa dos SSOTs ativos do projeto.
-> Última atualização: 2026-09-12
+> Última atualização: 2026-10-07
 > Status documental: CANÔNICO. Este registry descreve o contrato executável atual. Snapshots históricos em `docs/10-archive` preservam contexto, mas paths aposentados nesses documentos não reabrem autoridade.
 
 ---
@@ -37,7 +37,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | | |
 |---|---|
 | **Arquivo** | `src/core/location/types/index.ts` |
-| **Service** | `src/core/location/LocationService.ts` |
+| **Service** | `src/core/location/services/LocationService.ts` |
 | **Grupos territoriais** | `src/core/territorial/contracts.ts` + `src/core/territorial/repositories/` + `src/core/territorial/services/` |
 | **Responsabilidade** | `Location` mantém a hierarquia geográfica país → estado → cidade → bairro; grupos territoriais pertencem ao domínio `core/territorial` |
 | **Tipos principais** | `Location`, `LocationTree`, `TerritoryFilter`, `ActiveTerritory` |
@@ -100,7 +100,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 
 | | |
 |---|---|
-| **Contrato atual** | `docs/07-modules/POSTS_FEED_SSOT.md` |
+| **Contrato atual** | `src/core/posts/services/posts.feed.queries.ts` (owner da query) + `tests/architecture/posts-feed-ssot.test.ts` (regressão de ownership) |
 | **UI/aplicação** | `src/core/community-feed` + `src/core/posts/views/CommunityPostView.ts` |
 | **Post owner** | `src/core/posts` / `postService` |
 | **Comment owner** | `src/core/comments` |
@@ -121,7 +121,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | **Responsabilidade** | Sistema de roles e permissões |
 | **Tipos principais** | `AppRole`, `UserRole`, `RoleHistory`, `GrantRoleRequest`, `RoleCheckResult` |
 | **Tabela** | `user_roles`, `role_history` |
-| **Alinhado com** | `supabase/migrations/20260418000000_create_roles_system.sql` |
+| **Alinhado com** | `supabase/migrations/20260418000001_migrate_user_roles_to_new_structure.sql` (migração histórica; novas alterações exigem migrations incrementais) |
 
 ---
 
@@ -214,9 +214,9 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 
 | | |
 |---|---|
-| **Arquivo** | `src/core/favorites/types.ts` |
-| **Service** | `src/core/favorites/services/FavoritesService.ts` |
-| **Responsabilidade** | Sistema de favoritos |
+| **Arquivo** | `src/core/favorites/services/BusinessFavoriteStore.ts` (tipos derivados de `types.generated.ts`) |
+| **Service** | `src/core/favorites/services/BusinessFavoriteStore.ts` (RPC store) + `src/core/favorites/services/favorites.queries.ts` (leitura) + `src/core/favorites/services/favorites.mutations.ts` (escrita) |
+| **Responsabilidade** | Favoritos de empresas; tipos derivados do schema, acesso canônico via RPC e operações de leitura/escrita sem recriar o serviço genérico aposentado |
 
 ---
 
@@ -257,7 +257,7 @@ SSOTs de features verticais e superfícies de aplicação. O owner pode estar em
 | **Service** | `src/modules/classifieds/jobs/services/VagasService.ts` |
 | **Responsabilidade** | Sistema completo de vagas de emprego |
 | **Tipos principais** | `Vaga`, `VagaRow`, `VagaStatus`, `VagaContrato`, `VagaApplicationChannel`, `VagaFilters`, `VagasPaginatedResult`, `Candidatura` |
-| **Alinhado com** | `supabase/migrations/20260416170000_vagas_domain_aaa.sql` |
+| **Alinhado com** | `supabase/migrations/20260416110000_create_vagas.sql` (criação histórica; schema atual inclui migrations posteriores) |
 
 ---
 
@@ -265,20 +265,20 @@ SSOTs de features verticais e superfícies de aplicação. O owner pode estar em
 
 | | |
 |---|---|
-| **Arquivo** | `src/modules/classifieds/types/classified.ts` |
+| **Arquivo** | `src/core/classifieds/services/types.ts` |
 | **Service** | `src/core/classifieds/services/ClassifiedService.ts` |
 | **Responsabilidade** | Anúncios classificados |
-| **Tipos principais** | `Classified`, `ClassifiedWithSeller`, `ClassifiedFilters`, `CreateClassifiedInput` |
+| **Tipos principais** | `ClassifiedData`, `CreateClassifiedInput`, `UpdateClassifiedInput`, `ClassifiedStatus`, `SellerWithAds` |
 | **Tabela** | `classifieds` |
 
 ---
 
-### 18. Classifieds Service Types
+### 18. Classifieds Presentation Types
 
 | | |
 |---|---|
-| **Arquivo** | `src/modules/classifieds/services/types.ts` |
-| **Responsabilidade** | Tipos de operação do serviço de classificados |
+| **Arquivo** | `src/modules/classifieds/sections/types.ts` |
+| **Responsabilidade** | Props e estados das sections de Classificados; operações de domínio e escrita permanecem em `src/core/classifieds/services/types.ts` e nos services do Core |
 
 ---
 
@@ -322,17 +322,17 @@ SSOTs de features verticais e superfícies de aplicação. O owner pode estar em
 
 | | |
 |---|---|
-| **Arquivo** | `src/modules/admin/identity/sections/types.ts` |
+| **Arquivo** | `src/core/admin/identity/sections/types.ts` |
 | **Responsabilidade** | Gestão de identidades públicas no painel admin |
 
 ---
 
-### 23. Admin Service Types
+### 23. Admin Territory Presentation Types
 
 | | |
 |---|---|
-| **Arquivo** | `src/modules/admin/services/types.ts` |
-| **Responsabilidade** | Tipos compartilhados para operações administrativas |
+| **Arquivo** | `src/modules/admin/sections/types.ts` |
+| **Responsabilidade** | Props e estados das sections administrativas territoriais; não define autoridade de escrita nem permissões |
 
 ---
 
@@ -442,7 +442,7 @@ interface MinhaVaga { titulo: string }
 1. Definir owner e contrato no domínio correto.
 2. Reutilizar tipos gerados/canônicos em vez de duplicá-los.
 3. Adicionar tabela protegida em `tools/architecture/check-ssot-compliance.ts` quando aplicável.
-4. Registrar somente paths existentes neste documento.
+4. Registrar somente paths existentes neste documento; referências a migrations históricas devem apontar para arquivos reais, sem recriar ledger nem insinuar que uma migration antiga representa todo o schema vigente.
 5. Se um owner for aposentado, migrar callers e atualizar guardrails/registry na mesma mudança.
 
 ---
