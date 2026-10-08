@@ -77,9 +77,14 @@ BEGIN
 END
 $address_public_preflight$;
 
--- A tabela original não é um endpoint público. O único RLS de acesso
--- detalhado continuará sendo "Users manage own addresses" (auth.uid()).
-REVOKE SELECT ON TABLE public.addresses FROM PUBLIC, anon;
+-- Endereços detalhados NÃO têm política de leitura pública. É necessário
+-- preservar o GRANT SELECT de anon na tabela física SOMENTE porque o PostgREST
+-- usa o relacionamento FK address:addresses!address_id nos read models ativos
+-- de Business/Mapa: retirar o GRANT quebraria a consulta inteira, mesmo se
+-- nenhum endereço fosse visível. Sem policy RLS para anon, SELECT retorna
+-- ZERO linhas; a única política restante exige auth.uid() = owner_user_id.
+-- A projeção de endereços verificados NÃO depende desse GRANT (view abaixo).
+-- NÃO criar uma policy permissiva de compatibilidade para anon.
 DROP POLICY "Addresses public verified read" ON public.addresses;
 
 -- A view JÁ EXISTENTE é o único read model de endereços verificados.
@@ -159,7 +164,7 @@ COMMENT ON VIEW public.addresses_public IS
 
 DO $address_public_postflight$
 BEGIN
-  IF has_table_privilege('anon', 'public.addresses', 'SELECT')
+  IF NOT has_table_privilege('anon', 'public.addresses', 'SELECT')
     OR NOT has_table_privilege('authenticated', 'public.addresses', 'SELECT')
     OR NOT has_table_privilege('anon', 'public.addresses_public', 'SELECT')
     OR NOT has_table_privilege('authenticated', 'public.addresses_public', 'SELECT')
@@ -172,7 +177,17 @@ BEGIN
       SELECT 1 FROM pg_policy
       WHERE polrelid = 'public.addresses'::regclass
         AND polname = 'Users manage own addresses'
-    ) THEN
+        AND polcmd = '*'
+        AND 'authenticated'::regrole::oid = ANY(polroles)
+        AND NOT (0::oid = ANY(polroles))
+        AND NOT ('anon'::regrole::oid = ANY(polroles))
+    )
+    OR EXISTS (
+      SELECT 1 FROM pg_policy
+      WHERE polrelid = 'public.addresses'::regclass
+        AND polname <> 'Users manage own addresses'
+    )
+    OR pg_has_role('anon', 'authenticated', 'member') THEN
     RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: table or view grants/RLS incorrect';
   END IF;
 
