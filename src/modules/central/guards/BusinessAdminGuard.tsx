@@ -17,11 +17,18 @@ import { toast } from "sonner";
 export function BusinessAdminGuard() {
   const { businessId } = useParams<{ businessId: string }>();
   const navigate = useNavigate();
-  const { business, isLoading: loadingBusiness } = useBusiness(businessId || "");
+  const {
+    business,
+    isLoading: loadingBusiness,
+    error: businessError,
+    retry: retryBusiness,
+  } = useBusiness(businessId || "");
   const {
     permissions,
     loading: loadingAccess,
     checkedProfileId,
+    error: accessError,
+    refetch: retryAccess,
   } = useDashboardAccess(business?.profile_id);
   const accessReady = Boolean(
     business?.profile_id &&
@@ -30,7 +37,7 @@ export function BusinessAdminGuard() {
   );
 
   useEffect(() => {
-    if (loadingBusiness) return;
+    if (loadingBusiness || businessError) return;
 
     if (!businessId || !business) {
       toast.error("Empresa não encontrada.");
@@ -38,7 +45,7 @@ export function BusinessAdminGuard() {
       return;
     }
 
-    if (!accessReady) return;
+    if (!accessReady || accessError) return;
 
     if (!permissions.hasAccess) {
       toast.error("Você não tem permissão para gerenciar esta empresa.");
@@ -46,7 +53,9 @@ export function BusinessAdminGuard() {
     }
   }, [
     accessReady,
+    accessError,
     business,
+    businessError,
     businessId,
     loadingBusiness,
     navigate,
@@ -61,6 +70,30 @@ export function BusinessAdminGuard() {
           <p className="text-sm text-muted-foreground">Verificando permissões...</p>
         </div>
       </div>
+    );
+  }
+
+  if (businessError || accessError) {
+    return (
+      <section
+        role="alert"
+        className="mx-auto flex min-h-[40vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center"
+      >
+        <h1 className="text-lg font-semibold">Não foi possível verificar esta empresa</h1>
+        <p className="text-sm text-muted-foreground">
+          Houve um problema ao consultar os dados ou as permissões. Seu acesso não foi liberado.
+        </p>
+        <button
+          type="button"
+          className="min-h-11 rounded-lg border border-territory-border px-5 py-2 font-medium"
+          onClick={() => {
+            if (businessError) retryBusiness();
+            if (accessError) void retryAccess();
+          }}
+        >
+          Tentar novamente
+        </button>
+      </section>
     );
   }
 
