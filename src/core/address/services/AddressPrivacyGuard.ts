@@ -33,7 +33,7 @@ export class AddressPrivacyGuard {
       location_id: address.location_id,
       address_type: address.address_type,
       precision: address.precision || 'city',
-      verification_status: address.verification_status || 'pending',
+      verification_status: publiclyVerified ? 'verified' : 'pending',
       // Coordenadas só se verificado
       latitude: publiclyVerified ? address.latitude : null,
       longitude: publiclyVerified ? address.longitude : null,
