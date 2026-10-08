@@ -258,8 +258,13 @@ BEGIN
     RETURN NEW;
   END IF;
 
+  -- Bloquear somente elevação/substituição de prova trusted pela origem
+  -- cliente; uma revogação para FALSE é segura e NECESSÁRIA no UPDATE
+  -- interno disparado pelo gatilho AFTER UPDATE de public.addresses.
+  -- Colunas continuam sem GRANT de escrita para authenticated.
   IF (current_user = 'authenticated' OR auth.uid() IS NOT NULL)
      AND NEW.is_verified IS DISTINCT FROM OLD.is_verified
+     AND NEW.is_verified IS DISTINCT FROM FALSE
   THEN
     RAISE EXCEPTION 'RESIDENCE_VERIFICATION_SERVER_ONLY'
       USING ERRCODE = '42501';
@@ -270,14 +275,23 @@ BEGIN
   THEN
     NEW.is_verified := false;
     NEW.verification_requested_at := NULL;
-  ELSIF (current_user = 'authenticated' OR auth.uid() IS NOT NULL)
-    AND NEW.verification_requested_at IS DISTINCT FROM OLD.verification_requested_at
+  ELSIF NEW.verification_requested_at IS DISTINCT FROM OLD.verification_requested_at
   THEN
-    IF NEW.verification_requested_at IS NULL THEN
-      -- Moradores não cancelam/apagam o histórico da solicitação manualmente.
-      NEW.verification_requested_at := OLD.verification_requested_at;
-    ELSE
-      NEW.verification_requested_at := now();
+    IF NEW.verification_requested_at IS NULL
+       AND pg_trigger_depth() > 1
+       AND current_user = 'postgres'
+       AND NEW.is_verified IS FALSE
+    THEN
+      -- A cadeia interna Address -> Residence pode revogar a solicitação.
+      -- O cliente não pode forjar esta condição em um UPDATE direto.
+      NEW.verification_requested_at := NULL;
+    ELSIF current_user = 'authenticated' OR auth.uid() IS NOT NULL THEN
+      IF NEW.verification_requested_at IS NULL THEN
+        -- Um UPDATE direto de morador não cancela o pedido de verificação.
+        NEW.verification_requested_at := OLD.verification_requested_at;
+      ELSE
+        NEW.verification_requested_at := now();
+      END IF;
     END IF;
   END IF;
 
