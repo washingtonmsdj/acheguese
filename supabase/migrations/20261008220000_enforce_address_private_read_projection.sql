@@ -12,6 +12,18 @@ DECLARE
   v_definition text;
 BEGIN
   IF NOT EXISTS (
+    SELECT 1 FROM pg_class c
+    WHERE c.oid = 'public.addresses'::regclass
+      AND c.relkind = 'r' AND c.relrowsecurity
+      AND NOT c.relforcerowsecurity
+  ) OR EXISTS (
+    SELECT 1 FROM pg_roles r
+    WHERE r.rolname = 'anon' AND r.rolbypassrls
+  ) THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: base-table RLS or anon role drift';
+  END IF;
+
+  IF NOT EXISTS (
     SELECT 1
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -164,7 +176,15 @@ COMMENT ON VIEW public.addresses_public IS
 
 DO $address_public_postflight$
 BEGIN
-  IF NOT has_table_privilege('anon', 'public.addresses', 'SELECT')
+  IF NOT EXISTS (
+      SELECT 1 FROM pg_class c
+      WHERE c.oid = 'public.addresses'::regclass AND c.relrowsecurity
+    )
+    OR EXISTS (
+      SELECT 1 FROM pg_roles r
+      WHERE r.rolname = 'anon' AND r.rolbypassrls
+    )
+    OR NOT has_table_privilege('anon', 'public.addresses', 'SELECT')
     OR NOT has_table_privilege('authenticated', 'public.addresses', 'SELECT')
     OR NOT has_table_privilege('anon', 'public.addresses_public', 'SELECT')
     OR NOT has_table_privilege('authenticated', 'public.addresses_public', 'SELECT')
