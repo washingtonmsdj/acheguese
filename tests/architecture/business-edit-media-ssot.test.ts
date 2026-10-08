@@ -22,7 +22,7 @@ describe("Business edit media and identity SSOT", () => {
     expect(editPage).toContain("hasUnsavedFields: formDirty");
     expect(editPage).toContain("hasUnsavedSlug: slug !== originalSlug");
     expect(editPage).toContain("hasPendingUploads: pendingMediaUploadsRef.current > 0");
-    expect(editPage).not.toContain("if (business) {\\n      form.reset({");
+    expect(editPage).not.toContain("if (business) {\n      form.reset({");
   });
 
   it("never retains a previous Business slug when switching to a slugless company", () => {
