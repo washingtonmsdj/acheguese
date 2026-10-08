@@ -115,7 +115,9 @@ const currentBusiness = {
 
 describe("business lifecycle broker", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Reset queued one-off responses as well as call history between cases.
+    // An unused post-commit read rejection must not leak into the next test.
+    vi.resetAllMocks();
     mocks.getCurrentUser.mockResolvedValue({ id: "user-1" });
     mocks.checkAvailability.mockResolvedValue({ status: "available" });
     mocks.canChangeIdentifier.mockResolvedValue({
