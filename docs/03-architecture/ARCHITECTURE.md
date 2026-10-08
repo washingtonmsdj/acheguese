@@ -40,7 +40,7 @@ Database -> Service -> Hook -> Component
 - Autorizacao no frontend e apenas hint de interface. RLS, RPC e Edge Function
   sao a autoridade de seguranca.
 - Ownership atual, duplicacoes e alvo de migracao estao em
-  [architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md](./architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md).
+  [architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md](./CORE_PLATFORM_ARCHITECTURE_SSOT.md).
 
 ## Produto territory-first e lifecycle modular
 - Territorio e o contexto geografico raiz.
@@ -71,11 +71,10 @@ Database -> Service -> Hook -> Component
 
 ## Documentacao Relacionada
 - [CURRENT_RULES.md](./CURRENT_RULES.md)
-- [DATA_MODELING.md](./DATA_MODELING.md)
-- [architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md](./architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
+- [DATA_MODELING.md](../02-domain/DATA_MODELING.md)
+- [architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md](./CORE_PLATFORM_ARCHITECTURE_SSOT.md)
 - [COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — contrato interno pos-MVP
-- [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md)
-- [MIGRATIONS.md](./MIGRATIONS.md)
+- [MIGRATIONS.md](../09-reference/MIGRATIONS.md)
 
 Search segue o mesmo boundary de providers:
 
