@@ -10,11 +10,15 @@ export const LIVE_DOCS = [
   "docs/README.md",
   "docs/03-architecture/ARCHITECTURE.md",
   "docs/03-architecture/MAINTENANCE.md",
+  "docs/07-modules/SEARCH_SSOT.md",
+  "docs/07-modules/MEDIA_ASSET_SSOT.md",
   "docs/08-roadmap/README.md",
   "docs/08-roadmap/NEXT-STEPS.md",
   "src/modules/README.md",
   "src/modules/business/README.md",
   "src/modules/business/VALIDATION.md",
+  "src/core/location/README.md",
+  "src/core/billing/README.md",
 ] as const;
 
 /**
