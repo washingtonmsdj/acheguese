@@ -460,7 +460,7 @@ export default function CriarEmpresaPage({
         )}
 
         {isError && error && (
-          <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          <div className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${creationOutcomeUncertain ? "border-border bg-muted text-foreground" : "border-destructive/30 bg-destructive/5 text-destructive"}`}>
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
               <p className="font-medium">{creationOutcomeUncertain ? "Cadastro aguardando confirmação" : "Não foi possível criar a empresa."}</p>
