@@ -62,6 +62,9 @@ describe("canonical public Business list read failures", () => {
     expect(mocks.from).toHaveBeenCalledWith("public_business_search");
     expect(query.select).toHaveBeenCalledTimes(1);
     expect(query.range).toHaveBeenCalledTimes(1);
+    expect(query.order).toHaveBeenLastCalledWith("profile_id", {
+      ascending: true,
+    });
   });
 
   it("propagates a PostgREST failure instead of reporting no companies", async () => {
