@@ -73,6 +73,6 @@ describe("Business ownership lookup boundaries", () => {
     mocks.getActiveRoleResult.mockResolvedValue({ success: false, error: unavailable.message });
     await expect(
       BusinessOwnershipService.resolveManagementRole("business-1", "user-admin"),
-    ).rejects.toBe(unavailable);
+    ).rejects.toThrow(unavailable.message);
   });
 });
