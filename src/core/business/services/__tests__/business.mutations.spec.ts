@@ -84,6 +84,7 @@ import {
   updateBusiness,
 } from "../business.mutations";
 import { BusinessBrokerOutcomeUnknownError } from "../BusinessBrokerOutcomeUnknownError";
+import { SupabaseBrokerRejectedError } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 
 const businessInput: CreateBusinessInput = {
   name: "Empresa Teste",
@@ -253,6 +254,19 @@ describe("business lifecycle broker", () => {
       createBusiness({ ...businessInput, address_street: "Rua Sem Recibo" }),
     ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("compensates an address for an explicitly rejected broker response", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-server-rejected" });
+    mocks.createBusinessRpc.mockRejectedValue(
+      new SupabaseBrokerRejectedError("Authoritative create rejection"),
+    );
+
+    await expect(
+      createBusiness({ ...businessInput, address_street: "Rua Rejeitada" }),
+    ).rejects.toThrow("Erro ao criar empresa: Authoritative create rejection");
+
+    expect(mocks.deleteAddress).toHaveBeenCalledExactlyOnceWith("address-server-rejected");
   });
 
   it("creates structured Address with owner_user_id and compensates it if broker rejects", async () => {
@@ -434,6 +448,22 @@ describe("business lifecycle broker", () => {
 
     expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(1);
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("compensates an address only for an explicitly rejected update", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-update-rejected" });
+    mocks.updateBusinessRpc.mockRejectedValue(
+      new SupabaseBrokerRejectedError("Authoritative update rejection"),
+    );
+
+    await expect(
+      updateBusiness("profile-1", {
+        location_id: businessInput.location_id,
+        address_street: "Rua Atualizacao Rejeitada",
+      }),
+    ).rejects.toThrow("Erro ao atualizar empresa: Authoritative update rejection");
+
+    expect(mocks.deleteAddress).toHaveBeenCalledExactlyOnceWith("address-update-rejected");
   });
 
   it("compensates a newly created Address when an update broker command fails", async () => {
