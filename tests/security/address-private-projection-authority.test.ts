@@ -22,6 +22,9 @@ describe("Address private table / public projection SSOT", () => {
     expect(migration).toContain("c.relrowsecurity");
     expect(migration).toContain("r.rolbypassrls");
     expect(migration).toContain("professional read-model drift");
+    expect(migration).toContain("LEFT JOIN addresses address ON");
+    expect(migration).toContain("professional.is_accepting_clients = true");
+    expect(migration).toContain("pg_get_viewdef(c.oid, true)");
     expect(migration).toContain("BEGIN;");
     expect(migration).toContain("COMMIT;");
   });
