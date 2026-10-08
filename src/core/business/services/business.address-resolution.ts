@@ -146,6 +146,16 @@ export async function resolveBusinessAddressForPersistence(
     hasDefinedField(input, "latitude") || hasDefinedField(input, "longitude");
   const hasLocationPatch = hasDefinedField(input, "location_id");
 
+  // PATCH can inherit the street only when an existing Address is attached.
+  // Do not silently discard a complement/CEP/coordinate on a new address.
+  if (
+    !hasExistingAddress &&
+    (hasAddressSyncPatch || hasCoordinatePatch) &&
+    !input.address_street?.trim()
+  ) {
+    throw new Error("Informe a rua para cadastrar o endereco fisico");
+  }
+
   const shouldSyncAddress =
     Boolean(input.address_street) ||
     (hasExistingAddress &&

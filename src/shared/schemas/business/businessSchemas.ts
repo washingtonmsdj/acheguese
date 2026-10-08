@@ -220,6 +220,8 @@ function applyBusinessRules<T extends z.AnyZodObject>(
   options: {
     requireLocation?: boolean;
     requireContactChannel?: boolean;
+    /** Partial PATCH may inherit the street from the current Business Address. */
+    allowPartialExistingAddress?: boolean;
   } = {},
 ): z.ZodEffects<T, z.infer<T>, z.input<T>> {
   return schema.superRefine((data, ctx) => {
@@ -266,7 +268,7 @@ function applyBusinessRules<T extends z.AnyZodObject>(
       });
     }
 
-    if (hasAddressDetails && !data.address_street) {
+    if (hasAddressDetails && !data.address_street && !options.allowPartialExistingAddress) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["address_street"],
@@ -315,7 +317,9 @@ export const createBusinessStep2Schema = applyBusinessRules(
   },
 );
 
-export const updateBusinessSchema = applyBusinessRules(baseBusinessObjectSchema.partial());
+export const updateBusinessSchema = applyBusinessRules(baseBusinessObjectSchema.partial(), {
+  allowPartialExistingAddress: true,
+});
 
 export const businessUXSchema = baseBusinessObjectSchema.pick({
   name: true,

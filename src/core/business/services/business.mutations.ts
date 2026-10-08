@@ -14,6 +14,7 @@ import {
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { AddressService } from "@/core/address/services/AddressService";
+import type { CreateAddressInput } from "@/core/address/types";
 import {
   createBusinessSchema,
   updateBusinessSchema,
@@ -244,13 +245,52 @@ async function syncAddress(
       : {}),
   };
 
-  if (existingAddressId) {
-    const address = await addressService.updateAddress(existingAddressId, payload);
-    return { addressId: address.id, created: false };
+  // Physical address changes are staged as a new Address; modifying the
+  // old row here could affect a different Business (or survive a rejected
+  // Business update). The broker alone switches the Business reference.
+  //
+  // A complement-only edit can reuse the *existing geocoding evidence*, but
+  // never reuses the old ID or copies its verification/ownership flags.
+  let retainedGeocoding: Pick<
+    CreateAddressInput,
+    | "latitude"
+    | "longitude"
+    | "precision"
+    | "geocoding_source"
+    | "geocoding_confidence"
+    | "geocoded_at"
+  > = {};
+  if (existingAddressId && resolution.latitude === undefined) {
+    const previous = await addressService.getAddressById(existingAddressId);
+    if (!previous) {
+      throw new Error("Endereco atual nao encontrado para gerar uma nova versao");
+    }
+    if (
+      previous.location_id !== resolution.locationId ||
+      previous.street?.trim().toLocaleLowerCase("pt-BR") !==
+        resolution.street.trim().toLocaleLowerCase("pt-BR") ||
+      (previous.number ?? null) !== resolution.number
+    ) {
+      throw new Error("Endereco alterado precisa de nova verificacao de geolocalizacao");
+    }
+    if (
+      typeof previous.latitude === "number" && Number.isFinite(previous.latitude) &&
+      typeof previous.longitude === "number" && Number.isFinite(previous.longitude)
+    ) {
+      retainedGeocoding = {
+        latitude: previous.latitude,
+        longitude: previous.longitude,
+        precision: previous.precision,
+        geocoding_source: previous.geocoding_source,
+        geocoding_confidence: previous.geocoding_confidence,
+        geocoded_at: previous.geocoded_at,
+      };
+    }
   }
 
   const address = await addressService.createAddress({
     ...payload,
+    ...retainedGeocoding,
     owner_user_id: actorUserId,
   });
   return { addressId: address.id, created: true };
