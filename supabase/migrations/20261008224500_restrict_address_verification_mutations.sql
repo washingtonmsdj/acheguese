@@ -234,13 +234,13 @@ SECURITY INVOKER
 SET search_path = pg_catalog, pg_temp
 AS $residence_verification_owner_guard$
 BEGIN
-  IF current_user <> 'authenticated' THEN
-    RETURN NEW;
-  END IF;
-
+  -- O vínculo trusted não sobrevive a mudanças de residência, mesmo quando
+  -- efetuadas por um serviço autorizado. A aprovação é outra operação.
   IF TG_OP = 'INSERT' THEN
-    NEW.is_verified := false;
-    NEW.verification_requested_at := NULL;
+    IF current_user = 'authenticated' THEN
+      NEW.is_verified := false;
+      NEW.verification_requested_at := NULL;
+    END IF;
     RETURN NEW;
   END IF;
 
@@ -249,7 +249,8 @@ BEGIN
   THEN
     NEW.is_verified := false;
     NEW.verification_requested_at := NULL;
-  ELSIF NEW.verification_requested_at IS DISTINCT FROM OLD.verification_requested_at
+  ELSIF current_user = 'authenticated'
+    AND NEW.verification_requested_at IS DISTINCT FROM OLD.verification_requested_at
   THEN
     IF NEW.verification_requested_at IS NULL THEN
       -- Moradores não cancelam/apagam o histórico da solicitação manualmente.
