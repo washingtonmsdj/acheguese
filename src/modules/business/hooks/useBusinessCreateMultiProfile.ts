@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { toast } from "sonner";
+import { logger } from "@/shared/utils/logger";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
 import { mediaService } from "@/core/media/services/MediaService";
 import type { CreateBusinessInput } from "@/core/business/types";
@@ -85,8 +86,9 @@ export function useBusinessCreateMultiProfile(
             "business_logo",
           );
           logoReference = upload.reference;
-        } catch {
+        } catch (error) {
           mediaSetupIncomplete = true;
+          logger.error("Falha ao associar mídia à empresa criada:", error);
         }
       }
 
@@ -98,8 +100,9 @@ export function useBusinessCreateMultiProfile(
             "business_banner",
           );
           bannerReference = upload.reference;
-        } catch {
+        } catch (error) {
           mediaSetupIncomplete = true;
+          logger.error("Falha ao associar mídia à empresa criada:", error);
         }
       }
 
@@ -109,8 +112,9 @@ export function useBusinessCreateMultiProfile(
             ...(logoReference ? { logo_url: logoReference } : {}),
             ...(bannerReference ? { banner_url: bannerReference } : {}),
           });
-        } catch {
+        } catch (error) {
           mediaSetupIncomplete = true;
+          logger.error("Falha ao associar mídia à empresa criada:", error);
         }
       }
 
@@ -118,9 +122,8 @@ export function useBusinessCreateMultiProfile(
       if (!businessDataId) {
         try {
           businessDataId = await BusinessService.getBusinessDataIdByProfileId(profileId);
-        } catch {
-          // The profile ID remains authoritative after a committed creation.
-          // A read-model lookup failure is not a reason to create again.
+        } catch (error) {
+          logger.error("Falha ao consultar o identificador de dados da empresa criada:", error);
         }
       }
 
