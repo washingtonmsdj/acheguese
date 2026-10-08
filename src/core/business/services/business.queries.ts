@@ -72,6 +72,13 @@ interface BusinessQueriesDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
 }
 
+export class BusinessNotFoundError extends Error {
+  constructor() {
+    super("Empresa não encontrada");
+    this.name = "BusinessNotFoundError";
+  }
+}
+
 type BusinessServiceRow = Record<string, unknown>;
 
 interface BusinessCommunityLinkEligibilityRow {
@@ -643,7 +650,7 @@ export async function getBusinessById(id: string): Promise<Business> {
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) throw new Error("Empresa não encontrada");
+    if (!data) throw new BusinessNotFoundError();
 
     const business = mapBusinessDataToBusiness(
       data as BusinessDataWithProfiles,
@@ -656,6 +663,7 @@ export async function getBusinessById(id: string): Promise<Business> {
       : {};
     return { ...business, ...contact };
   } catch (error) {
+    if (error instanceof BusinessNotFoundError) throw error;
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao buscar empresa: ${message}`);
   }
@@ -752,10 +760,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
       .eq("status", "active")
       .maybeSingle();
 
-    if (error) {
-      logger.error("Error fetching business by slug:", error);
-      return null;
-    }
+    if (error) throw error;
 
     if (!data) return null;
 
@@ -775,7 +780,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
     };
   } catch (error) {
     logger.error("Error in getBusinessBySlug:", error);
-    return null;
+    throw error;
   }
 }
 
