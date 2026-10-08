@@ -13,22 +13,23 @@
 
 import { useBusinessUrls } from '@/core/business/hooks/useBusinessUrls';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
+import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
+import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
+import { messagingRoutes } from '@/core/messaging';
+import { notificationRoutes } from '@/core/notifications/routes/notificationRoutes';
 import { useServiceUrls } from '@/core/professional/hooks/useServiceUrls';
-import { useCommunityUrls } from './useCommunityUrls';
 import {
   buildProfileEditUrl,
   buildProfileSettingsUrl,
   buildPublicProfileUrl,
 } from '@/core/profiles/utils/publicProfileUrl';
-import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
-import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
-import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
-import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
 import { ACCOUNT_PATHS } from '@/core/routing/config/account';
-import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
-import { messagingRoutes } from '@/core/messaging';
-import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
+import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
+import { useCommunityUrls } from './useCommunityUrls';
+import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 
 export interface AppUrls {
   // Módulos territoriais
@@ -238,7 +239,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     ranking: '/ranking',
     gamification: '/gamificacao',
     search: buildModuleTerritoryUrl(MODULE_SLUGS.search, cityBase),
-    notifications: '/notificacoes',
+    notifications: notificationRoutes.inbox(),
     jobs: jobPublicRoutes.list({ state: active.state, city: active.city }),
     family: {
       home: ACCOUNT_PATHS.home,

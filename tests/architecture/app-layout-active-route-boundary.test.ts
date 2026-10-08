@@ -7,6 +7,9 @@ const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const appShell = read("src/app/components/AppLayoutSidebar.tsx");
 const messagingInboxPage = read("src/app/pages/MessagingInboxPage.tsx");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
+const notificationRoutes = read(
+  "src/core/notifications/routes/notificationRoutes.ts",
+);
 const messagingCss = read("src/modules/messaging/pages/MensagensPage.css");
 const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
@@ -65,7 +68,7 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('<Route path="*" element={<P.NotFound />} />');
   });
 
-  it("derives mounted active surfaces from the canonical lifecycle", () => {
+  it("derives mounted active surfaces from the canonical lifecycle and route owners", () => {
     expect(appLayout).toContain('isProductModuleEnabled("business")');
     for (const capability of [
       "profiles",
@@ -82,19 +85,57 @@ describe("active AppLayout route boundary", () => {
       );
     }
 
-    expect(appLayout).toContain('path="/empresas"');
-    expect(appLayout).toContain('path="/mapa"');
-    expect(appLayout).toContain('path="/perto-de-mim"');
-    expect(appLayout).toContain('path="/busca"');
-    expect(appLayout).toContain('path="/notificacoes"');
-    expect(appLayout).toContain("path={ACCOUNT_PATHS.notifications}");
+    for (const ownedRoute of [
+      "buildAppModulePath(APP_MODULE_SLUGS.business)",
+      'buildAppModulePath(APP_MODULE_SLUGS.business, "cadastrar")',
+      "buildAppModulePath(APP_MODULE_SLUGS.map)",
+      "buildAppModulePath(APP_MODULE_SLUGS.nearby)",
+      "buildAppModulePath(APP_MODULE_SLUGS.search)",
+      "path={`/${TERRITORIAL_STATIC.searchAlias}`}",
+      "path={ACCOUNT_PATHS.home}",
+      "path={ACCOUNT_PATHS.preferences}",
+      "path={ACCOUNT_PATHS.privacy}",
+      "path={ACCOUNT_PATHS.profileSettings}",
+      "path={ACCOUNT_PATHS.security}",
+      "path={ACCOUNT_PATHS.addresses}",
+      "path={ACCOUNT_PATHS.notifications}",
+      "path={notificationRoutes.inbox()}",
+    ]) {
+      expect(appLayout).toContain(ownedRoute);
+    }
+
+    for (const duplicatedLiteral of [
+      'path="/empresas"',
+      'path="/empresas/cadastrar"',
+      'path="/mapa"',
+      'path="/perto-de-mim"',
+      'path="/busca"',
+      'path="/buscar"',
+      'path="/conta"',
+      'path="/conta/preferencias"',
+      'path="/conta/privacidade"',
+      'path="/conta/perfil/configuracoes"',
+      'path="/conta/seguranca"',
+      'path="/conta/enderecos"',
+      'path="/notificacoes"',
+    ]) {
+      expect(appLayout).not.toContain(duplicatedLiteral);
+    }
+
+    expect(notificationRoutes).toContain('inbox: () => "/notificacoes"');
     expect(appLayout).toContain("messagingRoutes.inbox()");
     expect(appLayout).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
   });
 
   it("keeps Messaging inbox in the app shell while threads use focused conversation mode", () => {
-    expect(appShell).toContain('pathSegments[0] === "mensagens" && pathSegments.length >= 3');
+    expect(appShell).toContain(
+      "const MESSAGING_INBOX_PATH = messagingRoutes.inbox();",
+    );
+    expect(appShell).toContain(
+      "pathname.startsWith(`${MESSAGING_INBOX_PATH}/`) && pathSegments.length >= 3",
+    );
+    expect(appShell).not.toContain('pathSegments[0] === "mensagens"');
     expect(appShell).toContain("if (isConversationRoute)");
     expect(appShell).not.toContain("if (isMessagingRoute)");
     expect(appShell).toContain(

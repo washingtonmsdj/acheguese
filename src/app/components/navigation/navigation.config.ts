@@ -33,8 +33,10 @@ import {
 } from '@/app/config/lifecycleRegistry';
 import type { PlatformCapabilityKey } from '@/app/config/platformCapabilityRegistry';
 import type { ProductModuleKey } from '@/app/config/productModuleRegistry';
-import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { messagingRoutes } from '@/core/messaging/routes/messagingRoutes';
+import { notificationRoutes } from '@/core/notifications/routes/notificationRoutes';
+import { centralRoutes } from '@/core/routing/config/centralRoutes';
+import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 
 type NavigationLifecycle =
@@ -70,6 +72,7 @@ const NAV_MODULE_ROOTS = {
   map: buildAppModulePath(APP_MODULE_SLUGS.map),
   nearby: buildAppModulePath(APP_MODULE_SLUGS.nearby),
   mobility: buildAppModulePath(APP_MODULE_SLUGS.mobility),
+  search: buildAppModulePath(APP_MODULE_SLUGS.search),
 } as const;
 
 /**
@@ -160,7 +163,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
         lifecycle: { kind: 'capability', key: 'notifications' },
         icon: Bell,
         label: 'Notificações',
-        href: '/notificacoes',
+        href: notificationRoutes.inbox(),
         description: 'Atualizações da conta e dos módulos ativos',
         requiresAuth: true,
       },
@@ -169,7 +172,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
         lifecycle: { kind: 'capability', key: 'central' },
         icon: LayoutGrid,
         label: 'Central',
-        href: '/central',
+        href: centralRoutes.home,
         description: 'Hub de gestão e operação',
         requiresAuth: true,
       },
@@ -230,7 +233,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
         lifecycle: { kind: 'capability', key: 'search' },
         icon: Search,
         label: 'Busca',
-        href: '/busca',
+        href: NAV_MODULE_ROOTS.search,
         description: 'Busca no conteúdo ativo',
       },
     ],
