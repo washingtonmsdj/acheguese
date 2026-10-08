@@ -22,8 +22,8 @@
 | BUS-07 | P1 paginação | `getBusinessesList` ordenava por atributos não únicos sem desempate estável antes de `range` | Esta PR: desempate por `profile_id`; offset ainda exige testes de concorrência de escrita |
 | BUS-08 | P1 identificação | `BusinessUrlService` convertia erro de resolução de slug/premium/ID em `null` | #641 já aberta, sem sobreposição |
 | BUS-09 | P1 leitura agregada | `business.queries.getBusinessesByIds` devolve `[]` em erro; isso pode ocultar falha em Nearby e recomendações | Pendente: migrar erros à borda com testes de consumidores |
-| BUS-10 | P1 detalhe | `business.queries.getBusinessBySlug` retorna `null` em erro, lido como inexistência em `useBusiness` | Pendente: discriminar ausência confirmada e indisponibilidade |
-| BUS-11 | P1 gestão | `BusinessAdminGuard` ignora o `error` de `useBusiness` e redireciona para listagem com mensagem de “não encontrada” quando o fetch falha | Pendente: estado explícito de erro e retry sem alegar 404 |
+| BUS-10 | P1 detalhe | `business.queries.getBusinessBySlug` retorna `null` em erro, lido como inexistência em `useBusiness` | Esta PR: erro tipado de ausência, falhas relançadas ao hook |
+| BUS-11 | P1 gestão | `BusinessAdminGuard` ignora o `error` de `useBusiness` e redireciona para listagem com mensagem de “não encontrada” quando o fetch falha | Esta PR: guard bloqueado com erro explícito/retry; redireciona apenas ausência confirmada |
 | BUS-12 | P1 ID de domínio | `getBusinessDataIdByProfileId` retorna `null` em transporte com erro, confundindo falha e ausência no fluxo de autoridade | Pendente: definir erro distinto e validar consumidores (DashboardAccess, Gastronomy, ServiceAreas) |
 | BUS-13 | P1 autoridade | `BusinessOwnershipService.resolveOwnerProfileId` retorna `null` em erro SQL; é **fail-closed quanto à permissão**, mas UI pode reportar ausência/negação falsa | Pendente: separar indisponibilidade de autorização negada; manter fail-closed |
 | BUS-14 | P0 certificação | Atomicidade do `AddressService` externo versus transação de broker, compensação e idempotência entre requisições não foram comprovadas ponta a ponta | Pendente: revisão de contrato do broker e provas transacionais; não criar escritor paralelo |
@@ -36,7 +36,7 @@
 ## Plano de execução
 
 1. **Source imediatamente:** #644 para cadastro confirmado/duplicidade; esta PR para consultas e paginação. Esperar checks no HEAD exato; não mesclar #621 durante gates.
-2. **Próxima frente:** read model por slug/IDs e UI de erro do guard de gestão; coordenação com #641 para não duplicar resolver.
+2. **Próxima frente:** listas agregadas por IDs, propagação de falhas de autoridade no DashboardAccess e demais consumers; coordenação com #641 para não duplicar resolver.
 3. **Hardening de segurança:** prova de autorização via RPC/RLS, mutações de produto, concessão/revogação e isolamento `profile_id`/`business_data.id`.
 4. **Integridade persistente:** idempotência real do broker, referência de mídias, ownership de endereço e compensação; não substituir transação por retries na UI.
 5. **Certificação de Business MVP:** criar, editar, detalhe público, gestão, testes negativos, performance/paginação em volume, typecheck/lint/unit/build e smoke same-SHA. Sem chamar runner pendente de PASS.
