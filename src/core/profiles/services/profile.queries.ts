@@ -194,12 +194,12 @@ export async function getProfileByType(
     });
     return profiles[0] ?? null;
   } catch (error) {
-    trackError(error as Error, {
+    trackError(error instanceof Error ? error : new Error(String(error)), {
       component: "profile.queries",
       action: "getProfileByType",
       metadata: { userId, profileType },
     });
-    return null;
+    throw error;
   }
 }
 
