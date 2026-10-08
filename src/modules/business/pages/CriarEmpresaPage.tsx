@@ -18,6 +18,7 @@ import {
   isBusinessSlugSafetyBypassAllowed,
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { useBusinessCreateMultiProfile } from "@/modules/business/hooks/useBusinessCreateMultiProfile";
+import { BusinessBrokerOutcomeUnknownError } from "@/core/business/services/BusinessBrokerOutcomeUnknownError";
 import type { CreateBusinessInput, BusinessCategory } from "@/core/business/types";
 import { StepIndicator } from "@/modules/business/components/create/StepIndicator";
 import { BasicInfoStep } from "@/modules/business/components/create/BasicInfoStep";
@@ -384,6 +385,7 @@ export default function CriarEmpresaPage({
 
   const createSubmissionInFlightRef = useRef(false);
   const createdBusinessRef = useRef(false);
+  const [creationOutcomeUncertain, setCreationOutcomeUncertain] = useState(false);
 
   const handleCreate = async () => {
     if (createSubmissionInFlightRef.current || createdBusinessRef.current) return;
@@ -407,8 +409,13 @@ export default function CriarEmpresaPage({
         bannerFile,
       });
       createdBusinessRef.current = true;
-    } catch {
-      // Mutation errors are surfaced by the canonical hook and the page alert.
+    } catch (error) {
+      if (error instanceof BusinessBrokerOutcomeUnknownError) {
+        // Do not encourage an unsafe second create when the first may have committed.
+        createdBusinessRef.current = true;
+        setCreationOutcomeUncertain(true);
+      }
+      // Definite failures are surfaced by the hook and remain retryable.
     } finally {
       createSubmissionInFlightRef.current = false;
     }
@@ -453,11 +460,21 @@ export default function CriarEmpresaPage({
         )}
 
         {isError && error && (
-          <div className="flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          <div className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${creationOutcomeUncertain ? "border-border bg-muted text-foreground" : "border-destructive/30 bg-destructive/5 text-destructive"}`}>
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <div>
-              <p className="font-medium">Não foi possível criar a empresa.</p>
+              <p className="font-medium">{creationOutcomeUncertain ? "Cadastro aguardando confirmação" : "Não foi possível criar a empresa."}</p>
               <p>{error.message}</p>
+              {creationOutcomeUncertain && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3"
+                  onClick={() => navigate(businessManagementRoutes.list())}
+                >
+                  Conferir minhas empresas
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -625,7 +642,7 @@ export default function CriarEmpresaPage({
                 <div><dt>Fotos</dt><dd>{[logoFile && "logo", bannerFile && "capa"].filter(Boolean).join(" e ") || "Nenhuma adicionada"}</dd></div>
               </dl>
               <p className="bcr-review-note">Após a publicação, você poderá atualizar os dados pela Central da empresa.</p>
-              <div className="bcr-actions"><Button type="button" variant="outline" onClick={() => setCurrentStep(4)}>Voltar</Button><Button type="button" disabled={isCreating} onClick={() => void handleCreate()}>{isCreating ? "Publicando..." : "Publicar empresa"} <ArrowRight aria-hidden="true" /></Button></div>
+              <div className="bcr-actions"><Button type="button" variant="outline" onClick={() => setCurrentStep(4)}>Voltar</Button><Button type="button" disabled={isCreating || creationOutcomeUncertain} onClick={() => void handleCreate()}>{creationOutcomeUncertain ? "Verifique suas empresas" : isCreating ? "Publicando..." : "Publicar empresa"} <ArrowRight aria-hidden="true" /></Button></div>
             </section>
           )}
         </form>

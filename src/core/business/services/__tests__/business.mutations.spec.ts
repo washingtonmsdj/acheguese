@@ -83,6 +83,7 @@ import {
   deleteBusiness,
   updateBusiness,
 } from "../business.mutations";
+import { BusinessBrokerOutcomeUnknownError } from "../BusinessBrokerOutcomeUnknownError";
 
 const businessInput: CreateBusinessInput = {
   name: "Empresa Teste",
@@ -226,6 +227,63 @@ describe("business lifecycle broker", () => {
     });
     expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
     expect(mocks.getBusinessById).not.toHaveBeenCalled();
+  });
+
+  it("does not delete an Address if a dispatched create may already have committed", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-uncertain-create" });
+    mocks.createBusinessRpc.mockRejectedValue(new Error("Response lost after dispatch"));
+
+    await expect(
+      createBusiness({
+        ...businessInput,
+        address_street: "Rua Ambigua",
+        address_number: "11",
+      }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+
+    expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("does not compensate a successful broker response missing its receipt", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-missing-receipt" });
+    mocks.createBusinessRpc.mockResolvedValue({ success: true });
+
+    await expect(
+      createBusiness({ ...businessInput, address_street: "Rua Sem Recibo" }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("does not infer rollback from a generic Edge error after dispatch", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-edge-uncertain" });
+    // The Edge handler may fail after the RPC has committed, including in
+    // its post-dispatch audit response. A generic error proves no rollback.
+    mocks.createBusinessRpc.mockRejectedValue(new Error("Internal server error"));
+
+    await expect(
+      createBusiness({ ...businessInput, address_street: "Rua Edge Incerto" }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("preserves ordinary validation failures before the command is sent", async () => {
+    mocks.checkAvailability.mockRejectedValue(new Error("Slug lookup unavailable"));
+
+    await expect(createBusiness(businessInput))
+      .rejects.toThrow("Erro ao criar empresa: Slug lookup unavailable");
+
+    expect(mocks.createBusinessRpc).not.toHaveBeenCalled();
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+  });
+
+  it("reports a dispatched create with no physical address as an unknown outcome", async () => {
+    mocks.createBusinessRpc.mockRejectedValue(new Error("Edge returned 500"));
+
+    await expect(createBusiness(businessInput))
+      .rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    expect(mocks.createBusinessRpc).toHaveBeenCalledOnce();
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
   });
 
   it("creates structured Address with owner_user_id and compensates it if broker rejects", async () => {
@@ -391,6 +449,62 @@ describe("business lifecycle broker", () => {
     expect(mocks.updateBusinessRpc).toHaveBeenCalledOnce();
     expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("does not invent a confirmed update without the matching broker receipt", async () => {
+    for (const data of [undefined, { profile_id: "different-profile" }]) {
+      mocks.updateBusinessRpc.mockResolvedValue({ success: true, data });
+
+      await expect(
+        updateBusiness("profile-1", {
+          description: "Atualizacao com recibo faltante ou divergente",
+        }),
+      ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    }
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves an Address on a success flag with a mismatched update receipt", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-mismatched-receipt" });
+    mocks.updateBusinessRpc.mockResolvedValue({
+      success: true,
+      data: { profile_id: "other-profile" },
+    });
+
+    await expect(
+      updateBusiness("profile-1", {
+        location_id: businessInput.location_id,
+        address_street: "Rua Recibo Divergente",
+      }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("preserves a possible committed Address after an ambiguous update", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-uncertain-update" });
+    mocks.updateBusinessRpc.mockRejectedValue(new Error("Connection dropped"));
+
+    await expect(
+      updateBusiness("profile-1", {
+        location_id: businessInput.location_id,
+        address_street: "Rua Atualizacao Incerta",
+        address_number: "24",
+      }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("keeps a preflight update read failure distinct from an uncertain commit", async () => {
+    mocks.getBusinessById.mockRejectedValue(new Error("Read model is unavailable"));
+
+    await expect(updateBusiness("profile-1", {
+      description: "Teste de leitura antes da atualizacao",
+    })).rejects.toThrow("Erro ao atualizar empresa: Read model is unavailable");
+
+    expect(mocks.updateBusinessRpc).not.toHaveBeenCalled();
   });
 
   it("compensates a newly created Address when an update broker command fails", async () => {

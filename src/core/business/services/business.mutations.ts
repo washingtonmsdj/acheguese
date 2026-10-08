@@ -36,6 +36,7 @@ import { normalizeMediaAssetReference } from "@/core/media/references/mediaAsset
 import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
 import { ProfileRpcService } from "@/core/profiles/services/ProfileRpcService";
+import { BusinessBrokerOutcomeUnknownError } from "./BusinessBrokerOutcomeUnknownError";
 import type {
   CreateBusinessInput,
   CreateProductInput,
@@ -351,6 +352,8 @@ export async function createBusiness(
 ): Promise<BusinessCreationReceipt> {
   let createdAddressId: string | undefined;
   let businessWriteCompleted = false;
+  // A dispatched broker command may have committed despite a lost response.
+  let safeToCompensateAddress = true;
 
   try {
     const user = await SessionService.getCurrentUser();
@@ -417,13 +420,19 @@ export async function createBusiness(
         ? toBusinessHoursRows(validatedInput.horario_funcionamento)
         : null;
 
+    safeToCompensateAddress = false;
     const result = await ProfileRpcService.createBusiness<BusinessBrokerResult>({
       businessPatch,
       contactChannels,
       businessHours,
     });
-    if (!result.success || !result.data?.profile_id) {
-      throw new Error(result.error || "Broker nao retornou a empresa criada");
+    if (!result.success) {
+      // Only a server-confirmed rejection is safe to compensate.
+      safeToCompensateAddress = true;
+      throw new Error(result.error || "Broker rejeitou a criacao da empresa");
+    }
+    if (!result.data?.profile_id) {
+      throw new Error("Broker nao retornou a empresa criada");
     }
 
     businessWriteCompleted = true;
@@ -434,8 +443,16 @@ export async function createBusiness(
       business_data_id: result.data.business_data_id ?? null,
     };
   } catch (error) {
-    if (createdAddressId && !businessWriteCompleted) {
+    if (createdAddressId && !businessWriteCompleted && safeToCompensateAddress) {
       await cleanupUnattachedAddress(createdAddressId);
+    }
+    if (!businessWriteCompleted && !safeToCompensateAddress) {
+      logger.error("[business.mutations] broker outcome unconfirmed; address preserved", {
+        operation: "create",
+        addressId: createdAddressId ?? null,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw new BusinessBrokerOutcomeUnknownError("create");
     }
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar empresa: ${message}`);
@@ -456,6 +473,8 @@ export async function updateBusiness(
 ): Promise<BusinessUpdateReceipt> {
   let createdAddressId: string | undefined;
   let businessWriteCompleted = false;
+  // A dispatched broker command may have committed despite a lost response.
+  let safeToCompensateAddress = true;
 
   try {
     const user = await SessionService.getCurrentUser();
@@ -552,6 +571,7 @@ export async function updateBusiness(
         ? toBusinessHoursRows(validatedInput.horario_funcionamento)
         : null;
 
+    safeToCompensateAddress = false;
     const result = await ProfileRpcService.updateBusiness<BusinessBrokerResult>(
       id,
       {
@@ -561,7 +581,13 @@ export async function updateBusiness(
       },
     );
     if (!result.success) {
+      safeToCompensateAddress = true;
       throw new Error(result.error || "Broker rejeitou atualizacao da empresa");
+    }
+    // A success flag without the matching transaction receipt does not prove
+    // that this target profile was updated. Never manufacture a commit.
+    if (result.data?.profile_id !== id) {
+      throw new Error("Broker nao retornou recibo valido da empresa atualizada");
     }
 
     businessWriteCompleted = true;
@@ -569,8 +595,16 @@ export async function updateBusiness(
     // read-model outage must not turn this mutation into a false failure.
     return { profile_id: id };
   } catch (error) {
-    if (createdAddressId && !businessWriteCompleted) {
+    if (createdAddressId && !businessWriteCompleted && safeToCompensateAddress) {
       await cleanupUnattachedAddress(createdAddressId);
+    }
+    if (!businessWriteCompleted && !safeToCompensateAddress) {
+      logger.error("[business.mutations] broker outcome unconfirmed; address preserved", {
+        operation: "update",
+        addressId: createdAddressId ?? null,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw new BusinessBrokerOutcomeUnknownError("update");
     }
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao atualizar empresa: ${message}`);

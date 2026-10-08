@@ -3,7 +3,8 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BusinessService, type BusinessUpdateReceipt } from "@/core/business/services/BusinessService";
+import { BusinessService, BusinessBrokerOutcomeUnknownError, type BusinessUpdateReceipt } from "@/core/business/services/BusinessService";
+
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { useSessionContext } from "@/core/session";
 import { mediaService } from "@/core/media/services/MediaService";
@@ -68,7 +69,11 @@ export function useBusinessEdit(
     },
 
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao atualizar empresa");
+      if (error instanceof BusinessBrokerOutcomeUnknownError) {
+        toast.warning(error.message);
+      } else {
+        toast.error(error.message || "Erro ao atualizar empresa");
+      }
       options.onError?.(error);
     },
   });
