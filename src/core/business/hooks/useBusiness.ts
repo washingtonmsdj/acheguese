@@ -6,6 +6,7 @@ interface UseBusinessResult {
   business: Business | null;
   isLoading: boolean;
   error: Error | null;
+  retry: () => void;
 }
 
 const UUID_PATTERN =
@@ -48,5 +49,6 @@ export function useBusiness(idOrSlug: string): UseBusinessResult {
     business: query.data || null,
     isLoading: query.isLoading,
     error,
+    retry: () => { void query.refetch(); },
   };
 }
