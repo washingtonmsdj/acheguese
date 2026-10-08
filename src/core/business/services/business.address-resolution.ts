@@ -32,12 +32,14 @@ const ADDRESS_SYNC_FIELDS = [
   "address_number",
   "address_complement",
   "postal_code",
+  "cep",
 ] as const;
 
 const ADDRESS_LOCATOR_FIELDS = [
   "address_street",
   "address_number",
   "postal_code",
+  "cep",
   "location_id",
 ] as const;
 
