@@ -65,18 +65,9 @@ export function BusinessAdminGuard() {
     permissions.hasAccess,
   ]);
 
-  if (loadingBusiness || (business && !accessReady)) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <div className="space-y-3 text-center">
-          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-sm text-muted-foreground">Verificando permissões...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (businessError || accessError) {
+  // Terminal query errors take precedence over a cached business awaiting an
+  // authorization snapshot. Otherwise the spinner can hide the retry forever.
+  if (!loadingBusiness && (businessError || accessError)) {
     return (
       <section
         role="alert"
@@ -97,6 +88,17 @@ export function BusinessAdminGuard() {
           Tentar novamente
         </button>
       </section>
+    );
+  }
+
+  if (loadingBusiness || (business && !accessReady)) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <div className="space-y-3 text-center">
+          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Verificando permissões...</p>
+        </div>
+      </div>
     );
   }
 
