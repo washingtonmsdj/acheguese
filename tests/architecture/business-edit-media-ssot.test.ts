@@ -75,7 +75,7 @@ describe("Business edit media and identity SSOT", () => {
       "src/core/admin/services/AdminBusinessService.ts",
       "utf8",
     );
-    expect(adminService).not.toMatch(/async updateBusiness\\(/);
+    expect(adminService).not.toContain("async updateBusiness(");
   });
 
   it("does not retain the unused direct business_data settings writer", () => {
