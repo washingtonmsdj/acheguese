@@ -210,8 +210,22 @@ describe("business lifecycle broker", () => {
       ],
     });
     expect(mocks.createAddress).not.toHaveBeenCalled();
-    expect(mocks.getBusinessById).toHaveBeenCalledWith("profile-1");
-    expect(created.profile_id).toBe("profile-1");
+    expect(mocks.getBusinessById).not.toHaveBeenCalled();
+    expect(created).toEqual({
+      profile_id: "profile-1",
+      business_data_id: "business-data-1",
+    });
+  });
+
+  it("does not report a committed creation as failed when detail reads are unavailable", async () => {
+    mocks.getBusinessById.mockRejectedValue(new Error("PostgREST unavailable"));
+
+    await expect(createBusiness(businessInput)).resolves.toEqual({
+      profile_id: "profile-1",
+      business_data_id: "business-data-1",
+    });
+    expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
+    expect(mocks.getBusinessById).not.toHaveBeenCalled();
   });
 
   it("creates structured Address with owner_user_id and compensates it if broker rejects", async () => {

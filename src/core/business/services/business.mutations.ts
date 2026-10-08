@@ -25,7 +25,7 @@ import {
   sanitizePhone,
 } from "@/shared/utils/sanitization";
 import { isValidBusinessId } from "./validators";
-import { toBusinessData } from "./business.mappers";
+import { mapProductRecordToProduct, toBusinessData } from "./business.mappers";
 import { BusinessUrlService } from "./BusinessUrlService";
 import { getBusinessById } from "./business.queries";
 import {
@@ -37,10 +37,10 @@ import { EntityContactService } from "@/core/contact";
 import { SessionService } from "@/core/session/services/SessionService";
 import { ProfileRpcService } from "@/core/profiles/services/ProfileRpcService";
 import type {
-  Business,
   CreateBusinessInput,
   CreateProductInput,
   Product,
+  ProductRecord,
   UpdateBusinessInput,
 } from "../types";
 
@@ -341,9 +341,14 @@ async function cleanupUnattachedAddress(addressId?: string): Promise<void> {
   }
 }
 
+export interface BusinessCreationReceipt {
+  profile_id: string;
+  business_data_id: string | null;
+}
+
 export async function createBusiness(
   input: CreateBusinessInput,
-): Promise<Business> {
+): Promise<BusinessCreationReceipt> {
   let createdAddressId: string | undefined;
   let businessWriteCompleted = false;
 
@@ -422,7 +427,12 @@ export async function createBusiness(
     }
 
     businessWriteCompleted = true;
-    return await getBusinessById(result.data.profile_id);
+    // The broker is the authority for committed creation. A separate read
+    // must not turn a successful transaction into an apparent failure.
+    return {
+      profile_id: result.data.profile_id,
+      business_data_id: result.data.business_data_id ?? null,
+    };
   } catch (error) {
     if (createdAddressId && !businessWriteCompleted) {
       await cleanupUnattachedAddress(createdAddressId);
@@ -610,21 +620,7 @@ export async function createProduct(
     if (error) throw error;
     if (!data) throw new Error("Erro ao carregar produto criado");
 
-    return {
-      id: data.id,
-      profile_id: businessId,
-      name: productData.nome,
-      description: productData.descricao || "",
-      price: productData.preco || 0,
-      promotional_price: productData.preco_promocional || undefined,
-      image_url: productData.imagem || undefined,
-      category: productData.categoria || "",
-      stock: productData.estoque || 0,
-      active: productData.ativo ?? true,
-      featured: productData.destaque ?? false,
-      promotion: productData.promocao ?? false,
-      created_at: new Date().toISOString(),
-    };
+    return mapProductRecordToProduct(data as ProductRecord);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar produto: ${message}`);
