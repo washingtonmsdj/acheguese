@@ -47,9 +47,10 @@ describe("Business access identity isolation", () => {
 
   it("never applies an old user's late permission result to a new session", async () => {
     const previousCheck = deferred<"owner">();
+    const currentCheck = deferred<null>();
     mocks.getManagementRole.mockImplementation(
       (_businessId: string, userId: string) =>
-        userId === "user-old" ? previousCheck.promise : Promise.resolve(null),
+        userId === "user-old" ? previousCheck.promise : currentCheck.promise,
     );
     const { result, rerender } = renderHook(() => useDashboardAccess("profile-1"));
     await waitFor(() =>
@@ -60,7 +61,12 @@ describe("Business access identity isolation", () => {
     rerender();
     expect(result.current.permissions.hasAccess).toBe(false);
     expect(result.current.checkedProfileId).toBeNull();
+    expect(result.current.loading).toBe(true);
 
+    await act(async () => {
+      currentCheck.resolve(null);
+      await currentCheck.promise;
+    });
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
       expect(result.current.checkedProfileId).toBe("profile-1");
