@@ -42,6 +42,7 @@ describe("Address verified-only public projection", () => {
       verification_status: status,
     });
     expect(value.is_verified).toBe(false);
+    expect(value.verification_status).toBe('pending');
     expect(value.latitude).toBeNull();
     expect(value.longitude).toBeNull();
     expect(JSON.stringify(value)).not.toContain("EXEMPLO PRIVADO");
@@ -59,6 +60,7 @@ describe("Address verified-only public projection", () => {
     };
     const pub = AddressPrivacyGuard.toPublic(record);
     expect(pub.is_verified).toBe(true);
+    expect(pub.verification_status).toBe('verified');
     expect(pub.latitude).toBe(record.latitude);
     expect(pub.longitude).toBe(record.longitude);
     expect(Object.keys(pub).sort()).toEqual([
