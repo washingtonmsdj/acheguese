@@ -512,12 +512,23 @@ export class ProfileService {
     try {
       return await getUserBusinessesQuery(profileId);
     } catch (error) {
-      trackError(new Error("Error fetching user businesses"), {
+      const trackedError =
+        error instanceof Error
+          ? error
+          : new Error(
+              typeof error === "object" &&
+              error !== null &&
+              "message" in error &&
+              typeof error.message === "string"
+                ? error.message
+                : String(error),
+            );
+      trackError(trackedError, {
         component: "ProfileService",
         action: "getUserBusinesses",
-        metadata: { profileId, error },
+        metadata: { profileId },
       });
-      return [];
+      throw error;
     }
   }
   async getCurrentUserFavoriteBusinesses(): Promise<BusinessRow[]> {
