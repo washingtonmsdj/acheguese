@@ -175,5 +175,169 @@ BEGIN
 END
 $address_verification_postflight$;
 
+-- Residence é outro vínculo de confiança: a flag is_verified também
+-- não pode ser publicada nem escrita diretamente por residentes.
+DO $residence_verification_preflight$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_class c
+    WHERE c.oid = 'public.user_residences'::regclass
+      AND c.relkind = 'r' AND c.relrowsecurity
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_policy p
+    WHERE p.polrelid = 'public.user_residences'::regclass
+      AND p.polname = 'Users manage own residences'
+      AND p.polcmd = '*'
+      AND 'authenticated'::regrole::oid = ANY(p.polroles)
+      AND NOT ('anon'::regrole::oid = ANY(p.polroles))
+      AND position('user_id' in pg_get_expr(p.polqual,p.polrelid)) > 0
+      AND position('auth.uid()' in pg_get_expr(p.polqual,p.polrelid)) > 0
+  ) THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFY_WRITE_BLOCKED: owner RLS changed';
+  END IF;
+
+  IF NOT has_table_privilege('service_role','public.user_residences','UPDATE')
+     OR NOT has_table_privilege('authenticated','public.user_residences','UPDATE')
+  THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFY_WRITE_BLOCKED: current grants drifted';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE (tgrelid='public.user_residences'::regclass
+           AND tgname='residence_verification_owner_guard')
+       OR (tgrelid='public.addresses'::regclass
+           AND tgname='invalidate_linked_residence_verification')
+  ) THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFY_WRITE_BLOCKED: trigger name is occupied';
+  END IF;
+END
+$residence_verification_preflight$;
+
+REVOKE INSERT, UPDATE ON TABLE public.user_residences
+  FROM PUBLIC, authenticated;
+
+GRANT INSERT (user_id, address_id, location_id, country, is_primary)
+  ON TABLE public.user_residences TO authenticated;
+
+GRANT UPDATE (
+  address_id, location_id, country, is_primary, verification_requested_at
+) ON TABLE public.user_residences TO authenticated;
+
+-- Uma solicitação não é uma aprovação. O cliente pode solicitar, e o
+-- timestamp é sempre controlado pelo servidor, não pelo relógio do navegador.
+CREATE FUNCTION private.residence_verification_owner_guard()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = pg_catalog, pg_temp
+AS $residence_verification_owner_guard$
+BEGIN
+  IF current_user <> 'authenticated' THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'INSERT' THEN
+    NEW.is_verified := false;
+    NEW.verification_requested_at := NULL;
+    RETURN NEW;
+  END IF;
+
+  IF ROW(NEW.address_id, NEW.location_id, NEW.country)
+    IS DISTINCT FROM ROW(OLD.address_id, OLD.location_id, OLD.country)
+  THEN
+    NEW.is_verified := false;
+    NEW.verification_requested_at := NULL;
+  ELSIF NEW.verification_requested_at IS DISTINCT FROM OLD.verification_requested_at
+  THEN
+    IF NEW.verification_requested_at IS NULL THEN
+      -- Moradores não cancelam/apagam o histórico da solicitação manualmente.
+      NEW.verification_requested_at := OLD.verification_requested_at;
+    ELSE
+      NEW.verification_requested_at := now();
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END
+$residence_verification_owner_guard$;
+
+REVOKE ALL ON FUNCTION private.residence_verification_owner_guard()
+  FROM PUBLIC, anon, authenticated;
+
+CREATE TRIGGER residence_verification_owner_guard
+  BEFORE INSERT OR UPDATE ON public.user_residences
+  FOR EACH ROW
+  EXECUTE FUNCTION private.residence_verification_owner_guard();
+
+-- Mesma transação: alterar fisicamente um Address deve invalidar TODAS as
+-- residências que o referenciam, independentemente de um segundo write no UI.
+-- Função SECURITY DEFINER só invocável como trigger interno: não recebe ID,
+-- não é endpoint RPC e atua exclusivamente sobre o NEW.id já autorizado pelo
+-- UPDATE original (RLS Address para owner, ou autoridade server/service_role).
+CREATE FUNCTION private.invalidate_linked_residence_verification()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+AS $invalidate_linked_residence_verification$
+BEGIN
+  IF ROW(
+    NEW.location_id, NEW.postal_code, NEW.street, NEW.number,
+    NEW.complement, NEW.address_type, NEW.latitude, NEW.longitude,
+    NEW.geocoded_at, NEW.geocoding_source, NEW.geocoding_confidence,
+    NEW.precision, NEW.metadata
+  ) IS DISTINCT FROM ROW(
+    OLD.location_id, OLD.postal_code, OLD.street, OLD.number,
+    OLD.complement, OLD.address_type, OLD.latitude, OLD.longitude,
+    OLD.geocoded_at, OLD.geocoding_source, OLD.geocoding_confidence,
+    OLD.precision, OLD.metadata
+  ) THEN
+    UPDATE public.user_residences
+    SET is_verified = false,
+        verification_requested_at = NULL
+    WHERE address_id = NEW.id
+      AND (is_verified IS DISTINCT FROM false
+           OR verification_requested_at IS NOT NULL);
+  END IF;
+
+  RETURN NULL;
+END
+$invalidate_linked_residence_verification$;
+
+REVOKE ALL ON FUNCTION private.invalidate_linked_residence_verification()
+  FROM PUBLIC, anon, authenticated;
+
+CREATE TRIGGER invalidate_linked_residence_verification
+  AFTER UPDATE ON public.addresses
+  FOR EACH ROW
+  EXECUTE FUNCTION private.invalidate_linked_residence_verification();
+
+DO $residence_verification_postflight$
+BEGIN
+  IF has_column_privilege('authenticated','public.user_residences','is_verified','UPDATE')
+    OR has_column_privilege('authenticated','public.user_residences','is_verified','INSERT')
+    OR has_column_privilege('authenticated','public.user_residences','user_id','UPDATE')
+    OR NOT has_column_privilege('authenticated','public.user_residences','address_id','UPDATE')
+    OR NOT has_column_privilege('authenticated','public.user_residences','verification_requested_at','UPDATE')
+    OR NOT has_table_privilege('service_role','public.user_residences','UPDATE')
+    OR NOT EXISTS (
+      SELECT 1 FROM pg_trigger
+      WHERE tgrelid='public.user_residences'::regclass
+        AND tgname='residence_verification_owner_guard'
+        AND tgenabled='O'
+    )
+    OR NOT EXISTS (
+      SELECT 1 FROM pg_trigger
+      WHERE tgrelid='public.addresses'::regclass
+        AND tgname='invalidate_linked_residence_verification'
+        AND tgenabled='O'
+    )
+  THEN
+    RAISE EXCEPTION 'RESIDENCE_VERIFY_WRITE_BLOCKED: postflight privileges/triggers';
+  END IF;
+END
+$residence_verification_postflight$;
+
 NOTIFY pgrst, 'reload schema';
 COMMIT;
