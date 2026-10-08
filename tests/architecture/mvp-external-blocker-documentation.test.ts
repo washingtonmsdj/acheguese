@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("MVP external dependency documentation", () => {
-  it("keeps resolved infrastructure dependencies out of active blocker status", () => {
+  it("represents reopened infrastructure gates and the Business P0 without a false READY", () => {
     const execution = readFileSync(
       "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "utf8",
@@ -15,18 +15,21 @@ describe("MVP external dependency documentation", () => {
     for (const content of [execution, nextSteps]) {
       expect(content).toContain("#305");
       expect(content).toContain("#445");
-      expect(content).toMatch(/não há blocker externo ativo/i);
+      expect(content).toContain("#649");
+      expect(content).not.toMatch(/não há blocker externo ativo/i);
       expect(content).not.toMatch(/\b[0-9a-f]{40}\b/i);
     }
 
-    expect(execution).toContain("## Dependências externas resolvidas");
-    expect(execution).not.toContain("## Blocker externo atual");
-    expect(nextSteps).not.toContain("fechar o blocker externo restante");
-    expect(nextSteps).toContain("#305 — Supabase** encerrado");
-    expect(nextSteps).toContain("#445 — Vercel** encerrado");
+    expect(execution).toContain("## Blockers ativos de infraestrutura");
+    expect(execution).toContain("### #305 — Supabase / PostgREST territorial");
+    expect(execution).toContain("### #445 — Vercel / identidade de release");
+    expect(execution).toContain("### #649 — Business / Endereço e idempotência");
+    expect(execution).toContain("MVP NÃO HOMOLOGADO");
+    expect(nextSteps).toContain("**#305 e #445 estão abertos**");
+    expect(nextSteps).toContain("broker SQL/Address com testes negativos (#649)");
   });
 
-  it("preserves canonical release identity semantics after blocker closure", () => {
+  it("preserves release identity semantics while gates are open", () => {
     const execution = readFileSync(
       "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "utf8",

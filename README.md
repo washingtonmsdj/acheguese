@@ -2,7 +2,7 @@
 
 Plataforma hiperlocal, territory-first e modular, construída para conectar moradores às empresas e serviços do próprio território.
 
-> **MVP atual — 2026-10-05**
+> **MVP atual — 2026-10-08**
 >
 > **Domínio de produto ativo:** Business / Empresas.
 >
@@ -14,9 +14,9 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 ## Estado de entrega
 
-O núcleo do MVP está funcional e o candidato vigente já comprovou os gates determinísticos de arquitetura, segurança, build, E2E público e smoke autenticado de produção. **Não há blocker externo ativo conhecido para o primeiro release.**
+O núcleo funcional do MVP foi construído e houve certificações anteriores de arquitetura, segurança, build, E2E público e smoke autenticado. **O lançamento não está homologado:** os gates #305 (Data API/PostgREST) e #445 (deploy/identidade Vercel) estão abertos; o P0 Business #649 exige correção transacional e testes. A PR #621 requer reconciliação com a `main` atual e nova certificação do HEAD exato.
 
-Os antigos blockers de infraestrutura foram encerrados com prova real: `#305` após sessão autenticada + Conta + Business no runtime certificado, e `#445` após validação da identidade de release pela política canônica `exact/equivalent`, sem forçar deployment artificial. Regressão de infraestrutura ou delta deployável reabre o gate correspondente; issue encerrada não vira permissão para ignorar falha futura.
+As provas históricas de fechamento de `#305` e `#445` permanecem registradas, mas **não certificam o cenário atual**: houve nova degradação do PostgREST e a identidade do deployment do release presente não foi confirmada. Não ampliar timeout, afrouxar RLS, forçar build ou presumir `READY` por CI verde. A política canônica de release permanece `exact/equivalent`.
 
 A certificação vigente cobre Auth/Conta, Business lifecycle e Business Messaging no runtime aceito. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado; não se deve transformar ausência de um cenário específico no smoke agregado em afirmação de cobertura que o teste não executou.
 
