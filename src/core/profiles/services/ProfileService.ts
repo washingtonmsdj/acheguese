@@ -3,6 +3,8 @@ import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
+import { LocationService } from "@/core/location/services/LocationService";
+import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { RoleService } from "@/core/authorization/services/RoleService";
 import {
   publicIdentityService,
@@ -296,6 +298,12 @@ export class ProfileService {
       getUserLikesCount: (profileId) => this.getUserLikesCount(profileId),
       getUserBusinessesByProfiles: (profileIds) =>
         this.getUserBusinessesByProfiles(profileIds),
+      getTerritoryLabel: async (locationId) => {
+        const locationService = new LocationService(createLocationRepository());
+        const { location } = await locationService.getLocationById({ id: locationId });
+        const fullName = location.full_name.trim();
+        return fullName.length > 0 ? fullName : null;
+      },
       resolvePermissions: (profileContext) =>
         profileContext?.permissions ?? {
           canPost: false,
