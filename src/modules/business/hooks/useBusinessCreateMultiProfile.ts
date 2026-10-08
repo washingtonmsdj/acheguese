@@ -8,6 +8,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { BusinessService, type BusinessCreationReceipt } from "@/core/business/services/BusinessService";
+import { BusinessBrokerOutcomeUnknownError } from "@/core/business/services/BusinessBrokerOutcomeUnknownError";
 import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
@@ -144,7 +145,11 @@ export function useBusinessCreateMultiProfile(
     },
 
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao criar empresa");
+      if (error instanceof BusinessBrokerOutcomeUnknownError) {
+        toast.warning(error.message);
+      } else {
+        toast.error(error.message || "Erro ao criar empresa");
+      }
       options.onError?.(error);
     },
   });
