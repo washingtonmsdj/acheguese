@@ -17,6 +17,7 @@ export {
 // Re-exports de queries (alias via BusinessService)
 export {
   getBusinessesList,
+  BusinessNotFoundError,
   getBusinessProfile,
   getBusinessById,
   getBusinessDataIdByProfileId,

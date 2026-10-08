@@ -25,15 +25,12 @@ export class BusinessOwnershipService {
         .eq('id', businessId)
         .maybeSingle();
 
-      if (error) {
-        logger.error('[BusinessOwnershipService] Error resolving owner profile:', error);
-        return null;
-      }
+      if (error) throw error;
 
       return data?.profile_id || null;
     } catch (error) {
       logger.error('[BusinessOwnershipService] Unexpected error:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -60,18 +57,21 @@ export class BusinessOwnershipService {
         return 'owner';
       }
 
-      const activeRole = await ProfileMembersService.getActiveRole(
+      const membership = await ProfileMembersService.getActiveRoleResult(
         ownerProfileId,
         userId,
       );
+      if (!membership.success) {
+        throw new Error(membership.error || 'Failed to resolve active membership');
+      }
 
-      return activeRole === 'admin' ? 'admin' : null;
+      return membership.data === 'admin' ? 'admin' : null;
     } catch (error) {
       logger.error(
         '[BusinessOwnershipService] Unexpected error resolving management role:',
         error,
       );
-      return null;
+      throw error;
     }
   }
 

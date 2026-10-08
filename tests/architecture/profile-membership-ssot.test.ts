@@ -119,7 +119,7 @@ describe("G4 profile membership SSOT", () => {
       "utf8",
     );
 
-    expect(ownership).toContain("ProfileMembersService.isManager(ownerProfileId, userId)");
+    expect(ownership).toContain("ProfileMembersService.getActiveRoleResult(");
     expect(ownership).not.toMatch(DIRECT_PROFILE_MEMBERS_RE);
   });
 
