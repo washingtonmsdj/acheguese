@@ -1,7 +1,7 @@
 -- Endereços: separar a autoridade privada da projeção pública existente.
 -- Apenas change-set versionado, não aplicar via dashboard / dual-write.
 -- addresses_public é uma EXCEÇÃO CONTROLADA ao security_invoker: projeção
--- explícita de campos não sensíveis, somente endereços verificados e
+-- explícita de campos não sensíveis, somente endereços com ambos os estados de verificação confirmados e
 -- security_barrier. A tabela física conserva RLS de proprietário.
 -- Em caso de drift de owner, policy ou projeção, a transação ABORTA.
 BEGIN;
@@ -101,7 +101,7 @@ DROP POLICY "Addresses public verified read" ON public.addresses;
 
 -- A view JÁ EXISTENTE é o único read model de endereços verificados.
 -- A exceção de privilégios do owner fica confinada à lista explícita
--- de nove colunas existente, com filtro de verificação e security barrier.
+-- de nove colunas existente, com dupla confirmação da verificação e security barrier.
 CREATE OR REPLACE VIEW public.addresses_public
 WITH (security_invoker = false, security_barrier = true)
 AS
@@ -116,8 +116,8 @@ SELECT
   address.verification_status,
   address.created_at
 FROM public.addresses AS address
-WHERE address.is_verified = true
-   OR address.verification_status = 'verified'::public.address_verification_status;
+WHERE address.is_verified IS TRUE
+  AND address.verification_status = 'verified'::public.address_verification_status;
 
 REVOKE INSERT, UPDATE, DELETE ON TABLE public.addresses_public
   FROM PUBLIC, anon, authenticated;
