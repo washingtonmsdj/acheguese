@@ -76,7 +76,7 @@ BEGIN
   -- Na atualização, QUALQUER alteração física invalida a prova antiga,
   -- inclusive quando a operação foi iniciada pelo servidor.
   IF TG_OP = 'INSERT' THEN
-    IF current_user = 'authenticated' THEN
+    IF current_user = 'authenticated' OR auth.uid() IS NOT NULL THEN
       NEW.is_verified := false;
       NEW.verification_status := 'pending'::public.address_verification_status;
       NEW.verified_at := NULL;
@@ -237,7 +237,7 @@ BEGIN
   -- O vínculo trusted não sobrevive a mudanças de residência, mesmo quando
   -- efetuadas por um serviço autorizado. A aprovação é outra operação.
   IF TG_OP = 'INSERT' THEN
-    IF current_user = 'authenticated' THEN
+    IF current_user = 'authenticated' OR auth.uid() IS NOT NULL THEN
       NEW.is_verified := false;
       NEW.verification_requested_at := NULL;
     END IF;
@@ -249,7 +249,7 @@ BEGIN
   THEN
     NEW.is_verified := false;
     NEW.verification_requested_at := NULL;
-  ELSIF current_user = 'authenticated'
+  ELSIF (current_user = 'authenticated' OR auth.uid() IS NOT NULL)
     AND NEW.verification_requested_at IS DISTINCT FROM OLD.verification_requested_at
   THEN
     IF NEW.verification_requested_at IS NULL THEN
