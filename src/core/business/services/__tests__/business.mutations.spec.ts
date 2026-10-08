@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   canChangeIdentifier: vi.fn(),
   generateUniqueSlug: vi.fn(),
   createAddress: vi.fn(),
+  getAddressById: vi.fn(),
   updateAddress: vi.fn(),
   deleteAddress: vi.fn(),
   buildPatch: vi.fn(),
@@ -39,6 +40,7 @@ vi.mock("@/core/public-identity", () => ({
 vi.mock("@/core/address/services/AddressService", () => ({
   AddressService: class {
     createAddress = mocks.createAddress;
+    getAddressById = mocks.getAddressById;
     updateAddress = mocks.updateAddress;
     deleteAddress = mocks.deleteAddress;
   },
@@ -429,6 +431,126 @@ describe("business lifecycle broker", () => {
 
     expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(1);
     expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
+  });
+
+  it("stages changes to an existing address as a new version rather than mutating the old row", async () => {
+    const previous = {
+      id: "old-address",
+      location_id: businessInput.location_id,
+      street: "Rua Conservada",
+      number: "42",
+      latitude: -12.981,
+      longitude: -38.451,
+      precision: "street",
+      geocoding_source: "nominatim_osm",
+      geocoding_confidence: 0.87,
+      geocoded_at: "2026-08-17T12:00:00.000Z",
+    };
+    mocks.getBusinessById.mockResolvedValue({
+      ...currentBusiness,
+      address_id: "old-address",
+      address: { street: "Rua Conservada", number: "42" },
+    });
+    mocks.resolveAddress.mockResolvedValue({
+      locationId: businessInput.location_id,
+      postalCode: "40000-000",
+      street: "Rua Conservada",
+      number: "42",
+      complement: "Sala 12",
+    });
+    mocks.getAddressById.mockResolvedValue(previous);
+    mocks.createAddress.mockResolvedValue({ id: "new-address" });
+
+    await expect(updateBusiness("profile-1", {
+      address_complement: "Sala 12",
+    })).resolves.toEqual({ profile_id: "profile-1" });
+
+    expect(mocks.getAddressById).toHaveBeenCalledWith("old-address");
+    expect(mocks.updateAddress).not.toHaveBeenCalled();
+    expect(mocks.createAddress).toHaveBeenCalledWith(expect.objectContaining({
+      owner_user_id: "user-1",
+      street: "Rua Conservada",
+      number: "42",
+      complement: "Sala 12",
+      latitude: previous.latitude,
+      longitude: previous.longitude,
+      precision: previous.precision,
+      geocoding_source: previous.geocoding_source,
+    }));
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledWith("profile-1",
+      expect.objectContaining({
+        businessPatch: expect.objectContaining({ address_id: "new-address" }),
+      }),
+    );
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
+  it("does not mutate the existing address when the broker rejects the new reference", async () => {
+    mocks.getBusinessById.mockResolvedValue({
+      ...currentBusiness, address_id: "old-address",
+    });
+    mocks.createAddress.mockResolvedValue({ id: "staged-address" });
+    mocks.updateBusinessRpc.mockResolvedValue({
+      success: false, error: "Transaction rejected",
+    });
+
+    await expect(updateBusiness("profile-1", {
+      address_street: "Rua Revisada",
+      address_number: "9",
+    })).rejects.toThrow("Transaction rejected");
+
+    expect(mocks.updateAddress).not.toHaveBeenCalled();
+    expect(mocks.deleteAddress).toHaveBeenCalledWith("staged-address");
+    expect(mocks.deleteAddress).not.toHaveBeenCalledWith("old-address");
+  });
+
+  it("keeps old and staged addresses untouched after an ambiguous broker response", async () => {
+    mocks.getBusinessById.mockResolvedValue({
+      ...currentBusiness, address_id: "old-address",
+    });
+    mocks.createAddress.mockResolvedValue({ id: "staged-address" });
+    mocks.updateBusinessRpc.mockRejectedValue(new Error("Response lost"));
+
+    await expect(updateBusiness("profile-1", {
+      address_street: "Rua Revisada",
+      address_number: "9",
+    })).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+
+    expect(mocks.updateAddress).not.toHaveBeenCalled();
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledWith("profile-1",
+      expect.objectContaining({
+        businessPatch: expect.objectContaining({ address_id: "staged-address" }),
+      }),
+    );
+  });
+
+  it("fails before dispatch if the old geocoding evidence cannot be safely reused", async () => {
+    mocks.getBusinessById.mockResolvedValue({
+      ...currentBusiness, address_id: "old-address",
+    });
+    mocks.resolveAddress.mockResolvedValue({
+      locationId: businessInput.location_id,
+      postalCode: null,
+      street: "Rua do Pedido",
+      number: "42",
+      complement: "Sala 2",
+    });
+    mocks.getAddressById.mockResolvedValue({
+      id: "old-address",
+      location_id: businessInput.location_id,
+      street: "Rua Diferente",
+      number: "42",
+      latitude: -12.98,
+      longitude: -38.45,
+    });
+
+    await expect(updateBusiness("profile-1", {
+      address_complement: "Sala 2",
+    })).rejects.toThrow("Endereco alterado precisa de nova verificacao");
+    expect(mocks.createAddress).not.toHaveBeenCalled();
+    expect(mocks.updateAddress).not.toHaveBeenCalled();
+    expect(mocks.updateBusinessRpc).not.toHaveBeenCalled();
   });
 
   it("retains a newly attached address after broker-confirmed update without a second read", async () => {
