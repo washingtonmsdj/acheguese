@@ -109,6 +109,50 @@ A mudança só é válida para produção após aplicação controlada, verifica
 real de `anon`/usuário proprietário/terceiro e smoke das superfícies
 públicas. Um merge por si só **não** prova que o banco já aplica a regra.
 
+## Homologação conjunta de RLS e prova de endereço (pré-implantação)
+
+O par de migrações versionadas é **indivisível para certificação**:
+`20261008215900_restrict_address_verification_mutations.sql` (escrita)
+deve ser aplicado antes de
+`20261008220000_enforce_address_private_read_projection.sql` (leitura).
+Os preflights abortam em caso de drift ou sequência errada.
+
+**Ambiente:** executar primeiro em PostgreSQL/Supabase de desenvolvimento
+isolado, sem copiar PII ou usar contas reais. A CI estática não equivale à
+execução SQL nem à autorização do fluxo HTTP PostgREST.
+
+**Matriz obrigatória (usar sessões reais do provedor de autenticação no
+ambiente de teste, não apenas `SET ROLE` nem claims JWT forjadas):**
+
+| Ator | Operação | Resultado esperado |
+|---|---|---|
+| `anon` | SELECT `addresses` detalhado | zero linhas por RLS, mantendo o GRANT técnico para FK embedding |
+| `anon` | SELECT `addresses_public` | somente nove colunas, somente registros com `is_verified=true AND verification_status='verified'` |
+| `anon` | catálogo Business e view profissional pública | consulta íntegra, nenhum campo residencial detalhado |
+| Morador A | INSERT Address e Residence próprios | estado de verificação pendente/não verificado |
+| Morador A | UPDATE de rua, CEP, coordenadas ou localização do próprio Address | permitido; Address passa a não verificado e todas as residências vinculadas são invalidadas na **mesma transação** |
+| Morador A | UPDATE direto de `is_verified`, status ou `verified_by` | rejeitado por privilégio SQL, inclusive numa tentativa com outros campos |
+| Morador A | INSERT/UPDATE de `user_residences.is_verified` | rejeitado |
+| Morador A | requestVerification | timestamp definido pelo servidor; não equivale à aprovação |
+| Morador B | ler/editar endereço ou residência de A | negado por RLS |
+| Fluxo Verification autorizado | marcar prova após análise | somente autoridade do servidor, com auditoria e autorização apropriadas |
+| Alteração do endereço previamente verificado | prova e solicitação existentes | revogadas sem erro ou deadlock, inclusive com `auth.uid()` presente no encadeamento interno |
+
+**Probes read-only pós-aplicação:** os arquivos
+`tests/security/address-verification-authenticated-probe.sql` e
+`tests/security/address-private-projection-postapply-probe.sql`
+confirmam propriedades de ACL e leitura anônima; são complementares
+e **não substituem os testes de escrita com fixtures**.
+
+**Antes de produção:** demonstrar migrator e plano de reversão; revisão de
+permissões no banco de teste, impacto no endereço comercial e no mapa,
+sinais de PostgREST/edge e execução do smoke autenticado. Não alterar a
+produção por dashboard, não usar dual-write nem contornar o bloqueio de
+RLS com uma nova policy permissiva. Registrar o resultado nos PRs #657 e #658
+e no gate da PR de release #621. Somente após confirmação explícita do
+responsável pela produção executar o deploy versionado e verificar o
+estado pós-aplicação. Problemas posteriores devem bloquear a promoção.
+
 ## Separação de responsabilidades
 
 - **Address**: entidade postal, persistência, privacidade e lifecycle;
