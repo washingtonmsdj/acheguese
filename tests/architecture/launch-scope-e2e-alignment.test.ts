@@ -12,6 +12,9 @@ const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
 const searchProviderScope = read("src/app/config/searchProviderScope.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const notificationRoutes = read(
+  "src/core/notifications/routes/notificationRoutes.ts",
+);
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
 const searchPage = read("src/app/pages/BuscaPage.tsx");
 const publicCitySelector = read(
@@ -79,7 +82,8 @@ describe("MVP launch-scope alignment", () => {
       );
     }
     expect(appRoutes).toContain("messagingRoutes.inbox()");
-    expect(appRoutes).toContain('path="/notificacoes"');
+    expect(appRoutes).toContain("path={notificationRoutes.inbox()}");
+    expect(notificationRoutes).toContain('inbox: () => "/notificacoes"');
     expect(appRoutes).not.toContain("launchElement(");
     expect(appRoutes).not.toContain("LaunchPausedPage");
   });
