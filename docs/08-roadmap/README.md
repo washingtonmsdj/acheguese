@@ -13,7 +13,7 @@ Se houver conflito entre qualquer outro plano desta pasta e esses dois documento
 
 - [`CORE_PLATFORM_CONSOLIDATION_PLAN.md`](./CORE_PLATFORM_CONSOLIDATION_PLAN.md) — consolidação transversal ainda não concluída por depender de evidências de staging/carga; não é requisito para ativar domínios pausados no MVP atual.
 - [`COMMUNITY_SCALE_READINESS_PLAN.md`](./COMMUNITY_SCALE_READINESS_PLAN.md) — preparação futura de Community para escala; Community permanece `paused`.
-- [`MONOREPO_MIGRATION_PLAN.md`](./MONOREPO_MIGRATION_PLAN.md) — proposta histórica/futura de mobile/monorepo; não faz parte da certificação web atual e não deve ser usada como estimativa vigente sem revalidação.
+- O estudo de monorepo/mobile de abril de 2026 foi **arquivado** em [`../10-archive/plans/MONOREPO_MIGRATION_PLAN_2026-04.md`](../10-archive/plans/MONOREPO_MIGRATION_PLAN_2026-04.md). Suas estimativas e comandos não representam trabalho aprovado nem prazo do MVP.
 
 ## Evidências datadas
 
