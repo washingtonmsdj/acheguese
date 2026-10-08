@@ -34,6 +34,15 @@ describe("documentação e topologia física canônicas", () => {
     expect(maintenance).not.toContain("src/<dominio>/README.md");
   });
 
+  it("usa o README de Empresas como índice e não como checkpoint antigo", () => {
+    const business = read("src/modules/business/README.md");
+    expect(business).toContain("VALIDATION.md");
+    expect(business).toContain("BusinessService.createBusiness()");
+    expect(business).toContain("docs/08-roadmap/EXECUCAO_MAIN_ONLY.md");
+    expect(business).not.toContain("G4 SSOT SOURCE CLOSED");
+    expect(business).not.toContain("NAO MVP CERTIFICADO");
+  });
+
   it("mantém taxonomia de módulos íntegra sem listas quebradas", () => {
     const modules = read("src/modules/README.md");
     expect(modules).toContain("Estado oficial das verticais:");
