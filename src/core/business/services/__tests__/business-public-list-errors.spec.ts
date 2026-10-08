@@ -24,7 +24,7 @@ vi.mock("@/shared/utils/logger", () => ({
   logger: { warn: vi.fn(), error: vi.fn() },
 }));
 
-import { getBusinessesList } from "../business.queries";
+import { BusinessNotFoundError, getBusinessById, getBusinessBySlug, getBusinessesList } from "../business.queries";
 
 function createQuery(result: { data: unknown[] | null; error: Error | null }) {
   const query = {
@@ -34,6 +34,7 @@ function createQuery(result: { data: unknown[] | null; error: Error | null }) {
     or: vi.fn(),
     order: vi.fn(),
     range: vi.fn(),
+    maybeSingle: vi.fn(),
     then: (
       resolve: (value: typeof result) => unknown,
       reject?: (error: unknown) => unknown,
@@ -85,6 +86,32 @@ describe("canonical public Business list read failures", () => {
       }),
     ).rejects.toBe(outage);
     expect(query.range).not.toHaveBeenCalled();
+  });
+
+  it("distinguishes a confirmed missing ID from a failed lookup", async () => {
+    const query = createQuery({ data: [], error: null });
+    query.maybeSingle.mockResolvedValue({ data: null, error: null });
+    mocks.from.mockReturnValue(query);
+    await expect(
+      getBusinessById("00000000-0000-4000-8000-000000000001"),
+    ).rejects.toBeInstanceOf(BusinessNotFoundError);
+
+    const outage = new Error("backend unavailable");
+    query.maybeSingle.mockResolvedValue({ data: null, error: outage });
+    await expect(
+      getBusinessById("00000000-0000-4000-8000-000000000001"),
+    ).rejects.not.toBeInstanceOf(BusinessNotFoundError);
+  });
+
+  it("returns null only for absent slugs and propagates resolver outages", async () => {
+    const query = createQuery({ data: [], error: null });
+    query.maybeSingle.mockResolvedValue({ data: null, error: null });
+    mocks.from.mockReturnValue(query);
+    await expect(getBusinessBySlug("empresa-teste")).resolves.toBeNull();
+
+    const outage = new Error("service unavailable");
+    query.maybeSingle.mockResolvedValue({ data: null, error: outage });
+    await expect(getBusinessBySlug("empresa-teste")).rejects.toBe(outage);
   });
 
   it("propagates a transport exception raised before the read", async () => {
