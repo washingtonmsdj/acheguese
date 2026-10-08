@@ -451,6 +451,36 @@ describe("business lifecycle broker", () => {
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
   });
 
+  it("does not invent a confirmed update without the matching broker receipt", async () => {
+    for (const data of [undefined, { profile_id: "different-profile" }]) {
+      mocks.updateBusinessRpc.mockResolvedValue({ success: true, data });
+
+      await expect(
+        updateBusiness("profile-1", {
+          description: "Atualizacao com recibo faltante ou divergente",
+        }),
+      ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    }
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves an Address on a success flag with a mismatched update receipt", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-mismatched-receipt" });
+    mocks.updateBusinessRpc.mockResolvedValue({
+      success: true,
+      data: { profile_id: "other-profile" },
+    });
+
+    await expect(
+      updateBusiness("profile-1", {
+        location_id: businessInput.location_id,
+        address_street: "Rua Recibo Divergente",
+      }),
+    ).rejects.toBeInstanceOf(BusinessBrokerOutcomeUnknownError);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
+  });
+
   it("preserves a possible committed Address after an ambiguous update", async () => {
     mocks.createAddress.mockResolvedValue({ id: "address-uncertain-update" });
     mocks.updateBusinessRpc.mockRejectedValue(new Error("Connection dropped"));
