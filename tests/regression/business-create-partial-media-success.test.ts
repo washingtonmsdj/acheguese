@@ -17,6 +17,14 @@ describe("Business creation committed before optional media setup", () => {
     expect(createPage).toContain("createSubmissionInFlightRef.current = false;");
   });
 
+  it("blocks resubmission after an unconfirmed broker response", () => {
+    expect(createPage).toContain("error instanceof BusinessBrokerOutcomeUnknownError");
+    expect(createPage).toContain("createdBusinessRef.current = true;");
+    expect(createPage).toContain("setCreationOutcomeUncertain(true)");
+    expect(createPage).toContain("disabled={isCreating || creationOutcomeUncertain}");
+    expect(hook).toContain("toast.warning(error.message)");
+  });
+
   it("creates the business only through the canonical owner", () => {
     expect(hook).toContain("await BusinessService.createBusiness(inputWithLocation)");
     expect(hook).not.toContain("MultiProfileService.create");
