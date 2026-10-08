@@ -489,7 +489,18 @@ export class ProfileService {
     try {
       return await getUserBusinessesByProfilesQuery(profileIds);
     } catch (error) {
-      trackError(error instanceof Error ? error : new Error(String(error)), {
+      const trackedError =
+        error instanceof Error
+          ? error
+          : new Error(
+              typeof error === "object" &&
+              error !== null &&
+              "message" in error &&
+              typeof error.message === "string"
+                ? error.message
+                : String(error),
+            );
+      trackError(trackedError, {
         component: "ProfileService",
         action: "getUserBusinessesByProfiles",
         metadata: { profileIds },
