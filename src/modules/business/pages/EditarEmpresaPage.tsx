@@ -81,6 +81,16 @@ export default function EditarEmpresaPage() {
   // Refs para upload de imagens
   const logoRef = useRef<HTMLInputElement>(null);
   const capaRef = useRef<HTMLInputElement>(null);
+  const logoUploadSequenceRef = useRef(0);
+  const capaUploadSequenceRef = useRef(0);
+  const pendingMediaUploadsRef = useRef(0);
+  const [pendingMediaUploads, setPendingMediaUploads] = useState(0);
+
+  // Late responses for another Business must never update this form.
+  useEffect(() => {
+    ++logoUploadSequenceRef.current;
+    ++capaUploadSequenceRef.current;
+  }, [businessId]);
 
   // Estados para preview de imagens
   const [logoPreview, setLogoPreview] = useState<string>("");
@@ -190,14 +200,20 @@ export default function EditarEmpresaPage() {
       return;
     }
 
+    const uploadId = ++logoUploadSequenceRef.current;
+    ++pendingMediaUploadsRef.current;
+    setPendingMediaUploads(pendingMediaUploadsRef.current);
     try {
       const url = await uploadBusinessImage(file, "logos");
+      if (uploadId !== logoUploadSequenceRef.current) return;
       form.setValue("logo_url", url, { shouldDirty: true, shouldValidate: true });
       setLogoPreview(url);
       toast.success("Logo enviado. Salve as alterações para publicá-lo.");
-    } catch (error) {
-      toast.error("Erro ao fazer upload do logo");
-      console.error(error);
+    } catch {
+      // The canonical upload hook displays the failure; retain the prior image.
+    } finally {
+      --pendingMediaUploadsRef.current;
+      setPendingMediaUploads(pendingMediaUploadsRef.current);
     }
   };
 
@@ -217,19 +233,29 @@ export default function EditarEmpresaPage() {
       return;
     }
 
+    const uploadId = ++capaUploadSequenceRef.current;
+    ++pendingMediaUploadsRef.current;
+    setPendingMediaUploads(pendingMediaUploadsRef.current);
     try {
       const url = await uploadBusinessImage(file, "banners");
+      if (uploadId !== capaUploadSequenceRef.current) return;
       form.setValue("banner_url", url, { shouldDirty: true, shouldValidate: true });
       setCapaPreview(url);
       toast.success("Capa enviada. Salve as alterações para publicá-la.");
-    } catch (error) {
-      toast.error("Erro ao fazer upload da capa");
-      console.error(error);
+    } catch {
+      // The canonical upload hook displays the failure; retain the prior image.
+    } finally {
+      --pendingMediaUploadsRef.current;
+      setPendingMediaUploads(pendingMediaUploadsRef.current);
     }
   };
 
   const doSave = form.handleSubmit(async (data) => {
     if (!businessId) return;
+    if (pendingMediaUploadsRef.current > 0) {
+      toast.error("Aguarde o envio das imagens antes de salvar a empresa.");
+      return;
+    }
 
     const isVerifiedOfficial = Boolean(business?.is_verified);
     if (
@@ -314,7 +340,7 @@ export default function EditarEmpresaPage() {
                 logoPreview={logoPreview}
                 logoRef={logoRef}
                 onLogoChange={handleLogoChange}
-                uploading={uploading}
+                uploading={uploading || pendingMediaUploads > 0}
                 errors={getErrors()}
                 onCancel={() => navigate(businessManagementRoutes.overview(businessId))}
                 onNext={handleNextStep1}
@@ -393,7 +419,7 @@ export default function EditarEmpresaPage() {
                       .filter(Boolean),
                   )
                 }
-                saving={saving}
+                saving={saving || pendingMediaUploads > 0}
                 onBack={() => setCurrentStep(2)}
                 onSave={handleSave}
               />
