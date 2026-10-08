@@ -16,6 +16,6 @@ export async function resolveGastronomyBusinessId(
     return resolvedBusinessDataId ?? businessIdentifier;
   } catch (error) {
     logger.error('[Gastronomy] Error resolving business identifier:', error);
-    return businessIdentifier;
+    throw error;
   }
 }
