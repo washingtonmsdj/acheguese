@@ -17,6 +17,7 @@ import type { CreateBusinessInput } from "@/core/business/types";
 export interface BusinessCreateResult {
   profile_id: string;
   business_data_id: string | null;
+  mediaSetupIncomplete?: boolean;
 }
 
 export interface CreateBusinessSubmission {
@@ -71,48 +72,73 @@ export function useBusinessCreateMultiProfile(
       const createdBusiness = await BusinessService.createBusiness(inputWithLocation);
       const profileId = createdBusiness.profile_id;
 
+      // Creation has already committed. Media failures must never turn this
+      // result into a failed creation and encourage a duplicate submission.
+      let mediaSetupIncomplete = false;
       let logoReference: string | undefined;
       let bannerReference: string | undefined;
-
       if (logoFile) {
-        const upload = await mediaService.uploadMediaAsset(
-          profileId,
-          logoFile,
-          "business_logo",
-        );
-        logoReference = upload.reference;
+        try {
+          const upload = await mediaService.uploadMediaAsset(
+            profileId,
+            logoFile,
+            "business_logo",
+          );
+          logoReference = upload.reference;
+        } catch {
+          mediaSetupIncomplete = true;
+        }
       }
 
       if (bannerFile) {
-        const upload = await mediaService.uploadMediaAsset(
-          profileId,
-          bannerFile,
-          "business_banner",
-        );
-        bannerReference = upload.reference;
+        try {
+          const upload = await mediaService.uploadMediaAsset(
+            profileId,
+            bannerFile,
+            "business_banner",
+          );
+          bannerReference = upload.reference;
+        } catch {
+          mediaSetupIncomplete = true;
+        }
       }
 
       if (logoReference || bannerReference) {
-        await BusinessService.updateBusiness(profileId, {
-          ...(logoReference ? { logo_url: logoReference } : {}),
-          ...(bannerReference ? { banner_url: bannerReference } : {}),
-        });
+        try {
+          await BusinessService.updateBusiness(profileId, {
+            ...(logoReference ? { logo_url: logoReference } : {}),
+            ...(bannerReference ? { banner_url: bannerReference } : {}),
+          });
+        } catch {
+          mediaSetupIncomplete = true;
+        }
       }
 
-      const businessDataId =
-        createdBusiness.business_data_id ??
-        (await BusinessService.getBusinessDataIdByProfileId(profileId));
+      let businessDataId = createdBusiness.business_data_id ?? null;
+      if (!businessDataId) {
+        try {
+          businessDataId = await BusinessService.getBusinessDataIdByProfileId(profileId);
+        } catch {
+          // The profile ID remains authoritative after a committed creation.
+          // A read-model lookup failure is not a reason to create again.
+        }
+      }
 
       return {
         profile_id: profileId,
         business_data_id: businessDataId,
+        mediaSetupIncomplete,
       };
     },
 
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["businesses"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Empresa criada com sucesso!");
+      if (result.mediaSetupIncomplete) {
+        toast.warning("Empresa criada, mas algumas imagens não foram salvas. Complete-as na edição da empresa.");
+      } else {
+        toast.success("Empresa criada com sucesso!");
+      }
       options.onSuccess?.(result);
     },
 
