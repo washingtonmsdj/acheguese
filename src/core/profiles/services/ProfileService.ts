@@ -489,12 +489,12 @@ export class ProfileService {
     try {
       return await getUserBusinessesByProfilesQuery(profileIds);
     } catch (error) {
-      trackError(new Error("Error fetching user businesses"), {
+      trackError(error instanceof Error ? error : new Error(String(error)), {
         component: "ProfileService",
         action: "getUserBusinessesByProfiles",
-        metadata: { profileIds, error },
+        metadata: { profileIds },
       });
-      return [];
+      throw error;
     }
   }
   async getUserBusinesses(profileId: string): Promise<BusinessRow[]> {
