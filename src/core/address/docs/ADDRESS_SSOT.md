@@ -59,7 +59,15 @@ A tabela `public.addresses` armazena dados físicos e privados de endereço,
 incluindo rua, número, complemento, CEP, proprietário e metadados.
 A autorização de leitura/gravação da linha detalhada pertence à política
 `Users manage own addresses`, vinculada à identidade autenticada.
-`anon` não recebe `SELECT` sobre a tabela física.
+
+**PostgREST / FK de Business e Mapa:** os clientes públicos ainda usam
+`addresses!address_id` como relacionamento de leitura. Por isso, a permissão
+SQL `SELECT` do papel `anon` na tabela física deve permanecer para que
+a consulta relacionada não falhe, mas **não existe política RLS de leitura
+para `anon`**: toda consulta anônima à tabela física devolve zero linhas,
+inclusive em endereços verificados. Não adicionar política pública para
+"consertar" uma resposta nula; a única leitura detalhada autorizada por RLS
+é a do proprietário autenticado. O teste de regressão protege essa distinção.
 
 `public.addresses_public` é o **read model canônico existente**, sem copiar
 ou persistir endereços: expõe somente `id`, `location_id`, `address_type`,
