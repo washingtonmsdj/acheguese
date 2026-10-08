@@ -25,7 +25,7 @@ import {
   sanitizePhone,
 } from "@/shared/utils/sanitization";
 import { isValidBusinessId } from "./validators";
-import { toBusinessData } from "./business.mappers";
+import { mapProductRecordToProduct, toBusinessData } from "./business.mappers";
 import { BusinessUrlService } from "./BusinessUrlService";
 import { getBusinessById } from "./business.queries";
 import {
@@ -41,6 +41,7 @@ import type {
   CreateBusinessInput,
   CreateProductInput,
   Product,
+  ProductRecord,
   UpdateBusinessInput,
 } from "../types";
 
@@ -610,21 +611,7 @@ export async function createProduct(
     if (error) throw error;
     if (!data) throw new Error("Erro ao carregar produto criado");
 
-    return {
-      id: data.id,
-      profile_id: businessId,
-      name: productData.nome,
-      description: productData.descricao || "",
-      price: productData.preco || 0,
-      promotional_price: productData.preco_promocional || undefined,
-      image_url: productData.imagem || undefined,
-      category: productData.categoria || "",
-      stock: productData.estoque || 0,
-      active: productData.ativo ?? true,
-      featured: productData.destaque ?? false,
-      promotion: productData.promocao ?? false,
-      created_at: new Date().toISOString(),
-    };
+    return mapProductRecordToProduct(data as ProductRecord);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar produto: ${message}`);
