@@ -3,15 +3,15 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessService, type BusinessUpdateReceipt } from "@/core/business/services/BusinessService";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { useSessionContext } from "@/core/session";
 import { mediaService } from "@/core/media/services/MediaService";
 import { toast } from "sonner";
-import type { UpdateBusinessInput, Business } from "@/core/business/types";
+import type { UpdateBusinessInput } from "@/core/business/types";
 
 interface UseBusinessEditOptions {
-  onSuccess?: (business: Business) => void;
+  onSuccess?: (receipt: BusinessUpdateReceipt) => void;
   onError?: (error: Error) => void;
 }
 
@@ -19,12 +19,12 @@ interface UseBusinessEditReturn {
   updateBusiness: (params: {
     id: string;
     data: UpdateBusinessInput;
-  }) => Promise<Business>;
+  }) => Promise<BusinessUpdateReceipt>;
   isLoading: boolean;
   isSuccess: boolean;
   isError: boolean;
   error: Error | null;
-  data: Business | undefined;
+  data: BusinessUpdateReceipt | undefined;
   reset: () => void;
 }
 
@@ -41,7 +41,7 @@ export function useBusinessEdit(
     }: {
       id: string;
       data: UpdateBusinessInput;
-    }): Promise<Business> => {
+    }): Promise<BusinessUpdateReceipt> => {
       // Authorization belongs to the target Business broker/RLS; the acting
       // user may legitimately manage a Business other than the active profile.
       if (!user?.id) {
@@ -58,14 +58,13 @@ export function useBusinessEdit(
       return await BusinessService.updateBusiness(id, validation.data);
     },
 
-    onSuccess: (business) => {
+    onSuccess: (receipt) => {
+      // The broker confirmed the commit, but the receipt is not a Business
+      // read model. Let canonical queries refresh both ID and slug caches.
       void queryClient.invalidateQueries({ queryKey: ["businesses"] });
-      // The canonical detail query is also keyed by slug, not only by ID.
-      // Invalidate the entire Business detail family after a committed edit.
-      queryClient.setQueryData(["business", business.id], business);
       void queryClient.invalidateQueries({ queryKey: ["business"] });
       toast.success("Empresa atualizada com sucesso!");
-      options.onSuccess?.(business);
+      options.onSuccess?.(receipt);
     },
 
     onError: (error: Error) => {
