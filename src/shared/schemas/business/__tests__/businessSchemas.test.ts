@@ -7,9 +7,30 @@
 
 import { describe, it, expect } from "vitest";
 import fc from "fast-check";
-import { updateBusinessSchema } from "../businessSchemas";
+import { createBusinessSchema, updateBusinessSchema } from "../businessSchemas";
 
 describe("updateBusinessSchema Property-Based Tests", () => {
+  it("permite patch de complemento quando rua já está persistida", () => {
+    expect(updateBusinessSchema.safeParse({
+      address_complement: "Sala 12",
+    }).success).toBe(true);
+  });
+
+  it("mantém a exigência de rua no cadastro de novo endereço físico", () => {
+    const result = createBusinessSchema.safeParse({
+      name: "Empresa Teste",
+      category: "servicos",
+      location_id: "00000000-0000-4000-8000-000000000001",
+      email: "contato@exemplo.com",
+      address_complement: "Sala 12",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === "address_street"))
+        .toBe(true);
+    }
+  });
+
   // Property 6: updateBusinessSchema rejeita formatos inválidos de email, phone, website
   it("deve rejeitar email com formato inválido", () => {
     fc.assert(
