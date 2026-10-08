@@ -2,7 +2,7 @@
  * CriarEmpresaPage - fluxo alinhado ao SSOT de business
  */
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
@@ -382,7 +382,13 @@ export default function CriarEmpresaPage({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const createSubmissionInFlightRef = useRef(false);
+  const createdBusinessRef = useRef(false);
+
   const handleCreate = async () => {
+    if (createSubmissionInFlightRef.current || createdBusinessRef.current) return;
+    createSubmissionInFlightRef.current = true;
+    try {
     form.clearErrors();
 
     const result = createBusinessSchema.safeParse(form.getValues());
@@ -400,6 +406,12 @@ export default function CriarEmpresaPage({
       logoFile,
       bannerFile,
     });
+    createdBusinessRef.current = true;
+    } catch {
+      // Mutation errors are surfaced by the canonical hook and the page alert.
+    } finally {
+      createSubmissionInFlightRef.current = false;
+    }
   };
 
   const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
