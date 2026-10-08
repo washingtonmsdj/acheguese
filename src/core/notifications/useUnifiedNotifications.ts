@@ -198,9 +198,9 @@ export function useUnifiedNotifications(
     }
   }, [stableFilters, updateNotifications, user?.id]);
 
-  const markAllAsRead = useCallback(async () => {
+  const markAllAsRead = useCallback(async (): Promise<number | null> => {
     const requestUserId = user?.id;
-    if (!requestUserId) return 0;
+    if (!requestUserId) return null;
 
     try {
       const count = await notificationService.markAllAsRead();
@@ -232,7 +232,7 @@ export function useUnifiedNotifications(
       return count;
     } catch (err) {
       logger.error("Erro ao marcar todas como lidas:", err);
-      return 0;
+      return null;
     }
   }, [enableToast, stableFilters, updateNotifications, user?.id]);
 
