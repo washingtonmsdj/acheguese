@@ -111,7 +111,18 @@ export async function getProfileContextAggregate(
     });
   } catch (error) {
     logger.error("Error getting profile context:", error);
-    trackError(error instanceof Error ? error : new Error(String(error)), {
+    const trackedError =
+      error instanceof Error
+        ? error
+        : new Error(
+            typeof error === "object" &&
+            error !== null &&
+            "message" in error &&
+            typeof error.message === "string"
+              ? error.message
+              : String(error),
+          );
+    trackError(trackedError, {
       component: "profile.context.aggregate",
       action: "getProfileContextAggregate",
       metadata: { userId },
