@@ -1,0 +1,93 @@
+name: Address Public Projection PostgreSQL Integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261008220000_enforce_address_private_read_projection.sql"
+      - "tests/security/address-private-projection-postapply-probe.sql"
+      - "tests/security/fixtures/address-public-view-db-*.sql"
+      - ".github/workflows/address-public-projection-postgres-integration.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261008220000_enforce_address_private_read_projection.sql"
+      - "tests/security/address-private-projection-postapply-probe.sql"
+      - "tests/security/fixtures/address-public-view-db-*.sql"
+      - ".github/workflows/address-public-projection-postgres-integration.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: address-public-postgres-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sql-read-and-write-boundary:
+    name: PostgreSQL 17 combined trusted-write and public-read migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGDATABASE: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout exact public projection commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Source prerequisite migration from canonical PR or merged main
+        shell: bash
+        run: |
+          set -euo pipefail
+          prerequisite="supabase/migrations/20261008215900_restrict_address_verification_mutations.sql"
+          if [ -f "$prerequisite" ]; then
+            echo "Using merged canonical prerequisite from checkout."
+          else
+            # Same repository and exact PR ref. Never copy/mutate production.
+            git fetch --no-tags --depth=1 origin refs/pull/658/head
+            for path in \
+              "$prerequisite" \
+              "tests/security/fixtures/address-verification-db-setup.sql" \
+              "tests/security/fixtures/address-verification-db-assert.sql" \
+              "tests/security/address-verification-authenticated-probe.sql"; do
+              mkdir -p "$(dirname "$path")"
+              git show "FETCH_HEAD:$path" > "$path"
+            done
+            echo "Using prerequisite from PR #658 commit $(git rev-parse FETCH_HEAD)"
+          fi
+
+      - name: Create synthetic schema and roles
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-verification-db-setup.sql
+
+      - name: Apply exact write-authority prerequisite migration
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261008215900_restrict_address_verification_mutations.sql
+
+      - name: Prove owner, denial, cascade and privileged operations
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-verification-db-assert.sql
+
+      - name: Install current public view, professional and Business synthetic fixtures
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-public-view-db-setup.sql
+
+      - name: Apply exact public projection migration
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261008220000_enforce_address_private_read_projection.sql
+
+      - name: Prove privacy isolation, verified-only projection and Business compatibility
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-public-view-db-assert.sql
