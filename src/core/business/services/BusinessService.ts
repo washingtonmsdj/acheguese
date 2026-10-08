@@ -33,6 +33,8 @@ export {
   getGallery,
 } from "./business.queries";
 
+export type { BusinessCreationReceipt } from "./business.mutations";
+
 // Re-exports de mutations (alias via BusinessService)
 export {
   createBusiness,
