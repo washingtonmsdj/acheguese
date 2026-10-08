@@ -106,7 +106,14 @@ BEGIN
     WHERE n.nspname = 'public'
       AND c.relname = 'public_professional_search'
       AND c.relkind = 'v'
+      AND pg_get_userbyid(c.relowner) = 'postgres'
       AND 'security_invoker=true' = ANY(COALESCE(c.reloptions, ARRAY[]::text[]))
+      AND position('LEFT JOIN addresses address ON' in
+        pg_get_viewdef(c.oid, true)) > 0
+      AND position('professional.is_accepting_clients = true' in
+        pg_get_viewdef(c.oid, true)) > 0
+      AND position('professional.visibility =' in
+        pg_get_viewdef(c.oid, true)) > 0
   ) THEN
     RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: professional read-model drift';
   END IF;
