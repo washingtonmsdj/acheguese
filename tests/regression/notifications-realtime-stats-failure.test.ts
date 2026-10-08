@@ -5,6 +5,10 @@ const hook = readFileSync(
   "src/core/notifications/useUnifiedNotifications.ts",
   "utf8",
 );
+const service = readFileSync(
+  "src/core/notifications/services/NotificationService.ts",
+  "utf8",
+);
 
 describe("notification Realtime statistics failure boundary", () => {
   it("handles rejected stats refresh without detaching the Realtime handler", () => {
@@ -23,6 +27,15 @@ describe("notification Realtime statistics failure boundary", () => {
   it("ignores soft-deleted notifications before deduplication and counters", () => {
     expect(hook).toMatch(
       /const newNotification = notification;\s*if \(newNotification\.deleted_at\) return;\s*if \(seenNotificationIdsRef\.current\.has\(newNotification\.id\)\) return;/,
+    );
+  });
+
+  it("propagates statistics query errors rather than reporting a false empty inbox", () => {
+    expect(service).toMatch(
+      /catch \(error\) \{\s*logger\.error\("Error getting notification stats:", error\);\s*throw error;\s*\}/,
+    );
+    expect(service).not.toContain(
+      'logger.error("Error getting notification stats:", error);\n      return { total: 0, unread: 0 };',
     );
   });
 
