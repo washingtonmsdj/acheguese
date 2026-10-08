@@ -229,12 +229,17 @@ function applyBusinessRules<T extends z.AnyZodObject>(
     const hasContactChannel = Boolean(
       data.phone || data.whatsapp || data.email || data.website,
     );
-    const hasAddressDetails = Boolean(
-      data.address_street || data.address_number || data.address_complement || data.postal_code,
-    );
-
     const hasLatitude = data.latitude !== undefined;
     const hasLongitude = data.longitude !== undefined;
+    const hasPhysicalAddressPatch = Boolean(
+      data.address_street ||
+      data.address_number ||
+      data.address_complement ||
+      data.postal_code ||
+      data.cep ||
+      hasLatitude ||
+      hasLongitude
+    );
 
     if (hasLatitude !== hasLongitude) {
       ctx.addIssue({
@@ -268,7 +273,15 @@ function applyBusinessRules<T extends z.AnyZodObject>(
       });
     }
 
-    if (hasAddressDetails && !data.address_street && !options.allowPartialExistingAddress) {
+    if (data.address_id && hasPhysicalAddressPatch) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["address_id"],
+        message: "Escolha um endereco existente ou informe novos dados fisicos, nao ambos",
+      });
+    }
+
+    if (hasPhysicalAddressPatch && !data.address_street && !options.allowPartialExistingAddress) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["address_street"],
