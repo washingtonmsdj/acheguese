@@ -389,24 +389,24 @@ export default function CriarEmpresaPage({
     if (createSubmissionInFlightRef.current || createdBusinessRef.current) return;
     createSubmissionInFlightRef.current = true;
     try {
-    form.clearErrors();
+      form.clearErrors();
 
-    const result = createBusinessSchema.safeParse(form.getValues());
-    if (!result.success) {
-      setSchemaErrors(result.error.issues);
-      setStep1Attempted(true);
-      const firstInvalidField = String(result.error.issues[0]?.path[0] ?? "");
-      setCurrentStep(getFirstInvalidStep(firstInvalidField));
-      setPendingFocus(firstInvalidField);
-      return;
-    }
+      const result = createBusinessSchema.safeParse(form.getValues());
+      if (!result.success) {
+        setSchemaErrors(result.error.issues);
+        setStep1Attempted(true);
+        const firstInvalidField = String(result.error.issues[0]?.path[0] ?? "");
+        setCurrentStep(getFirstInvalidStep(firstInvalidField));
+        setPendingFocus(firstInvalidField);
+        return;
+      }
 
-    await createBusinessAsync({
-      data: result.data as CreateBusinessInput,
-      logoFile,
-      bannerFile,
-    });
-    createdBusinessRef.current = true;
+      await createBusinessAsync({
+        data: result.data as CreateBusinessInput,
+        logoFile,
+        bannerFile,
+      });
+      createdBusinessRef.current = true;
     } catch {
       // Mutation errors are surfaced by the canonical hook and the page alert.
     } finally {
