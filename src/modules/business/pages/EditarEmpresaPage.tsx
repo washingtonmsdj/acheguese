@@ -35,6 +35,7 @@ import {
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
+import { MEDIA_IMAGE_SOURCE_MIME_TYPES, MEDIA_PRESET_CLIENT_CONFIG } from "@/core/media/config/mediaPresets";
 
 function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
   const value = String(rawCategory ?? "").trim().toLowerCase();
@@ -153,12 +154,10 @@ export default function EditarEmpresaPage() {
       setLogoPreview(business.logo_url || "");
       setCapaPreview(business.banner_url || "");
 
-      // Inicializar slug com valor existente ou derivado do nome
-      const businessSlug = business.slug;
-      if (businessSlug) {
-        setSlug(businessSlug);
-        setOriginalSlug(businessSlug);
-      }
+      // Reset both fields for every business identity, including empty slugs.
+      const businessSlug = business.slug ?? "";
+      setSlug(businessSlug);
+      setOriginalSlug(businessSlug);
     }
   }, [business, form]);
 
@@ -180,22 +179,22 @@ export default function EditarEmpresaPage() {
     if (!file) return;
 
     // Validar tamanho (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MEDIA_PRESET_CLIENT_CONFIG.business_logo.maxSourceBytes) {
       toast.error("Imagem muito grande. Máximo 5MB");
       return;
     }
 
     // Validar tipo
-    if (!file.type.startsWith("image/")) {
-      toast.error("Arquivo deve ser uma imagem");
+    if (!MEDIA_IMAGE_SOURCE_MIME_TYPES.some((type) => type === file.type)) {
+      toast.error("Use uma imagem JPEG, PNG, WebP ou GIF");
       return;
     }
 
     try {
       const url = await uploadBusinessImage(file, "logos");
-      form.setValue("logo_url", url);
+      form.setValue("logo_url", url, { shouldDirty: true, shouldValidate: true });
       setLogoPreview(url);
-      toast.success("Logo atualizado!");
+      toast.success("Logo enviado. Salve as alterações para publicá-lo.");
     } catch (error) {
       toast.error("Erro ao fazer upload do logo");
       console.error(error);
@@ -207,22 +206,22 @@ export default function EditarEmpresaPage() {
     if (!file) return;
 
     // Validar tamanho (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MEDIA_PRESET_CLIENT_CONFIG.business_banner.maxSourceBytes) {
       toast.error("Imagem muito grande. Máximo 5MB");
       return;
     }
 
     // Validar tipo
-    if (!file.type.startsWith("image/")) {
-      toast.error("Arquivo deve ser uma imagem");
+    if (!MEDIA_IMAGE_SOURCE_MIME_TYPES.some((type) => type === file.type)) {
+      toast.error("Use uma imagem JPEG, PNG, WebP ou GIF");
       return;
     }
 
     try {
       const url = await uploadBusinessImage(file, "banners");
-      form.setValue("banner_url", url);
+      form.setValue("banner_url", url, { shouldDirty: true, shouldValidate: true });
       setCapaPreview(url);
-      toast.success("Capa atualizada!");
+      toast.success("Capa enviada. Salve as alterações para publicá-la.");
     } catch (error) {
       toast.error("Erro ao fazer upload da capa");
       console.error(error);
