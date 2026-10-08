@@ -3,8 +3,8 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BusinessService, type BusinessUpdateReceipt } from "@/core/business/services/BusinessService";
-import { BusinessBrokerOutcomeUnknownError } from "@/core/business/services/BusinessBrokerOutcomeUnknownError";
+import { BusinessService, BusinessBrokerOutcomeUnknownError, type BusinessUpdateReceipt } from "@/core/business/services/BusinessService";
+
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { useSessionContext } from "@/core/session";
 import { mediaService } from "@/core/media/services/MediaService";
