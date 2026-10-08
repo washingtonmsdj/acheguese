@@ -10,7 +10,8 @@ import { Building2, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { useBusinessEdit, useBusinessImageUpload } from "@/modules/business/hooks/useBusinessEdit";
+import { useBusinessEdit, useBusinessEditImageUpload } from "@/modules/business/hooks/useBusinessEdit";
+import { shouldHydrateBusinessEditForm } from "@/modules/business/utils/shouldHydrateBusinessEditForm";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import type {
   UpdateBusinessInput,
@@ -35,6 +36,7 @@ import {
 } from "@/core/public-identity/domain/businessSlugSafety";
 import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { getBusinessCategoryLabel } from "@/shared/taxonomy/businessCategories";
+import { MEDIA_IMAGE_SOURCE_MIME_TYPES, MEDIA_PRESET_CLIENT_CONFIG } from "@/core/media/config/mediaPresets";
 
 function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
   const value = String(rawCategory ?? "").trim().toLowerCase();
@@ -80,6 +82,17 @@ export default function EditarEmpresaPage() {
   // Refs para upload de imagens
   const logoRef = useRef<HTMLInputElement>(null);
   const capaRef = useRef<HTMLInputElement>(null);
+  const initializedBusinessProfileIdRef = useRef<string | null>(null);
+  const logoUploadSequenceRef = useRef(0);
+  const capaUploadSequenceRef = useRef(0);
+  const pendingMediaUploadsRef = useRef(0);
+  const [pendingMediaUploads, setPendingMediaUploads] = useState(0);
+
+  // Late responses for another Business must never update this form.
+  useEffect(() => {
+    ++logoUploadSequenceRef.current;
+    ++capaUploadSequenceRef.current;
+  }, [businessId]);
 
   // Estados para preview de imagens
   const [logoPreview, setLogoPreview] = useState<string>("");
@@ -93,7 +106,7 @@ export default function EditarEmpresaPage() {
     },
   });
 
-  const { mutateAsync: uploadImage, isPending: uploading } = useBusinessImageUpload();
+  const { mutateAsync: uploadImage, isPending: uploading } = useBusinessEditImageUpload(businessId);
   const uploadBusinessImage = (file: File, folder: "logos" | "banners") =>
     uploadImage({ file, folder });
 
@@ -124,43 +137,54 @@ export default function EditarEmpresaPage() {
     },
   });
 
+  const formDirty = form.formState.isDirty;
+
   useEffect(() => {
-    if (business) {
-      form.reset({
-        name: business.name,
-        description: business.description,
-        category: normalizeCategoryValue(business.category),
-        phone: business.phone || "",
-        whatsapp: business.whatsapp || "",
-        email: business.email || "",
-        address:
-          business.business_address ||
-          [business.address?.street, business.address?.number, business.address?.complement]
-            .filter(Boolean)
-            .join(", "),
-        website: business.website || "",
-        instagram: business.instagram || "",
-        facebook: business.facebook || "",
-        formas_pagamento: business.formas_pagamento || [],
-        especialidades: business.especialidades || [],
-        facilidades: business.facilidades || [],
-        modos_atendimento: business.modos_atendimento || ["presencial"],
-        latitude: business.address?.latitude,
-        longitude: business.address?.longitude,
-      });
+    if (
+      !business ||
+      !shouldHydrateBusinessEditForm({
+        routeProfileId: businessId,
+        loadedProfileId: business.profile_id,
+        initializedProfileId: initializedBusinessProfileIdRef.current,
+        hasUnsavedFields: formDirty,
+        hasUnsavedSlug: slug !== originalSlug,
+        hasPendingUploads: pendingMediaUploadsRef.current > 0,
+      })
+    ) return;
 
-      // Inicializar previews de imagens
-      setLogoPreview(business.logo_url || "");
-      setCapaPreview(business.banner_url || "");
+    initializedBusinessProfileIdRef.current = businessId;
+    form.reset({
+      name: business.name,
+      description: business.description,
+      category: normalizeCategoryValue(business.category),
+      phone: business.phone || "",
+      whatsapp: business.whatsapp || "",
+      email: business.email || "",
+      address:
+        business.business_address ||
+        [business.address?.street, business.address?.number, business.address?.complement]
+          .filter(Boolean)
+          .join(", "),
+      website: business.website || "",
+      instagram: business.instagram || "",
+      facebook: business.facebook || "",
+      formas_pagamento: business.formas_pagamento || [],
+      especialidades: business.especialidades || [],
+      facilidades: business.facilidades || [],
+      modos_atendimento: business.modos_atendimento || ["presencial"],
+      latitude: business.address?.latitude,
+      longitude: business.address?.longitude,
+    });
 
-      // Inicializar slug com valor existente ou derivado do nome
-      const businessSlug = business.slug;
-      if (businessSlug) {
-        setSlug(businessSlug);
-        setOriginalSlug(businessSlug);
-      }
-    }
-  }, [business, form]);
+    // Inicializar previews de imagens
+    setLogoPreview(business.logo_url || "");
+    setCapaPreview(business.banner_url || "");
+
+    // Reset both fields for every business identity, including empty slugs.
+    const businessSlug = business.slug ?? "";
+    setSlug(businessSlug);
+    setOriginalSlug(businessSlug);
+  }, [business, businessId, form, formDirty, slug, originalSlug]);
 
   const handleNextStep1 = () => {
     form.trigger(["name", "description", "category"]).then((isValid) => {
@@ -180,25 +204,31 @@ export default function EditarEmpresaPage() {
     if (!file) return;
 
     // Validar tamanho (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MEDIA_PRESET_CLIENT_CONFIG.business_logo.maxSourceBytes) {
       toast.error("Imagem muito grande. Máximo 5MB");
       return;
     }
 
     // Validar tipo
-    if (!file.type.startsWith("image/")) {
-      toast.error("Arquivo deve ser uma imagem");
+    if (!MEDIA_IMAGE_SOURCE_MIME_TYPES.some((type) => type === file.type)) {
+      toast.error("Use uma imagem JPEG, PNG, WebP ou GIF");
       return;
     }
 
+    const uploadId = ++logoUploadSequenceRef.current;
+    ++pendingMediaUploadsRef.current;
+    setPendingMediaUploads(pendingMediaUploadsRef.current);
     try {
       const url = await uploadBusinessImage(file, "logos");
-      form.setValue("logo_url", url);
+      if (uploadId !== logoUploadSequenceRef.current) return;
+      form.setValue("logo_url", url, { shouldDirty: true, shouldValidate: true });
       setLogoPreview(url);
-      toast.success("Logo atualizado!");
-    } catch (error) {
-      toast.error("Erro ao fazer upload do logo");
-      console.error(error);
+      toast.success("Logo enviado. Salve as alterações para publicá-lo.");
+    } catch {
+      // The canonical upload hook displays the failure; retain the prior image.
+    } finally {
+      --pendingMediaUploadsRef.current;
+      setPendingMediaUploads(pendingMediaUploadsRef.current);
     }
   };
 
@@ -207,30 +237,40 @@ export default function EditarEmpresaPage() {
     if (!file) return;
 
     // Validar tamanho (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MEDIA_PRESET_CLIENT_CONFIG.business_banner.maxSourceBytes) {
       toast.error("Imagem muito grande. Máximo 5MB");
       return;
     }
 
     // Validar tipo
-    if (!file.type.startsWith("image/")) {
-      toast.error("Arquivo deve ser uma imagem");
+    if (!MEDIA_IMAGE_SOURCE_MIME_TYPES.some((type) => type === file.type)) {
+      toast.error("Use uma imagem JPEG, PNG, WebP ou GIF");
       return;
     }
 
+    const uploadId = ++capaUploadSequenceRef.current;
+    ++pendingMediaUploadsRef.current;
+    setPendingMediaUploads(pendingMediaUploadsRef.current);
     try {
       const url = await uploadBusinessImage(file, "banners");
-      form.setValue("banner_url", url);
+      if (uploadId !== capaUploadSequenceRef.current) return;
+      form.setValue("banner_url", url, { shouldDirty: true, shouldValidate: true });
       setCapaPreview(url);
-      toast.success("Capa atualizada!");
-    } catch (error) {
-      toast.error("Erro ao fazer upload da capa");
-      console.error(error);
+      toast.success("Capa enviada. Salve as alterações para publicá-la.");
+    } catch {
+      // The canonical upload hook displays the failure; retain the prior image.
+    } finally {
+      --pendingMediaUploadsRef.current;
+      setPendingMediaUploads(pendingMediaUploadsRef.current);
     }
   };
 
   const doSave = form.handleSubmit(async (data) => {
     if (!businessId) return;
+    if (pendingMediaUploadsRef.current > 0) {
+      toast.error("Aguarde o envio das imagens antes de salvar a empresa.");
+      return;
+    }
 
     const isVerifiedOfficial = Boolean(business?.is_verified);
     if (
@@ -315,7 +355,7 @@ export default function EditarEmpresaPage() {
                 logoPreview={logoPreview}
                 logoRef={logoRef}
                 onLogoChange={handleLogoChange}
-                uploading={uploading}
+                uploading={uploading || pendingMediaUploads > 0}
                 errors={getErrors()}
                 onCancel={() => navigate(businessManagementRoutes.overview(businessId))}
                 onNext={handleNextStep1}
@@ -394,7 +434,7 @@ export default function EditarEmpresaPage() {
                       .filter(Boolean),
                   )
                 }
-                saving={saving}
+                saving={saving || pendingMediaUploads > 0}
                 onBack={() => setCurrentStep(2)}
                 onSave={handleSave}
               />

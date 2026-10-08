@@ -72,6 +72,13 @@ interface BusinessQueriesDbClient {
   from: <TRow = never>(table: string) => QueryBuilder<TRow>;
 }
 
+export class BusinessNotFoundError extends Error {
+  constructor() {
+    super("Empresa não encontrada");
+    this.name = "BusinessNotFoundError";
+  }
+}
+
 type BusinessServiceRow = Record<string, unknown>;
 
 interface BusinessCommunityLinkEligibilityRow {
@@ -383,20 +390,7 @@ export async function getBusinessesList(
   }
 
   try {
-    // FASE 1 IA: Usar view pública segura
-    const checkResult = await supabase
-      .from("public_business_search")
-      .select("profile_id")
-      .limit(1);
-
-    if (checkResult.error) {
-      logger.warn(
-        " public_business_search view not accessible:",
-        checkResult.error.message,
-      );
-      return { businesses: [], nextPage: undefined };
-    }
-
+    // A consulta real é a única verificação de acesso à view canônica.
     let query = supabase
       .from("public_business_search")
       .select(PUBLIC_BUSINESS_LIST_SELECT)
@@ -428,18 +422,11 @@ export async function getBusinessesList(
     // Hierárquico - resolve descendentes pelo owner canônico de Location.
     let resolvedFilter = filter;
     if (filter?.scope === "location") {
-      try {
-        const descendantIds =
-          await LocationHierarchyReadService.getDescendantIds(filter.location_id);
+      const descendantIds =
+        await LocationHierarchyReadService.getDescendantIds(filter.location_id);
 
-        if (descendantIds.length > 0) {
-          resolvedFilter = { scope: "group", location_ids: descendantIds };
-        }
-      } catch (error) {
-        logger.warn(
-          "[BusinessQueries] Failed to expand territory; using exact location filter",
-          { location_id: filter.location_id, error },
-        );
+      if (descendantIds.length > 0) {
+        resolvedFilter = { scope: "group", location_ids: descendantIds };
       }
     }
 
@@ -505,6 +492,14 @@ export async function getBusinessesList(
         break;
     }
 
+    // A tie-breaker by unique profile ID makes ordering deterministic for
+    // equal ratings/names and avoids overlapping offset pages.
+    query = (
+      query as unknown as {
+        order: (field: string, opts: { ascending: boolean }) => typeof query;
+      }
+    ).order("profile_id", { ascending: true });
+
     query = query.range(
       pageParam * pageSize,
       (pageParam + 1) * pageSize - 1,
@@ -512,13 +507,7 @@ export async function getBusinessesList(
 
     const { data, error } = await query;
 
-    if (error) {
-      logger.warn(
-        " Error fetching businesses list:",
-        (error as { message?: string }).message,
-      );
-      return { businesses: [], nextPage: undefined };
-    }
+    if (error) throw error;
 
     // Fetch profiles
     const profileIds =
@@ -555,8 +544,8 @@ export async function getBusinessesList(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    logger.warn(" Unexpected error in getBusinessesList:", message);
-    return { businesses: [], nextPage: undefined };
+    logger.error("Error in getBusinessesList:", message);
+    throw error;
   }
 }
 
@@ -661,7 +650,7 @@ export async function getBusinessById(id: string): Promise<Business> {
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) throw new Error("Empresa não encontrada");
+    if (!data) throw new BusinessNotFoundError();
 
     const business = mapBusinessDataToBusiness(
       data as BusinessDataWithProfiles,
@@ -674,6 +663,7 @@ export async function getBusinessById(id: string): Promise<Business> {
       : {};
     return { ...business, ...contact };
   } catch (error) {
+    if (error instanceof BusinessNotFoundError) throw error;
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao buscar empresa: ${message}`);
   }
@@ -698,16 +688,13 @@ export async function getBusinessDataIdByProfileId(
       .order("updated_at", { ascending: false })
       .limit(1);
 
-    if (error) {
-      logger.error("Error fetching business_data id by profile_id:", error);
-      return null;
-    }
+    if (error) throw error;
 
     const rows = (data as Array<{ id?: string }> | null) ?? [];
     return rows[0]?.id ?? null;
   } catch (error) {
     logger.error("Error in getBusinessDataIdByProfileId:", error);
-    return null;
+    throw error;
   }
 }
 
@@ -770,10 +757,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
       .eq("status", "active")
       .maybeSingle();
 
-    if (error) {
-      logger.error("Error fetching business by slug:", error);
-      return null;
-    }
+    if (error) throw error;
 
     if (!data) return null;
 
@@ -793,7 +777,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
     };
   } catch (error) {
     logger.error("Error in getBusinessBySlug:", error);
-    return null;
+    throw error;
   }
 }
 
@@ -842,10 +826,7 @@ export async function getBusinessesByIds(ids: string[]): Promise<
       )
       .in("profile_id", ids);
 
-    if (error) {
-      logger.error("Error getting businesses by IDs", error, { ids });
-      return [];
-    }
+    if (error) throw error;
 
     return ((data as unknown[]) || []).map((b: unknown) => {
       const typed = b as {
@@ -882,7 +863,7 @@ export async function getBusinessesByIds(ids: string[]): Promise<
     });
   } catch (error) {
     logger.error("Error getting businesses by IDs", error as Error, { ids });
-    return [];
+    throw error;
   }
 }
 

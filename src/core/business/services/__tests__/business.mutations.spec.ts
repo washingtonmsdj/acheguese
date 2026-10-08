@@ -115,7 +115,9 @@ const currentBusiness = {
 
 describe("business lifecycle broker", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // Reset queued one-off responses as well as call history between cases.
+    // An unused post-commit read rejection must not leak into the next test.
+    vi.resetAllMocks();
     mocks.getCurrentUser.mockResolvedValue({ id: "user-1" });
     mocks.checkAvailability.mockResolvedValue({ status: "available" });
     mocks.canChangeIdentifier.mockResolvedValue({
@@ -208,8 +210,22 @@ describe("business lifecycle broker", () => {
       ],
     });
     expect(mocks.createAddress).not.toHaveBeenCalled();
-    expect(mocks.getBusinessById).toHaveBeenCalledWith("profile-1");
-    expect(created.profile_id).toBe("profile-1");
+    expect(mocks.getBusinessById).not.toHaveBeenCalled();
+    expect(created).toEqual({
+      profile_id: "profile-1",
+      business_data_id: "business-data-1",
+    });
+  });
+
+  it("does not report a committed creation as failed when detail reads are unavailable", async () => {
+    mocks.getBusinessById.mockRejectedValue(new Error("PostgREST unavailable"));
+
+    await expect(createBusiness(businessInput)).resolves.toEqual({
+      profile_id: "profile-1",
+      business_data_id: "business-data-1",
+    });
+    expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
+    expect(mocks.getBusinessById).not.toHaveBeenCalled();
   });
 
   it("creates structured Address with owner_user_id and compensates it if broker rejects", async () => {
@@ -327,15 +343,7 @@ describe("business lifecycle broker", () => {
     expect(mocks.updateBusinessRpc).not.toHaveBeenCalled();
   });
 
-  it("updates non-structural Business data through the broker and reloads canonical read model", async () => {
-    const updatedBusiness = {
-      ...currentBusiness,
-      name: "Empresa Renomeada",
-    } as Business;
-    mocks.getBusinessById
-      .mockResolvedValueOnce(currentBusiness)
-      .mockResolvedValueOnce(updatedBusiness);
-
+  it("confirms non-structural updates from the broker without a second read", async () => {
     const updated = await updateBusiness("profile-1", {
       name: "Empresa Renomeada",
     });
@@ -348,7 +356,41 @@ describe("business lifecycle broker", () => {
       businessHours: null,
     });
     expect(mocks.updateAddress).not.toHaveBeenCalled();
-    expect(updated.name).toBe("Empresa Renomeada");
+    expect(updated).toEqual({ profile_id: "profile-1" });
+    expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
+  });
+
+  it("never represents an already committed update as failed when detail reads are down", async () => {
+    mocks.getBusinessById
+      .mockResolvedValueOnce(currentBusiness)
+      .mockRejectedValueOnce(new Error("Public read model unavailable"));
+
+    await expect(
+      updateBusiness("profile-1", { description: "Descrição revisada" }),
+    ).resolves.toEqual({ profile_id: "profile-1" });
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledTimes(1);
+    expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
+  });
+
+  it("retains a newly attached address after broker-confirmed update without a second read", async () => {
+    mocks.createAddress.mockResolvedValue({ id: "address-update-committed" });
+    mocks.getBusinessById
+      .mockResolvedValueOnce(currentBusiness)
+      .mockRejectedValueOnce(new Error("Read model timeout"));
+
+    await expect(
+      updateBusiness("profile-1", {
+        location_id: businessInput.location_id,
+        address_street: "Rua Confirmada",
+        address_number: "42",
+        postal_code: "40000-001",
+      }),
+    ).resolves.toEqual({ profile_id: "profile-1" });
+
+    expect(mocks.updateBusinessRpc).toHaveBeenCalledOnce();
+    expect(mocks.getBusinessById).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteAddress).not.toHaveBeenCalled();
   });
 
   it("compensates a newly created Address when an update broker command fails", async () => {

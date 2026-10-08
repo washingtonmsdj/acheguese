@@ -2,6 +2,15 @@ import type { ImageOptimizePreset } from "@/shared/utils/imageOptimizer";
 
 export const MEDIA_PRESET_VERSION = 1 as const;
 
+// Client-side MIME policy shared with the MediaService uploader and input UX.
+// The media-assets broker remains the authoritative server-side validator.
+export const MEDIA_IMAGE_SOURCE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+] as const;
+
 export const MEDIA_PRESET_NAMES = [
   "user_avatar",
   "post_image",

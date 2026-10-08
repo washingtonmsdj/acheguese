@@ -2,7 +2,7 @@
  * CriarEmpresaPage - fluxo alinhado ao SSOT de business
  */
 
-import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
@@ -382,24 +382,36 @@ export default function CriarEmpresaPage({
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const createSubmissionInFlightRef = useRef(false);
+  const createdBusinessRef = useRef(false);
+
   const handleCreate = async () => {
-    form.clearErrors();
+    if (createSubmissionInFlightRef.current || createdBusinessRef.current) return;
+    createSubmissionInFlightRef.current = true;
+    try {
+      form.clearErrors();
 
-    const result = createBusinessSchema.safeParse(form.getValues());
-    if (!result.success) {
-      setSchemaErrors(result.error.issues);
-      setStep1Attempted(true);
-      const firstInvalidField = String(result.error.issues[0]?.path[0] ?? "");
-      setCurrentStep(getFirstInvalidStep(firstInvalidField));
-      setPendingFocus(firstInvalidField);
-      return;
+      const result = createBusinessSchema.safeParse(form.getValues());
+      if (!result.success) {
+        setSchemaErrors(result.error.issues);
+        setStep1Attempted(true);
+        const firstInvalidField = String(result.error.issues[0]?.path[0] ?? "");
+        setCurrentStep(getFirstInvalidStep(firstInvalidField));
+        setPendingFocus(firstInvalidField);
+        return;
+      }
+
+      await createBusinessAsync({
+        data: result.data as CreateBusinessInput,
+        logoFile,
+        bannerFile,
+      });
+      createdBusinessRef.current = true;
+    } catch {
+      // Mutation errors are surfaced by the canonical hook and the page alert.
+    } finally {
+      createSubmissionInFlightRef.current = false;
     }
-
-    await createBusinessAsync({
-      data: result.data as CreateBusinessInput,
-      logoFile,
-      bannerFile,
-    });
   };
 
   const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {

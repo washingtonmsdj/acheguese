@@ -7,16 +7,16 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BusinessService } from "@/core/business/services/BusinessService";
+import { BusinessService, type BusinessCreationReceipt } from "@/core/business/services/BusinessService";
 import { createBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import { toast } from "sonner";
+import { logger } from "@/shared/utils/logger";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
 import { mediaService } from "@/core/media/services/MediaService";
 import type { CreateBusinessInput } from "@/core/business/types";
 
-export interface BusinessCreateResult {
-  profile_id: string;
-  business_data_id: string | null;
+export interface BusinessCreateResult extends BusinessCreationReceipt {
+  mediaSetupIncomplete?: boolean;
 }
 
 export interface CreateBusinessSubmission {
@@ -71,48 +71,75 @@ export function useBusinessCreateMultiProfile(
       const createdBusiness = await BusinessService.createBusiness(inputWithLocation);
       const profileId = createdBusiness.profile_id;
 
+      // Creation has already committed. Media failures must never turn this
+      // result into a failed creation and encourage a duplicate submission.
+      let mediaSetupIncomplete = false;
       let logoReference: string | undefined;
       let bannerReference: string | undefined;
-
       if (logoFile) {
-        const upload = await mediaService.uploadMediaAsset(
-          profileId,
-          logoFile,
-          "business_logo",
-        );
-        logoReference = upload.reference;
+        try {
+          const upload = await mediaService.uploadMediaAsset(
+            profileId,
+            logoFile,
+            "business_logo",
+          );
+          logoReference = upload.reference;
+        } catch (error) {
+          mediaSetupIncomplete = true;
+          logger.error("Falha ao associar mídia à empresa criada:", error);
+        }
       }
 
       if (bannerFile) {
-        const upload = await mediaService.uploadMediaAsset(
-          profileId,
-          bannerFile,
-          "business_banner",
-        );
-        bannerReference = upload.reference;
+        try {
+          const upload = await mediaService.uploadMediaAsset(
+            profileId,
+            bannerFile,
+            "business_banner",
+          );
+          bannerReference = upload.reference;
+        } catch (error) {
+          mediaSetupIncomplete = true;
+          logger.error("Falha ao associar mídia à empresa criada:", error);
+        }
       }
 
       if (logoReference || bannerReference) {
-        await BusinessService.updateBusiness(profileId, {
-          ...(logoReference ? { logo_url: logoReference } : {}),
-          ...(bannerReference ? { banner_url: bannerReference } : {}),
-        });
+        try {
+          await BusinessService.updateBusiness(profileId, {
+            ...(logoReference ? { logo_url: logoReference } : {}),
+            ...(bannerReference ? { banner_url: bannerReference } : {}),
+          });
+        } catch (error) {
+          mediaSetupIncomplete = true;
+          logger.error("Falha ao associar mídia à empresa criada:", error);
+        }
       }
 
-      const businessDataId =
-        createdBusiness.business_data_id ??
-        (await BusinessService.getBusinessDataIdByProfileId(profileId));
+      let businessDataId = createdBusiness.business_data_id ?? null;
+      if (!businessDataId) {
+        try {
+          businessDataId = await BusinessService.getBusinessDataIdByProfileId(profileId);
+        } catch (error) {
+          logger.error("Falha ao consultar o identificador de dados da empresa criada:", error);
+        }
+      }
 
       return {
         profile_id: profileId,
         business_data_id: businessDataId,
+        mediaSetupIncomplete,
       };
     },
 
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["businesses"] });
       queryClient.invalidateQueries({ queryKey: ["profiles"] });
-      toast.success("Empresa criada com sucesso!");
+      if (result.mediaSetupIncomplete) {
+        toast.warning("Empresa criada, mas algumas imagens não foram salvas. Complete-as na edição da empresa.");
+      } else {
+        toast.success("Empresa criada com sucesso!");
+      }
       options.onSuccess?.(result);
     },
 

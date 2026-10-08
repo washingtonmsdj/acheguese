@@ -17,6 +17,7 @@ export {
 // Re-exports de queries (alias via BusinessService)
 export {
   getBusinessesList,
+  BusinessNotFoundError,
   getBusinessProfile,
   getBusinessById,
   getBusinessDataIdByProfileId,
@@ -32,6 +33,8 @@ export {
   getSimilarBusinesses,
   getGallery,
 } from "./business.queries";
+
+export type { BusinessCreationReceipt, BusinessUpdateReceipt } from "./business.mutations";
 
 // Re-exports de mutations (alias via BusinessService)
 export {
