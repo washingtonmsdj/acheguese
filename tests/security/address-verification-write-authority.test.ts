@@ -63,6 +63,9 @@ describe("Address verification write authority", () => {
     expect(migration).toContain("NEW.verified_at := NULL;");
     expect(migration).toContain("NEW.verified_by := NULL;");
     expect(migration).toContain("NEW.verified_reason := 'address_details_changed';");
+    expect(migration).toContain("ADDRESS_VERIFICATION_SERVER_ONLY");
+    expect(migration).toContain("RESIDENCE_VERIFICATION_SERVER_ONLY");
+    expect(migration).toContain("USING ERRCODE = '42501';");
     expect(migration).toContain("REVOKE ALL ON FUNCTION private.address_verification_owner_guard()");
     expect(migration).toContain("RLS owner boundary changed");
   });
