@@ -93,6 +93,15 @@ genericamente em outras views. `public.public_professional_search` preserva
 `security_invoker=true` e consulta as coordenadas via
 `public.addresses_public`, não diretamente na tabela privada.
 
+**Sequência obrigatória de segurança:** a migração
+`20261008215900_restrict_address_verification_mutations.sql` (PR #658)
+precisa estar aplicada **antes** da projeção pública
+`20261008220000_enforce_address_private_read_projection.sql` (PR #657).
+O preflight da segunda migração confirma as restrições de escrita e os
+triggers necessários e aborta se a primeira ainda não foi aplicada.
+Ambas dependem de homologação conjunta; nunca ativar a projeção sem a
+autoridade exclusiva de Verification no servidor.
+
 A migração versionada
 `20261008220000_enforce_address_private_read_projection.sql` registra
 pré-condições contra drift, mudança transacional e pós-condições de RLS/ACL.
