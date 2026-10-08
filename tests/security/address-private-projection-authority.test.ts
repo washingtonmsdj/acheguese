@@ -14,6 +14,9 @@ describe("Address private table / public projection SSOT", () => {
     expect(migration).toContain("unexpected view owner or invoker mode");
     expect(migration).toContain("unexpected public projection columns");
     expect(migration).toContain("unexpected base-table RLS policies");
+    expect(migration).toContain("base-table RLS or anon role drift");
+    expect(migration).toContain("c.relrowsecurity");
+    expect(migration).toContain("r.rolbypassrls");
     expect(migration).toContain("professional read-model drift");
     expect(migration).toContain("BEGIN;");
     expect(migration).toContain("COMMIT;");
