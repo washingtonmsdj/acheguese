@@ -171,12 +171,12 @@ export async function getProfilesByUserId(userId?: string): Promise<Profile[]> {
       targetUserId,
     });
   } catch (error) {
-    trackError(error as Error, {
+    trackError(error instanceof Error ? error : new Error(String(error)), {
       component: "profile.queries",
       action: "getProfilesByUserId",
       metadata: { userId: targetUserId },
     });
-    return [];
+    throw error;
   }
 }
 
