@@ -37,6 +37,8 @@ export default function ProfilePublicRoute() {
     data: result,
     isLoading,
     error,
+    isFetching,
+    refetch,
   } = useQuery({
     queryKey: ["profile", "username", username],
     queryFn: async (): Promise<RouteResult> => {
@@ -116,12 +118,35 @@ export default function ProfilePublicRoute() {
     );
   }
 
-  if (error || !result || result.type === "not_found") {
-    logger.error("[ProfilePublicRoute] Error or profile not found", {
+  if (error) {
+    logger.error("[ProfilePublicRoute] Failed to load public profile", {
       username,
       error,
     });
 
+    return (
+      <div className="territory-vivo flex min-h-[70dvh] items-center justify-center bg-territory-canvas px-4">
+        <div className="max-w-md rounded-territory-highlight border border-territory-border bg-territory-surface p-6 text-center sm:p-8" role="alert">
+          <p className="text-lg font-semibold text-foreground">
+            Não foi possível carregar o perfil
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Não conseguimos consultar os dados agora. Tente novamente.
+          </p>
+          <button
+            type="button"
+            className="mt-4 inline-block text-sm font-semibold text-territory-brand underline underline-offset-4 disabled:opacity-50"
+            disabled={isFetching}
+            onClick={() => void refetch()}
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!result || result.type === "not_found") {
     if (username) {
       logPageNotFound({
         entityType: "profile",
