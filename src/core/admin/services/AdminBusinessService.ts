@@ -79,33 +79,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Atualiza os campos administrativos delegáveis de um negócio.
-   * SSOT: BusinessService.
-   */
-  async updateBusiness(
-    id: string,
-    updates: Partial<AdminBusinessData>,
-  ): Promise<AdminBusinessData | null> {
-    try {
-      const businessUpdates: Record<string, unknown> = {};
-
-      if (updates.name) businessUpdates.name = updates.name;
-      if (updates.description !== undefined) {
-        businessUpdates.description = updates.description;
-      }
-      if (updates.category !== undefined) {
-        businessUpdates.category = updates.category;
-      }
-
-      await BusinessService.updateBusiness(id, businessUpdates);
-      return await this.getBusinessById(id);
-    } catch (error) {
-      logger.error("Error in updateBusiness:", error);
-      throw error;
-    }
-  }
-
   async deleteBusiness(id: string): Promise<boolean> {
     try {
       await BusinessService.deleteBusiness(id);
