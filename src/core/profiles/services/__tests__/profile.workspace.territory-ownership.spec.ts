@@ -42,7 +42,23 @@ function createDeps(locationId?: string): WorkspaceDeps & {
   return {
     userId: "user-1",
     getActiveProfile: vi.fn().mockResolvedValue(profile),
-    getProfileContext: vi.fn().mockResolvedValue(null),
+    getProfileContext: vi.fn().mockResolvedValue({
+      id: "profile-1",
+      name: "Perfil Teste",
+      displayName: "Perfil Teste",
+      username: "teste",
+      status: { isActive: true, isBlocked: false, isSuspended: false },
+      permissions: {
+        canPost: false,
+        canComment: false,
+        canMessage: false,
+        canCreateBusiness: false,
+        canModerate: false,
+      },
+      plan: { type: "basic", isPremium: false },
+      reputation: { level: 1, score: 0 },
+      verified: false,
+    }),
     getProfilesByUserId: vi.fn().mockResolvedValue([profile]),
     getUserRoles: vi.fn().mockResolvedValue([]),
     getUserLikesCount: vi.fn().mockResolvedValue(0),
@@ -97,6 +113,41 @@ describe("Account: Location SSOT para o rotulo territorial", () => {
     deps.getTerritoryLabel.mockRejectedValueOnce(failure);
 
     await expect(getPrivateWorkspaceAggregate(deps)).rejects.toBe(failure);
+  });
+
+  it("nao anuncia uma conta desbloqueada quando o contexto confirmado diz bloqueada", async () => {
+    const deps = createDeps();
+    (deps.getProfileContext as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      id: "profile-1",
+      name: "Perfil Teste",
+      displayName: "Perfil Teste",
+      username: "teste",
+      status: { isActive: false, isBlocked: true, isSuspended: false },
+      permissions: {
+        canPost: false,
+        canComment: false,
+        canMessage: false,
+        canCreateBusiness: false,
+        canModerate: false,
+      },
+      plan: { type: "basic", isPremium: false },
+      reputation: { level: 1, score: 0 },
+      verified: false,
+    });
+
+    const workspace = await getPrivateWorkspaceAggregate(deps);
+
+    expect(workspace.account.isBlocked).toBe(true);
+    expect(workspace.account.accountState).toBe("blocked");
+  });
+
+  it("se o perfil existe mas seu contexto nao foi confirmado, rejeita o workspace", async () => {
+    const deps = createDeps();
+    (deps.getProfileContext as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+
+    await expect(getPrivateWorkspaceAggregate(deps)).rejects.toThrow(
+      "Profile context unavailable for the active account",
+    );
   });
 
   it("impede consultas territoriais diretas no agregador de Profile", () => {
