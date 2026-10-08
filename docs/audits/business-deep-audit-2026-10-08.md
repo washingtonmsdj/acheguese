@@ -61,3 +61,9 @@
 ### Revisão de escopo
 
 O inventário acima é baseado no código inspecionado, não em prova de ataque nem em certificação funcional completa. Evidências de segurança dependem de políticas/RPCs e testes autenticados. Alterações operacionais de Supabase/Vercel estão explicitamente fora deste ciclo.
+
+### Revisão da autoridade delegada — contrato do Membership Owner
+
+A auditoria encontrou uma segunda camada de mascaramento: `ProfileMembersService.getActiveRole()` transforma a falha de `getActiveRoleResult()` em `null` para compatibilidade de callers simples. O owner de Business **agora consome o `getActiveRoleResult` existente**, exigindo `success === true` antes de interpretar `data` como role. Dessa forma, consulta de membership indisponível gera erro técnico e o hook mantém a interface sem acesso; ausência legítima de membership continua negando normalmente. O contrato de autorização de servidor (`private.can_manage_profile`) não foi modificado. Ratchets arquiteturais de Business e membership foram ajustados para verificar a delegação ao método canônico de resultado, e os testes de ownership cobrem admin, owner, negativa e falha.
+
+O guard de gestão foi ajustado para priorizar estados de erro sobre spinner de verificação em caso de dados em cache, com testes de renderização para recuperação e negação.
