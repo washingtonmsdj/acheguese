@@ -45,15 +45,10 @@ async function calculatePermissions(
     };
   }
 
-  let canModerate = false;
-  try {
-    const roles = await RoleService.getUserRoles(profile.user_id);
-    canModerate = roles.some((role) =>
-      ["admin", "moderator"].includes(role),
-    );
-  } catch {
-    canModerate = false;
-  }
+  const roles = await RoleService.getUserRoles(profile.user_id);
+  const canModerate = roles.some((role) =>
+    ["admin", "moderator"].includes(role),
+  );
 
   return {
     canPost: true,

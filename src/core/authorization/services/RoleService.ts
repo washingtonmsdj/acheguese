@@ -61,11 +61,7 @@ export class RoleService {
    * Consulta via Edge Function `role-rpc`.
    */
   static async getUserRoles(userId: string): Promise<AppRole[]> {
-    try {
-      return RoleRpcService.getUserRoles(userId);
-    } catch (error) {
-      logger.error('Erro ao buscar roles do usuário:', error);
-      return [];
-    }
+    // O broker é o owner de leitura: indisponibilidade não é ausência de roles.
+    return RoleRpcService.getUserRoles(userId);
   }
 }

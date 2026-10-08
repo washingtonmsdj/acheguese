@@ -149,7 +149,10 @@ async function handleGetUserRoles(
   });
 
   if (error) throw error;
-  return { roles: Array.isArray(data) ? data : [] };
+  if (!Array.isArray(data)) {
+    throw new Error("get_user_roles returned an invalid result");
+  }
+  return { roles: data };
 }
 
 async function handleIsAdmin(

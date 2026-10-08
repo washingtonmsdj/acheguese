@@ -439,12 +439,12 @@ export class ProfileService {
     try {
       return await RoleService.getUserRoles(userId);
     } catch (error) {
-      trackError(new Error("Error fetching user roles"), {
+      trackError(error instanceof Error ? error : new Error(String(error)), {
         component: "ProfileService",
         action: "getUserRoles",
-        metadata: { userId, error },
+        metadata: { userId },
       });
-      return [];
+      throw error;
     }
   }
   async getShareActivityDefault(userId: string): Promise<boolean> {
