@@ -33,6 +33,14 @@ BEGIN
     RAISE EXCEPTION 'ADDRESS_PRIVATE_PROBE_FAILED: public view column contract drift';
   END IF;
 
+  -- O catálogo Business mantém o FK embedding: RLS oculta a linha
+  -- detalhada, mas a role anon ainda pode compor o JOIN sem erro 42501.
+  PERFORM business.id
+  FROM public.public_business_search AS business
+  LEFT JOIN public.addresses AS related_address
+    ON related_address.id = business.address_id
+  LIMIT 1;
+
   -- Força referência à coluna projetada e ao relacionamento da view pausada.
   PERFORM latitude FROM public.public_professional_search LIMIT 1;
 END
