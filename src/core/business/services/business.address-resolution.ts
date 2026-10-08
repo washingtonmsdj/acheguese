@@ -32,12 +32,14 @@ const ADDRESS_SYNC_FIELDS = [
   "address_number",
   "address_complement",
   "postal_code",
+  "cep",
 ] as const;
 
 const ADDRESS_LOCATOR_FIELDS = [
   "address_street",
   "address_number",
   "postal_code",
+  "cep",
   "location_id",
 ] as const;
 
@@ -96,6 +98,15 @@ function providerHouseNumberMatches(
     normalizeAddressToken(requestedNumber) ===
     normalizeAddressToken(providerNumber)
   );
+}
+
+function providerPostalCodeMatches(
+  requestedPostalCode: string | null,
+  providerPostalCode: string | null | undefined,
+): boolean {
+  if (!requestedPostalCode || !providerPostalCode) return true;
+  const digits = (value: string) => value.replace(/\D/g, "");
+  return digits(requestedPostalCode) === digits(providerPostalCode);
 }
 
 function mapGeocodingSource(source: string): GeocodingSource {
@@ -257,7 +268,8 @@ export async function resolveBusinessAddressForPersistence(
       (result) =>
         result.confidence >= BUSINESS_ADDRESS_MIN_GEOCODING_CONFIDENCE &&
         selectedTerritoryMatches(locationId, result) &&
-        providerHouseNumberMatches(number, result.providerAddress.number),
+        providerHouseNumberMatches(number, result.providerAddress.number) &&
+        providerPostalCodeMatches(postalCode, result.providerAddress.postalCode),
     )
     .sort((left, right) => right.confidence - left.confidence);
 

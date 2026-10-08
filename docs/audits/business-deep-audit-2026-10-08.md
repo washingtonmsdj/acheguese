@@ -96,3 +96,13 @@ Uma mutation de Empresa não pode vincular um `address_id` existente **e simulta
 O schema canônico agora rejeita a combinação em **create** e **update**, antes de qualquer escrita. Referência isolada segue válida; atualização física isolada segue o versionamento de Address da PR #650. O cadastro exige logradouro para endereço novo; a atualização parcial pode herdar logradouro apenas quando já existe um Address, após resolver a entidade. Regressões no schema e na mutation verificam bloqueio antes do dispatch.
 
 Esse contrato não substitui autenticação, RLS, idempotência ou atomicidade do broker. O issue #649 permanece P0 para resolução backend.
+
+### CEP legado e consistência da geocodificação no owner de Address
+
+**Falha concreta:** o schema aceitava `cep` como alias de `postal_code`, mas `ADDRESS_SYNC_FIELDS` e `ADDRESS_LOCATOR_FIELDS` não incluíam `cep`. Um PATCH apenas com o alias atualizava os metadados/resumo da empresa e deixava a referência Address antiga, produzindo CEPs divergentes. Além disso, dois aliases diferentes podiam ser enviados ao mesmo tempo, e o mapper escolhia um silenciosamente.
+
+**Correção incremental:** os dois campos disparam o mesmo fluxo canônico de Address; se `cep` e `postal_code` forem informados juntos, o schema exige o **mesmo CEP numérico**, com ou sem hífen. Em mudanças de CEP, a geocodificação é renovada: um resultado cujo CEP conhecido diverge do solicitado não passa no filtro, mesmo com confiança elevada e território aparentemente correto. Onde o provedor não fornece CEP, a regra anterior de território/precisão continua aplicável.
+
+Testes cobrem o PATCH por `cep` isolado, ausência de Address prévio, dois aliases concordantes/discordantes e geocoder com CEP conhecido divergente. O versionamento copy-on-write das PRs #650/#651 permanece o único caminho de alteração física; nenhuma nova gravação ou API paralela foi criada.
+
+**Fronteira não resolvida:** a API não torna o Address e Business atomicamente consistentes e não introduz idempotência persistente. O issue #649 mantém essa exigência P0.
