@@ -465,6 +465,16 @@ export default function CriarEmpresaPage({
             <div>
               <p className="font-medium">{creationOutcomeUncertain ? "Cadastro aguardando confirmação" : "Não foi possível criar a empresa."}</p>
               <p>{error.message}</p>
+              {creationOutcomeUncertain && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3"
+                  onClick={() => navigate(businessManagementRoutes.list())}
+                >
+                  Conferir minhas empresas
+                </Button>
+              )}
             </div>
           </div>
         )}
