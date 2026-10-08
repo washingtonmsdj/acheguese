@@ -84,6 +84,13 @@ describe("Business address resolution", () => {
     mocks.geocode.mockResolvedValue([geocodeResult()]);
   });
 
+  it("does not discard a partial physical Address patch when no Address exists", async () => {
+    await expect(resolveBusinessAddressForPersistence({
+      address_complement: "Sala sem endereço",
+    })).rejects.toThrow("Informe a rua para cadastrar o endereco fisico");
+    expect(mocks.geocode).not.toHaveBeenCalled();
+  });
+
   it("geocodes a new physical address through the canonical location owner", async () => {
     const result = await resolveBusinessAddressForPersistence(input);
 
