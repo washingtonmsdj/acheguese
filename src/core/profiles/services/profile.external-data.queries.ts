@@ -213,6 +213,6 @@ export async function getCurrentUserFavoriteBusinessesQuery(): Promise<BusinessR
     .in("profile_id", businessIds)
     .eq("status", "active");
 
-  if (error) return [];
+  if (error) throw error;
   return normalizeBusinessQueryRows(businesses ?? []);
 }

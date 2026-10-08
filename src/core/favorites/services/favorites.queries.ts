@@ -33,7 +33,7 @@ export async function isBusinessFavorited(
       action: "isBusinessFavorited",
       metadata: { businessId },
     });
-    return false;
+    throw error;
   }
 }
 
@@ -52,6 +52,6 @@ export async function getCurrentUserBusinessFavorites(): Promise<string[]> {
       component: "favorites.queries",
       action: "getCurrentUserBusinessFavorites",
     });
-    return [];
+    throw error;
   }
 }
