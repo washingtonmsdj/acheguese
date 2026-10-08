@@ -72,10 +72,16 @@ inclusive em endereços verificados. Não adicionar política pública para
 `public.addresses_public` é o **read model canônico existente**, sem copiar
 ou persistir endereços: expõe somente `id`, `location_id`, `address_type`,
 `latitude`, `longitude`, `precision`, `is_verified`,
-`verification_status` e `created_at`, restritos a endereços verificados.
+`verification_status` e `created_at`, restritos a endereços nos quais
+`is_verified = true` **e** `verification_status = verified` concordam.
+Um estado contraditório (somente flag ou somente status) não é prova
+suficiente para liberar coordenadas; a pendência exige reconciliação pelo
+owner Verification, sem exposição automática.
 Não inclui rua, número, complemento, CEP ou `owner_user_id`.
 A segurança dessa projeção é obrigatória no **PostgreSQL**, independentemente
 do DTO `AddressPrivacyGuard.toPublic()` usado na interface.
+`ResidentAddressService.toPublicDTO()` delega ao mesmo guard canônico, sem
+segunda implementação do filtro.
 
 **Exceção explícita e mínima:** como a view pública deve servir usuários
 anônimos e autenticados sem lhes conceder permissão à tabela privada, essa
