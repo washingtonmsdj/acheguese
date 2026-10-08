@@ -22,6 +22,8 @@ describe("Business creation committed before optional media setup", () => {
     expect(createPage).toContain("createdBusinessRef.current = true;");
     expect(createPage).toContain("setCreationOutcomeUncertain(true)");
     expect(createPage).toContain("disabled={isCreating || creationOutcomeUncertain}");
+    expect(createPage).toContain("Conferir minhas empresas");
+    expect(createPage).toContain("navigate(businessManagementRoutes.list())");
     expect(hook).toContain("toast.warning(error.message)");
   });
 
