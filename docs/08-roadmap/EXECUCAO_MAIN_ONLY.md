@@ -1,7 +1,7 @@
 # Achegue-se — Execução main-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Atualizado:** 2026-10-05  
+**Atualizado:** 2026-10-08  
 **Linha de integração:** `main`
 
 Este documento contém somente o estado operacional vigente, a ordem de execução e o Definition of Done do MVP. Histórico de PRs, SHAs e investigações encerradas pertence a `docs/08-roadmap/checkpoints/`, `docs/10-archive/` ou ao histórico do Git.
@@ -98,23 +98,29 @@ A documentação viva representa somente o produto atual:
 
 Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentais correspondentes.
 
-## Dependências externas resolvidas
+## Blockers ativos de infraestrutura
 
-**Não há blocker externo ativo conhecido para o primeiro release.** Os antigos blockers permanecem citados apenas para preservar a regra de contenção e a proveniência da certificação.
+**O release permanece bloqueado por #305 (Supabase/PostgREST) e #445 (Vercel/identidade).** As certificações de snapshots anteriores não substituem verificação do Data API nem deployment e smoke do mesmo conteúdo. A PR #621 está desatualizada em relação à `main` e precisa ser reconciliada sem sobrescrever melhorias dos outros chats.
 
-### #305 — Supabase / sessão autenticada
+### #305 — Supabase / PostgREST territorial
 
-Encerrado após o data plane voltar a responder e o candidato comprovar sessão real, Conta e Business no smoke autenticado de produção. A causa final encontrada no fluxo de Business foi uma leitura browser-side que tentava atravessar a tabela privada `profiles`; a correção moveu a resolução para o boundary canônico de Profile sem abrir grants nem relaxar RLS.
+**ABERTO.** O Data API sofreu nova degradação nas leituras territoriais (`locations` e `territorial_groups`) após o fechamento histórico. Em 08/10/2026, logs recentes de PostgREST continuavam registrando timeouts HTTP, `57014` e falhas de leitura de schema/configuração. Uma leitura SQL isolada respondeu, mas não certifica o Data API. A correção histórica de Profile/browser permanece preservada, sem provar resolução deste incidente.
 
-A regressão de Auth/PostgREST, indisponibilidade do data plane ou falha de autorização volta a bloquear o release. Não compensar com retry ilimitado, timeout artificialmente maior, fallback de login, bypass OIDC, fixture alternativa ou relaxamento de RLS.
+O gate #305 só fecha após leituras reais e sustentadas de PostgREST, certificação das rotas territoriais e smoke do candidato. Não compensar com retry ilimitado, timeout artificialmente maior, fallback de login, bypass OIDC, fixture alternativa ou relaxamento de RLS.
 
 ### #445 — Vercel / identidade de release
 
-Encerrado após o gate canônico comprovar a identidade de runtime pela política **`exact/equivalent`**. Quando commits posteriores não alteram o fingerprint deployável, o runtime Production já certificado pode ser aceito como equivalente; isso evita build artificial sem reduzir a prova de identidade.
+**ABERTO.** A última rejeição registrada do deployment canônico foi HTTP `402 payment_required` (quota Vercel), com reset histórico informado em 07/10/2026; a capacidade atual e a identidade do deployment do novo conteúdo ainda **não foram comprovadas**. A política **`exact/equivalent`** continua canônica: equivalência só vale com fingerprint demonstrado, nunca por presunção ou reaproveitamento de CI antigo.
 
 A política `tools/release/vercel-ignore-build.mjs` continua válida: somente paths classificados como **skippable** ficam fora do fingerprint deployável e podem receber `Ignored Build Step`. Testes e documentação comum normalmente entram nessa classe, mas documentos críticos de governança consumidos pela autoridade de release — incluindo este `EXECUCAO_MAIN_ONLY.md` — são deliberadamente deploy-relevant e alteram o fingerprint. Não contornar isso com commit vazio, alteração artificial de runtime, ampliação indevida da allowlist ou relaxamento de `vercel.json`.
 
 Todo novo delta deployável — inclusive mudança em input crítico de governança que participa do fingerprint — exige nova prova: deployment `READY` + smoke, ou equivalência de fingerprint aceita pelo gate canônico. Qualquer regressão de infraestrutura reabre o gate correspondente.
+
+## P0 de integridade do domínio ativo
+
+### #649 — Business / Endereço e idempotência
+
+**ABERTO.** As PRs #646, #648, #650, #651 e #652 foram integradas para evitar compensações destrutivas, impedir edição antecipada do endereço existente e validar o CEP. Entretanto, a operação Address/Business continua sem transação conjunta comprovada, recibo de idempotência persistente ou reconciliação de órfãos no servidor. Não tratar copy-on-write e CI verde como certificação do fluxo empresarial de criação/edição. A correção deve nascer versionada no owner SQL/broker, sem escritor paralelo nem dashboard drift, e passar testes negativos autenticados.
 
 ## Dívidas abertas que não são blocker genérico do MVP
 
@@ -135,7 +141,7 @@ Todo novo delta deployável — inclusive mudança em input crítico de governan
    - remover código/documento comprovadamente obsoleto;
    - manter histórico em checkpoints/archive/Git;
    - preservar módulos pós-MVP com owner legítimo;
-   - impedir documento vivo de voltar a anunciar blocker encerrado.
+   - impedir documento vivo de ocultar blocker reaberto.
 
 3. **Preservar os gates do candidato**
    - security;
@@ -150,8 +156,14 @@ Todo novo delta deployável — inclusive mudança em input crítico de governan
    - release identity;
    - deployment/smoke quando houver delta deployável.
 
-4. **Promover**
-   - somente enquanto todas as provas aplicáveis ao mesmo conteúdo de runtime permanecerem verdes;
+4. **Resolver os blockers atuais**
+   - #305: validar saúde sustentada das consultas territoriais do Data API;
+   - #445: comprovar capacidade, deployment e identidade de release do novo conteúdo;
+   - #649: resolver a atomicidade/idempotência no broker SQL e certificar os cenários negativos;
+   - reconciliar #621 com a `main` sem perder os commits já incorporados.
+
+5. **Promover**
+   - somente com os blockers acima efetivamente resolvidos e todas as provas aplicáveis ao mesmo conteúdo de runtime verdes;
    - regressão crítica reabre o gate;
    - módulos pós-MVP continuam `paused` após o primeiro release.
 
@@ -173,9 +185,10 @@ O MVP recebe **READY** quando o conteúdo candidato comprovar:
 - identidade de release `exact/equivalent` comprovada;
 - deployment `READY` + smoke para qualquer novo delta deployável;
 - `Ignored Build Step` apenas quando a política canônica provar que não houve delta deployável;
-- nenhum erro crítico recorrente.
+- nenhum erro crítico recorrente;
+- #305 e #445 fechados com provas atuais, e #649 resolvido e certificado na autoridade persistente.
 
-O candidato vigente já possui as provas centrais de release e **não há blocker externo ativo conhecido**. O trabalho restante antes da promoção é acabamento/higiene e preservação dos gates, não abertura de novas frentes de produto.
+**MVP NÃO HOMOLOGADO.** O candidato #621 precisa ser reconciliado com a `main` e recertificado no novo HEAD. #305, #445 e #649 continuam abertos; acabamento/higiene não substitui correção dos bloqueios de operação.
 
 ## Onde fica o histórico
 
