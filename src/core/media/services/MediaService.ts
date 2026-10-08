@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { MEDIA_UPLOAD_LIMITS } from "@/core/media/config/uploadLimits";
 import {
+  MEDIA_IMAGE_SOURCE_MIME_TYPES,
   MEDIA_PRESET_CLIENT_CONFIG,
   MEDIA_PRESET_VERSION,
   type MediaPreset,
@@ -93,12 +94,7 @@ interface UploadPrivateFileOptions {
 }
 
 class MediaServiceClass {
-  private readonly ALLOWED_IMAGE_TYPES = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/gif",
-  ];
+  private readonly ALLOWED_IMAGE_TYPES = MEDIA_IMAGE_SOURCE_MIME_TYPES;
 
   private readonly ALLOWED_ADDRESS_PROOF_TYPES = [
     "application/pdf",
