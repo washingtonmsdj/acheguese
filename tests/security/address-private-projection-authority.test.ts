@@ -53,10 +53,11 @@ describe("Address private table / public projection SSOT", () => {
       "WITH (security_invoker = false, security_barrier = true)",
     );
     expect(publicView).toContain("FROM public.addresses AS address");
-    expect(publicView).toContain("WHERE address.is_verified = true");
+    expect(publicView).toContain("WHERE address.is_verified IS TRUE");
     expect(publicView).toContain(
-      "address.verification_status = 'verified'::public.address_verification_status",
+      "AND address.verification_status = 'verified'::public.address_verification_status",
     );
+    expect(publicView).not.toContain("OR address.verification_status");
     for (const privateField of [
       "address.street",
       "address.number",
