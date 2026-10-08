@@ -176,7 +176,8 @@ export class BusinessUrlService {
         .in('business_role', ['standalone', 'branch'])
         .maybeSingle();
 
-      if (error || !data) return null;
+      if (error) throw error;
+      if (!data) return null;
       const geographicPath = data.location?.geographic_path;
       if (!geographicPath) return null;
 
@@ -188,7 +189,7 @@ export class BusinessUrlService {
       };
     } catch (err) {
       logger.error('[BusinessUrlService] resolveBySlug error:', err);
-      return null;
+      throw err;
     }
   }
 
@@ -214,7 +215,8 @@ export class BusinessUrlService {
         .eq("slug", slug)
         .maybeSingle();
 
-      if (error || !data || !data.business) {
+      if (error) throw error;
+      if (!data || !data.business) {
         return null;
       }
 
@@ -250,7 +252,7 @@ export class BusinessUrlService {
       };
     } catch (err) {
       logger.error("[BusinessUrlService] resolveByPremiumSlug error:", err);
-      return null;
+      throw err;
     }
   }
 
@@ -273,7 +275,8 @@ export class BusinessUrlService {
         .in('business_role', ['standalone', 'branch'])
         .maybeSingle();
 
-      if (error || !data || !data.slug) return null;
+      if (error) throw error;
+      if (!data || !data.slug) return null;
       const geographicPath = data.location?.geographic_path;
       if (!geographicPath) return null;
 
@@ -285,7 +288,7 @@ export class BusinessUrlService {
       };
     } catch (err) {
       logger.error('[BusinessUrlService] resolveById error:', err);
-      return null;
+      throw err;
     }
   }
 

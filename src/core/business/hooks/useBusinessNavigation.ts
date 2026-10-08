@@ -8,6 +8,7 @@ import { useCallback } from "react";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { buildBusinessPremiumUrl } from "@/core/business/utils/businessPublicUrls";
 import { logger } from "@/shared/utils/logger";
+import { useToast } from "@/shared/hooks/use-toast";
 import { useBusinessUrls } from "./useBusinessUrls";
 
 interface BusinessData {
@@ -20,6 +21,7 @@ interface BusinessData {
 export function useBusinessNavigation() {
   const navigate = useNavigate();
   const businessUrls = useBusinessUrls();
+  const { toast } = useToast();
 
   const resolvePreferredUrl = useCallback(
     async (ctx: {
@@ -72,17 +74,28 @@ export function useBusinessNavigation() {
    */
   const navigateToBusiness = useCallback(
     async (business: BusinessData) => {
-      const url = await resolveBusinessUrl(business);
-      if (!url) {
-        logger.warn(
-          "[useBusinessNavigation] Contexto insuficiente para navegar:",
-          business,
-        );
-        return;
+      try {
+        const url = await resolveBusinessUrl(business);
+        if (!url) {
+          logger.warn(
+            "[useBusinessNavigation] Contexto insuficiente para navegar:",
+            business,
+          );
+          return;
+        }
+        navigate(url);
+      } catch (error) {
+        // Esta é a borda de interação com a UI: o SSOT de URLs mantém o
+        // erro original, e o clique apresenta falha sem fabricar navegação.
+        logger.error("[useBusinessNavigation] Falha ao resolver empresa:", error);
+        toast({
+          title: "Não foi possível abrir a empresa",
+          description: "A consulta está indisponível. Tente novamente.",
+          variant: "destructive",
+        });
       }
-      navigate(url);
     },
-    [navigate, resolveBusinessUrl],
+    [navigate, resolveBusinessUrl, toast],
   );
 
   /**
