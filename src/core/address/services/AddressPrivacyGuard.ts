@@ -24,6 +24,10 @@ export class AddressPrivacyGuard {
    * Remove: rua, número, complemento, CEP, owner_user_id
    */
   static toPublic(address: Address): AddressPublicDTO {
+    // Uma flag isolada não prova a confirmação da verificação.
+    const publiclyVerified =
+      address.is_verified === true && address.verification_status === 'verified';
+
     return {
       id: address.id,
       location_id: address.location_id,
@@ -31,9 +35,9 @@ export class AddressPrivacyGuard {
       precision: address.precision || 'city',
       verification_status: address.verification_status || 'pending',
       // Coordenadas só se verificado
-      latitude: address.is_verified ? address.latitude : null,
-      longitude: address.is_verified ? address.longitude : null,
-      is_verified: address.is_verified,
+      latitude: publiclyVerified ? address.latitude : null,
+      longitude: publiclyVerified ? address.longitude : null,
+      is_verified: publiclyVerified,
     };
   }
 
