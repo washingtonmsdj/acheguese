@@ -67,3 +67,16 @@ O inventário acima é baseado no código inspecionado, não em prova de ataque 
 A auditoria encontrou uma segunda camada de mascaramento: `ProfileMembersService.getActiveRole()` transforma a falha de `getActiveRoleResult()` em `null` para compatibilidade de callers simples. O owner de Business **agora consome o `getActiveRoleResult` existente**, exigindo `success === true` antes de interpretar `data` como role. Dessa forma, consulta de membership indisponível gera erro técnico e o hook mantém a interface sem acesso; ausência legítima de membership continua negando normalmente. O contrato de autorização de servidor (`private.can_manage_profile`) não foi modificado. Ratchets arquiteturais de Business e membership foram ajustados para verificar a delegação ao método canônico de resultado, e os testes de ownership cobrem admin, owner, negativa e falha.
 
 O guard de gestão foi ajustado para priorizar estados de erro sobre spinner de verificação em caso de dados em cache, com testes de renderização para recuperação e negação.
+
+## Integridade das respostas de broker — 08/10/2026
+
+**Achado:** ao criar um Address fora da transação do broker e perder a resposta da chamada `profile-rpc`, o cliente não sabe se o Business já foi confirmado. Uma compensação destrutiva nesse estado pode remover o endereço de uma empresa efetivamente persistida. O mesmo vale para uma atualização que troca a referência do endereço.
+
+**Correção defensiva implementada:**
+
+- Antes de enviar o comando ao broker, ou depois de uma resposta **explicitamente rejeitada** (`success: false`), a compensação do Address continua permitida.
+- Assim que o comando foi enviado, sem uma resposta conclusiva, o domínio classifica a situação como `BusinessBrokerOutcomeUnknownError`, registra a identidade do Address para reconciliação e **não** executa `deleteAddress`. Uma resposta `success: true` sem recibo obrigatório também é tratada como resultado desconhecido.
+- A UI informa que o cadastro deve ser verificado e desabilita novo envio na mesma instância da página, em vez de declarar que a empresa não existe. A edição diferencia esse estado no aviso.
+- Regressões simulam resposta perdida e recibo incompleto após comando enviado, para criação e atualização.
+
+**Limite ainda aberto (P0):** isso evita exclusão indevida, mas **não implementa idempotência no servidor, reconciliação automática nem uma transação única entre Address e Business**. A falha de resposta pode deixar um Address sem associação, que deverá ser inspecionado mediante uma rotina segura de reconciliação no owner persistente. Não criar retry cego ou exclusão periódica sem comprovar as referências existentes no banco. A correção definitiva requer contrato versionado de idempotência/status no broker e validação de RLS/migrations na frente autorizada de backend, que permanece fora do escopo operacional desta PR.
