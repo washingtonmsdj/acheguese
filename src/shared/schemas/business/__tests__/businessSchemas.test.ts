@@ -19,6 +19,7 @@ describe("updateBusinessSchema Property-Based Tests", () => {
   it("mantém a exigência de rua no cadastro de novo endereço físico", () => {
     const result = createBusinessSchema.safeParse({
       name: "Empresa Teste",
+      description: "Descrição adequada para o cadastro da empresa",
       category: "servicos",
       location_id: "00000000-0000-4000-8000-000000000001",
       email: "contato@exemplo.com",
