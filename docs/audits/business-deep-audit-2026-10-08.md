@@ -21,14 +21,14 @@
 | BUS-06 | P1 abrangência territorial | `getBusinessesList` engolia erro na resolução de descendentes e restringia silenciosamente a localidade exata | Esta PR: propagar erro; nunca representar recorte incompleto como busca normal |
 | BUS-07 | P1 paginação | `getBusinessesList` ordenava por atributos não únicos sem desempate estável antes de `range` | Esta PR: desempate por `profile_id`; offset ainda exige testes de concorrência de escrita |
 | BUS-08 | P1 identificação | `BusinessUrlService` convertia erro de resolução de slug/premium/ID em `null` | #641 já aberta, sem sobreposição |
-| BUS-09 | P1 leitura agregada | `business.queries.getBusinessesByIds` devolve `[]` em erro; isso pode ocultar falha em Nearby e recomendações | Pendente: migrar erros à borda com testes de consumidores |
+| BUS-09 | P1 leitura agregada | `business.queries.getBusinessesByIds` devolve `[]` em erro; isso pode ocultar falha em Nearby e recomendações | Esta PR: erros propagados na consulta canônica e regressão de vazio verdadeiro versus indisponibilidade; consumidores com UX própria ainda em revisão |
 | BUS-10 | P1 detalhe | `business.queries.getBusinessBySlug` retorna `null` em erro, lido como inexistência em `useBusiness` | Esta PR: erro tipado de ausência, falhas relançadas ao hook |
 | BUS-11 | P1 gestão | `BusinessAdminGuard` ignora o `error` de `useBusiness` e redireciona para listagem com mensagem de “não encontrada” quando o fetch falha | Esta PR: guard bloqueado com erro explícito/retry; redireciona apenas ausência confirmada |
-| BUS-12 | P1 ID de domínio | `getBusinessDataIdByProfileId` retorna `null` em transporte com erro, confundindo falha e ausência no fluxo de autoridade | Pendente: definir erro distinto e validar consumidores (DashboardAccess, Gastronomy, ServiceAreas) |
-| BUS-13 | P1 autoridade | `BusinessOwnershipService.resolveOwnerProfileId` retorna `null` em erro SQL; é **fail-closed quanto à permissão**, mas UI pode reportar ausência/negação falsa | Pendente: separar indisponibilidade de autorização negada; manter fail-closed |
+| BUS-12 | P1 ID de domínio | `getBusinessDataIdByProfileId` retorna `null` em transporte com erro, confundindo falha e ausência no fluxo de autoridade | Esta PR: consulta de identidade relança falhas; DashboardAccess diferencia indisponibilidade e negação; Gastronomy deixa de substituir ID quando há erro; outros consumidores permanecem sujeitos a E2E |
+| BUS-13 | P1 autoridade | `BusinessOwnershipService.resolveOwnerProfileId` retorna `null` em erro SQL; é **fail-closed quanto à permissão**, mas UI pode reportar ausência/negação falsa | Esta PR: resolução de ownership preserva falhas para o hook; acesso negado por padrão; respostas antigas de outra sessão/perfil são descartadas; RLS ainda não certificado |
 | BUS-14 | P0 certificação | Atomicidade do `AddressService` externo versus transação de broker, compensação e idempotência entre requisições não foram comprovadas ponta a ponta | Pendente: revisão de contrato do broker e provas transacionais; não criar escritor paralelo |
 | BUS-15 | P0 segurança | Autorização negativa real (não owner, gestor revogado, cross-profile), RLS/grants de Business e ações sensíveis exigem prova no backend | Pendente; **nenhuma vulnerabilidade de escalada foi demonstrada** apenas com inspeção do frontend |
-| BUS-16 | P1 criação produto | `business.mutations.createProduct` insere diretamente em `business_products`; contrato RLS precisa ser comprovado, e `created_at` retornado é `new Date()`, não timestamp persistido | Pendente: validar ownership/enforcement e mapear timestamp do resultado real |
+| BUS-16 | P1 criação produto | `business.mutations.createProduct` insere diretamente em `business_products`; contrato RLS precisa ser comprovado, e `created_at` retornado é `new Date()`, não timestamp persistido | #644: mapper canônico lê timestamp persistido do registro retornado; ownership/RLS da mutação ainda exige prova no backend |
 | BUS-17 | P2 contrato legado | `BusinessService.getBusinesses` retorna só primeira página (100) e depois filtra bairro/delivery em memória; consumidores podem receber resultados incompletos | Pendente: migrar consumidores restantes para consultas filtradas no owner e aposentar fachada |
 | BUS-18 | P2 higiene | Prévia, testes mobile, CRUD de fotos/horários/catálogo e navegação já têm auditorias anteriores; não equivalem a smoke com conta real e mesmo SHA | Pendente: certificação funcional create → edit → página pública → gestão e cleanup |
 | BUS-19 | P1 mídia | Upload confirmado sem associação ao perfil pode deixar artefato não referenciado; não há prova aqui de coleta de órfãos ou rollback seguro | Risco **não comprovado**; verificar owner `core/media` antes de propor limpeza |
@@ -50,3 +50,14 @@
 - PRs #641, #644; testes de regressão de `business.mutations.spec.ts` e `business-public-list-errors.spec.ts`.
 
 **Status deste documento:** auditoria de código/versionamento; não declaração de MVP READY nem atestado de exploração de segurança.
+
+## Atualização de implementação — 08/10/2026
+
+- **PR #645**: `getBusinessDataIdByProfileId`, `BusinessOwnershipService`, `getBusinessesByIds` e `resolveGastronomyBusinessId` diferenciam ausência normal de erro do serviço. O hook `useDashboardAccess` liga cada resposta à conta e ao perfil consultados e invalida checagens antigas; isso é controle defensivo de interface, **não** enforcement no servidor.
+- **PR #645**: testes adicionados para erros de identidade, papéis owner/admin versus negativas reais, race de mudança de sessão, retry explícito e agregação de empresas.
+- **PR #644**: `createProduct` usa o mapper canônico existente para retornar a linha persistida, incluindo `created_at`; não fabrica horário no navegador. O backend/RLS da operação ainda precisa de testes negativos.
+- As PRs permanecem sem merge e não alteram o candidato #621. Checks de CI pendentes devem ser julgados no HEAD de cada PR, nunca herdados de commit anterior.
+
+### Revisão de escopo
+
+O inventário acima é baseado no código inspecionado, não em prova de ataque nem em certificação funcional completa. Evidências de segurança dependem de políticas/RPCs e testes autenticados. Alterações operacionais de Supabase/Vercel estão explicitamente fora deste ciclo.
