@@ -32,7 +32,10 @@ export class RoleRpcService {
     const result = await this.invoke<{ roles: AppRole[] }>("getUserRoles", {
       userId,
     });
-    return Array.isArray(result.roles) ? result.roles : [];
+    if (!Array.isArray(result?.roles) || result.roles.some((role) => typeof role !== "string")) {
+      throw new Error("Invalid role-rpc response: roles must be an array");
+    }
+    return result.roles;
   }
 
   static async isAdmin(userId: string): Promise<boolean> {
