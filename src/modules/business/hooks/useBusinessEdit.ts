@@ -31,7 +31,7 @@ interface UseBusinessEditReturn {
 export function useBusinessEdit(
   options: UseBusinessEditOptions = {},
 ): UseBusinessEditReturn {
-  const { activeProfile } = useSessionContext();
+  const { user } = useSessionContext();
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -42,8 +42,10 @@ export function useBusinessEdit(
       id: string;
       data: UpdateBusinessInput;
     }): Promise<Business> => {
-      if (!activeProfile?.id) {
-        throw new Error("Perfil ativo nao encontrado");
+      // Authorization belongs to the target Business broker/RLS; the acting
+      // user may legitimately manage a Business other than the active profile.
+      if (!user?.id) {
+        throw new Error("Sessão não autenticada");
       }
 
       const validation = updateBusinessSchema.safeParse(data);
