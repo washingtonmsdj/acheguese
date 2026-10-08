@@ -54,8 +54,13 @@ describe("Address verification write authority", () => {
     expect(migration).toContain("SECURITY INVOKER");
     expect(migration).toContain("IF current_user = 'authenticated' OR auth.uid() IS NOT NULL THEN");
     expect(migration).toContain(
-      "ELSIF (current_user = 'authenticated' OR auth.uid() IS NOT NULL)",
+      "ELSIF NEW.verification_requested_at IS DISTINCT FROM OLD.verification_requested_at",
     );
+    expect(migration).toContain("AND NEW.is_verified IS DISTINCT FROM FALSE");
+    expect(migration).toContain("pg_trigger_depth() > 1");
+    expect(migration).toContain("AND current_user = 'postgres'");
+    expect(migration).toContain("NEW.verification_requested_at := NULL;");
+    expect(migration).toContain("NEW.verification_requested_at := OLD.verification_requested_at;");
     expect(migration).toContain("Na atualização, QUALQUER alteração física invalida a prova antiga");
     expect(migration).toContain("IS DISTINCT FROM ROW(");
     expect(migration).toContain("NEW.is_verified := false;");
