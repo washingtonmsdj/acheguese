@@ -485,6 +485,14 @@ export async function getBusinessesList(
         break;
     }
 
+    // A tie-breaker by unique profile ID makes ordering deterministic for
+    // equal ratings/names and avoids overlapping offset pages.
+    query = (
+      query as unknown as {
+        order: (field: string, opts: { ascending: boolean }) => typeof query;
+      }
+    ).order("profile_id", { ascending: true });
+
     query = query.range(
       pageParam * pageSize,
       (pageParam + 1) * pageSize - 1,
