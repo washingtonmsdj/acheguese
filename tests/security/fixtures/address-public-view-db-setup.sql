@@ -35,7 +35,8 @@ CREATE TABLE public.professional_data (
 );
 CREATE TABLE public.public_business_search (
   id uuid PRIMARY KEY,
-  address_id uuid REFERENCES public.addresses(id)
+  address_id uuid REFERENCES public.addresses(id),
+  status text NOT NULL DEFAULT 'active'
 );
 
 -- Mimic the current verified-read policy, before #657 removes it.
@@ -51,8 +52,8 @@ CREATE POLICY "public professional sample" ON public.professional_data
   FOR SELECT TO anon, authenticated USING (visibility = 'public_listed');
 CREATE POLICY "public location sample" ON public.locations
   FOR SELECT TO anon, authenticated USING (true);
-CREATE POLICY "public business sample" ON public.public_business_search
-  FOR SELECT TO anon, authenticated USING (true);
+CREATE POLICY "public_business_search_public_read" ON public.public_business_search
+  FOR SELECT TO anon, authenticated USING (status = 'active'::text);
 GRANT SELECT ON public.professional_data, public.locations, public.public_business_search TO anon, authenticated;
 
 CREATE VIEW public.addresses_public
@@ -116,6 +117,16 @@ UPDATE public.addresses SET is_verified=true,
   verification_status='verified'::public.address_verification_status,
   verified_at=now()
  WHERE id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1';
+-- The second fully verified address has real coordinates but NO public
+-- business/professional association. Its latitude/longitude must stay private.
+UPDATE public.addresses
+SET latitude = -12.95, longitude = -38.50
+WHERE id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2';
+UPDATE public.addresses
+SET is_verified = true,
+    verification_status = 'verified'::public.address_verification_status,
+    verified_at = now()
+WHERE id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2';
 -- The previous isolated #658 assertions intentionally revoked this row.
 -- Restore server-approved residence only for the HTTP revocation scenario.
 UPDATE public.user_residences
@@ -150,7 +161,15 @@ INSERT INTO public.professional_data(
  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5',
  'Fixture profissional inconsistente','fixture-ambiguous',
  'public_listed',true,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
- 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee3');
-INSERT INTO public.public_business_search(id,address_id)
- VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
-         'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1');
+ 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee3'),
+('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7',
+ 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8',
+ 'Fixture profissional privado','fixture-private',
+ 'private',true,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
+ 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2');
+INSERT INTO public.public_business_search(id,address_id,status)
+ VALUES
+ ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1','active'),
+ ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2','inactive');
