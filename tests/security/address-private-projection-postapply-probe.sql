@@ -68,16 +68,20 @@ BEGIN
   IF EXISTS (
     SELECT 1
     FROM public.addresses_public AS published_address
+    -- Somente o operador privilegiado lê o titular na tabela física.
+    -- O read model público permanece com suas nove colunas estritas.
+    JOIN public.addresses AS private_address
+      ON private_address.id = published_address.id
     WHERE NOT EXISTS (
       SELECT 1 FROM public.public_business_search AS published_business
       WHERE published_business.address_id = published_address.id
         AND published_business.status = 'active'
         AND (
-          published_address.owner_user_id IS NULL
+          private_address.owner_user_id IS NULL
           OR EXISTS (
             SELECT 1 FROM public.profiles AS owner_profile
             WHERE owner_profile.id = published_business.profile_id
-              AND owner_profile.user_id = published_address.owner_user_id
+              AND owner_profile.user_id = private_address.owner_user_id
           )
         )
     )
@@ -90,11 +94,11 @@ BEGIN
         AND published_professional.slug IS NOT NULL
         AND NULLIF(btrim(published_professional.slug), '') IS NOT NULL
         AND (
-          published_address.owner_user_id IS NULL
+          private_address.owner_user_id IS NULL
           OR EXISTS (
             SELECT 1 FROM public.profiles AS owner_profile
             WHERE owner_profile.id = published_professional.profile_id
-              AND owner_profile.user_id = published_address.owner_user_id
+              AND owner_profile.user_id = private_address.owner_user_id
           )
         )
     )
