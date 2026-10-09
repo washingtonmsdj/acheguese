@@ -53,6 +53,147 @@ recriado. Lookup postal usado por fluxos territoriais passa por
 - `location_id`/território público não equivale a autorização para ler o
   endereço privado.
 
+## Autoridade de leitura pública versus privada
+
+A tabela `public.addresses` armazena dados físicos e privados de endereço,
+incluindo rua, número, complemento, CEP, proprietário e metadados.
+A autorização de leitura/gravação da linha detalhada pertence à política
+`Users manage own addresses`, vinculada à identidade autenticada.
+
+**PostgREST / FK de Business e Mapa:** os clientes públicos ainda usam
+`addresses!address_id` como relacionamento de leitura. Por isso, a permissão
+SQL `SELECT` do papel `anon` na tabela física deve permanecer para que
+a consulta relacionada não falhe, mas **não existe política RLS de leitura
+para `anon`**: toda consulta anônima à tabela física devolve zero linhas,
+inclusive em endereços verificados. Não adicionar política pública para
+"consertar" uma resposta nula; a única leitura detalhada autorizada por RLS
+é a do proprietário autenticado. O teste de regressão protege essa distinção.
+
+`public.addresses_public` é o **read model canônico existente**, sem copiar
+ou persistir endereços: expõe somente `id`, `location_id`, `address_type`,
+`latitude`, `longitude`, `precision`, `is_verified`,
+`verification_status` e `created_at`. Para ser incluído, o endereço
+precisa satisfazer **ambas** as condições: (1) `is_verified = true` **e**
+`verification_status = verified` e (2) associação efetiva a uma entidade
+**já publicada**: `public_business_search.status = active`, ou profissional
+com `visibility = public_listed`, aceitando clientes e com slug válido.
+Para endereços com `owner_user_id`, a identidade `profiles.user_id` da
+entidade anunciada **também deve corresponder ao titular do endereço**:
+uma empresa ou profissional administrado por terceiro não pode publicar a
+localização residencial de outra conta apenas informando seu `address_id`.
+Endereços comerciais sem proprietário residencial individual continuam
+elegíveis quando ligados a empresa ativa, preservando o catálogo existente.
+Um endereço verificado, mas sem anúncio público autorizado, continua privado
+— inclusive suas coordenadas exatas. Endereços vinculados apenas a empresas
+inativas ou profissionais privados também não são publicados. No catálogo Business ativo,
+a fonte canônica das coordenadas públicas continua sendo o próprio
+`public_business_search`, não o endereço físico. Nenhuma entidade
+residencial vira pública só por obter comprovação documental.
+
+A view tem nove colunas e nunca inclui rua, número, complemento, CEP nem
+`owner_user_id`. A filtragem e a barreira de publicação são obrigatórias
+no **PostgreSQL**; não dependem do estado do navegador.
+`AddressPrivacyGuard.toPublic()`/ `ResidentAddressService.toPublicDTO()`
+**sempre ocultam coordenadas residenciais**, inclusive com verificação
+aprovada, porque o DTO não dispõe do vínculo publicado validado pelo banco.
+Somente o read model SQL pode autorizar coordenadas de entidade pública.
+
+**Exceção explícita e mínima:** como a view pública deve servir usuários
+anônimos e autenticados sem lhes conceder permissão à tabela privada, essa
+view específica usa o dono `postgres` e
+`security_invoker=false, security_barrier=true`. Essa exceção só é segura
+porque a projeção tem lista fixa de colunas permitidas, dupla
+confirmação de verificação, associação a entidade publicada e privilégio
+de **somente leitura**; não deve ser reproduzida
+genericamente em outras views. `public.public_professional_search` preserva
+`security_invoker=true` e consulta as coordenadas via
+`public.addresses_public`, não diretamente na tabela privada.
+
+**Sequência obrigatória de segurança:** a migração
+`20261008215900_restrict_address_verification_mutations.sql` (PR #658)
+precisa estar aplicada **antes** da projeção pública
+`20261008220000_enforce_address_private_read_projection.sql` (PR #657).
+O preflight da segunda migração confirma as restrições de escrita e os
+triggers necessários e aborta se a primeira ainda não foi aplicada.
+Ambas dependem de homologação conjunta; nunca ativar a projeção sem a
+autoridade exclusiva de Verification no servidor.
+
+A migração versionada
+`20261008220000_enforce_address_private_read_projection.sql` registra
+pré-condições contra drift, mudança transacional e pós-condições de RLS/ACL.
+A mudança só é válida para produção após aplicação controlada, verificação
+real de `anon`/usuário proprietário/terceiro e smoke das superfícies
+públicas. Um merge por si só **não** prova que o banco já aplica a regra.
+
+## Homologação conjunta de RLS e prova de endereço (pré-implantação)
+
+O par de migrações versionadas é **indivisível para certificação**:
+`20261008215900_restrict_address_verification_mutations.sql` (escrita)
+deve ser aplicado antes de
+`20261008220000_enforce_address_private_read_projection.sql` (leitura).
+Os preflights abortam em caso de drift ou sequência errada.
+
+**Ambiente:** executar primeiro em PostgreSQL/Supabase de desenvolvimento
+isolado, sem copiar PII ou usar contas reais. A CI estática não equivale à
+execução SQL nem à autorização do fluxo HTTP PostgREST.
+
+**Certificação técnica já automatizada (08/10/2026):**
+- PR #658 usa `.github/workflows/address-verification-postgres-integration.yml`
+  para aplicar a migração de escrita em PostgreSQL 17 com RLS, usuário
+  próprio/terceiro, revogação de prova e tentativa de escalada por RPC.
+- PR #657 usa
+  `.github/workflows/address-public-projection-postgres-integration.yml`
+  e `tools/ci/run-address-public-projection-postgres.sh` para aplicar
+  **#658 antes de #657**, verificar assinaturas dos arquivos do pré-requisito
+  e testar RLS/visões públicas. O pré-requisito é fixado por commit e hashes
+  Git de objetos; mudança posterior em #658 exige uma nova revisão explícita
+  do pin, sem consultar uma branch móvel silenciosamente.
+- No mesmo PostgreSQL descartável, `tools/ci/run-address-postgrest-http.sh`
+  inicializa PostgREST e exercita `tools/ci/assert-address-postgrest-http.mjs`
+  com **JWTs válidos assinados por chave aleatória da própria CI**. Prova
+  separação anon/proprietário/terceiro, operações REST de leitura e PATCH,
+  relação pública de Business, coordenadas verificadas **e publicadas**, invalidação
+  transacional de Residence.
+
+**Limite da certificação:** o emissor JWT da CI é sintético; esses testes
+não conectam ao Supabase Auth real nem provam deploy/segredos, perfis reais,
+JWT expirado/revogado, infraestrutura de produção ou o fluxo administrativo
+completo. Esses pontos continuam na matriz de homologação em staging antes
+da implantação. Nenhuma permissão ou migração foi alterada em produção
+pela CI.
+
+**Matriz obrigatória (usar sessões reais do provedor de autenticação no
+ambiente de teste, não apenas `SET ROLE` nem claims JWT forjadas):**
+
+| Ator | Operação | Resultado esperado |
+|---|---|---|
+| `anon` | SELECT `addresses` detalhado | zero linhas por RLS, mantendo o GRANT técnico para FK embedding |
+| `anon` | SELECT `addresses_public` | somente nove colunas, dupla confirmação de verificação **e** vínculo com entidade pública ativa; endereços residenciais isolados não aparecem |
+| `anon` | catálogo Business e view profissional pública | consulta íntegra, nenhum campo residencial detalhado |
+| Morador A | INSERT Address e Residence próprios | estado de verificação pendente/não verificado |
+| Morador A | UPDATE de rua, CEP, coordenadas ou localização do próprio Address | permitido; Address passa a não verificado e todas as residências vinculadas são invalidadas na **mesma transação** |
+| Morador A | UPDATE direto de `is_verified`, status ou `verified_by` | rejeitado por privilégio SQL, inclusive numa tentativa com outros campos |
+| Morador A | INSERT/UPDATE de `user_residences.is_verified` | rejeitado |
+| Morador A | requestVerification | timestamp definido pelo servidor; não equivale à aprovação |
+| Morador B | ler/editar endereço ou residência de A | negado por RLS |
+| Fluxo Verification autorizado | marcar prova após análise | somente autoridade do servidor, com auditoria e autorização apropriadas |
+| Alteração do endereço previamente verificado | prova e solicitação existentes | revogadas sem erro ou deadlock, inclusive com `auth.uid()` presente no encadeamento interno |
+
+**Probes read-only pós-aplicação:** os arquivos
+`tests/security/address-verification-authenticated-probe.sql` e
+`tests/security/address-private-projection-postapply-probe.sql`
+confirmam propriedades de ACL e leitura anônima; são complementares
+e **não substituem os testes de escrita com fixtures**.
+
+**Antes de produção:** demonstrar migrator e plano de reversão; revisão de
+permissões no banco de teste, impacto no endereço comercial e no mapa,
+sinais de PostgREST/edge e execução do smoke autenticado. Não alterar a
+produção por dashboard, não usar dual-write nem contornar o bloqueio de
+RLS com uma nova policy permissiva. Registrar o resultado nos PRs #657 e #658
+e no gate da PR de release #621. Somente após confirmação explícita do
+responsável pela produção executar o deploy versionado e verificar o
+estado pós-aplicação. Problemas posteriores devem bloquear a promoção.
+
 ## Separação de responsabilidades
 
 - **Address**: entidade postal, persistência, privacidade e lifecycle;

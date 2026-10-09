@@ -22,6 +22,7 @@ import {
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { residenceService } from '@/core/residence/services/ResidenceService';
 import { AddressService } from './AddressService';
+import { AddressPrivacyGuard } from './AddressPrivacyGuard';
 import type {
   Address,
   AddressPrecision,
@@ -137,16 +138,7 @@ export class ResidentAddressService {
   }
 
   static toPublicDTO(address: Address): AddressPublicDTO {
-    return {
-      id: address.id,
-      location_id: address.location_id,
-      address_type: address.address_type,
-      precision: address.precision || 'city',
-      verification_status: address.verification_status || 'pending',
-      latitude: address.is_verified ? address.latitude : null,
-      longitude: address.is_verified ? address.longitude : null,
-      is_verified: address.is_verified,
-    };
+    return AddressPrivacyGuard.toPublic(address);
   }
 
   private validateInput(input: RegisterResidentAddressInput): void {

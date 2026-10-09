@@ -1,0 +1,73 @@
+name: Address Public Projection PostgreSQL Integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261008220000_enforce_address_private_read_projection.sql"
+      - "tests/security/address-private-projection-postapply-probe.sql"
+      - "tests/security/fixtures/address-public-view-db-*.sql"
+      - "tools/ci/run-address-public-projection-postgres.sh"
+      - "tools/ci/run-address-postgrest-http.sh"
+      - "tools/ci/assert-address-postgrest-http.mjs"
+      - ".github/workflows/address-public-projection-postgres-integration.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261008220000_enforce_address_private_read_projection.sql"
+      - "tests/security/address-private-projection-postapply-probe.sql"
+      - "tests/security/fixtures/address-public-view-db-*.sql"
+      - "tools/ci/run-address-public-projection-postgres.sh"
+      - "tools/ci/run-address-postgrest-http.sh"
+      - "tools/ci/assert-address-postgrest-http.mjs"
+      - ".github/workflows/address-public-projection-postgres-integration.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: address-public-postgres-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sql-read-and-write-boundary:
+    name: PostgreSQL 17 combined trusted-write and public-read migration
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGDATABASE: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout exact public projection commit
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - name: Apply both canonical migrations and verify SQL invariants
+        shell: bash
+        run: bash tools/ci/run-address-public-projection-postgres.sh
+
+      - name: Setup Node.js for signed JWT HTTP assertions
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Test signed JWT requests through actual PostgREST
+        shell: bash
+        run: bash tools/ci/run-address-postgrest-http.sh
