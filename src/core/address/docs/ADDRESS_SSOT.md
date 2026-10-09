@@ -72,23 +72,33 @@ inclusive em endereços verificados. Não adicionar política pública para
 `public.addresses_public` é o **read model canônico existente**, sem copiar
 ou persistir endereços: expõe somente `id`, `location_id`, `address_type`,
 `latitude`, `longitude`, `precision`, `is_verified`,
-`verification_status` e `created_at`, restritos a endereços nos quais
-`is_verified = true` **e** `verification_status = verified` concordam.
-Um estado contraditório (somente flag ou somente status) não é prova
-suficiente para liberar coordenadas; a pendência exige reconciliação pelo
-owner Verification, sem exposição automática.
-Não inclui rua, número, complemento, CEP ou `owner_user_id`.
-A segurança dessa projeção é obrigatória no **PostgreSQL**, independentemente
-do DTO `AddressPrivacyGuard.toPublic()` usado na interface.
-`ResidentAddressService.toPublicDTO()` delega ao mesmo guard canônico, sem
-segunda implementação do filtro.
+`verification_status` e `created_at`. Para ser incluído, o endereço
+precisa satisfazer **ambas** as condições: (1) `is_verified = true` **e**
+`verification_status = verified` e (2) associação efetiva a uma entidade
+**já publicada**: `public_business_search.status = active`, ou profissional
+com `visibility = public_listed`, aceitando clientes e com slug válido.
+Um endereço verificado, mas sem anúncio público, continua privado — inclusive
+suas coordenadas exatas. Endereços vinculados apenas a empresas inativas ou
+profissionais privados também não são publicados. No catálogo Business ativo,
+a fonte canônica das coordenadas públicas continua sendo o próprio
+`public_business_search`, não o endereço físico. Nenhuma entidade
+residencial vira pública só por obter comprovação documental.
+
+A view tem nove colunas e nunca inclui rua, número, complemento, CEP nem
+`owner_user_id`. A filtragem e a barreira de publicação são obrigatórias
+no **PostgreSQL**; não dependem do estado do navegador.
+`AddressPrivacyGuard.toPublic()`/ `ResidentAddressService.toPublicDTO()`
+**sempre ocultam coordenadas residenciais**, inclusive com verificação
+aprovada, porque o DTO não dispõe do vínculo publicado validado pelo banco.
+Somente o read model SQL pode autorizar coordenadas de entidade pública.
 
 **Exceção explícita e mínima:** como a view pública deve servir usuários
 anônimos e autenticados sem lhes conceder permissão à tabela privada, essa
 view específica usa o dono `postgres` e
 `security_invoker=false, security_barrier=true`. Essa exceção só é segura
-porque a projeção tem lista fixa de colunas permitidas, filtro SQL de
-verificação e privilégio de **somente leitura**; não deve ser reproduzida
+porque a projeção tem lista fixa de colunas permitidas, dupla
+confirmação de verificação, associação a entidade publicada e privilégio
+de **somente leitura**; não deve ser reproduzida
 genericamente em outras views. `public.public_professional_search` preserva
 `security_invoker=true` e consulta as coordenadas via
 `public.addresses_public`, não diretamente na tabela privada.
@@ -136,7 +146,7 @@ execução SQL nem à autorização do fluxo HTTP PostgREST.
   inicializa PostgREST e exercita `tools/ci/assert-address-postgrest-http.mjs`
   com **JWTs válidos assinados por chave aleatória da própria CI**. Prova
   separação anon/proprietário/terceiro, operações REST de leitura e PATCH,
-  relação pública de Business, coordenadas verificadas e invalidação
+  relação pública de Business, coordenadas verificadas **e publicadas**, invalidação
   transacional de Residence.
 
 **Limite da certificação:** o emissor JWT da CI é sintético; esses testes
@@ -152,7 +162,7 @@ ambiente de teste, não apenas `SET ROLE` nem claims JWT forjadas):**
 | Ator | Operação | Resultado esperado |
 |---|---|---|
 | `anon` | SELECT `addresses` detalhado | zero linhas por RLS, mantendo o GRANT técnico para FK embedding |
-| `anon` | SELECT `addresses_public` | somente nove colunas, somente registros com `is_verified=true AND verification_status='verified'` |
+| `anon` | SELECT `addresses_public` | somente nove colunas, dupla confirmação de verificação **e** vínculo com entidade pública ativa; endereços residenciais isolados não aparecem |
 | `anon` | catálogo Business e view profissional pública | consulta íntegra, nenhum campo residencial detalhado |
 | Morador A | INSERT Address e Residence próprios | estado de verificação pendente/não verificado |
 | Morador A | UPDATE de rua, CEP, coordenadas ou localização do próprio Address | permitido; Address passa a não verificado e todas as residências vinculadas são invalidadas na **mesma transação** |
