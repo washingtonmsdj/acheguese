@@ -110,6 +110,45 @@ campos físicos nulos. Isso pode ser correto por privacidade, mas deve ser
 testado como contrato da página pública, especialmente Business e
 Gastronomia, sem relaxar RLS para preservar um formato legado.
 
+## Impacto de Address #657 nas RPCs públicas ativas
+
+Leitura **somente de metadados** no Supabase canônico confirmou que
+`get_public_business_snapshot_by_slug(text,text,text,text)` e
+`get_public_gastronomy_snapshot_by_slug(text,text,text,text)` são
+`SECURITY INVOKER` e executáveis por `anon`. As duas funções
+consultam `public.public_business_search` mas ainda fazem
+`LEFT JOIN addresses a ON a.id = bd.address_id`, selecionando
+`street`, `number`, `complement`, `postal_code`, `latitude` e
+`longitude` da **tabela privada**. Confirmado no catálogo:
+`anon` tem GRANT técnico SELECT em `addresses` e ainda existe a policy
+`Addresses public verified read` (antes da migração #657).
+
+**Efeito esperado da #657:** o GRANT é mantido para compatibilidade de
+relacionamentos, mas a policy pública desaparece; portanto, o `LEFT JOIN`
+privado deixa de produzir valores de endereço físico para `anon`. A
+função permanece executável e a busca via `public_business_search` ainda
+pode trazer a identidade comercial, mas objetos `address` no JSON legado
+podem passar a conter valores `null`. Isso é uma consequência
+de segurança, não autorização para reabrir a tabela física.
+
+Os `latitude`/`longitude` comerciais de
+`public.public_business_search` são o SSOT já publicado para Business
+ativo e estão presentes como colunas distintas. Uma eventual correção
+dos snapshots deve ocorrer **no owner dos RPCs públicos** e preservar o
+schema JSON sem incorporar endereço residencial: contrato explícito para
+geolocalização comercial e campos físicos somente quando houver regra de
+publicação aprovada. `metadata->>'business_address'` é outra superfície
+de saída existente que exige auditoria de dados publicados, não confiança
+implícita na verificação residencial.
+
+**Gates pré-implantação:** além dos testes PostgreSQL/PostgREST de #657,
+homologar no ambiente Supabase/Auth do release a busca por slug
+Business/Gastronomia com `anon`, owner e terceiro, validando JSON
+institucional, mapa e SEO. Verificar que nenhum endereço de terceiro
+é exposto e que estabelecimentos públicos ainda resolvem. Não editar
+RPCs aplicadas historicamente nem mover rotas de módulos pausados nesta
+PR de lineage. Vincular a #657/#621/#660, sem criar outro deploy.
+
 ## Efeito no MVP
 
 - **PR #658** — migração `20261008215900`, escrita trusted, 7/7 CI
