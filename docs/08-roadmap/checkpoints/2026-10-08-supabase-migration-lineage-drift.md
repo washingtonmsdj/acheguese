@@ -66,6 +66,24 @@ admitia exatamente cinco versões `20260821001800`, `20260821002600`,
 remoto**. Isso prova que o gate antigo já estava desatualizado antes das
 PRs Address.
 
+## Estado efetivo das três migrations sem versão remota
+
+Inspeção **somente leitura** do catálogo PostgreSQL, sem expor endereços
+individuais nem assumir que igualdade de objeto comprova execução histórica:
+
+| Migração local sem registro | Evidência no banco canônico | Tratamento seguro |
+|---|---|---|
+| `20260921224500_project_business_search_coordinates_from_address` | `private.sync_public_business_search_row()` existe, mas `private.sync_public_business_search_address_coordinates()` e os dois gatilhos específicos em `addresses` não existem. Entre **15 Business públicos ativos com Address**, são **7 com coordenadas**, com **zero divergências atuais** entre `public_business_search` e `addresses` | A igualdade atual **não garante sincronismo após futuras edições**; avaliar owner/trigger existente e dependências com #649. Não executar o backfill histórico sem homologação |
+| `20260927170000_territory_first_public_snapshot_urls` | `get_public_business_snapshot_by_slug(text,text,text,text)` e `get_public_gastronomy_snapshot_by_slug(text,text,text,text)` já existem, com `SECURITY INVOKER`, callable por `anon`, URL canônica territorial e campos de endereço físico no corpo SQL | Auditar a superfície de retorno com RLS vigente e após #657; distinguir dados de empresas publicados de informação residencial privada. Não inferir versão aplicada só por assinatura existente |
+| `20261002175500_harden_professional_trust_reputation_search_path` | `get_professional_trust_reputation(uuid)` permanece `SECURITY DEFINER`, com `search_path=public, private, pg_temp`, e concessão `EXECUTE` a `anon`, diferente de `SET search_path = ''` exigido pelo arquivo local | Endurecimento **ainda não demonstrado em produção**. Inspecionar corpo e referências antes de nova migration versionada; jamais fazer ALTER isolado no banco |
+
+**Interdependência de privacidade:** #657 retira a política RLS de acesso
+anônimo a `addresses`. Qualquer RPC pública `SECURITY INVOKER`
+que consulta diretamente essa tabela pode passar a produzir coordenadas ou
+campos físicos nulos. Isso pode ser correto por privacidade, mas deve ser
+testado como contrato da página pública, especialmente Business e
+Gastronomia, sem relaxar RLS para preservar um formato legado.
+
 ## Efeito no MVP
 
 - **PR #658** — migração `20261008215900`, escrita trusted, 7/7 CI
