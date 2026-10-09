@@ -76,6 +76,22 @@ run_sql() {
 }
 
 run_sql "tests/security/fixtures/address-verification-db-setup.sql"
+
+# Verify the ordering guard by deliberately attempting the public read migration
+# BEFORE the required trusted-write migration. Exact failure expected; any other
+# error indicates test drift, and a successful early apply is a release blocker.
+set +e
+early_projection_output="$(psql -X -v ON_ERROR_STOP=1 -f "${projection_migration}" 2>&1)"
+early_projection_status=$?
+set -e
+if [[ "${early_projection_status}" -eq 0 ]] || \
+   [[ "${early_projection_output}" != *"trusted write guard must be applied first"* ]]; then
+  echo "FATAL: projection-before-write was not blocked by the expected preflight" >&2
+  printf '%s\n' "${early_projection_output}" >&2
+  exit 1
+fi
+echo "PASS: public projection cannot be installed before server write authority"
+
 run_sql "${authority_migration}"
 run_sql "tests/security/fixtures/address-verification-db-assert.sql"
 run_sql "tests/security/fixtures/address-public-view-db-setup.sql"
