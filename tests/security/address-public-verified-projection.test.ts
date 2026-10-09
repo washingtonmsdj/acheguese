@@ -52,7 +52,7 @@ describe("Address verified-only public projection", () => {
     expect(value).not.toHaveProperty("owner_user_id");
   });
 
-  it("publishes only safe fields for a fully verified address", () => {
+  it("keeps verified residential coordinates private until an entity is explicitly published", () => {
     const record = {
       ...address,
       is_verified: true,
@@ -61,8 +61,9 @@ describe("Address verified-only public projection", () => {
     const pub = AddressPrivacyGuard.toPublic(record);
     expect(pub.is_verified).toBe(true);
     expect(pub.verification_status).toBe('verified');
-    expect(pub.latitude).toBe(record.latitude);
-    expect(pub.longitude).toBe(record.longitude);
+    expect(pub.latitude).toBeNull();
+    expect(pub.longitude).toBeNull();
+    expect(JSON.stringify(pub)).not.toContain("EXEMPLO PRIVADO");
     expect(Object.keys(pub).sort()).toEqual([
       "address_type", "id", "is_verified", "latitude", "location_id",
       "longitude", "precision", "verification_status",
