@@ -121,6 +121,31 @@ Os preflights abortam em caso de drift ou sequência errada.
 isolado, sem copiar PII ou usar contas reais. A CI estática não equivale à
 execução SQL nem à autorização do fluxo HTTP PostgREST.
 
+**Certificação técnica já automatizada (08/10/2026):**
+- PR #658 usa `.github/workflows/address-verification-postgres-integration.yml`
+  para aplicar a migração de escrita em PostgreSQL 17 com RLS, usuário
+  próprio/terceiro, revogação de prova e tentativa de escalada por RPC.
+- PR #657 usa
+  `.github/workflows/address-public-projection-postgres-integration.yml`
+  e `tools/ci/run-address-public-projection-postgres.sh` para aplicar
+  **#658 antes de #657**, verificar assinaturas dos arquivos do pré-requisito
+  e testar RLS/visões públicas. O pré-requisito é fixado por commit e hashes
+  Git de objetos; mudança posterior em #658 exige uma nova revisão explícita
+  do pin, sem consultar uma branch móvel silenciosamente.
+- No mesmo PostgreSQL descartável, `tools/ci/run-address-postgrest-http.sh`
+  inicializa PostgREST e exercita `tools/ci/assert-address-postgrest-http.mjs`
+  com **JWTs válidos assinados por chave aleatória da própria CI**. Prova
+  separação anon/proprietário/terceiro, operações REST de leitura e PATCH,
+  relação pública de Business, coordenadas verificadas e invalidação
+  transacional de Residence.
+
+**Limite da certificação:** o emissor JWT da CI é sintético; esses testes
+não conectam ao Supabase Auth real nem provam deploy/segredos, perfis reais,
+JWT expirado/revogado, infraestrutura de produção ou o fluxo administrativo
+completo. Esses pontos continuam na matriz de homologação em staging antes
+da implantação. Nenhuma permissão ou migração foi alterada em produção
+pela CI.
+
 **Matriz obrigatória (usar sessões reais do provedor de autenticação no
 ambiente de teste, não apenas `SET ROLE` nem claims JWT forjadas):**
 
