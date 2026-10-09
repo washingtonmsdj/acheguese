@@ -30,7 +30,8 @@ GRANT EXECUTE ON FUNCTION public.fixture_rpc_promote_residence() TO authenticate
 
 BEGIN;
 SET LOCAL ROLE authenticated;
-SET LOCAL request.jwt.claim.sub = '11111111-1111-4111-8111-111111111111';
+-- Exercise the modern PostgREST JWT payload, not only the legacy claim.sub GUC.
+SET LOCAL request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';
 
 DO $owner_test$
 DECLARE
