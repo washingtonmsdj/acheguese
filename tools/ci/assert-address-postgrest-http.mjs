@@ -62,7 +62,9 @@ const publicAddresses = successful(
   await request("/addresses_public?select=id,latitude,longitude,is_verified,verification_status"),
   "verified-only public projection",
 );
-assert.equal(publicAddresses.length, 1);
+assert.equal(publicAddresses.length, 2);
+assert.ok(publicAddresses.some(a => a.id === "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee6"),
+  "active business with no residential owner remains published");
 assert.ok(publicAddresses.every(a => a.is_verified === true && a.verification_status === "verified"));
 assert.ok(!publicAddresses.some(a => a.id.startsWith("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee")));
 assert.ok(!publicAddresses.some(a => a.id === "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"),
@@ -94,9 +96,9 @@ const businessRows = successful(
   await request("/public_business_search?select=id,address:addresses!address_id(id,street)"),
   "business FK join without physical address read",
 );
-assert.equal(businessRows.length, 1);
-assert.equal(businessRows[0].address, null,
-  "Public Business FK embedding must not expose private physical address");
+assert.equal(businessRows.length, 3);
+assert.ok(businessRows.every(row => row.address === null),
+  "Public Business FK embedding must not expose private physical addresses");
 
 const professionals = successful(
   await request("/public_professional_search?select=slug,latitude,longitude"),
@@ -109,6 +111,10 @@ assert.equal(Number(valid.latitude), -12.98);
 assert.equal(Number(valid.longitude), -38.51);
 assert.equal(ambiguous.latitude, null);
 assert.equal(ambiguous.longitude, null);
+const forgedAssociation = professionals.find(x => x.slug === "fixture-foreign");
+assert.ok(forgedAssociation, "public professional link is present for negative permission test");
+assert.equal(forgedAssociation.latitude, null);
+assert.equal(forgedAssociation.longitude, null);
 const hidden = professionals.find(x => x.slug === "fixture-private");
 assert.equal(hidden, undefined, "private professional listing must not appear publicly");
 
@@ -146,7 +152,8 @@ const after = successful(
   await request("/addresses_public?select=id,is_verified,verification_status"),
   "public projection after owner edit",
 );
-assert.equal(after.length, 0);
+assert.equal(after.length, 1);
+assert.equal(after[0].id, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee6");
 assert.ok(!after.some(x => x.id === ADDR_A));
 
 patched(
