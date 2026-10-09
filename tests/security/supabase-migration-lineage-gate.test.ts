@@ -153,6 +153,24 @@ describe("fail-closed Supabase production migration lineage", () => {
     expect(badRemote.stderr).toContain("Versão de migração malformada");
   });
 
+  it("never drops a remote row with a truncated or nonnumeric version", () => {
+    const shortenedRemote = runFixture(
+      [{ local: V1, remote: V1 }, { remote: "2026092600592" }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+    );
+    expect(shortenedRemote.status).toBe(1);
+    expect(shortenedRemote.stderr).toContain("Versão de migração malformada");
+
+    const unreadableRemote = runFixture(
+      [{ local: V1, remote: V1 }, { remote: "BROKEN_VERSION" }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+    );
+    expect(unreadableRemote.status).toBe(1);
+    expect(unreadableRemote.stderr).toContain("Versão de migração malformada");
+  });
+
   it("refuses version-looking lines without table delimiters, even beside valid rows", () => {
     const result = runFixture(
       [{ local: V1, remote: V1 }, { local: V2 }],
