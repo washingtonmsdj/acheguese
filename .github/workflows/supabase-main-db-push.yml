@@ -106,6 +106,7 @@ jobs:
           path: gate
           sparse-checkout: |
             supabase
+            tools/ci
           sparse-checkout-cone-mode: true
 
       - name: Assert checkout provenance
@@ -165,6 +166,10 @@ jobs:
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
+
+          # This legacy batch remains intentionally locked to five reviewed
+          # LGPD migrations. Address #658/#657 must NOT be included before
+          # independent staging certification and explicit release approval.
           $expected = @(
             "20260821001800",
             "20260821002600",
@@ -178,49 +183,18 @@ jobs:
             $migrationOutput | ForEach-Object { Write-Host $_ }
             throw "supabase migration list failed."
           }
-          $migrationOutput | ForEach-Object { Write-Host $_ }
 
-          $localOnly = New-Object System.Collections.Generic.List[string]
-          $remoteOnly = New-Object System.Collections.Generic.List[string]
-
-          foreach ($line in $migrationOutput) {
-            $text = [string]$line
-            $parts = @([regex]::Split($text, '\s*[|│]\s*'))
-            if ($parts.Count -lt 2) { continue }
-
-            $localMatch = [regex]::Match($parts[0], '\d{14}')
-            $remoteMatch = [regex]::Match($parts[1], '\d{14}')
-
-            if ($localMatch.Success -and -not $remoteMatch.Success) {
-              $localOnly.Add($localMatch.Value)
-            } elseif (-not $localMatch.Success -and $remoteMatch.Success) {
-              $remoteOnly.Add($remoteMatch.Value)
-            }
+          $listPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-migration-list.txt"
+          Set-Content -Path $listPath -Value ($migrationOutput -join [Environment]::NewLine) -Encoding UTF8
+          & node "tools/ci/verify-supabase-migration-lineage.mjs" `
+            --list $listPath `
+            --directory "supabase/migrations" `
+            --expected ($expected -join ",")
+          if ($LASTEXITCODE -ne 0) {
+            throw "Remote/local migration history diverges from exact approved batch. No automatic repair, no db push."
           }
 
-          $localOnly = @($localOnly | Sort-Object -Unique)
-          $remoteOnly = @($remoteOnly | Sort-Object -Unique)
-
-          if ($remoteOnly.Count -ne 0) {
-            throw "Remote-only migrations detected: $($remoteOnly -join ', ')"
-          }
-
-          $delta = @(Compare-Object -ReferenceObject $expected -DifferenceObject $localOnly)
-          if ($delta.Count -ne 0) {
-            throw "Pending migration set differs from approved five. Expected=$($expected -join ',') Actual=$($localOnly -join ',')"
-          }
-
-          $localFiles = @(
-            Get-ChildItem "supabase/migrations" -File -Filter "*.sql" |
-              ForEach-Object { if ($_.BaseName -match '^(\d{14})_') { $Matches[1] } } |
-              Where-Object { $_ -in $expected } |
-              Sort-Object -Unique
-          )
-          if (@(Compare-Object -ReferenceObject $expected -DifferenceObject $localFiles).Count -ne 0) {
-            throw "One or more approved migration files are missing from the exact checkout."
-          }
-
-          Write-Host "Approved pending migrations: $($localOnly -join ', ')"
+          Write-Host "Approved exact pending versions: $($expected -join ', ')"
 
       - name: Dry-run production DB push
         shell: powershell
@@ -308,5 +282,6 @@ jobs:
             "- Approved versions: 20260821001800, 20260821002600, 20260821011000, 20260821022500, 20260821024000",
             "- Push-triggered executions are always dry-run only.",
             "- Checkout is isolated under gate/ to avoid shared self-hosted workspace cleanup locks.",
+            "- Any local/remote version mismatch or unknown migration-list format blocks db push, without automatic migration repair.",
             "- No seed, reset, repair, branch creation, or destructive fallback is permitted by this workflow."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
