@@ -75,7 +75,7 @@ const ownerRows = successful(
   "owner private address read",
 );
 assert.equal(ownerRows.length, 1);
-assert.equal(ownerRows[0].street, "Fixture rua original");
+assert.equal(ownerRows[0].street, "Fixture rua alterada");
 
 const otherRows = successful(
   await request(`/addresses?id=eq.${ADDR_A}&select=id,street`, { token: outsider }),
