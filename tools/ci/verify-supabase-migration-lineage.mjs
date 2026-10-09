@@ -32,6 +32,12 @@ export function parseMigrationTable(output) {
       if (/^\s*\d{8,}/.test(line)) {
         throw new Error(`Linha sem delimitadores na listagem de migrations: ${line.trim()}`);
       }
+      // Before the recognized header the CLI may print connection status.
+      // After it, every nonempty line must be a recognized table row or
+      // separator; otherwise an illegible remote migration could be dropped.
+      if (sawHeader && line.trim() !== "") {
+        throw new Error(`Linha não reconhecida após cabeçalho de migrations: ${line.trim()}`);
+      }
       continue;
     }
     if (!sawHeader || columns.length !== 3) {
