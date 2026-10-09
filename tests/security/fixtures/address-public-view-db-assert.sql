@@ -14,8 +14,15 @@ BEGIN
   END IF;
 
   SELECT count(*) INTO v_count FROM public.addresses_public;
-  IF v_count <> 2 THEN
+  IF v_count <> 1 THEN
     RAISE EXCEPTION 'public verified projection cardinality drift: %',v_count;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.addresses_public
+    WHERE id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2'
+  ) THEN
+    RAISE EXCEPTION 'verified residential/private coordinates were published';
   END IF;
 
   SELECT count(*) INTO v_count
@@ -56,6 +63,13 @@ BEGIN
      OR v_public_row.longitude IS DISTINCT FROM -38.51::numeric
   THEN
     RAISE EXCEPTION 'verified professional no longer gets public coordinates';
+  END IF;
+
+  SELECT latitude, longitude INTO v_public_row
+  FROM public.public_professional_search
+  WHERE slug='fixture-private';
+  IF v_public_row.latitude IS NOT NULL OR v_public_row.longitude IS NOT NULL THEN
+    RAISE EXCEPTION 'private-listing professional leaked home coordinates';
   END IF;
 
   SELECT latitude, longitude INTO v_public_row
