@@ -52,6 +52,32 @@ assumir equivalência por nome:
 | `20260926020539` | `close_direct_profile_delete_authority` |
 | `20261006055146` | `pause_community_direct_messaging_rpc_client_grants` |
 
+### Refinamento lexical dos sete pares com diferença textual
+
+A comparação adicional tokenizou o corpo SQL registrado remotamente e o arquivo
+homônimo do source, preservando literais, identificadores e operadores. A
+normalização ignora **apenas comentários e espaços externos aos literais**;
+em quatro casos, foi testada separadamente a retirada de `BEGIN;` e
+`COMMIT;` explícitos do source, mantendo todos os demais tokens e a ordem
+de execução. **Resultado: nenhuma diferença de tokens de comandos
+restante foi encontrada nesses sete pares.**
+
+| Classificação léxica | Versões remotas |
+|---|---|
+| Mesma sequência de tokens sem retirar `BEGIN/COMMIT` (3) | `20260926011531` analytics; `20260926015559` timeouts; `20260926020539` profile delete |
+| Mesmos tokens após retirar apenas o par explícito `BEGIN/COMMIT` (4) | `20260926011402` service-role policies; `20260926012414` browser RLS; `20260926012944` RPC timeout; `20261006055146` community direct messages |
+
+Em `20260926012414`, o `COMMIT;` explícito do source ocorre
+**antes de `NOTIFY pgrst, 'reload schema'`**; os tokens restantes e sua
+ordem coincidem com a versão remota. A versão remota adicional
+`20260926012211`, com o mesmo nome de `20260926011402`, permanece
+**outra execução histórica** e não deve ser descartada ao reconciliar.
+
+Esta é uma **prova lexical do corpo**, não uma certificação de equivalência
+de transação, search_path, dependências, ordem histórica ou efeitos em
+dados. Os limites `BEGIN/COMMIT` podem mudar atomicidade; a reconciliação
+requer validação em PostgreSQL isolado, sem `migration repair` automático.
+
 Três arquivos `main` sem nome correspondente no histórico remoto e que
 **não devem ser implicitamente classificados como seguros para aplicação**:
 
