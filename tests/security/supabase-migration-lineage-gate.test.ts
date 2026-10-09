@@ -84,6 +84,29 @@ describe("fail-closed Supabase production migration lineage", () => {
     expect(result.stdout).toContain(unexpected);
   });
 
+  it("blocks a previously skipped migration older than the latest deployed remote version", () => {
+    const result = runFixture(
+      [{ local: V1 }, { local: V2, remote: V2 }, { local: V3, remote: V3 }],
+      [`${V1}_old_unapplied.sql`, `${V2}_applied.sql`, `${V3}_applied.sql`],
+      V1,
+    );
+    expect(result.status).toBe(1);
+    const details = JSON.parse(result.stdout);
+    expect(details.retroactivePending).toEqual([V1]);
+    expect(details.latestRemoteVersion).toBe(V3);
+    expect(result.stderr).toContain("HISTÓRICO_SUPABASE_DIVERGENTE");
+  });
+
+  it("blocks an approved migration batch with timestamps in the wrong order", () => {
+    const result = runFixture(
+      [{ local: V1, remote: V1 }, { local: V2 }, { local: V3 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`, `${V3}_pending.sql`],
+      `${V3},${V2}`,
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Lista esperada de pendências inválida ou duplicada");
+  });
+
   it("blocks a misleading approval when the referenced source file is absent", () => {
     const result = runFixture(
       [{ local: V1, remote: V1 }, { local: V2 }],
