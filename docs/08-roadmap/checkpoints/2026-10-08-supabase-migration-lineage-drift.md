@@ -96,6 +96,37 @@ conteúdos diferentes, comparadas com um único arquivo local
 ambas como uma única execução. A restauração histórica precisa
 preservar as duas sequências executadas e a ordem real.
 
+### Inversões de ordem: timestamp não é apenas metadado
+
+Comparação read-only da ordem das 24 versões remotas sem ID correspondente
+com as versões locais de mesmo nome identificou **cinco pares com ordem
+relativa invertida** e **uma colisão**: duas execuções remotas distintas
+mapeiam para um único arquivo local. Essas observações são independentes
+da equivalência lexical do SQL:
+
+| Execuções em ordem remota | Arquivos em ordem local contrária |
+|---|---|
+| `20260926011402` → `20260926011531` | `20260926011200` → `20260926011000` |
+| `20260926021216` → `20260926021526` | `20260926021500` → `20260926021000` |
+| `20260926025016` → `20260926100452` | `20260926025137` → `20260926025000` |
+| `20260926025922` → `20260926100452` | `20260926030000` → `20260926025000` |
+| `20260926031046` → `20260926100452` | `20260926030330` → `20260926025000` |
+
+A sexta ocorrência é a **colisão**, não uma sexta inversão: as
+execuções remotas `20260926011402` e `20260926012211` possuem
+corpos SQL distintos e o mesmo nome, mas ambos correspondem por nome ao
+arquivo local `20260926011200`. Não reduzir duas execuções históricas a
+uma versão.
+
+**Consequência:** trocar apenas os prefixes timestamp da fonte para
+"igualar" o histórico remoto pode alterar a ordem de execução das DDLs
+em instalações novas, afetando dependências, segurança e atomicidade.
+A resolução definitiva precisa preservar ambos os fatos: o que foi
+executado no banco canônico e uma sequência reprodutível para bancos
+limpos. Testar replay integral em PostgreSQL isolado antes de alterar
+a autoridade de migrations; não reescrever `schema_migrations` para
+ocultar inversões.
+
 ### Refinamento lexical dos sete pares com diferença textual
 
 A comparação adicional tokenizou o corpo SQL registrado remotamente e o arquivo
