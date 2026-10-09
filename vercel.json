@@ -9,7 +9,7 @@
   "rewrites": [
     {
       "source": "/catalogo-api/:path*",
-      "destination": "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev/:path*"
+      "destination": "https://tonecos-catalogo-api.tonecosstudio.workers.dev/:path*"
     },
     {
       "source": "/tonecosstudios/",
