@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -19,6 +19,14 @@ describe("map runtime bounded reads", () => {
   const classifiedsQuery = readProjectFile(
     "src/core/classifieds/services/classifieds.map-queries.ts",
   );
+
+  it("keeps retired private-address map runtime absent and uses public Business SSOT", () => {
+    expect(
+      existsSync(resolve(process.cwd(), "src/core/maps/services/MapLayerRuntimeService.ts")),
+    ).toBe(false);
+    expect(gastronomy).not.toContain("addresses!address_id");
+    expect(gastronomy).not.toContain("from<GastronomyMapRow>");
+  });
 
   it("reads gastronomy candidates from the bounded public Business projection", () => {
     expect(gastronomy).toContain(
