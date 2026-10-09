@@ -85,7 +85,8 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
   }
   const expected = new Set(expectedPending);
   if (expected.size !== expectedPending.length ||
-      expectedPending.some((version) => !VERSION.test(version))) {
+      expectedPending.some((version) => !VERSION.test(version)) ||
+      expectedPending.some((version, i) => i > 0 && version < expectedPending[i - 1])) {
     throw new Error("Lista esperada de pendências inválida ou duplicada");
   }
   const localFromCli = new Set();
@@ -111,8 +112,17 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
   const missingApprovedFiles = [...expected].filter((v) => !localFiles.has(v));
   const unexpectedPending = [...localOnly].filter((v) => !expected.has(v));
   const missingPending = [...expected].filter((v) => !localOnly.has(v));
+  // Um db push comum não deve introduzir migrations mais antigas que a
+  // última versão já executada. Exigiria --include-all, que é proibido
+  // neste gate por poder acionar SQL histórico não homologado.
+  const latestRemoteVersion = [...remoteFromCli].sort().at(-1) ?? null;
+  const retroactivePending = [...localOnly].filter(
+    (version) => latestRemoteVersion !== null && version < latestRemoteVersion,
+  );
   const sorted = (items) => items.sort();
   const result = {
+    latestRemoteVersion,
+    retroactivePending: sorted(retroactivePending),
     localOnly: sorted([...localOnly]),
     remoteOnly: sorted([...remoteOnly]),
     unexpectedPending: sorted(unexpectedPending),
@@ -132,6 +142,7 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
     && result.missingApprovedFiles.length === 0
     && result.missingFromCheckout.length === 0
     && result.missingFromCli.length === 0
+    && result.retroactivePending.length === 0
     && result.invalidSqlFiles.length === 0
     && result.duplicateLocalRows.length === 0
     && result.duplicateRemoteRows.length === 0
