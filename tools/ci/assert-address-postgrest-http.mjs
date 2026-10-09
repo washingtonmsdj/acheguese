@@ -66,7 +66,13 @@ assert.equal(publicAddresses.length, 2);
 assert.ok(publicAddresses.some(a => a.id === "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee6"),
   "active business with no residential owner remains published");
 assert.ok(publicAddresses.every(a => a.is_verified === true && a.verification_status === "verified"));
-assert.ok(!publicAddresses.some(a => a.id.startsWith("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee")));
+for (const contradictoryId of [
+  "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee3",
+  "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee4",
+]) {
+  assert.ok(!publicAddresses.some(a => a.id === contradictoryId),
+    "contradictory verification must never publish coordinates");
+}
 assert.ok(!publicAddresses.some(a => a.id === "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"),
   "verified private address must not be published without a public entity");
 denied(
