@@ -56,7 +56,11 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
   const localOnly = new Set();
   const remoteOnly = new Set();
   const mispaired = [];
+  const duplicateLocalRows = new Set();
+  const duplicateRemoteRows = new Set();
   for (const { local, remote } of rows) {
+    if (local && localFromCli.has(local)) duplicateLocalRows.add(local);
+    if (remote && remoteFromCli.has(remote)) duplicateRemoteRows.add(remote);
     if (local) localFromCli.add(local);
     if (remote) remoteFromCli.add(remote);
     if (local && !remote) localOnly.add(local);
@@ -79,6 +83,8 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
     missingApprovedFiles: sorted(missingApprovedFiles),
     missingFromCheckout: sorted(missingFromCheckout),
     missingFromCli: sorted(missingFromCli),
+    duplicateLocalRows: sorted([...duplicateLocalRows]),
+    duplicateRemoteRows: sorted([...duplicateRemoteRows]),
     mispaired,
   };
   // O conjunto localOnly esperado é intencional; não é um desvio.
@@ -88,6 +94,8 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
     && result.missingApprovedFiles.length === 0
     && result.missingFromCheckout.length === 0
     && result.missingFromCli.length === 0
+    && result.duplicateLocalRows.length === 0
+    && result.duplicateRemoteRows.length === 0
     && result.mispaired.length === 0;
   return result;
 }
@@ -107,7 +115,12 @@ export function runAudit(argv) {
   }
   const output = readFileSync(resolve(args.get("--list")), "utf8");
   const filenames = readdirSync(resolve(args.get("--directory")));
-  const expectedPending = args.get("--expected").split(",").map((x) => x.trim());
+  // 'none' is the explicit post-apply state: all migrations must have
+  // both local and remote entries. An empty shell argument is ambiguous.
+  const rawExpected = args.get("--expected");
+  const expectedPending = rawExpected === "none"
+    ? []
+    : rawExpected.split(",").map((x) => x.trim());
   const result = auditMigrationLineage({ output, filenames, expectedPending });
   console.log(JSON.stringify(result, null, 2));
   if (!result.ok) {
