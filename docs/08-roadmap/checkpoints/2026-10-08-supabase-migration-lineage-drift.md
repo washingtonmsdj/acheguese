@@ -247,6 +247,20 @@ institucional, mapa e SEO. Verificar que nenhum endereço de terceiro
 RPCs aplicadas historicamente nem mover rotas de módulos pausados nesta
 PR de lineage. Vincular a #657/#621/#660, sem criar outro deploy.
 
+### Bloqueio temporal antes de `db push`
+
+O gate de lineage também recusa qualquer versão pendente anterior à
+**última migração já registrada no Supabase**. Isso inclui, por exemplo,
+a antiga allowlist de cinco migrations LGPD de agosto de 2026 diante
+das migrations remotas de outubro: sua execução exigiria tratamento
+especial semelhante a `--include-all`, **não autorizado** pelo workflow.
+Além da comparação exata das versões, a lista aprovada deve estar em
+ordem crescente. O verificador registra `latestRemoteVersion` e
+`retroactivePending` no diagnóstico e interrompe o workflow antes de
+qualquer tentativa de `db push`. Testes negativos cobrem os dois
+cenários. Mesmo que todas as versões fossem nominalmente reconhecidas,
+**histórico temporal incoerente não é condição de implantação**.
+
 ## Efeito no MVP
 
 - **PR #658** — migração `20261008215900`, escrita trusted, 7/7 CI
