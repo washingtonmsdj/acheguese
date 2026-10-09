@@ -14,7 +14,7 @@ BEGIN
   END IF;
 
   SELECT count(*) INTO v_count FROM public.addresses_public;
-  IF v_count <> 1 THEN
+  IF v_count <> 2 THEN
     RAISE EXCEPTION 'public verified projection cardinality drift: %',v_count;
   END IF;
 
@@ -23,6 +23,13 @@ BEGIN
     WHERE id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2'
   ) THEN
     RAISE EXCEPTION 'verified residential/private coordinates were published';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM public.addresses_public
+    WHERE id = 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee6'
+  ) THEN
+    RAISE EXCEPTION 'published ownerless business address was hidden';
   END IF;
 
   SELECT count(*) INTO v_count
@@ -52,7 +59,7 @@ BEGIN
   FROM public.public_business_search b
   LEFT JOIN public.addresses address_private ON address_private.id = b.address_id
   WHERE address_private.id IS NULL;
-  IF v_count <> 1 THEN
+  IF v_count <> 3 THEN
     RAISE EXCEPTION 'Business FK embedding fails or leaks detailed address';
   END IF;
 
@@ -70,6 +77,13 @@ BEGIN
   WHERE slug='fixture-private';
   IF v_public_row.latitude IS NOT NULL OR v_public_row.longitude IS NOT NULL THEN
     RAISE EXCEPTION 'private-listing professional leaked home coordinates';
+  END IF;
+
+  SELECT latitude, longitude INTO v_public_row
+  FROM public.public_professional_search
+  WHERE slug='fixture-foreign';
+  IF v_public_row.latitude IS NOT NULL OR v_public_row.longitude IS NOT NULL THEN
+    RAISE EXCEPTION 'cross-owner professional association exposed private coordinates';
   END IF;
 
   SELECT latitude, longitude INTO v_public_row
