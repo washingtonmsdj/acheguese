@@ -56,3 +56,36 @@ END
 $address_anon_probe$;
 
 ROLLBACK;
+
+
+-- Segunda prova, no operador DB após reverter o SET ROLE anon.
+-- Verifica o predicado de vínculo público sem carregar dados pessoais.
+-- É impossível verificar a associação profissional na role anon, pois
+-- professional_data mantém ACL privada; nunca ampliá-la só para o probe.
+BEGIN TRANSACTION READ ONLY;
+DO $address_public_listing_probe$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM public.addresses_public AS published_address
+    WHERE NOT EXISTS (
+      SELECT 1 FROM public.public_business_search AS published_business
+      WHERE published_business.address_id = published_address.id
+        AND published_business.status = 'active'
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM public.professional_data AS published_professional
+      WHERE published_professional.address_id = published_address.id
+        AND published_professional.is_accepting_clients IS TRUE
+        AND published_professional.visibility =
+          'public_listed'::public.professional_profile_visibility
+        AND published_professional.slug IS NOT NULL
+        AND NULLIF(btrim(published_professional.slug), '') IS NOT NULL
+    )
+  ) THEN
+    RAISE EXCEPTION
+      'ADDRESS_PRIVATE_PROBE_FAILED: verified address without public listing exposed';
+  END IF;
+END
+$address_public_listing_probe$;
+ROLLBACK;
