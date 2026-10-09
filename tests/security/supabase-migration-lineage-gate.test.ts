@@ -92,6 +92,47 @@ describe("fail-closed Supabase production migration lineage", () => {
     expect(result.stdout).toContain(V3);
   });
 
+  it("rejects repeated versions even when set-based comparisons would collapse them", () => {
+    const duplicatedLocal = runFixture(
+      [{ local: V1, remote: V1 }, { local: V1, remote: V2 }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+    );
+    expect(duplicatedLocal.status).toBe(1);
+    expect(duplicatedLocal.stdout).toContain('"duplicateLocalRows"');
+    expect(duplicatedLocal.stdout).toContain(V1);
+
+    const duplicatedRemote = runFixture(
+      [{ local: V1, remote: V1 }, { remote: V1 }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+    );
+    expect(duplicatedRemote.status).toBe(1);
+    const remoteState = JSON.parse(duplicatedRemote.stdout);
+    expect(remoteState.duplicateRemoteRows).toEqual([V1]);
+  });
+
+  it("allows only fully synchronized history with explicit none after apply", () => {
+    const done = runFixture(
+      [{ local: V1, remote: V1 }, { local: V2, remote: V2 }],
+      [`${V1}_old.sql`, `${V2}_new.sql`],
+      "none",
+    );
+    expect(done.status).toBe(0);
+    const state = JSON.parse(done.stdout);
+    expect(state.ok).toBe(true);
+    expect(state.localOnly).toEqual([]);
+    expect(state.remoteOnly).toEqual([]);
+
+    const partial = runFixture(
+      [{ local: V1, remote: V1 }, { local: V2 }],
+      [`${V1}_old.sql`, `${V2}_new.sql`],
+      "none",
+    );
+    expect(partial.status).toBe(1);
+    expect(JSON.parse(partial.stdout).unexpectedPending).toEqual([V2]);
+  });
+
   it("blocks mixed local/remote versions on a row and unknown CLI formats", () => {
     const mixed = runFixture(
       [{ local: V1, remote: V2 }],
