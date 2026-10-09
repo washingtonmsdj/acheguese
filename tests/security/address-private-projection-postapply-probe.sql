@@ -72,6 +72,14 @@ BEGIN
       SELECT 1 FROM public.public_business_search AS published_business
       WHERE published_business.address_id = published_address.id
         AND published_business.status = 'active'
+        AND (
+          published_address.owner_user_id IS NULL
+          OR EXISTS (
+            SELECT 1 FROM public.profiles AS owner_profile
+            WHERE owner_profile.id = published_business.profile_id
+              AND owner_profile.user_id = published_address.owner_user_id
+          )
+        )
     )
     AND NOT EXISTS (
       SELECT 1 FROM public.professional_data AS published_professional
@@ -81,6 +89,14 @@ BEGIN
           'public_listed'::public.professional_profile_visibility
         AND published_professional.slug IS NOT NULL
         AND NULLIF(btrim(published_professional.slug), '') IS NOT NULL
+        AND (
+          published_address.owner_user_id IS NULL
+          OR EXISTS (
+            SELECT 1 FROM public.profiles AS owner_profile
+            WHERE owner_profile.id = published_professional.profile_id
+              AND owner_profile.user_id = published_address.owner_user_id
+          )
+        )
     )
   ) THEN
     RAISE EXCEPTION
