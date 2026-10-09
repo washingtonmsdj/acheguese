@@ -14,37 +14,44 @@ const MIGRATION_FILE = /^(\d{14})_[^/]+\.sql$/;
 export function parseMigrationTable(output) {
   if (typeof output !== "string") throw new Error("migration output must be text");
   const rows = [];
+  let sawHeader = false;
   for (const line of output.split(/\r?\n/)) {
-    // O CLI v2.115.0 imprime LOCAL | REMOTE | TIME (UTC). Não extrair
-    // identificadores de células com texto adicional: parsing permissivo
-    // pode transformar histórico inválido em um lote aparentemente aprovado.
+    // Contrato do CLI versionado: LOCAL | REMOTE | TIME (UTC).
+    // Um texto parcial na coluna de migração não pode ser reinterpretado
+    // como uma versão aprovada. Nenhum parse de prefixo é permitido.
+    if (/^\s*LOCAL\s*[|│]\s*REMOTE\s*[|│]/i.test(line)) {
+      if (sawHeader) throw new Error("Cabeçalho da tabela de migrations repetido");
+      sawHeader = true;
+      continue;
+    }
+    // Aceitar linhas decorativas de separação, mas nunca uma versão fora
+    // da tabela (inclusive versões truncadas com 8 a 13 dígitos).
+    if (/^[\s\-─┼+|│]+$/u.test(line)) continue;
     const columns = line.split(/\s*[|│]\s*/u);
-    const isVersionCell = (raw) => /\d{14}/.test(raw);
     if (columns.length < 2) {
-      if (/^\s*\d{14}(?:\D|$)/.test(line)) {
+      if (/^\s*\d{8,}/.test(line)) {
         throw new Error(`Linha sem delimitadores na listagem de migrations: ${line.trim()}`);
       }
       continue;
     }
-    // Cabeçalhos, separadores e avisos sem timestamps não são dados.
-    if (!columns.some(isVersionCell)) continue;
-    if (columns.length !== 3) {
+    if (!sawHeader || columns.length !== 3) {
       throw new Error(`Colunas inesperadas na listagem de migrations: ${line.trim()}`);
     }
     const localCell = columns[0].trim();
     const remoteCell = columns[1].trim();
-    // Uma célula vazia é válida; versão com sufixo, espaços internos ou
-    // identificador parcial exige falha explícita, nunca interpretação.
+    // Linhas de dados após o cabeçalho com strings inesperadas não são
+    // cabeçalhos ou warnings. Rejeitar inclusive células sem algarismos.
     if ((localCell && !VERSION.test(localCell)) ||
         (remoteCell && !VERSION.test(remoteCell))) {
       throw new Error(`Versão de migração malformada: ${line.trim()}`);
     }
-    const local = localCell || null;
-    const remote = remoteCell || null;
-    if (!local && !remote) {
+    if (!localCell && !remoteCell) {
       throw new Error(`Linha de migração sem versões reconhecíveis: ${line.trim()}`);
     }
-    rows.push({ local, remote });
+    rows.push({ local: localCell || null, remote: remoteCell || null });
+  }
+  if (!sawHeader) {
+    throw new Error("Cabeçalho LOCAL/REMOTE ausente; formato CLI desconhecido");
   }
   if (rows.length === 0) {
     throw new Error("Nenhuma linha de migração reconhecida; formato CLI desconhecido");
