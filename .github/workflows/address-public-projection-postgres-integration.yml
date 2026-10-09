@@ -8,6 +8,8 @@ on:
       - "tests/security/address-private-projection-postapply-probe.sql"
       - "tests/security/fixtures/address-public-view-db-*.sql"
       - "tools/ci/run-address-public-projection-postgres.sh"
+      - "tools/ci/run-address-postgrest-http.sh"
+      - "tools/ci/assert-address-postgrest-http.mjs"
       - ".github/workflows/address-public-projection-postgres-integration.yml"
   push:
     branches: [main]
@@ -16,6 +18,8 @@ on:
       - "tests/security/address-private-projection-postapply-probe.sql"
       - "tests/security/fixtures/address-public-view-db-*.sql"
       - "tools/ci/run-address-public-projection-postgres.sh"
+      - "tools/ci/run-address-postgrest-http.sh"
+      - "tools/ci/assert-address-postgrest-http.mjs"
       - ".github/workflows/address-public-projection-postgres-integration.yml"
 
 permissions:
@@ -58,3 +62,12 @@ jobs:
       - name: Apply both canonical migrations and verify SQL invariants
         shell: bash
         run: bash tools/ci/run-address-public-projection-postgres.sh
+
+      - name: Setup Node.js for signed JWT HTTP assertions
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Test signed JWT requests through actual PostgREST
+        shell: bash
+        run: bash tools/ci/run-address-postgrest-http.sh
