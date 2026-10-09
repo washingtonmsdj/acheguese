@@ -72,6 +72,9 @@ describe("Address private table / public projection SSOT", () => {
     expect(publicView).toContain("FROM public.professional_data AS published_professional");
     expect(publicView).toContain("published_professional.visibility = 'public_listed'");
     expect(publicView).toContain("published_professional.is_accepting_clients IS TRUE");
+    expect(publicView).toContain("published_business_owner.user_id = address.owner_user_id");
+    expect(publicView).toContain("published_professional_owner.user_id = address.owner_user_id");
+    expect(publicView).toContain("address.owner_user_id IS NULL");
     for (const privateField of [
       "address.street",
       "address.number",
