@@ -77,9 +77,15 @@ precisa satisfazer **ambas** as condições: (1) `is_verified = true` **e**
 `verification_status = verified` e (2) associação efetiva a uma entidade
 **já publicada**: `public_business_search.status = active`, ou profissional
 com `visibility = public_listed`, aceitando clientes e com slug válido.
-Um endereço verificado, mas sem anúncio público, continua privado — inclusive
-suas coordenadas exatas. Endereços vinculados apenas a empresas inativas ou
-profissionais privados também não são publicados. No catálogo Business ativo,
+Para endereços com `owner_user_id`, a identidade `profiles.user_id` da
+entidade anunciada **também deve corresponder ao titular do endereço**:
+uma empresa ou profissional administrado por terceiro não pode publicar a
+localização residencial de outra conta apenas informando seu `address_id`.
+Endereços comerciais sem proprietário residencial individual continuam
+elegíveis quando ligados a empresa ativa, preservando o catálogo existente.
+Um endereço verificado, mas sem anúncio público autorizado, continua privado
+— inclusive suas coordenadas exatas. Endereços vinculados apenas a empresas
+inativas ou profissionais privados também não são publicados. No catálogo Business ativo,
 a fonte canônica das coordenadas públicas continua sendo o próprio
 `public_business_search`, não o endereço físico. Nenhuma entidade
 residencial vira pública só por obter comprovação documental.
