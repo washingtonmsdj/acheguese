@@ -1,7 +1,8 @@
 -- Endereços: separar a autoridade privada da projeção pública existente.
 -- Apenas change-set versionado, não aplicar via dashboard / dual-write.
 -- addresses_public é uma EXCEÇÃO CONTROLADA ao security_invoker: projeção
--- explícita de campos não sensíveis, somente endereços com ambos os estados de verificação confirmados e
+-- explícita de campos não sensíveis, somente endereços com ambos os estados de
+-- verificação confirmados e vínculo comercial/profissional já público;
 -- security_barrier. A tabela física conserva RLS de proprietário.
 -- Em caso de drift de owner, policy ou projeção, a transação ABORTA.
 BEGIN;
@@ -101,6 +102,30 @@ BEGIN
     RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: unexpected base-table RLS policies';
   END IF;
 
+  -- A view SECURITY DEFINER só pode derivar publicação de um read
+  -- model cujo contrato de visibilidade para anon é explicitamente ativo.
+  -- Não introduzir uma exceção pública mais ampla que o SSOT Business.
+  IF NOT has_table_privilege('anon', 'public.public_business_search', 'SELECT')
+     OR NOT EXISTS (
+       SELECT 1
+       FROM pg_class c
+       WHERE c.oid = 'public.public_business_search'::regclass
+         AND c.relkind = 'r'
+         AND c.relrowsecurity
+     )
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_policy p
+       WHERE p.polrelid = 'public.public_business_search'::regclass
+         AND p.polname = 'public_business_search_public_read'
+         AND p.polcmd = 'r'
+         AND 'anon'::regrole::oid = ANY(p.polroles)
+         AND position('status' in pg_get_expr(p.polqual, p.polrelid)) > 0
+         AND position('active' in pg_get_expr(p.polqual, p.polrelid)) > 0
+     )
+  THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: public Business visibility drift';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
     WHERE n.nspname = 'public'
@@ -132,7 +157,8 @@ DROP POLICY "Addresses public verified read" ON public.addresses;
 
 -- A view JÁ EXISTENTE é o único read model de endereços verificados.
 -- A exceção de privilégios do owner fica confinada à lista explícita
--- de nove colunas existente, com dupla confirmação da verificação e security barrier.
+-- de nove colunas existente, com dupla confirmação da verificação,
+-- vínculo a entidade publicamente listada e security barrier.
 CREATE OR REPLACE VIEW public.addresses_public
 WITH (security_invoker = false, security_barrier = true)
 AS
@@ -148,7 +174,27 @@ SELECT
   address.created_at
 FROM public.addresses AS address
 WHERE address.is_verified IS TRUE
-  AND address.verification_status = 'verified'::public.address_verification_status;
+  AND address.verification_status = 'verified'::public.address_verification_status
+  -- Verificação postal NÃO é consentimento para divulgar a localização
+  -- residencial. Publicar apenas endereços de entidades que já escolheram
+  -- tornar pública a presença territorial. Sem associação pública, negar.
+  AND (
+    EXISTS (
+      SELECT 1
+      FROM public.public_business_search AS published_business
+      WHERE published_business.address_id = address.id
+        AND published_business.status = 'active'
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.professional_data AS published_professional
+      WHERE published_professional.address_id = address.id
+        AND published_professional.is_accepting_clients IS TRUE
+        AND published_professional.visibility = 'public_listed'::public.professional_profile_visibility
+        AND published_professional.slug IS NOT NULL
+        AND NULLIF(btrim(published_professional.slug), '') IS NOT NULL
+    )
+  );
 
 REVOKE INSERT, UPDATE, DELETE ON TABLE public.addresses_public
   FROM PUBLIC, anon, authenticated;
@@ -203,7 +249,7 @@ WHERE professional.is_accepting_clients = true
   AND NULLIF(btrim(professional.slug), '') IS NOT NULL;
 
 COMMENT ON VIEW public.addresses_public IS
-  'SSOT público de endereço verificado: somente 9 campos seguros, security_barrier=true. Exceção security_invoker=false limitada à view; tabela addresses permanece privada via RLS/ACL.';
+  'SSOT público: 9 colunas, endereço verificado e vinculado a Business/profissional já listado publicamente; security_barrier. addresses privado por RLS/ACL.';
 
 DO $address_public_postflight$
 BEGIN
