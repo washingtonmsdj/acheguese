@@ -10,7 +10,10 @@ CREATE SCHEMA private;
 CREATE FUNCTION auth.uid()
 RETURNS uuid LANGUAGE sql STABLE
 AS $auth_uid$
-  SELECT NULLIF(current_setting('request.jwt.claim.sub', true), '')::uuid
+  SELECT coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    (nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub')
+  )::uuid
 $auth_uid$;
 GRANT USAGE ON SCHEMA auth TO authenticated, service_role;
 GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated, service_role;
