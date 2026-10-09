@@ -15,16 +15,36 @@ export function parseMigrationTable(output) {
   if (typeof output !== "string") throw new Error("migration output must be text");
   const rows = [];
   for (const line of output.split(/\r?\n/)) {
+    // O CLI v2.115.0 imprime LOCAL | REMOTE | TIME (UTC). Não extrair
+    // identificadores de células com texto adicional: parsing permissivo
+    // pode transformar histórico inválido em um lote aparentemente aprovado.
     const columns = line.split(/\s*[|│]\s*/u);
-    if (columns.length < 2) continue;
-    const readVersion = (value) => {
-      const raw = String(value).trim();
-      const match = raw.match(/^(\d{14})(?:\s|$)/);
-      return match?.[1] ?? null;
-    };
-    const local = readVersion(columns[0]);
-    const remote = readVersion(columns[1]);
-    if (local || remote) rows.push({ local, remote });
+    const isVersionCell = (raw) => /\d{14}/.test(raw);
+    if (columns.length < 2) {
+      if (/^\s*\d{14}(?:\D|$)/.test(line)) {
+        throw new Error(`Linha sem delimitadores na listagem de migrations: ${line.trim()}`);
+      }
+      continue;
+    }
+    // Cabeçalhos, separadores e avisos sem timestamps não são dados.
+    if (!columns.some(isVersionCell)) continue;
+    if (columns.length !== 3) {
+      throw new Error(`Colunas inesperadas na listagem de migrations: ${line.trim()}`);
+    }
+    const localCell = columns[0].trim();
+    const remoteCell = columns[1].trim();
+    // Uma célula vazia é válida; versão com sufixo, espaços internos ou
+    // identificador parcial exige falha explícita, nunca interpretação.
+    if ((localCell && !VERSION.test(localCell)) ||
+        (remoteCell && !VERSION.test(remoteCell))) {
+      throw new Error(`Versão de migração malformada: ${line.trim()}`);
+    }
+    const local = localCell || null;
+    const remote = remoteCell || null;
+    if (!local && !remote) {
+      throw new Error(`Linha de migração sem versões reconhecíveis: ${line.trim()}`);
+    }
+    rows.push({ local, remote });
   }
   if (rows.length === 0) {
     throw new Error("Nenhuma linha de migração reconhecida; formato CLI desconhecido");
@@ -38,9 +58,13 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
     throw new Error("filenames and expectedPending must be arrays");
   }
   const localFiles = new Map();
+  const invalidSqlFiles = [];
   for (const file of filenames) {
     const found = String(file).match(MIGRATION_FILE);
-    if (!found) continue;
+    if (!found) {
+      if (String(file).toLowerCase().endsWith(".sql")) invalidSqlFiles.push(String(file));
+      continue;
+    }
     if (localFiles.has(found[1])) {
       throw new Error(`Versão duplicada no source: ${found[1]}`);
     }
@@ -83,6 +107,7 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
     missingApprovedFiles: sorted(missingApprovedFiles),
     missingFromCheckout: sorted(missingFromCheckout),
     missingFromCli: sorted(missingFromCli),
+    invalidSqlFiles: sorted(invalidSqlFiles),
     duplicateLocalRows: sorted([...duplicateLocalRows]),
     duplicateRemoteRows: sorted([...duplicateRemoteRows]),
     mispaired,
@@ -94,6 +119,7 @@ export function auditMigrationLineage({ output, filenames, expectedPending }) {
     && result.missingApprovedFiles.length === 0
     && result.missingFromCheckout.length === 0
     && result.missingFromCli.length === 0
+    && result.invalidSqlFiles.length === 0
     && result.duplicateLocalRows.length === 0
     && result.duplicateRemoteRows.length === 0
     && result.mispaired.length === 0;
