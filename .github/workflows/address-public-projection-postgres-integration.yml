@@ -7,6 +7,7 @@ on:
       - "supabase/migrations/20261008220000_enforce_address_private_read_projection.sql"
       - "tests/security/address-private-projection-postapply-probe.sql"
       - "tests/security/fixtures/address-public-view-db-*.sql"
+      - "tools/ci/run-address-public-projection-postgres.sh"
       - ".github/workflows/address-public-projection-postgres-integration.yml"
   push:
     branches: [main]
@@ -14,6 +15,7 @@ on:
       - "supabase/migrations/20261008220000_enforce_address_private_read_projection.sql"
       - "tests/security/address-private-projection-postapply-probe.sql"
       - "tests/security/fixtures/address-public-view-db-*.sql"
+      - "tools/ci/run-address-public-projection-postgres.sh"
       - ".github/workflows/address-public-projection-postgres-integration.yml"
 
 permissions:
@@ -53,41 +55,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Source prerequisite migration from canonical PR or merged main
+      - name: Apply both canonical migrations and verify SQL invariants
         shell: bash
-        run: |
-          set -euo pipefail
-          prerequisite="supabase/migrations/20261008215900_restrict_address_verification_mutations.sql"
-          if [ -f "$prerequisite" ]; then
-            echo "Using merged canonical prerequisite from checkout."
-          else
-            # Same repository and exact PR ref. Never copy/mutate production.
-            git fetch --no-tags --depth=1 origin refs/pull/658/head
-            for path in \
-              "$prerequisite" \
-              "tests/security/fixtures/address-verification-db-setup.sql" \
-              "tests/security/fixtures/address-verification-db-assert.sql" \
-              "tests/security/address-verification-authenticated-probe.sql"; do
-              mkdir -p "$(dirname "$path")"
-              git show "FETCH_HEAD:$path" > "$path"
-            done
-            echo "Using prerequisite from PR #658 commit $(git rev-parse FETCH_HEAD)"
-          fi
-
-      - name: Create synthetic schema and roles
-        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-verification-db-setup.sql
-
-      - name: Apply exact write-authority prerequisite migration
-        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261008215900_restrict_address_verification_mutations.sql
-
-      - name: Prove owner, denial, cascade and privileged operations
-        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-verification-db-assert.sql
-
-      - name: Install current public view, professional and Business synthetic fixtures
-        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-public-view-db-setup.sql
-
-      - name: Apply exact public projection migration
-        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261008220000_enforce_address_private_read_projection.sql
-
-      - name: Prove privacy isolation, verified-only projection and Business compatibility
-        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-public-view-db-assert.sql
+        run: bash tools/ci/run-address-public-projection-postgres.sh
