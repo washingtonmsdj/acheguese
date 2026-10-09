@@ -62,9 +62,11 @@ const publicAddresses = successful(
   await request("/addresses_public?select=id,latitude,longitude,is_verified,verification_status"),
   "verified-only public projection",
 );
-assert.equal(publicAddresses.length, 2);
+assert.equal(publicAddresses.length, 1);
 assert.ok(publicAddresses.every(a => a.is_verified === true && a.verification_status === "verified"));
 assert.ok(!publicAddresses.some(a => a.id.startsWith("eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee")));
+assert.ok(!publicAddresses.some(a => a.id === "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2"),
+  "verified private address must not be published without a public entity");
 denied(
   await request("/addresses_public?select=street"),
   "forbidden private column in public view",
@@ -107,6 +109,8 @@ assert.equal(Number(valid.latitude), -12.98);
 assert.equal(Number(valid.longitude), -38.51);
 assert.equal(ambiguous.latitude, null);
 assert.equal(ambiguous.longitude, null);
+const hidden = professionals.find(x => x.slug === "fixture-private");
+assert.equal(hidden, undefined, "private professional listing must not appear publicly");
 
 denied(
   await request(`/addresses?id=eq.${ADDR_A}`, {
@@ -142,7 +146,7 @@ const after = successful(
   await request("/addresses_public?select=id,is_verified,verification_status"),
   "public projection after owner edit",
 );
-assert.equal(after.length, 1);
+assert.equal(after.length, 0);
 assert.ok(!after.some(x => x.id === ADDR_A));
 
 patched(
@@ -157,4 +161,4 @@ const preserved = successful(
 );
 assert.equal(preserved[0]?.street, "HTTP fixture updated");
 
-console.log("PASS: PostgREST signed JWT owner/outsider/anon, physical-private RLS, Business FK, public projection, update triggers");
+console.log("PASS: PostgREST JWT owner/outsider/anon, private residential coords, Business FK, public projection and revocation triggers");
