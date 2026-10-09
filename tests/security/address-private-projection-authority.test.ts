@@ -22,6 +22,8 @@ describe("Address private table / public projection SSOT", () => {
     expect(migration).toContain("c.relrowsecurity");
     expect(migration).toContain("r.rolbypassrls");
     expect(migration).toContain("professional read-model drift");
+    expect(migration).toContain("public Business visibility drift");
+    expect(migration).toContain("'public_business_search_public_read'");
     expect(migration).toContain("LEFT JOIN addresses address ON");
     expect(migration).toContain("professional.is_accepting_clients = true");
     expect(migration).toContain("pg_get_viewdef(c.oid, true)");
@@ -65,6 +67,11 @@ describe("Address private table / public projection SSOT", () => {
       "AND address.verification_status = 'verified'::public.address_verification_status",
     );
     expect(publicView).not.toContain("OR address.verification_status");
+    expect(publicView).toContain("FROM public.public_business_search AS published_business");
+    expect(publicView).toContain("published_business.status = 'active'");
+    expect(publicView).toContain("FROM public.professional_data AS published_professional");
+    expect(publicView).toContain("published_professional.visibility = 'public_listed'");
+    expect(publicView).toContain("published_professional.is_accepting_clients IS TRUE");
     for (const privateField of [
       "address.street",
       "address.number",
