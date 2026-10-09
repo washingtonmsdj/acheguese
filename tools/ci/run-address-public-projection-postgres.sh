@@ -17,11 +17,11 @@ projection_migration="supabase/migrations/20261008220000_enforce_address_private
 # Pin the prerequisite to a reviewed immutable commit. A later edit to
 # #658 must fail this dependent test until #657 explicitly reviews and
 # updates the commit + blob allowlist; never trust a moving PR ref silently.
-expected_authority_sha="d7b3d3d36b66997354a9d7197e0ef452051829bd"
+expected_authority_sha="b691082d1f71c3136f402a61a6e744d7f718beba"
 expected_authority_blobs=(
   "dd67e4f96931a042bf19309b8ab8b8b8fd65efab"
-  "e625a8fb8b263fe88b1878619a54d20fd2d1cc29"
-  "b426eb36e679dd94674856fd991e04a4007b8e7e"
+  "1eb1938e6d88f8d2c2ccc5a8bd7c955eaebd4407"
+  "152c0f64ec295969b995da8a7ea26d9d4e63e6d5"
   "a0bbe3e333664ee8893cbd18831cd50d7c48dec1"
 )
 prerequisite_paths=(
