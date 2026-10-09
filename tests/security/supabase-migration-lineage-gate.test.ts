@@ -182,6 +182,17 @@ describe("fail-closed Supabase production migration lineage", () => {
     expect(result.stderr).toContain("Linha sem delimitadores");
   });
 
+  it("rejects an unparseable remote-only line after the migration header", () => {
+    const corrupted = runFixture(
+      [{ local: V1, remote: V1 }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+      ["BROKEN_VERSION_MISSING_COLUMNS"],
+    );
+    expect(corrupted.status).toBe(1);
+    expect(corrupted.stderr).toContain("Linha não reconhecida após cabeçalho");
+  });
+
   it("rejects unversioned .sql files instead of silently omitting them from the audit", () => {
     const result = runFixture(
       [{ local: V1, remote: V1 }, { local: V2 }],
