@@ -33,8 +33,13 @@ CREATE TABLE public.professional_data (
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
 );
+CREATE TABLE public.profiles (
+  id uuid PRIMARY KEY,
+  user_id uuid NOT NULL
+);
 CREATE TABLE public.public_business_search (
   id uuid PRIMARY KEY,
+  profile_id uuid NOT NULL REFERENCES public.profiles(id),
   address_id uuid REFERENCES public.addresses(id),
   status text NOT NULL DEFAULT 'active'
 );
@@ -109,6 +114,14 @@ WHERE professional.is_accepting_clients = true
   AND NULLIF(btrim(professional.slug), '') IS NOT NULL;
 GRANT SELECT ON public.public_professional_search TO anon, authenticated;
 
+INSERT INTO public.profiles (id,user_id) VALUES
+ ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+  '11111111-1111-4111-8111-111111111111'),
+ ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5',
+  '11111111-1111-4111-8111-111111111111'),
+ ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8',
+  '22222222-2222-4222-8222-222222222222');
+
 -- Seed a verified public address and two contradictory ones. These values
 -- are synthetic; a "verified" address is not evidence of any real residence.
 UPDATE public.addresses SET latitude = -12.98, longitude = -38.51
@@ -117,8 +130,20 @@ UPDATE public.addresses SET is_verified=true,
   verification_status='verified'::public.address_verification_status,
   verified_at=now()
  WHERE id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1';
--- The second fully verified address has real coordinates but NO public
--- business/professional association. Its latitude/longitude must stay private.
+-- A separate company-listed location without a personal owner remains
+-- publishable (as in canonical active Business catalog entries).
+INSERT INTO public.addresses (
+  id, owner_user_id, location_id, street, latitude, longitude,
+  is_verified, verification_status, verified_at
+) VALUES (
+  'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee6',
+  NULL, 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
+  'Fixture business sem titular residencial',-12.94,-38.49,
+  true,'verified'::public.address_verification_status,now()
+);
+-- A second verified address has exact coordinates, but any active
+-- Business/Professional reference is owned by another user and MUST NOT
+-- authorize publication of this residential/private address.
 UPDATE public.addresses
 SET latitude = -12.95, longitude = -38.50
 WHERE id = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2';
@@ -166,10 +191,23 @@ INSERT INTO public.professional_data(
  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8',
  'Fixture profissional privado','fixture-private',
  'private',true,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
+ 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2'),
+('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaa10',
+ 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+ 'Fixture vinculo indevido','fixture-foreign',
+ 'public_listed',true,'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2');
-INSERT INTO public.public_business_search(id,address_id,status)
+INSERT INTO public.public_business_search(id,profile_id,address_id,status)
  VALUES
  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
   'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1','active'),
  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9',
-  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2','inactive');
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa8',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2','inactive'),
+ ('ffffffff-ffff-4fff-8fff-fffffffffff1',
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2','active'),
+ ('ffffffff-ffff-4fff-8fff-fffffffffff2',
+  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
+  'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee6','active');
