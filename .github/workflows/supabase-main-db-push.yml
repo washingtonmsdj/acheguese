@@ -224,25 +224,17 @@ jobs:
             $migrationOutput | ForEach-Object { Write-Host $_ }
             throw "Post-push migration list failed."
           }
-          $migrationOutput | ForEach-Object { Write-Host $_ }
 
-          $mismatches = New-Object System.Collections.Generic.List[string]
-          foreach ($line in $migrationOutput) {
-            $text = [string]$line
-            $parts = @([regex]::Split($text, '\s*[|│]\s*'))
-            if ($parts.Count -lt 2) { continue }
-            $localMatch = [regex]::Match($parts[0], '\d{14}')
-            $remoteMatch = [regex]::Match($parts[1], '\d{14}')
-            if ($localMatch.Success -xor $remoteMatch.Success) {
-              $mismatches.Add($text.Trim())
-            } elseif ($localMatch.Success -and $remoteMatch.Success -and $localMatch.Value -ne $remoteMatch.Value) {
-              $mismatches.Add($text.Trim())
-            }
+          $listPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-migration-list-after.txt"
+          Set-Content -Path $listPath -Value ($migrationOutput -join [Environment]::NewLine) -Encoding UTF8
+          & node "tools/ci/verify-supabase-migration-lineage.mjs" `
+            --list $listPath `
+            --directory "supabase/migrations" `
+            --expected "none"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Migration history is not fully synchronized after push. Do not attempt repair or a second push."
           }
 
-          if ($mismatches.Count -ne 0) {
-            throw "Migration history is not synchronized after push: $($mismatches -join ' | ')"
-          }
           Write-Host "Local and remote migration histories are synchronized."
 
       - name: Lint remote database
