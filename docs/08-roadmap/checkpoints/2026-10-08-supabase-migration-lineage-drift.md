@@ -30,9 +30,9 @@ de mesmo nome da `main`, em memória, sem trazer registros de usuários:
 |---|---:|
 | Exata, bytes iguais, versão diferente | 3 |
 | Igual após retirar somente whitespace final, versão diferente | 14 |
-| **Corpo SQL realmente divergente** | **7** |
+| **Corpo SQL textualmente diferente além do whitespace final** | **7** |
 
-Entradas com conteúdo divergente que exigem revisão da semântica, sem
+Das sete entradas com diferença textual, **duas tornam-se idênticas ao remover\ncomentários de linha inteira e normalizar o whitespace**\n(\`harden_authenticated_security_definer_rpc_timeouts\` e\n\`close_direct_profile_delete_authority\`). Outras apresentam wrappers\ntransacionais \`BEGIN/COMMIT\`, comentários ou formatação distintos; a\nequivalência semântica de todas ainda **não foi certificada**.\n\nEntradas com conteúdo divergente que exigem revisão da semântica, sem
 assumir equivalência por nome:
 
 | Versão remota aplicada | Nome |
@@ -80,9 +80,9 @@ PRs Address.
    avaliar reconciliação do **nome/timestamp de fonte** com o identificador
    efetivamente registrado, verificando ordem de dependências e novos
    bancos do zero. Não editar SQL já executado só para adequar a um nome.
-3. Para as sete versões com SQL divergente, recuperar o conteúdo histórico
+3. Para as sete versões com texto SQL divergente, recuperar o conteúdo histórico
    versionado e comparar comandos, efeitos e dependências; decidir caso a
-   caso se houve correção posterior já aplicada ou delta que precisa de uma
+   caso se houve somente formatação, comentários, transação explícita, correção\n   posterior já aplicada ou delta que precisa de uma
    **nova migration específica**, com testes PostgreSQL reais. Jamais
    reexecutar a versão local antiga presumindo equivalência.
 4. Auditar individualmente as três migrations ainda sem correspondente
