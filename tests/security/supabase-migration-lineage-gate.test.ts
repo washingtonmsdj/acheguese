@@ -15,6 +15,7 @@ function runFixture(
   entries: TableEntry[],
   names: string[],
   expected: string,
+  rawLines: string[] = [],
 ) {
   const root = mkdtempSync(join(tmpdir(), "acheguese-migrations-"));
   const migrations = join(root, "migrations");
@@ -29,6 +30,7 @@ function runFixture(
       "──────────────────┼──────────────────┼────────────────",
       ...entries.map(({ local, remote }) =>
         ` ${(local ?? "").padEnd(16)} │ ${(remote ?? "").padEnd(16)} │ 2026-10-08`),
+      ...rawLines,
     ].join("\n");
     writeFileSync(list, table);
     return spawnSync(process.execPath, [
@@ -131,6 +133,46 @@ describe("fail-closed Supabase production migration lineage", () => {
     );
     expect(partial.status).toBe(1);
     expect(JSON.parse(partial.stdout).unexpectedPending).toEqual([V2]);
+  });
+
+  it("rejects a version with trailing annotations instead of silently accepting its prefix", () => {
+    const badLocal = runFixture(
+      [{ local: V1, remote: V1 }, { local: `${V2} missing` }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+    );
+    expect(badLocal.status).toBe(1);
+    expect(badLocal.stderr).toContain("Versão de migração malformada");
+
+    const badRemote = runFixture(
+      [{ local: V1, remote: V1 }, { remote: `${V3} duplicate?` }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+    );
+    expect(badRemote.status).toBe(1);
+    expect(badRemote.stderr).toContain("Versão de migração malformada");
+  });
+
+  it("refuses version-looking lines without table delimiters, even beside valid rows", () => {
+    const result = runFixture(
+      [{ local: V1, remote: V1 }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`],
+      V2,
+      [`${V3}  incomplete migration CLI output`],
+    );
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Linha sem delimitadores");
+  });
+
+  it("rejects unversioned .sql files instead of silently omitting them from the audit", () => {
+    const result = runFixture(
+      [{ local: V1, remote: V1 }, { local: V2 }],
+      [`${V1}_applied.sql`, `${V2}_pending.sql`, "unversioned.sql"],
+      V2,
+    );
+    expect(result.status).toBe(1);
+    const output = JSON.parse(result.stdout);
+    expect(output.invalidSqlFiles).toEqual(["unversioned.sql"]);
   });
 
   it("blocks mixed local/remote versions on a row and unknown CLI formats", () => {
