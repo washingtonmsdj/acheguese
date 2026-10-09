@@ -177,13 +177,23 @@ WHERE address.is_verified IS TRUE
   AND address.verification_status = 'verified'::public.address_verification_status
   -- Verificação postal NÃO é consentimento para divulgar a localização
   -- residencial. Publicar apenas endereços de entidades que já escolheram
-  -- tornar pública a presença territorial. Sem associação pública, negar.
+  -- tornar pública a presença territorial. Se o endereço tem proprietário,
+  -- a identidade canônica do perfil publicado deve corresponder a ele.
+  -- Sem associação pública/autorizada, negar.
   AND (
     EXISTS (
       SELECT 1
       FROM public.public_business_search AS published_business
       WHERE published_business.address_id = address.id
         AND published_business.status = 'active'
+        AND (
+          address.owner_user_id IS NULL
+          OR EXISTS (
+            SELECT 1 FROM public.profiles AS published_business_owner
+            WHERE published_business_owner.id = published_business.profile_id
+              AND published_business_owner.user_id = address.owner_user_id
+          )
+        )
     )
     OR EXISTS (
       SELECT 1
@@ -193,6 +203,14 @@ WHERE address.is_verified IS TRUE
         AND published_professional.visibility = 'public_listed'::public.professional_profile_visibility
         AND published_professional.slug IS NOT NULL
         AND NULLIF(btrim(published_professional.slug), '') IS NOT NULL
+        AND (
+          address.owner_user_id IS NULL
+          OR EXISTS (
+            SELECT 1 FROM public.profiles AS published_professional_owner
+            WHERE published_professional_owner.id = published_professional.profile_id
+              AND published_professional_owner.user_id = address.owner_user_id
+          )
+        )
     )
   );
 
