@@ -92,6 +92,29 @@ admitia exatamente cinco versões `20260821001800`, `20260821002600`,
 remoto**. Isso prova que o gate antigo já estava desatualizado antes das
 PRs Address.
 
+## Verificação suplementar do SQL com versão já correspondente
+
+A auditoria por versão também cruzou os **682 identificadores coincidentes**
+com o hash Git dos arquivos na `main` e o corpo disponível na coluna
+`schema_migrations.statements` (somente leitura).
+
+**Esta comparação NÃO demonstra divergência em 476 scripts.** O Supabase
+frequentemente registra `statements` como um vetor de comandos, e o texto
+reconstituído por `array_to_string` não é uma cópia fiel do arquivo-fonte:
+foram **316 migrações de múltiplos elementos**, sem comparação byte-a-byte
+conclusiva por concatenação. Nas **366 migrations com um único elemento**,
+229 foram reconhecidas diretamente por SHA de arquivo ou variações apenas
+de quebra de linha nas extremidades; **137 exigem análise adicional**.
+A amostragem confirmou variações de linha inicial e comentários/espaçamento
+mesmo com IDs coincidentes. Isso **não prova 137 diferenças de comandos SQL**.
+
+Não classificar diferenças de hash causadas por reconstrução de
+`statements` como incompatibilidade sem reconstituir a representação
+original ou comparar comandos com parser SQL validado. A verificação
+operacional de deployment continua baseada primeiro na diferença de versões
+e no conjunto de arquivos autorizados; a integridade de conteúdo histórico
+requer auditoria independente antes de qualquer reparo.
+
 ## Estado efetivo das três migrations sem versão remota
 
 Inspeção **somente leitura** do catálogo PostgreSQL, sem expor endereços
