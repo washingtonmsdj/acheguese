@@ -52,6 +52,50 @@ assumir equivalência por nome:
 | `20260926020539` | `close_direct_profile_delete_authority` |
 | `20261006055146` | `pause_community_direct_messaging_rpc_client_grants` |
 
+### Mapa integral de correspondência por nome, sem alterar histórico
+
+Cada linha representa uma **migração distinta registrada na produção**,
+não uma migração que tenha sido reparada ou reaplicada. O par local é somente
+o arquivo da `main` com nome coincidente; não é certificação de equivalência
+temporal. Classes: **exato** = mesmo corpo SQL, **whitespace** = igualdade
+após aparar apenas whitespace final, **lexical** = texto diferente com
+sequência de tokens equivalentes segundo o teste complementar descrito a
+seguir (transações ainda exigem revisão).
+
+| ID registrado no Supabase | ID do arquivo na `main` | Classe |
+|---|---|---|
+| `20260926005921` | `20260926004700` | whitespace |
+| `20260926011402` | `20260926011200` | lexical |
+| `20260926011531` | `20260926011000` | lexical |
+| `20260926012211` | `20260926011200` | whitespace |
+| `20260926012259` | `20260926011800` | whitespace |
+| `20260926012414` | `20260926012500` | lexical |
+| `20260926012944` | `20260926013000` | lexical |
+| `20260926015559` | `20260926014500` | lexical |
+| `20260926020539` | `20260926020500` | lexical |
+| `20260926021216` | `20260926021500` | whitespace |
+| `20260926021526` | `20260926021000` | exato |
+| `20260926022700` | `20260926023000` | exato |
+| `20260926023649` | `20260926024500` | exato |
+| `20260926025016` | `20260926025137` | whitespace |
+| `20260926025922` | `20260926030000` | whitespace |
+| `20260926031046` | `20260926030330` | whitespace |
+| `20260926100452` | `20260926025000` | whitespace |
+| `20260926100507` | `20260926033000` | whitespace |
+| `20260926100606` | `20260926095000` | whitespace |
+| `20260926110547` | `20260926104500` | whitespace |
+| `20261005134637` | `20261005132500` | whitespace |
+| `20261005221222` | `20261005225000` | whitespace |
+| `20261006043357` | `20261006050045` | whitespace |
+| `20261006055146` | `20261006054500` | lexical |
+
+**Atenção:** `20260926011402` e `20260926012211` são
+duas execuções remotas com o mesmo nome, mas com corpos de tamanhos e
+conteúdos diferentes, comparadas com um único arquivo local
+`20260926011200`. Não criar alias duplo nem marcar automaticamente
+ambas como uma única execução. A restauração histórica precisa
+preservar as duas sequências executadas e a ordem real.
+
 ### Refinamento lexical dos sete pares com diferença textual
 
 A comparação adicional tokenizou o corpo SQL registrado remotamente e o arquivo
