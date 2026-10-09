@@ -7,7 +7,8 @@
  * Publicamente, mostrar apenas:
  * - Bairro / Cidade
  * - Grupo territorial
- * - Coordenadas (apenas se verificado)
+ * - Coordenadas exatas NÃO pertencem a este DTO residencial;
+ *   somente o read model SQL de entidade publicamente listada pode autorizá-las
  * 
  * Internamente, endereço detalhado é usado apenas para:
  * - Verificação de morador
@@ -34,9 +35,11 @@ export class AddressPrivacyGuard {
       address_type: address.address_type,
       precision: address.precision || 'city',
       verification_status: publiclyVerified ? 'verified' : 'pending',
-      // Coordenadas só se verificado
-      latitude: publiclyVerified ? address.latitude : null,
-      longitude: publiclyVerified ? address.longitude : null,
+      // Uma residência pode estar verificada sem consentir na divulgação
+      // de sua localização. O DTO não possui prova de anúncio público:
+      // negar coordenadas; Business/Professional usam addresses_public SQL.
+      latitude: null,
+      longitude: null,
       is_verified: publiclyVerified,
     };
   }
