@@ -116,6 +116,12 @@ UPDATE public.addresses SET is_verified=true,
   verification_status='verified'::public.address_verification_status,
   verified_at=now()
  WHERE id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1';
+-- The previous isolated #658 assertions intentionally revoked this row.
+-- Restore server-approved residence only for the HTTP revocation scenario.
+UPDATE public.user_residences
+SET is_verified = true,
+    verification_requested_at = now() - interval '3 days'
+WHERE id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc1';
 INSERT INTO public.addresses (
   id, owner_user_id, location_id, street, latitude, longitude,
   is_verified, verification_status
