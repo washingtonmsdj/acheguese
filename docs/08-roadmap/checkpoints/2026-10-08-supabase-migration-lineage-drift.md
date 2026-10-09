@@ -32,7 +32,14 @@ de mesmo nome da `main`, em memória, sem trazer registros de usuários:
 | Igual após retirar somente whitespace final, versão diferente | 14 |
 | **Corpo SQL textualmente diferente além do whitespace final** | **7** |
 
-Das sete entradas com diferença textual, **duas tornam-se idênticas ao remover\ncomentários de linha inteira e normalizar o whitespace**\n(\`harden_authenticated_security_definer_rpc_timeouts\` e\n\`close_direct_profile_delete_authority\`). Outras apresentam wrappers\ntransacionais \`BEGIN/COMMIT\`, comentários ou formatação distintos; a\nequivalência semântica de todas ainda **não foi certificada**.\n\nEntradas com conteúdo divergente que exigem revisão da semântica, sem
+Das sete entradas com diferença textual, **duas tornam-se idênticas ao remover
+comentários de linha inteira e normalizar o whitespace**
+(`harden_authenticated_security_definer_rpc_timeouts` e
+`close_direct_profile_delete_authority`). Outras apresentam wrappers
+transacionais `BEGIN/COMMIT`, comentários ou formatação distintos; a
+equivalência semântica de todas ainda **não foi certificada**.
+
+Entradas com conteúdo divergente que exigem revisão da semântica, sem
 assumir equivalência por nome:
 
 | Versão remota aplicada | Nome |
@@ -82,7 +89,8 @@ PRs Address.
    bancos do zero. Não editar SQL já executado só para adequar a um nome.
 3. Para as sete versões com texto SQL divergente, recuperar o conteúdo histórico
    versionado e comparar comandos, efeitos e dependências; decidir caso a
-   caso se houve somente formatação, comentários, transação explícita, correção\n   posterior já aplicada ou delta que precisa de uma
+   caso se houve somente formatação, comentários, transação explícita, correção
+   posterior já aplicada ou delta que precisa de uma
    **nova migration específica**, com testes PostgreSQL reais. Jamais
    reexecutar a versão local antiga presumindo equivalência.
 4. Auditar individualmente as três migrations ainda sem correspondente
