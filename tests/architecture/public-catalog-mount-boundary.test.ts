@@ -64,7 +64,7 @@ describe("temporary Tonecos Studios public routing boundary", () => {
     expect(config.rewrites).toEqual([
       {
         source: "/catalogo-api/:path*",
-        destination: "https://tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev/:path*",
+        destination: "https://tonecos-catalogo-api.tonecosstudio.workers.dev/:path*",
       },
       {
         source: "/tonecosstudios/",
@@ -103,7 +103,7 @@ describe("temporary Tonecos Studios public routing boundary", () => {
   it("keeps the browser CSP first-party for catalog API traffic", () => {
     const security = read("src/shared/config/security.config.ts");
     expect(security).not.toContain("CATALOG_API");
-    expect(security).not.toContain("tonecos-catalogo-api.ordax-ac1ca1b50d09.workers.dev");
+    expect(security).not.toContain("tonecos-catalogo-api.tonecosstudio.workers.dev");
     expect(security).toContain("'connect-src': [");
     expect(security).toContain("\"'self'\"");
   });
