@@ -74,6 +74,33 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - lifecycle/SSOT;
    - security/build/release identity.
 
+## Pós-MVP preservado — OrdaX como integração, não dependência
+
+A direção first-party com OrdaX está preservada, mas **não entra no MVP atual** e não altera o lifecycle vigente.
+
+Princípio permanente:
+
+> **Achegue-se descobre e conecta. OrdaX organiza e opera.**
+
+Quando a janela futura abrir:
+
+1. manter Achegue-se independente e territory-first;
+2. provar primeiro o Product OAuth real read-only com redirect HTTPS, duas contas e múltiplos Spaces;
+3. oferecer `Conectar OrdaX` como ação opt-in e revogável;
+4. manter Business/Mapa/Nearby/Busca funcionando mesmo sem OrdaX;
+5. somente depois avaliar publication scopes separados para ofertas, vagas, eventos ou outras projeções públicas;
+6. nunca ler banco OrdaX diretamente nem compartilhar `service_role`/foreign key;
+7. manter Education, Vagas/Oportunidades, Cupons/Ofertas e demais módulos `paused` até seus próprios gates de ativação.
+
+Ownership futuro permanece separado:
+
+- Achegue-se: território, descoberta, Mapa, Perto de mim, Business público, SEO e páginas públicas;
+- OrdaX: Account, Spaces, operação privada, Network, Intelligence e portais privados autorizados.
+
+Dados escolares privados, saúde, menores, Memory, mensagens privadas, localização sensível e dados internos de empresa não podem virar projeção pública ou targeting comercial.
+
+Detalhes: `docs/03-architecture/ORDAX_FIRST_PARTY_INTEGRATION.md`.
+
 ## Proibições
 
 - sem redirects de compatibilidade;
@@ -86,6 +113,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - sem apagar histórico necessário para auditoria ou proveniência;
 - sem commit artificial de runtime para contornar `Ignored Build Step` ou equivalência de fingerprint;
 - sem ampliar a allowlist de paths skippable apenas para evitar build de um input crítico de release;
-- sem `npm audit fix --force`/upgrade major apenas para silenciar finding dev-only quando o audit de produção está limpo.
+- sem `npm audit fix --force`/upgrade major apenas para silenciar finding dev-only quando o audit de produção está limpo;
+- sem transformar Achegue-se em frontend obrigatório do OrdaX ou OrdaX em banco obrigatório do Achegue-se.
 
 Detalhes e critérios completos: `EXECUCAO_MAIN_ONLY.md`.
