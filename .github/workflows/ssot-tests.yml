@@ -196,6 +196,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Probe production territorial Data API
+        run: npx tsx tools/release/preflight-production-territorial-data-plane.ts
+
       - name: Preflight authenticated fixture broker
         run: npx tsx tools/release/preflight-authenticated-e2e-broker.ts
 
