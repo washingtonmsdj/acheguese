@@ -128,30 +128,92 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Capture migration history through Management API
+      - name: Capture migration history through read-only Management API
         id: before_list
         shell: bash
         working-directory: gate
         run: |
           set -euo pipefail
           path="$RUNNER_TEMP/acheguese-migration-history-before.json"
+          direct_path="$RUNNER_TEMP/acheguese-migration-history-direct.json"
           status="$(
             curl --silent --show-error \
-              --output "$path" \
+              --output "$direct_path" \
               --write-out "%{http_code}" \
               --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
               --header "Accept: application/json" \
               "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/migrations"
           )"
-          if [ "$status" != "200" ]; then
-            echo "Supabase Management API migration history request failed with HTTP $status." >&2
-            if [ "$status" = "403" ]; then
-              echo "SUPABASE_ACCESS_TOKEN requires Migrations: Read for project $SUPABASE_PROJECT_REF." >&2
+
+          if [ "$status" = "200" ]; then
+            cp "$direct_path" "$path"
+            source_label="Migrations: Read"
+          elif [ "$status" = "403" ]; then
+            readonly_path="$RUNNER_TEMP/acheguese-migration-history-readonly-query.json"
+            readonly_sql='SELECT version::text AS version FROM supabase_migrations.schema_migrations ORDER BY version'
+            readonly_body="$(node -e 'process.stdout.write(JSON.stringify({ query: process.argv[1] }))' "$readonly_sql")"
+            readonly_status="$(
+              curl --silent --show-error \
+                --request POST \
+                --output "$readonly_path" \
+                --write-out "%{http_code}" \
+                --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+                --header "Accept: application/json" \
+                --header "Content-Type: application/json" \
+                --data "$readonly_body" \
+                "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/query/read-only"
+            )"
+            if [ "$readonly_status" != "201" ]; then
+              echo "Supabase read-only database query failed with HTTP $readonly_status after Migrations: Read returned 403." >&2
+              if [ "$readonly_status" = "403" ]; then
+                echo "SUPABASE_ACCESS_TOKEN requires either Migrations: Read or Database: Read for project $SUPABASE_PROJECT_REF." >&2
+              fi
+              exit 1
             fi
+            node - "$readonly_path" "$path" <<'NODE'
+          const fs = require("fs");
+          const inputPath = process.argv[2];
+          const outputPath = process.argv[3];
+          const value = JSON.parse(fs.readFileSync(inputPath, "utf8"));
+          const candidates = [
+            value,
+            value?.data,
+            value?.result,
+            value?.rows,
+            value?.data?.rows,
+            value?.result?.rows,
+          ];
+          const rows = candidates.find(Array.isArray);
+          if (!rows) {
+            console.error("Read-only query response did not contain a row array.");
+            process.exit(2);
+          }
+          const migrations = rows.map((row) => {
+            const rawVersion =
+              row && typeof row === "object" && !Array.isArray(row)
+                ? row.version
+                : Array.isArray(row)
+                  ? row[0]
+                  : row;
+            const version = String(rawVersion ?? "");
+            if (!/^\d{14}$/.test(version)) {
+              console.error(`Invalid migration version in read-only query response: ${version || "<empty>"}`);
+              process.exit(3);
+            }
+            return { version };
+          });
+          fs.writeFileSync(outputPath, JSON.stringify(migrations));
+          console.log("Read-only query migration entries:", migrations.length);
+          NODE
+            source_label="Database: Read"
+          else
+            echo "Supabase Management API migration history request failed with HTTP $status." >&2
             exit 1
           fi
-          node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const rows=Array.isArray(value)?value:value?.migrations; if(!Array.isArray(rows)) process.exit(2); console.log("Management API migration entries:", rows.length);' "$path"
+
+          node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const rows=Array.isArray(value)?value:value?.migrations; if(!Array.isArray(rows)) process.exit(2); console.log("Normalized migration entries:", rows.length);' "$path"
           echo "path=$path" >> "$GITHUB_OUTPUT"
+          echo "source=$source_label" >> "$GITHUB_OUTPUT"
 
       - name: Detect exact reconciliation phase
         id: phase
@@ -185,12 +247,13 @@ jobs:
         env:
           TARGET_SHA: ${{ steps.target.outputs.sha }}
           PHASE: ${{ steps.phase.outputs.value }}
+          READ_SOURCE: ${{ steps.before_list.outputs.source }}
         run: |
           {
             echo "## Supabase read-only migration diagnostic"
             echo "- Target SHA: $TARGET_SHA"
             echo "- Project ref: $SUPABASE_PROJECT_REF"
-            echo "- Read source: Supabase Management API migration history (Migrations: Read)"
+            echo "- Read source: $READ_SOURCE"
             echo "- Authorized phase: $PHASE"
             echo "- Runner: GitHub-hosted ubuntu-latest"
             echo "- This job performs no Postgres connection, migration repair, SQL push, seed, reset, or Edge Function deploy."
