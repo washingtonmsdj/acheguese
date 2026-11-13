@@ -46,6 +46,7 @@ const EXPLICIT_MVP_CONTRACTS = [
   "tests/regression/public/search-route.test.ts",
   "tests/release/vercel-ignore-build.test.mjs",
   "tests/release/release-identity.test.mjs",
+  "tests/release/preflight-production-territorial-data-plane.test.ts",
   "tests/security/lgpd-purge-policy-security.test.ts",
   "tests/security/account-operational-edge-policy.test.ts",
   "tests/security/account-password-reauthentication.test.ts",
