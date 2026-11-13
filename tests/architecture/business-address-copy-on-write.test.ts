@@ -5,29 +5,48 @@ const mutations = readFileSync(
   "src/core/business/services/business.mutations.ts",
   "utf8",
 );
+const transactionalMigration = readFileSync(
+  "supabase/migrations/20261113080000_business_transactional_address_idempotency.sql",
+  "utf8",
+);
 
 describe("Business and Address write boundaries", () => {
-  it("never mutates an existing physical Address before Business RPC commit", () => {
-    const syncStart = mutations.indexOf("async function syncAddress(");
-    const syncEnd = mutations.indexOf("function toBusinessHoursRows(", syncStart);
-    expect(syncStart).toBeGreaterThanOrEqual(0);
-    expect(syncEnd).toBeGreaterThan(syncStart);
+  it("prepares physical Address data without persisting it in the browser", () => {
+    const prepareStart = mutations.indexOf("async function prepareAddressMutation(");
+    const prepareEnd = mutations.indexOf("function toBusinessHoursRows(", prepareStart);
+    expect(prepareStart).toBeGreaterThanOrEqual(0);
+    expect(prepareEnd).toBeGreaterThan(prepareStart);
 
-    const syncAddress = mutations.slice(syncStart, syncEnd);
-    expect(syncAddress).not.toContain("addressService.updateAddress(");
-    expect(syncAddress).toContain("addressService.createAddress({");
-    expect(syncAddress).toContain("owner_user_id: actorUserId");
-    expect(syncAddress).toContain("getAddressById(existingAddressId)");
+    const prepareAddress = mutations.slice(prepareStart, prepareEnd);
+    expect(prepareAddress).toContain("getAddressById(existingAddressId)");
+    expect(prepareAddress).toContain("addressPatch:");
+    expect(prepareAddress).not.toContain("createAddress(");
+    expect(prepareAddress).not.toContain("updateAddress(");
+    expect(prepareAddress).not.toContain("deleteAddress(");
   });
 
-  it("changes Business address reference only through canonical broker", () => {
-    const updateStart = mutations.indexOf("export async function updateBusiness(");
-    const updateEnd = mutations.indexOf("export async function deleteBusiness(", updateStart);
-    const update = mutations.slice(updateStart, updateEnd);
+  it("creates Address and switches Business reference inside one broker transaction", () => {
+    expect(mutations).toContain("addressPatch: address.addressPatch ?? null");
+    expect(mutations).toContain("ProfileRpcService.updateBusiness<BusinessBrokerResult>");
+    expect(mutations).not.toContain("cleanupUnattachedAddress");
 
-    expect(update).toContain("ProfileRpcService.updateBusiness<BusinessBrokerResult>");
-    expect(update).toContain("createdAddressId = address.addressId");
-    expect(update).toContain("cleanupUnattachedAddress(createdAddressId)");
-    expect(update).not.toContain("AddressService().updateAddress");
+    expect(transactionalMigration).toContain(
+      "private.profile_create_business_address",
+    );
+    expect(transactionalMigration).toContain(
+      "private.profile_execute_business_operation",
+    );
+    expect(transactionalMigration).toContain(
+      "v_address_id := private.profile_create_business_address",
+    );
+    expect(transactionalMigration).toContain(
+      "v_effective_patch := v_effective_patch",
+    );
+    expect(transactionalMigration).toContain(
+      "private.profile_patch_business_data",
+    );
+    expect(transactionalMigration).toContain(
+      "private.business_operation_receipts",
+    );
   });
 });
