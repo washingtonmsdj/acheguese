@@ -49,6 +49,35 @@ function isRecoverableSupabaseTransportError(detail: string): boolean {
   return /Failed to fetch/i.test(detail) && detail.includes("vendor-supabase-");
 }
 
+function isTurnstileDataUrlCspProbe(
+  detail: string,
+  sourceUrl: string,
+): boolean {
+  if (
+    !detail.includes("data:,") ||
+    !/Content Security Policy|Refused to connect/i.test(detail)
+  ) {
+    return false;
+  }
+
+  const challengePolicyInMessage =
+    detail.includes("challenges.cloudflare.com") ||
+    detail.includes("cloudflarecaptcha.com");
+
+  let challengeFrameSource = false;
+  try {
+    const hostname = new URL(sourceUrl).hostname;
+    challengeFrameSource =
+      hostname === "challenges.cloudflare.com" ||
+      hostname.endsWith(".challenges.cloudflare.com") ||
+      hostname.endsWith(".cloudflarecaptcha.com");
+  } catch {
+    challengeFrameSource = false;
+  }
+
+  return challengePolicyInMessage || challengeFrameSource;
+}
+
 test.describe("Conta autenticada — fixture remota determinística", () => {
   test.skip(
     !hasE2EUserCredentials(),
@@ -64,18 +93,33 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       const pageErrors: string[] = [];
       const recoverableSupabaseTransportErrors: string[] = [];
       const networkErrors: string[] = [];
+      let sawTurnstileDataUrlCspProbe = false;
 
       page.on("console", (message) => {
         const detail = message.text();
+        const sourceUrl = message.location().url;
         const isTurnstileConsoleNoise = detail.includes(
           "font-size:0;color:transparent",
         );
         const isBlockedAdSenseProbe = detail.includes("csi.gstatic.com/csi");
+        const isTurnstileDataProbe = isTurnstileDataUrlCspProbe(
+          detail,
+          sourceUrl,
+        );
+        if (isTurnstileDataProbe) {
+          sawTurnstileDataUrlCspProbe = true;
+        }
+        const isTurnstileDataProbeCompanion =
+          sawTurnstileDataUrlCspProbe &&
+          detail.startsWith("Fetch API cannot load data:,") &&
+          /Content Security Policy|Refused to connect/i.test(detail);
 
         if (
           message.type() === "error" &&
           !isTurnstileConsoleNoise &&
-          !isBlockedAdSenseProbe
+          !isBlockedAdSenseProbe &&
+          !isTurnstileDataProbe &&
+          !isTurnstileDataProbeCompanion
         ) {
           if (isRecoverableSupabaseTransportError(detail)) {
             recoverableSupabaseTransportErrors.push(
