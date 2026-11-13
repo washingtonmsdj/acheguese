@@ -5,7 +5,7 @@
  * Data: 2026-03-19
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { PASSWORD_POLICY, isStrongPassword } from "../passwordPolicy";
 
 /**
