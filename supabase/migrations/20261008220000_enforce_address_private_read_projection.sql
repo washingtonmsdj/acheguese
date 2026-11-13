@@ -1,0 +1,330 @@
+-- Endereços: separar a autoridade privada da projeção pública existente.
+-- Apenas change-set versionado, não aplicar via dashboard / dual-write.
+-- addresses_public é uma EXCEÇÃO CONTROLADA ao security_invoker: projeção
+-- explícita de campos não sensíveis, somente endereços com ambos os estados de
+-- verificação confirmados e vínculo comercial/profissional já público;
+-- security_barrier. A tabela física conserva RLS de proprietário.
+-- Em caso de drift de owner, policy ou projeção, a transação ABORTA.
+BEGIN;
+
+DO $address_public_preflight$
+DECLARE
+  v_columns text[];
+  v_definition text;
+BEGIN
+  -- Ordem canônica: a migração 20261008215900 precisa ter revogado a
+  -- autoridade do cliente sobre provas antes de permitir novas leituras
+  -- públicas pela projeção. Não ativar um read model sobre autoverificação.
+  IF has_column_privilege('authenticated', 'public.addresses', 'is_verified', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.addresses', 'verification_status', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.addresses', 'verified_at', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.addresses', 'verified_by', 'UPDATE')
+     OR has_column_privilege('authenticated', 'public.user_residences', 'is_verified', 'UPDATE')
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_trigger
+       WHERE tgrelid = 'public.addresses'::regclass
+         AND tgname = 'address_verification_owner_guard'
+         AND tgenabled = 'O'
+     )
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_trigger
+       WHERE tgrelid = 'public.user_residences'::regclass
+         AND tgname = 'residence_verification_owner_guard'
+         AND tgenabled = 'O'
+     )
+  THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: trusted write guard must be applied first';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_class c
+    WHERE c.oid = 'public.addresses'::regclass
+      AND c.relkind = 'r' AND c.relrowsecurity
+      AND NOT c.relforcerowsecurity
+  ) OR EXISTS (
+    SELECT 1 FROM pg_roles r
+    WHERE r.rolname = 'anon' AND r.rolbypassrls
+  ) THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: base-table RLS or anon role drift';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relname = 'addresses_public'
+      AND c.relkind = 'v'
+      AND pg_get_userbyid(c.relowner) = 'postgres'
+      AND 'security_invoker=true' = ANY(COALESCE(c.reloptions, ARRAY[]::text[]))
+  ) THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: unexpected view owner or invoker mode';
+  END IF;
+
+  SELECT array_agg(a.attname::text ORDER BY a.attnum)
+    INTO v_columns
+  FROM pg_attribute a
+  WHERE a.attrelid = 'public.addresses_public'::regclass
+    AND a.attnum > 0 AND NOT a.attisdropped;
+
+  IF v_columns IS DISTINCT FROM ARRAY[
+    'id', 'location_id', 'address_type', 'latitude', 'longitude',
+    'precision', 'is_verified', 'verification_status', 'created_at'
+  ]::text[] THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: unexpected public projection columns';
+  END IF;
+
+  SELECT pg_get_viewdef('public.addresses_public'::regclass, true)
+    INTO v_definition;
+  IF position('is_verified' in v_definition) = 0
+     OR position('verification_status' in v_definition) = 0
+     OR position('WHERE' in v_definition) = 0 THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: verified-only filter missing';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policy
+    WHERE polrelid = 'public.addresses'::regclass
+      AND polname = 'Users manage own addresses'
+      AND polcmd = '*'
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_policy
+    WHERE polrelid = 'public.addresses'::regclass
+      AND polname = 'Addresses public verified read'
+      AND polcmd = 'r'
+  ) OR EXISTS (
+    SELECT 1 FROM pg_policy
+    WHERE polrelid = 'public.addresses'::regclass
+      AND polname NOT IN (
+        'Users manage own addresses', 'Addresses public verified read'
+      )
+  ) THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: unexpected base-table RLS policies';
+  END IF;
+
+  -- A view SECURITY DEFINER só pode derivar publicação de um read
+  -- model cujo contrato de visibilidade para anon é explicitamente ativo.
+  -- Não introduzir uma exceção pública mais ampla que o SSOT Business.
+  IF NOT has_table_privilege('anon', 'public.public_business_search', 'SELECT')
+     OR NOT EXISTS (
+       SELECT 1
+       FROM pg_class c
+       WHERE c.oid = 'public.public_business_search'::regclass
+         AND c.relkind = 'r'
+         AND c.relrowsecurity
+     )
+     OR NOT EXISTS (
+       SELECT 1 FROM pg_policy p
+       WHERE p.polrelid = 'public.public_business_search'::regclass
+         AND p.polname = 'public_business_search_public_read'
+         AND p.polcmd = 'r'
+         AND 'anon'::regrole::oid = ANY(p.polroles)
+         AND position('status' in pg_get_expr(p.polqual, p.polrelid)) > 0
+         AND position('active' in pg_get_expr(p.polqual, p.polrelid)) > 0
+     )
+  THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: public Business visibility drift';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public'
+      AND c.relname = 'public_professional_search'
+      AND c.relkind = 'v'
+      AND pg_get_userbyid(c.relowner) = 'postgres'
+      AND 'security_invoker=true' = ANY(COALESCE(c.reloptions, ARRAY[]::text[]))
+      AND position('LEFT JOIN addresses address ON' in
+        pg_get_viewdef(c.oid, true)) > 0
+      AND position('professional.is_accepting_clients = true' in
+        pg_get_viewdef(c.oid, true)) > 0
+      AND position('professional.visibility =' in
+        pg_get_viewdef(c.oid, true)) > 0
+  ) THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: professional read-model drift';
+  END IF;
+END
+$address_public_preflight$;
+
+-- Endereços detalhados NÃO têm política de leitura pública. É necessário
+-- preservar o GRANT SELECT de anon na tabela física SOMENTE porque o PostgREST
+-- usa o relacionamento FK address:addresses!address_id nos read models ativos
+-- de Business/Mapa: retirar o GRANT quebraria a consulta inteira, mesmo se
+-- nenhum endereço fosse visível. Sem policy RLS para anon, SELECT retorna
+-- ZERO linhas; a única política restante exige auth.uid() = owner_user_id.
+-- A projeção de endereços verificados NÃO depende desse GRANT (view abaixo).
+-- NÃO criar uma policy permissiva de compatibilidade para anon.
+DROP POLICY "Addresses public verified read" ON public.addresses;
+
+-- A view JÁ EXISTENTE é o único read model de endereços verificados.
+-- A exceção de privilégios do owner fica confinada à lista explícita
+-- de nove colunas existente, com dupla confirmação da verificação,
+-- vínculo a entidade publicamente listada e security barrier.
+CREATE OR REPLACE VIEW public.addresses_public
+WITH (security_invoker = false, security_barrier = true)
+AS
+SELECT
+  address.id,
+  address.location_id,
+  address.address_type,
+  address.latitude,
+  address.longitude,
+  address.precision,
+  address.is_verified,
+  address.verification_status,
+  address.created_at
+FROM public.addresses AS address
+WHERE address.is_verified IS TRUE
+  AND address.verification_status = 'verified'::public.address_verification_status
+  -- Verificação postal NÃO é consentimento para divulgar a localização
+  -- residencial. Publicar apenas endereços de entidades que já escolheram
+  -- tornar pública a presença territorial. Se o endereço tem proprietário,
+  -- a identidade canônica do perfil publicado deve corresponder a ele.
+  -- Sem associação pública/autorizada, negar.
+  AND (
+    EXISTS (
+      SELECT 1
+      FROM public.public_business_search AS published_business
+      WHERE published_business.address_id = address.id
+        AND published_business.status = 'active'
+        AND (
+          address.owner_user_id IS NULL
+          OR EXISTS (
+            SELECT 1 FROM public.profiles AS published_business_owner
+            WHERE published_business_owner.id = published_business.profile_id
+              AND published_business_owner.user_id = address.owner_user_id
+          )
+        )
+    )
+    OR EXISTS (
+      SELECT 1
+      FROM public.professional_data AS published_professional
+      WHERE published_professional.address_id = address.id
+        AND published_professional.is_accepting_clients IS TRUE
+        AND published_professional.visibility = 'public_listed'::public.professional_profile_visibility
+        AND published_professional.slug IS NOT NULL
+        AND NULLIF(btrim(published_professional.slug), '') IS NOT NULL
+        AND (
+          address.owner_user_id IS NULL
+          OR EXISTS (
+            SELECT 1 FROM public.profiles AS published_professional_owner
+            WHERE published_professional_owner.id = published_professional.profile_id
+              AND published_professional_owner.user_id = address.owner_user_id
+          )
+        )
+    )
+  );
+
+REVOKE INSERT, UPDATE, DELETE ON TABLE public.addresses_public
+  FROM PUBLIC, anon, authenticated;
+REVOKE SELECT ON TABLE public.addresses_public FROM PUBLIC;
+GRANT SELECT ON TABLE public.addresses_public TO anon, authenticated, service_role;
+
+-- A visão profissional pública (vertical pausada) já consumia coordenadas,
+-- mas por join direto na tabela privada. Mantemos EXATAMENTE sua projeção
+-- e filtros atuais, trocando somente a origem das coordenadas verificadas.
+-- Não introduz uma tabela, outro endereço ou outra autoridade persistente.
+CREATE OR REPLACE VIEW public.public_professional_search
+WITH (security_invoker = true)
+AS
+SELECT
+  professional.id,
+  professional.profile_id,
+  professional.professional_name,
+  professional.slug,
+  professional.service_category,
+  professional.service_subcategory,
+  professional.description,
+  professional.certifications,
+  professional.experience_years,
+  professional.education,
+  professional.price_range,
+  professional.service_areas,
+  professional.service_radius_km,
+  professional.available_hours,
+  professional.visibility,
+  professional.is_accepting_clients,
+  professional.is_verified,
+  professional.verified_at,
+  professional.rating,
+  professional.availability_notes,
+  professional.portfolio_items,
+  professional.location_id,
+  professional.address_id,
+  professional.metadata,
+  professional.created_at,
+  professional.updated_at,
+  address.latitude::numeric AS latitude,
+  address.longitude::numeric AS longitude,
+  location.geographic_path
+FROM public.professional_data AS professional
+LEFT JOIN public.addresses_public AS address
+  ON professional.address_id = address.id
+LEFT JOIN public.locations AS location
+  ON professional.location_id = location.id
+WHERE professional.is_accepting_clients = true
+  AND professional.visibility = 'public_listed'::public.professional_profile_visibility
+  AND professional.slug IS NOT NULL
+  AND NULLIF(btrim(professional.slug), '') IS NOT NULL;
+
+COMMENT ON VIEW public.addresses_public IS
+  'SSOT público: 9 colunas, endereço verificado e vinculado a Business/profissional já listado publicamente; security_barrier. addresses privado por RLS/ACL.';
+
+DO $address_public_postflight$
+BEGIN
+  IF NOT EXISTS (
+      SELECT 1 FROM pg_class c
+      WHERE c.oid = 'public.addresses'::regclass AND c.relrowsecurity
+    )
+    OR EXISTS (
+      SELECT 1 FROM pg_roles r
+      WHERE r.rolname = 'anon' AND r.rolbypassrls
+    )
+    OR NOT has_table_privilege('anon', 'public.addresses', 'SELECT')
+    OR NOT has_table_privilege('authenticated', 'public.addresses', 'SELECT')
+    OR NOT has_table_privilege('anon', 'public.addresses_public', 'SELECT')
+    OR NOT has_table_privilege('authenticated', 'public.addresses_public', 'SELECT')
+    OR EXISTS (
+      SELECT 1 FROM pg_policy
+      WHERE polrelid = 'public.addresses'::regclass
+        AND polname = 'Addresses public verified read'
+    )
+    OR NOT EXISTS (
+      SELECT 1 FROM pg_policy
+      WHERE polrelid = 'public.addresses'::regclass
+        AND polname = 'Users manage own addresses'
+        AND polcmd = '*'
+        AND 'authenticated'::regrole::oid = ANY(polroles)
+        AND NOT (0::oid = ANY(polroles))
+        AND NOT ('anon'::regrole::oid = ANY(polroles))
+    )
+    OR EXISTS (
+      SELECT 1 FROM pg_policy
+      WHERE polrelid = 'public.addresses'::regclass
+        AND polname <> 'Users manage own addresses'
+    )
+    OR pg_has_role('anon', 'authenticated', 'member') THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: table or view grants/RLS incorrect';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_class c
+    WHERE c.oid = 'public.addresses_public'::regclass
+      AND 'security_barrier=true' = ANY(COALESCE(c.reloptions, ARRAY[]::text[]))
+      AND 'security_invoker=false' = ANY(COALESCE(c.reloptions, ARRAY[]::text[]))
+  ) OR NOT EXISTS (
+    SELECT 1 FROM pg_class c
+    WHERE c.oid = 'public.public_professional_search'::regclass
+      AND 'security_invoker=true' = ANY(COALESCE(c.reloptions, ARRAY[]::text[]))
+  ) THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: read-model security options incorrect';
+  END IF;
+
+  IF has_table_privilege('anon', 'public.addresses_public', 'UPDATE')
+    OR has_table_privilege('authenticated', 'public.addresses_public', 'UPDATE') THEN
+    RAISE EXCEPTION 'ADDRESS_PRIVATE_PROJECTION_BLOCKED: public view is not read-only';
+  END IF;
+END
+$address_public_postflight$;
+
+NOTIFY pgrst, 'reload schema';
+COMMIT;
