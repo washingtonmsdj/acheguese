@@ -281,7 +281,7 @@ export default function TerritoryEntryPage() {
                 <ArrowIcon />
               </a>
 
-              <div className="ag-live-card" aria-label="Comunidade local ativa">
+              <div className="ag-live-card" aria-label="Informação local em destaque">
                 <span className="ag-avatar-stack" aria-hidden="true">
                   <i>A</i><i>J</i><i>M</i>
                 </span>
@@ -347,7 +347,7 @@ export default function TerritoryEntryPage() {
               <h2 id="ag-how-title">Seu bairro primeiro. O resto vem depois.</h2>
               <p>
                 Aqui, o território não é um filtro escondido. É o ponto de partida para encontrar
-                informação útil, pessoas próximas e negócios que fazem parte da rotina.
+                informação útil, lugares próximos e negócios que fazem parte da rotina.
               </p>
               <a href={launchBusinessUrl} className="ag-text-link">
                 Começar a explorar <ArrowIcon />
@@ -365,7 +365,7 @@ export default function TerritoryEntryPage() {
               <li>
                 <span>2</span>
                 <div>
-                  <h3>Descubra o que está acontecendo</h3>
+                  <h3>Descubra o que existe perto</h3>
                   <p>Busque empresas, lugares e o que está perto de você em poucos toques.</p>
                 </div>
               </li>
@@ -373,7 +373,7 @@ export default function TerritoryEntryPage() {
                 <span>3</span>
                 <div>
                   <h3>Fortaleça quem está perto</h3>
-                  <p>Participe da comunidade e faça a economia local circular.</p>
+                  <p>Escolha e apoie negócios locais para fazer a economia do território circular.</p>
                 </div>
               </li>
             </ol>
