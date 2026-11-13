@@ -82,6 +82,19 @@ describe("LGPD pending deletion client boundary", () => {
     expect(protectedRoute).toContain("staleTime: 0");
   });
 
+  it("explains a fail-closed redirect instead of presenting Privacy as voluntary navigation", () => {
+    expect(privacyPage).toContain("accountStateUnavailable");
+    expect(privacyPage).toContain(
+      "Não foi possível confirmar o estado da sua conta",
+    );
+    expect(privacyPage).toContain(
+      "Tentar voltar para Minha conta",
+    );
+    expect(privacyPage).toContain(
+      "navigate(ACCOUNT_PATHS.home, { replace: true })",
+    );
+  });
+
   it("keeps only the privacy recovery surface outside the deletion-status gate", () => {
     expect(protectedRoute).toContain(
       'const PRIVACY_ACCOUNT_PATH = "/conta/privacidade"',
