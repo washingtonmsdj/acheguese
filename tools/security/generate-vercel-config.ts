@@ -22,7 +22,6 @@ import {
   CACHE_HEADERS,
   getSecurityConfigSummary,
 } from "../../src/shared/config/security.config";
-import { PUBLIC_EXTERNAL_APPS } from "../../src/shared/config/publicExternalApps.config";
 
 const VERCEL_CONFIG_TEMPLATE = {
   $schema: "https://openapi.vercel.sh/vercel.json",
@@ -41,59 +40,16 @@ const VERCEL_CONFIG_TEMPLATE = {
     "node tools/release/validate-package-lock-consistency.mjs && npm ci",
   framework: "vite",
 
-  redirects: [
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/`,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/:path*`,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: "/",
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.visitorRedirectSource,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-  ],
+  redirects: [],
 
   rewrites: [
-    {
-      source: `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*`,
-      destination: `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*`,
-    },
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/`,
-    },
-    {
-      source: `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*`,
-      destination: `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/:path*`,
-    },
     {
       source: "/(.*)",
       destination: "/index.html",
     },
   ],
 
-  headers: [] as Array<{
+  headers: [] as Array{
     source: string;
     headers: Array<{ key: string; value: string }>;
   }>,
@@ -180,52 +136,17 @@ function generateVercelConfig() {
     throw new Error("Install command drifted from lockfile consistency guard");
   }
 
-  const expectedRedirects = [
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.mountPath,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/`,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: `${PUBLIC_EXTERNAL_APPS.catalog.legacyMountPath}/:path*`,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: "/",
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-    {
-      source: PUBLIC_EXTERNAL_APPS.catalog.visitorRedirectSource,
-      destination: PUBLIC_EXTERNAL_APPS.catalog.publicPath,
-      permanent: false,
-    },
-  ];
-  const [catalogApiRewrite, catalogRootRewrite, catalogNestedRewrite, spaRewrite] =
-    generated.rewrites ?? [];
+  if ((generated.redirects ?? []).length !== 0) {
+    throw new Error("Achegue-se public app must not redirect visitor routes");
+  }
+
+  const rewrites = generated.rewrites ?? [];
   if (
-    JSON.stringify(generated.redirects ?? []) !== JSON.stringify(expectedRedirects) ||
-    catalogApiRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.apiMountPath}/:path*` ||
-    catalogApiRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.apiUpstreamOrigin}/:path*` ||
-    catalogRootRewrite?.source !== PUBLIC_EXTERNAL_APPS.catalog.publicPath ||
-    catalogRootRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/` ||
-    catalogNestedRewrite?.source !== `${PUBLIC_EXTERNAL_APPS.catalog.mountPath}/:path*` ||
-    catalogNestedRewrite?.destination !== `${PUBLIC_EXTERNAL_APPS.catalog.upstreamOrigin}/:path*` ||
-    spaRewrite?.source !== "/(.*)" ||
-    spaRewrite?.destination !== "/index.html"
+    rewrites.length !== 1 ||
+    rewrites[0]?.source !== "/(.*)" ||
+    rewrites[0]?.destination !== "/index.html"
   ) {
-    throw new Error("Public catalog routing drifted from publicExternalApps SSOT");
+    throw new Error("Achegue-se public routing must resolve through the first-party SPA");
   }
 
   const cspCount = (generated.headers ?? [])
