@@ -28,6 +28,7 @@ const ACTIONS = {
   createPersonal: true,
   createBusiness: true,
   updateBusiness: true,
+  getBusinessOperation: true,
   deactivateBusiness: true,
   createProfessional: true,
   updateProfessionalData: true,
@@ -376,6 +377,124 @@ function sanitizeBusinessPatch(
       throw new RequestValidationError("Invalid metadata.modos_atendimento");
     }
     input.metadata = metadata;
+  }
+
+  return input;
+}
+
+function sanitizeBusinessAddressPatch(
+  value: unknown,
+): Record<string, unknown> | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "object" || Array.isArray(value)) {
+    throw new RequestValidationError("Invalid business address patch");
+  }
+
+  const input = { ...(value as Record<string, unknown>) };
+  const allowedKeys = new Set([
+    "location_id",
+    "postal_code",
+    "street",
+    "number",
+    "complement",
+    "address_type",
+    "precision",
+    "latitude",
+    "longitude",
+    "geocoded_at",
+    "geocoding_source",
+    "geocoding_confidence",
+    "metadata",
+  ]);
+
+  for (const key of Object.keys(input)) {
+    if (!allowedKeys.has(key)) {
+      throw new RequestValidationError(`Unsupported address field: ${key}`);
+    }
+  }
+
+  input.location_id = requireUuid(input.location_id, "addressPatch.location_id");
+
+  for (const [key, maxLength] of [
+    ["postal_code", 9],
+    ["street", 300],
+    ["number", 64],
+    ["complement", 300],
+    ["geocoding_source", 64],
+    ["geocoded_at", 64],
+  ] as const) {
+    if (key in input) {
+      input[key] = optionalString(input[key], `addressPatch.${key}`, maxLength);
+    }
+  }
+
+  const addressType =
+    input.address_type === undefined || input.address_type === null
+      ? "exact"
+      : requireString(input.address_type, "addressPatch.address_type", 32);
+  if (!["exact", "approximate", "landmark", "gps_only"].includes(addressType)) {
+    throw new RequestValidationError("Invalid addressPatch.address_type");
+  }
+  input.address_type = addressType;
+
+  if (addressType === "exact" && !input.street) {
+    throw new RequestValidationError("addressPatch.street is required");
+  }
+
+  if (
+    input.postal_code &&
+    !/^\d{5}-?\d{3}$/.test(String(input.postal_code))
+  ) {
+    throw new RequestValidationError("Invalid addressPatch.postal_code");
+  }
+
+  if (input.precision !== undefined && input.precision !== null) {
+    const precision = requireString(input.precision, "addressPatch.precision", 32);
+    if (
+      !["exact", "interpolated", "street", "neighborhood", "district", "city"].includes(
+        precision,
+      )
+    ) {
+      throw new RequestValidationError("Invalid addressPatch.precision");
+    }
+    input.precision = precision;
+  }
+
+  for (const [key, min, max] of [
+    ["latitude", -90, 90],
+    ["longitude", -180, 180],
+    ["geocoding_confidence", 0, 1],
+  ] as const) {
+    if (input[key] === undefined || input[key] === null) continue;
+    if (
+      typeof input[key] !== "number" ||
+      !Number.isFinite(input[key] as number) ||
+      (input[key] as number) < min ||
+      (input[key] as number) > max
+    ) {
+      throw new RequestValidationError(`Invalid addressPatch.${key}`);
+    }
+  }
+
+  if (
+    addressType === "gps_only" &&
+    (typeof input.latitude !== "number" || typeof input.longitude !== "number")
+  ) {
+    throw new RequestValidationError("gps_only address requires coordinates");
+  }
+
+  if (
+    input.geocoded_at &&
+    !Number.isFinite(Date.parse(String(input.geocoded_at)))
+  ) {
+    throw new RequestValidationError("Invalid addressPatch.geocoded_at");
+  }
+
+  if ("metadata" in input && input.metadata !== null) {
+    if (typeof input.metadata !== "object" || Array.isArray(input.metadata)) {
+      throw new RequestValidationError("Invalid addressPatch.metadata");
+    }
+    input.metadata = { ...(input.metadata as Record<string, unknown>) };
   }
 
   return input;
@@ -826,15 +945,22 @@ async function handleCreateBusiness(
   auth: UserAuthResult,
   params: Record<string, unknown>,
 ) {
+  const operationId = requireUuid(params.operationId, "operationId");
   const businessPatch = sanitizeBusinessPatch(params.businessPatch, {
     requireCreateFields: true,
   });
+  const addressPatch = sanitizeBusinessAddressPatch(params.addressPatch);
   const contactChannels = sanitizeContactChannels(params.contactChannels);
   const businessHours = sanitizeBusinessHours(params.businessHours);
+  const brokerPatch = {
+    ...businessPatch,
+    __operation_id: operationId,
+    ...(addressPatch ? { __address_patch: addressPatch } : {}),
+  };
 
   const { data, error } = await supabaseAdmin.rpc("profile_rpc_create_business", {
     p_actor_user_id: auth.userId,
-    p_business_patch: businessPatch,
+    p_business_patch: brokerPatch,
     p_contact_channels: contactChannels,
     p_business_hours: businessHours,
   });
@@ -849,20 +975,45 @@ async function handleUpdateBusiness(
   params: Record<string, unknown>,
 ) {
   const profileId = requireUuid(params.profileId, "profileId");
+  const operationId = requireUuid(params.operationId, "operationId");
   const businessPatch = sanitizeBusinessPatch(params.businessPatch ?? {});
+  const addressPatch = sanitizeBusinessAddressPatch(params.addressPatch);
   const contactChannels = sanitizeContactChannels(params.contactChannels);
   const businessHours = sanitizeBusinessHours(params.businessHours);
+  const brokerPatch = {
+    ...businessPatch,
+    __operation_id: operationId,
+    ...(addressPatch ? { __address_patch: addressPatch } : {}),
+  };
 
   const { data, error } = await supabaseAdmin.rpc("profile_rpc_update_business", {
     p_actor_user_id: auth.userId,
     p_profile_id: profileId,
-    p_business_patch: businessPatch,
+    p_business_patch: brokerPatch,
     p_contact_channels: contactChannels,
     p_business_hours: businessHours,
   });
 
   if (error) throw error;
   return data ?? { success: false, error: "Business update RPC returned no data" };
+}
+
+async function handleGetBusinessOperation(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const operationId = requireUuid(params.operationId, "operationId");
+  const { data, error } = await supabaseAdmin.rpc(
+    "profile_rpc_get_business_operation",
+    {
+      p_actor_user_id: auth.userId,
+      p_operation_id: operationId,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { found: false, operation_id: operationId };
 }
 
 async function handleDeactivateBusiness(
@@ -1114,6 +1265,8 @@ async function dispatchAction(
       return handleCreateBusiness(supabaseAdmin, auth, params);
     case "updateBusiness":
       return handleUpdateBusiness(supabaseAdmin, auth, params);
+    case "getBusinessOperation":
+      return handleGetBusinessOperation(supabaseAdmin, auth, params);
     case "deactivateBusiness":
       return handleDeactivateBusiness(supabaseAdmin, auth, params);
     case "createProfessional":

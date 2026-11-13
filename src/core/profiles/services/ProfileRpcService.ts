@@ -4,6 +4,7 @@ type ProfileRpcAction =
   | "createPersonal"
   | "createBusiness"
   | "updateBusiness"
+  | "getBusinessOperation"
   | "deactivateBusiness"
   | "createProfessional"
   | "updateProfessionalData"
@@ -69,7 +70,9 @@ export class ProfileRpcService {
   }
 
   static async createBusiness<TResult>(params: {
+    operationId: string;
     businessPatch: Record<string, unknown>;
+    addressPatch?: Record<string, unknown> | null;
     contactChannels?: Array<Record<string, unknown>> | null;
     businessHours?: Array<Record<string, unknown>> | null;
   }): Promise<TResult> {
@@ -79,7 +82,9 @@ export class ProfileRpcService {
   static async updateBusiness<TResult>(
     profileId: string,
     params: {
+      operationId: string;
       businessPatch: Record<string, unknown>;
+      addressPatch?: Record<string, unknown> | null;
       contactChannels?: Array<Record<string, unknown>> | null;
       businessHours?: Array<Record<string, unknown>> | null;
     },
@@ -88,6 +93,10 @@ export class ProfileRpcService {
       profileId,
       ...params,
     });
+  }
+
+  static async getBusinessOperation<TResult>(operationId: string): Promise<TResult> {
+    return this.invoke<TResult>("getBusinessOperation", { operationId });
   }
 
   static async deactivateBusiness<TResult>(profileId: string): Promise<TResult> {

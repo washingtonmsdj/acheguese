@@ -48,6 +48,7 @@ describe("profile rpc broker security", () => {
     expect(broker).toContain('this.invoke<TResult>("createPersonal"');
     expect(broker).toContain('this.invoke<TResult>("createBusiness"');
     expect(broker).toContain('this.invoke<TResult>("updateBusiness"');
+    expect(broker).toContain('this.invoke<TResult>("getBusinessOperation"');
     expect(broker).toContain('this.invoke<TResult>("deactivateBusiness"');
     expect(broker).toContain('this.invoke<TResult>("createProfessional"');
     expect(broker).toContain('this.invoke<TResult>("updateProfessionalData"');
@@ -275,6 +276,9 @@ describe("profile rpc broker security", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260909232757_broker_owned_business_lifecycle_g36.sql",
     );
+    const transactionalMigration = readProjectFile(
+      "supabase/migrations/20261113080000_business_transactional_address_idempotency.sql",
+    );
     const edge = readProjectFile("supabase/functions/profile-rpc/index.ts");
     const broker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
     const business = readProjectFile("src/core/business/services/business.mutations.ts");
@@ -310,18 +314,28 @@ describe("profile rpc broker security", () => {
     expect(edge).toContain('"createBusiness"');
     expect(edge).toContain('"updateBusiness"');
     expect(edge).toContain('"deactivateBusiness"');
+    expect(edge).toContain('"getBusinessOperation"');
     expect(edge).toContain("sanitizeBusinessPatch");
+    expect(edge).toContain("sanitizeBusinessAddressPatch");
     expect(edge).toContain("sanitizeContactChannels");
     expect(edge).toContain("sanitizeBusinessHours");
 
     expect(broker).toContain('this.invoke<TResult>("createBusiness"');
     expect(broker).toContain('this.invoke<TResult>("updateBusiness"');
+    expect(broker).toContain('this.invoke<TResult>("getBusinessOperation"');
     expect(broker).toContain('this.invoke<TResult>("deactivateBusiness"');
 
     expect(business).toContain("ProfileRpcService.createBusiness");
     expect(business).toContain("ProfileRpcService.updateBusiness");
     expect(business).toContain("ProfileRpcService.deactivateBusiness");
-    expect(business).toContain("owner_user_id: actorUserId");
+    expect(business).toContain("addressPatch: address.addressPatch ?? null");
+    expect(business).not.toContain("createAddress({");
+
+    expect(transactionalMigration).toContain("private.business_operation_receipts");
+    expect(transactionalMigration).toContain("private.profile_create_business_address");
+    expect(transactionalMigration).toContain("private.profile_execute_business_operation");
+    expect(transactionalMigration).toContain("profile_rpc_get_business_operation");
+    expect(transactionalMigration).toContain("p_business_patch - '__operation_id' - '__address_patch'");
     expect(business).toContain("pertence ao NetworkService");
     expect(business).not.toContain("BusinessHoursService");
     expect(business).not.toContain("ProfileMembersService");

@@ -5,8 +5,9 @@
  */
 export class BusinessBrokerOutcomeUnknownError extends Error {
   readonly operation: "create" | "update";
+  readonly operationId: string;
 
-  constructor(operation: "create" | "update") {
+  constructor(operation: "create" | "update", operationId: string) {
     super(
       operation === "create"
         ? "Não foi possível confirmar o cadastro. Verifique suas empresas antes de tentar novamente."
@@ -14,5 +15,6 @@ export class BusinessBrokerOutcomeUnknownError extends Error {
     );
     this.name = "BusinessBrokerOutcomeUnknownError";
     this.operation = operation;
+    this.operationId = operationId;
   }
 }
