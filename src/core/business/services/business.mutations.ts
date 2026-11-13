@@ -379,28 +379,47 @@ interface BusinessOperationReceipt {
   result?: BusinessBrokerResult | null;
 }
 
+const BUSINESS_OPERATION_RECONCILIATION_DELAYS_MS = [0, 250, 750] as const;
+
 async function reconcileBusinessOperation(
   operationId: string,
 ): Promise<BusinessBrokerResult | null> {
-  try {
-    const receipt =
-      await ProfileRpcService.getBusinessOperation<BusinessOperationReceipt>(
-        operationId,
-      );
-    if (
-      !receipt?.found ||
-      (receipt.status !== "committed" && receipt.status !== "rejected")
-    ) {
-      return null;
+  let lastError: unknown = null;
+
+  for (const delayMs of BUSINESS_OPERATION_RECONCILIATION_DELAYS_MS) {
+    if (delayMs > 0) {
+      await new Promise<void>((resolve) => setTimeout(resolve, delayMs));
     }
-    return receipt.result ?? null;
-  } catch (error) {
-    logger.error("[business.mutations] operation reconciliation failed", {
-      operationId,
-      message: error instanceof Error ? error.message : String(error),
-    });
-    return null;
+
+    try {
+      const receipt =
+        await ProfileRpcService.getBusinessOperation<BusinessOperationReceipt>(
+          operationId,
+        );
+      if (
+        receipt?.found &&
+        (receipt.status === "committed" || receipt.status === "rejected")
+      ) {
+        return receipt.result ?? null;
+      }
+    } catch (error) {
+      lastError = error;
+      logger.warn("[business.mutations] operation reconciliation read failed", {
+        operationId,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
+
+  if (lastError) {
+    logger.error("[business.mutations] operation reconciliation exhausted", {
+      operationId,
+      message:
+        lastError instanceof Error ? lastError.message : String(lastError),
+    });
+  }
+
+  return null;
 }
 
 export async function createBusiness(

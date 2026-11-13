@@ -278,6 +278,68 @@ describe("business lifecycle broker", () => {
     expect(mocks.deleteAddress).not.toHaveBeenCalled();
   });
 
+  it("waits briefly for a late committed receipt without resending create", async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.createBusinessRpc.mockRejectedValue(
+        new Error("Response lost while commit was finishing"),
+      );
+      mocks.getBusinessOperation
+        .mockResolvedValueOnce({ found: true, status: "pending" })
+        .mockResolvedValueOnce({ found: true, status: "pending" })
+        .mockResolvedValueOnce({
+          found: true,
+          status: "committed",
+          result: {
+            success: true,
+            data: {
+              profile_id: "profile-1",
+              business_data_id: "business-data-1",
+            },
+          },
+        });
+
+      const resultPromise = createBusiness(businessInput);
+      await vi.runAllTimersAsync();
+
+      await expect(resultPromise).resolves.toEqual({
+        profile_id: "profile-1",
+        business_data_id: "business-data-1",
+      });
+      expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
+      expect(mocks.getBusinessOperation).toHaveBeenCalledTimes(3);
+      const operationId = mocks.createBusinessRpc.mock.calls[0]?.[0]?.operationId;
+      expect(mocks.getBusinessOperation).toHaveBeenNthCalledWith(1, operationId);
+      expect(mocks.getBusinessOperation).toHaveBeenNthCalledWith(2, operationId);
+      expect(mocks.getBusinessOperation).toHaveBeenNthCalledWith(3, operationId);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("keeps the outcome unknown after the bounded receipt window is exhausted", async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.createBusinessRpc.mockRejectedValue(new Error("Response lost"));
+      mocks.getBusinessOperation.mockResolvedValue({
+        found: true,
+        status: "pending",
+      });
+
+      const resultPromise = createBusiness(businessInput);
+      const rejection = expect(resultPromise).rejects.toBeInstanceOf(
+        BusinessBrokerOutcomeUnknownError,
+      );
+      await vi.runAllTimersAsync();
+
+      await rejection;
+      expect(mocks.createBusinessRpc).toHaveBeenCalledTimes(1);
+      expect(mocks.getBusinessOperation).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("does not compensate a successful broker response missing its receipt", async () => {
     mocks.createAddress.mockResolvedValue({ id: "address-missing-receipt" });
     mocks.createBusinessRpc.mockResolvedValue({ success: true });

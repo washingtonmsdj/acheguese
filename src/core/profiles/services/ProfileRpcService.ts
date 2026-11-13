@@ -39,11 +39,13 @@ export type AccessibleProfilesParams =
 
 const FUNCTION_NAME = "profile-rpc";
 const SERVICE_NAME = "ProfileRpcService";
+const BUSINESS_OPERATION_READ_TIMEOUT_MS = 3_000;
 
 export class ProfileRpcService {
   private static async invoke<T>(
     action: ProfileRpcAction,
     params: Record<string, unknown> = {},
+    timeoutMs?: number,
   ): Promise<T> {
     return invokeSupabaseBroker<T, ProfileRpcAction>({
       action,
@@ -51,6 +53,7 @@ export class ProfileRpcService {
       noDataMessage: "Profile broker returned no data",
       params,
       serviceName: SERVICE_NAME,
+      timeoutMs,
     });
   }
 
@@ -96,7 +99,11 @@ export class ProfileRpcService {
   }
 
   static async getBusinessOperation<TResult>(operationId: string): Promise<TResult> {
-    return this.invoke<TResult>("getBusinessOperation", { operationId });
+    return this.invoke<TResult>(
+      "getBusinessOperation",
+      { operationId },
+      BUSINESS_OPERATION_READ_TIMEOUT_MS,
+    );
   }
 
   static async deactivateBusiness<TResult>(profileId: string): Promise<TResult> {
