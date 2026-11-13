@@ -14,6 +14,14 @@ describe("production release identity", () => {
     expect(isDeployRelevantReleasePath("tools/release/release-identity.mjs")).toBe(true);
 
     expect(isDeployRelevantReleasePath(".github/workflows/ssot-tests.yml")).toBe(false);
+    expect(
+      isDeployRelevantReleasePath("tools/release/run-mvp-unit-tests.mjs"),
+    ).toBe(false);
+    expect(
+      isDeployRelevantReleasePath(
+        "tools/release/preflight-production-territorial-data-plane.ts",
+      ),
+    ).toBe(false);
     expect(isDeployRelevantReleasePath("tests/e2e/account-authenticated.spec.ts")).toBe(false);
     expect(isDeployRelevantReleasePath("docs/08-roadmap/NEXT-STEPS.md")).toBe(false);
   });
