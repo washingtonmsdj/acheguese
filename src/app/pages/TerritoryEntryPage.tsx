@@ -9,7 +9,6 @@ import {
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
 import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
-import { PUBLIC_CATALOG_ANNOUNCEMENT_ENABLED, PUBLIC_CATALOG_PATH } from "@/shared/config/publicExternalApps.config";
 import "./TerritoryEntryPage.css";
 
 const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
@@ -201,32 +200,6 @@ export default function TerritoryEntryPage() {
       <a href="#conteudo" className="ag-skip-link">
         Pular para o conteúdo principal
       </a>
-
-      {PUBLIC_CATALOG_ANNOUNCEMENT_ENABLED && (
-        <aside className="ag-catalog-announcement" aria-label="Pré-lançamento do Achegue-se e acesso ao catálogo">
-          <div className="ag-container ag-catalog-announcement__inner">
-            <div className="ag-catalog-announcement__copy">
-              <span className="ag-catalog-announcement__status">
-                <i aria-hidden="true" />
-                Pré-lançamento
-              </span>
-              <div>
-                <strong>O Achegue-se está sendo preparado para o lançamento.</strong>
-                <p>A home continua disponível para conhecer o projeto. O Catálogo já pode ser acessado neste mesmo site.</p>
-              </div>
-            </div>
-            <div className="ag-catalog-announcement__actions">
-              <a className="ag-catalog-announcement__secondary" href="#conteudo">
-                Conhecer o Achegue-se
-              </a>
-              <a className="ag-catalog-announcement__primary" href={PUBLIC_CATALOG_PATH}>
-                Abrir catálogo
-                <ArrowIcon />
-              </a>
-            </div>
-          </div>
-        </aside>
-      )}
 
       <header className="ag-header">
         <div className="ag-container ag-header-inner">
