@@ -51,6 +51,24 @@ describe("Supabase lineage reconciliation contract", () => {
     expect(state.missingRemoteAliases).toEqual([]);
   });
 
+  it("accepts the same pre-repair ledger from the Management API", () => {
+    const remote = all
+      .filter((version) => !repair.has(version) && !forward.has(version))
+      .map((version) => ({ version, name: `migration_${version}` }));
+    const state = verifyReconciliation({
+      remoteHistory: remote,
+      directory: DIRECTORY,
+      manifest,
+      phase: "before",
+    });
+    expect(state.ok).toBe(true);
+    expect(state.localOnly).toEqual(
+      [...new Set([...repair, ...forward])].sort(),
+    );
+    expect(state.remoteOnly).toEqual([]);
+    expect(state.missingRemoteAliases).toEqual([]);
+  });
+
   it("accepts only forward migrations after tracking repair", () => {
     const remote = new Set(all.filter((version) => !forward.has(version)));
     const state = verifyReconciliation({
@@ -133,7 +151,10 @@ describe("Supabase lineage reconciliation contract", () => {
     expect(inspectStart).toBeGreaterThanOrEqual(0);
     expect(applyStart).toBeGreaterThan(inspectStart);
     const inspectJob = workflow.slice(inspectStart, applyStart);
-    expect(inspectJob).toContain("migration list --linked");
+    expect(inspectJob).toContain("/database/migrations");
+    expect(inspectJob).toContain("--remote-json");
+    expect(inspectJob).not.toContain("SUPABASE_DB_PASSWORD");
+    expect(inspectJob).not.toContain("migration list --linked");
     expect(inspectJob).not.toContain("migration repair ");
     expect(inspectJob).not.toContain("db push ");
     expect(inspectJob).not.toContain("functions deploy ");
