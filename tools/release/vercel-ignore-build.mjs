@@ -15,6 +15,15 @@ const CRITICAL_DOC_FILES = new Set([
 
 const PRODUCTION_GIT_BRANCH = "main";
 
+const NON_DEPLOY_RELEASE_TOOL_FILES = new Set([
+  "tools/release/preflight-authenticated-e2e-broker.ts",
+  "tools/release/preflight-production-territorial-data-plane.ts",
+  "tools/release/run-business-lifecycle-authenticated.mjs",
+  "tools/release/run-education-lifecycle-authenticated.mjs",
+  "tools/release/run-mvp-regression-tests.mjs",
+  "tools/release/run-mvp-unit-tests.mjs",
+]);
+
 function normalizePath(filePath) {
   return String(filePath ?? "")
     .trim()
@@ -25,6 +34,8 @@ function normalizePath(filePath) {
 export function isSkippableVercelPath(filePath) {
   const normalized = normalizePath(filePath);
   if (!normalized) return false;
+
+  if (NON_DEPLOY_RELEASE_TOOL_FILES.has(normalized)) return true;
 
   if (normalized.startsWith(".github/")) return true;
   if (normalized.startsWith("tests/")) return true;
