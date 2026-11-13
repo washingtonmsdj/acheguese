@@ -45,16 +45,33 @@ const MVP_DISABLED_ENTITLEMENTS = {
   canUseOwnDelivery: false,
 } as const;
 
+const OPTIONAL_WORKSPACE_READ_TIMEOUT_MS = 3_000;
+
 async function optionalWorkspaceRead<T>(
   label: string,
   read: () => Promise<T>,
   fallback: T,
 ): Promise<T> {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => {
+      reject(
+        new Error(
+          `Optional profile workspace read "${label}" timed out after ${OPTIONAL_WORKSPACE_READ_TIMEOUT_MS}ms`,
+        ),
+      );
+    }, OPTIONAL_WORKSPACE_READ_TIMEOUT_MS);
+  });
+
   try {
-    return await read();
+    return await Promise.race([read(), timeout]);
   } catch (error) {
     logger.warn("[profile-workspace] optional read failed", { label, error });
     return fallback;
+  } finally {
+    if (timeoutHandle !== undefined) {
+      clearTimeout(timeoutHandle);
+    }
   }
 }
 
