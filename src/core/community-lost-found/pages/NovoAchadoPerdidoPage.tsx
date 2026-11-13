@@ -114,7 +114,7 @@ export default function NovoAchadoPerdidoPage() {
     setValue,
     formState: { errors },
   } = useForm<NovoAchadoPerdidoInput>({
-    resolver: zodV3FormResolver(NovoAchadoPerdidoSchema),
+    resolver: zodV3FormResolver<NovoAchadoPerdidoInput>(NovoAchadoPerdidoSchema),
     mode: "onBlur",
     defaultValues: {
       tipo: undefined,
