@@ -1,0 +1,6 @@
+-- Historical remote lineage tombstone.
+-- Production recorded version 20260926011531 for SQL represented canonically by:
+--   20260926011000_harden_analytics_ingest_abuse_controls.sql
+-- This file is intentionally no-op. The canonical SQL remains at its original
+-- local version to preserve fresh-database execution order.
+-- Authority: supabase/migration-lineage-reconciliation.json

@@ -1,0 +1,6 @@
+-- Historical remote lineage tombstone.
+-- Production recorded version 20261005221222 for SQL represented canonically by:
+--   20261005225000_pause_safety_rpc_client_grants.sql
+-- This file is intentionally no-op. The canonical SQL remains at its original
+-- local version to preserve fresh-database execution order.
+-- Authority: supabase/migration-lineage-reconciliation.json

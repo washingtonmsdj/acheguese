@@ -23,7 +23,7 @@ describe('business map bounded read', () => {
     'supabase/migrations/20260920094738_index_public_business_map_bounds_g154.sql',
   );
   const addressProjectionMigration = readProjectFile(
-    'supabase/migrations/20260921224500_project_business_search_coordinates_from_address.sql',
+    'supabase/migrations/20261113090000_project_business_search_coordinates_from_address.sql',
   );
   const addressResolution = readProjectFile(
     'src/core/business/services/business.address-resolution.ts',

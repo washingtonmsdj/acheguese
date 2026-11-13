@@ -1,6 +1,7 @@
--- Harden the public professional reputation read model without changing its caller contract.
--- Supabase recommends an explicit search_path for SECURITY DEFINER functions.
--- The function body already schema-qualifies every relation it reads.
-
-ALTER FUNCTION public.get_professional_trust_reputation(uuid)
-  SET search_path = '';
+-- Lineage tombstone for retroactive migration 20261002175500.
+-- Desired search_path hardening was not present remotely.
+-- The original SQL was moved unchanged to the forward migration:
+--   20261113091000_harden_professional_trust_reputation_search_path.sql
+-- This file is intentionally no-op so migration repair can close the historical
+-- slot without pretending the original SQL ran at this timestamp.
+-- Authority: supabase/migration-lineage-reconciliation.json

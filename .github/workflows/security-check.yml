@@ -189,7 +189,7 @@ jobs:
           npm run test:mvp:unit 2>&1 | tee vitest-output.log
 
       - name: Test Supabase lineage fail-closed controls
-        run: npx vitest run tests/security/supabase-migration-lineage-gate.test.ts
+        run: npx vitest run tests/security/supabase-migration-lineage-gate.test.ts tests/security/supabase-lineage-reconciliation.test.ts
 
       - name: Upload MVP unit test log
         uses: actions/upload-artifact@v4

@@ -1,0 +1,269 @@
+{
+  "schemaVersion": "supabase-lineage-reconciliation/v1",
+  "authority": "supabase-main-db-push",
+  "projectRef": "xhdowzacfujckjelqhtd",
+  "purpose": "Preserve remote migration evidence while restoring a reproducible local chain without re-executing historical SQL.",
+  "policy": {
+    "remoteAliasFilesAreNoop": true,
+    "canonicalSqlStaysAtOriginalLocalVersion": true,
+    "remoteHistoricalVersionsAreNeverReverted": true,
+    "repairOnlyMarksCanonicalOrRetiredNoopVersionsApplied": true,
+    "forwardReplacementsCarryUnappliedRetroactiveEffects": true
+  },
+  "aliases": [
+    {
+      "remoteVersion": "20260926005921",
+      "canonicalVersion": "20260926004700",
+      "name": "fix_rls_auth_initplan_regression",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926005921_fix_rls_auth_initplan_regression.sql",
+      "canonicalFile": "20260926004700_fix_rls_auth_initplan_regression.sql"
+    },
+    {
+      "remoteVersion": "20260926011402",
+      "canonicalVersion": "20260926011200",
+      "name": "remove_redundant_service_role_rls_policies",
+      "equivalence": "lexical",
+      "remoteTombstoneFile": "20260926011402_remove_redundant_service_role_rls_policies.sql",
+      "canonicalFile": "20260926011200_remove_redundant_service_role_rls_policies.sql"
+    },
+    {
+      "remoteVersion": "20260926011531",
+      "canonicalVersion": "20260926011000",
+      "name": "harden_analytics_ingest_abuse_controls",
+      "equivalence": "lexical",
+      "remoteTombstoneFile": "20260926011531_harden_analytics_ingest_abuse_controls.sql",
+      "canonicalFile": "20260926011000_harden_analytics_ingest_abuse_controls.sql"
+    },
+    {
+      "remoteVersion": "20260926012211",
+      "canonicalVersion": "20260926011200",
+      "name": "remove_redundant_service_role_rls_policies",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926012211_remove_redundant_service_role_rls_policies.sql",
+      "canonicalFile": "20260926011200_remove_redundant_service_role_rls_policies.sql"
+    },
+    {
+      "remoteVersion": "20260926012259",
+      "canonicalVersion": "20260926011800",
+      "name": "fail_closed_browser_default_privileges",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926012259_fail_closed_browser_default_privileges.sql",
+      "canonicalFile": "20260926011800_fail_closed_browser_default_privileges.sql"
+    },
+    {
+      "remoteVersion": "20260926012414",
+      "canonicalVersion": "20260926012500",
+      "name": "consolidate_browser_rls_policies",
+      "equivalence": "lexical",
+      "remoteTombstoneFile": "20260926012414_consolidate_browser_rls_policies.sql",
+      "canonicalFile": "20260926012500_consolidate_browser_rls_policies.sql"
+    },
+    {
+      "remoteVersion": "20260926012944",
+      "canonicalVersion": "20260926013000",
+      "name": "harden_public_security_definer_rpc_runtime",
+      "equivalence": "lexical",
+      "remoteTombstoneFile": "20260926012944_harden_public_security_definer_rpc_runtime.sql",
+      "canonicalFile": "20260926013000_harden_public_security_definer_rpc_runtime.sql"
+    },
+    {
+      "remoteVersion": "20260926015559",
+      "canonicalVersion": "20260926014500",
+      "name": "harden_authenticated_security_definer_rpc_timeouts",
+      "equivalence": "lexical",
+      "remoteTombstoneFile": "20260926015559_harden_authenticated_security_definer_rpc_timeouts.sql",
+      "canonicalFile": "20260926014500_harden_authenticated_security_definer_rpc_timeouts.sql"
+    },
+    {
+      "remoteVersion": "20260926020539",
+      "canonicalVersion": "20260926020500",
+      "name": "close_direct_profile_delete_authority",
+      "equivalence": "lexical",
+      "remoteTombstoneFile": "20260926020539_close_direct_profile_delete_authority.sql",
+      "canonicalFile": "20260926020500_close_direct_profile_delete_authority.sql"
+    },
+    {
+      "remoteVersion": "20260926021216",
+      "canonicalVersion": "20260926021500",
+      "name": "remove_duplicate_trigger_drift",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926021216_remove_duplicate_trigger_drift.sql",
+      "canonicalFile": "20260926021500_remove_duplicate_trigger_drift.sql"
+    },
+    {
+      "remoteVersion": "20260926021526",
+      "canonicalVersion": "20260926021000",
+      "name": "close_residual_browser_write_grants",
+      "equivalence": "exact",
+      "remoteTombstoneFile": "20260926021526_close_residual_browser_write_grants.sql",
+      "canonicalFile": "20260926021000_close_residual_browser_write_grants.sql"
+    },
+    {
+      "remoteVersion": "20260926022700",
+      "canonicalVersion": "20260926023000",
+      "name": "bound_cron_worker_runtime",
+      "equivalence": "exact",
+      "remoteTombstoneFile": "20260926022700_bound_cron_worker_runtime.sql",
+      "canonicalFile": "20260926023000_bound_cron_worker_runtime.sql"
+    },
+    {
+      "remoteVersion": "20260926023649",
+      "canonicalVersion": "20260926024500",
+      "name": "fail_closed_future_private_function_grants",
+      "equivalence": "exact",
+      "remoteTombstoneFile": "20260926023649_fail_closed_future_private_function_grants.sql",
+      "canonicalFile": "20260926024500_fail_closed_future_private_function_grants.sql"
+    },
+    {
+      "remoteVersion": "20260926025016",
+      "canonicalVersion": "20260926025137",
+      "name": "remove_dead_territory_history_admin_policies",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926025016_remove_dead_territory_history_admin_policies.sql",
+      "canonicalFile": "20260926025137_remove_dead_territory_history_admin_policies.sql"
+    },
+    {
+      "remoteVersion": "20260926025922",
+      "canonicalVersion": "20260926030000",
+      "name": "consolidate_proven_rls_redundancies",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926025922_consolidate_proven_rls_redundancies.sql",
+      "canonicalFile": "20260926030000_consolidate_proven_rls_redundancies.sql"
+    },
+    {
+      "remoteVersion": "20260926031046",
+      "canonicalVersion": "20260926030330",
+      "name": "consolidate_profile_links_rls",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926031046_consolidate_profile_links_rls.sql",
+      "canonicalFile": "20260926030330_consolidate_profile_links_rls.sql"
+    },
+    {
+      "remoteVersion": "20260926100452",
+      "canonicalVersion": "20260926025000",
+      "name": "repair_postgres_function_default_privileges",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926100452_repair_postgres_function_default_privileges.sql",
+      "canonicalFile": "20260926025000_repair_postgres_function_default_privileges.sql"
+    },
+    {
+      "remoteVersion": "20260926100507",
+      "canonicalVersion": "20260926033000",
+      "name": "consolidate_remaining_proven_rls_redundancies",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926100507_consolidate_remaining_proven_rls_redundancies.sql",
+      "canonicalFile": "20260926033000_consolidate_remaining_proven_rls_redundancies.sql"
+    },
+    {
+      "remoteVersion": "20260926100606",
+      "canonicalVersion": "20260926095000",
+      "name": "retire_professional_coordinate_metadata",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926100606_retire_professional_coordinate_metadata.sql",
+      "canonicalFile": "20260926095000_retire_professional_coordinate_metadata.sql"
+    },
+    {
+      "remoteVersion": "20260926110547",
+      "canonicalVersion": "20260926104500",
+      "name": "remove_superseded_rls_paths",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20260926110547_remove_superseded_rls_paths.sql",
+      "canonicalFile": "20260926104500_remove_superseded_rls_paths.sql"
+    },
+    {
+      "remoteVersion": "20261005134637",
+      "canonicalVersion": "20261005132500",
+      "name": "revoke_authenticated_profile_direct_writes",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20261005134637_revoke_authenticated_profile_direct_writes.sql",
+      "canonicalFile": "20261005132500_revoke_authenticated_profile_direct_writes.sql"
+    },
+    {
+      "remoteVersion": "20261005221222",
+      "canonicalVersion": "20261005225000",
+      "name": "pause_safety_rpc_client_grants",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20261005221222_pause_safety_rpc_client_grants.sql",
+      "canonicalFile": "20261005225000_pause_safety_rpc_client_grants.sql"
+    },
+    {
+      "remoteVersion": "20261006043357",
+      "canonicalVersion": "20261006050045",
+      "name": "add_current_account_deletion_status_reader",
+      "equivalence": "whitespace",
+      "remoteTombstoneFile": "20261006043357_add_current_account_deletion_status_reader.sql",
+      "canonicalFile": "20261006050045_add_current_account_deletion_status_reader.sql"
+    },
+    {
+      "remoteVersion": "20261006055146",
+      "canonicalVersion": "20261006054500",
+      "name": "pause_community_direct_messaging_rpc_client_grants",
+      "equivalence": "lexical",
+      "remoteTombstoneFile": "20261006055146_pause_community_direct_messaging_rpc_client_grants.sql",
+      "canonicalFile": "20261006054500_pause_community_direct_messaging_rpc_client_grants.sql"
+    }
+  ],
+  "retiredRetroactive": [
+    {
+      "version": "20260921224500",
+      "file": "20260921224500_project_business_search_coordinates_from_address.sql",
+      "replacement": "20261113090000_project_business_search_coordinates_from_address.sql",
+      "reason": "Effect not fully present in production; move it forward rather than replaying a retroactive migration."
+    },
+    {
+      "version": "20260927170000",
+      "file": "20260927170000_territory_first_public_snapshot_urls.sql",
+      "replacement": "20261113090500_territory_first_public_snapshot_urls.sql",
+      "reason": "Functions exist remotely without this ledger id; reassert current canonical definitions as a forward migration."
+    },
+    {
+      "version": "20261002175500",
+      "file": "20261002175500_harden_professional_trust_reputation_search_path.sql",
+      "replacement": "20261113091000_harden_professional_trust_reputation_search_path.sql",
+      "reason": "Hardening is not present remotely; carry it forward instead of replaying an old timestamp."
+    }
+  ],
+  "repairAppliedVersions": [
+    "20260921224500",
+    "20260926004700",
+    "20260926011000",
+    "20260926011200",
+    "20260926011800",
+    "20260926012500",
+    "20260926013000",
+    "20260926014500",
+    "20260926020500",
+    "20260926021000",
+    "20260926021500",
+    "20260926023000",
+    "20260926024500",
+    "20260926025000",
+    "20260926025137",
+    "20260926030000",
+    "20260926030330",
+    "20260926033000",
+    "20260926095000",
+    "20260926104500",
+    "20260927170000",
+    "20261002175500",
+    "20261005132500",
+    "20261005225000",
+    "20261006050045",
+    "20261006054500"
+  ],
+  "forwardPendingVersions": [
+    "20261113080000",
+    "20261113090000",
+    "20261113090500",
+    "20261113091000"
+  ],
+  "applyOnMainPush": false,
+  "additionalForwardMigrations": [
+    {
+      "version": "20261113080000",
+      "file": "20261113080000_business_transactional_address_idempotency.sql",
+      "reason": "P0 #649: atomic Address + Business persistence and durable operation receipts, integrated in main before lineage reconciliation."
+    }
+  ]
+}
