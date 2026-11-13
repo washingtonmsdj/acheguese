@@ -49,7 +49,7 @@ const VERCEL_CONFIG_TEMPLATE = {
     },
   ],
 
-  headers: [] as Array{
+  headers: [] as Array<{
     source: string;
     headers: Array<{ key: string; value: string }>;
   }>,
