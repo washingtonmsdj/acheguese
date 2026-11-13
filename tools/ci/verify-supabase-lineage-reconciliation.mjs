@@ -22,7 +22,35 @@ function same(left, right) {
   return left.length === right.length && left.every((value, index) => value === right[index]);
 }
 
-export function verifyReconciliation({ output, directory, manifest, phase }) {
+export function parseManagementMigrationHistory(payload) {
+  const entries = Array.isArray(payload)
+    ? payload
+    : payload && Array.isArray(payload.migrations)
+      ? payload.migrations
+      : null;
+  if (!entries) {
+    throw new Error("Invalid Supabase Management API migration history payload");
+  }
+
+  return entries.map((entry) => {
+    const version =
+      typeof entry === "string" || typeof entry === "number"
+        ? String(entry)
+        : String(entry?.version ?? "");
+    if (!VERSION.test(version)) {
+      throw new Error(`Invalid remote migration version from Management API: ${version || "<empty>"}`);
+    }
+    return version;
+  });
+}
+
+export function verifyReconciliation({
+  output = null,
+  remoteHistory = null,
+  directory,
+  manifest,
+  phase,
+}) {
   if (!["before", "after-repair", "after-push"].includes(phase)) {
     throw new Error("Invalid reconciliation phase");
   }
@@ -135,7 +163,6 @@ export function verifyReconciliation({ output, directory, manifest, phase }) {
     }
   }
 
-  const rows = parseMigrationTable(output);
   const local = new Set();
   const remote = new Set();
   const localOnly = new Set();
@@ -144,14 +171,31 @@ export function verifyReconciliation({ output, directory, manifest, phase }) {
   const duplicateRemoteRows = new Set();
   const mispaired = [];
 
-  for (const row of rows) {
-    if (row.local && local.has(row.local)) duplicateLocalRows.add(row.local);
-    if (row.remote && remote.has(row.remote)) duplicateRemoteRows.add(row.remote);
-    if (row.local) local.add(row.local);
-    if (row.remote) remote.add(row.remote);
-    if (row.local && !row.remote) localOnly.add(row.local);
-    if (row.remote && !row.local) remoteOnly.add(row.remote);
-    if (row.local && row.remote && row.local !== row.remote) mispaired.push(row);
+  if (remoteHistory !== null) {
+    for (const version of byVersion.keys()) {
+      local.add(version);
+    }
+    for (const version of parseManagementMigrationHistory(remoteHistory)) {
+      if (remote.has(version)) duplicateRemoteRows.add(version);
+      remote.add(version);
+    }
+    for (const version of local) {
+      if (!remote.has(version)) localOnly.add(version);
+    }
+    for (const version of remote) {
+      if (!local.has(version)) remoteOnly.add(version);
+    }
+  } else {
+    const rows = parseMigrationTable(output);
+    for (const row of rows) {
+      if (row.local && local.has(row.local)) duplicateLocalRows.add(row.local);
+      if (row.remote && remote.has(row.remote)) duplicateRemoteRows.add(row.remote);
+      if (row.local) local.add(row.local);
+      if (row.remote) remote.add(row.remote);
+      if (row.local && !row.remote) localOnly.add(row.local);
+      if (row.remote && !row.local) remoteOnly.add(row.remote);
+      if (row.local && row.remote && row.local !== row.remote) mispaired.push(row);
+    }
   }
 
   const checkoutVersions = new Set(byVersion.keys());
@@ -211,21 +255,33 @@ function parseArgs(argv) {
   for (let index = 0; index < argv.length; index += 2) {
     const key = argv[index];
     const value = argv[index + 1];
-    if (!["--list", "--directory", "--manifest", "--phase"].includes(key) || !value) {
+    if (
+      !["--list", "--remote-json", "--directory", "--manifest", "--phase"].includes(key) ||
+      !value
+    ) {
       throw new Error(`Invalid or missing argument: ${key}`);
     }
     args.set(key, value);
   }
-  for (const key of ["--list", "--directory", "--manifest", "--phase"]) {
+  for (const key of ["--directory", "--manifest", "--phase"]) {
     if (!args.has(key)) throw new Error(`Required: ${key}`);
+  }
+  const sources = Number(args.has("--list")) + Number(args.has("--remote-json"));
+  if (sources !== 1) {
+    throw new Error("Exactly one remote history source is required: --list or --remote-json");
   }
   return args;
 }
 
 export function run(argv) {
   const args = parseArgs(argv);
+  const listPath = args.get("--list");
+  const remoteJsonPath = args.get("--remote-json");
   const state = verifyReconciliation({
-    output: readFileSync(resolve(args.get("--list")), "utf8"),
+    output: listPath ? readFileSync(resolve(listPath), "utf8") : null,
+    remoteHistory: remoteJsonPath
+      ? JSON.parse(readFileSync(resolve(remoteJsonPath), "utf8"))
+      : null,
     directory: resolve(args.get("--directory")),
     manifest: JSON.parse(readFileSync(resolve(args.get("--manifest")), "utf8")),
     phase: args.get("--phase"),
