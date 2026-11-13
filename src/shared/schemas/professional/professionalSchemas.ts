@@ -9,7 +9,7 @@
  * @version 1.0.0 - SSOT Migration
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { normalizeMediaAssetReference } from "@/shared/media/mediaAssetReference";
 
 // ============================================================================
