@@ -287,5 +287,5 @@ jobs:
             "- Remote historical versions are preserved; none are reverted.",
             "- Tracking repair may only mark the 26 manifest versions applied.",
             "- SQL apply is allowed only after exact after-repair verification and dry-run.",
-            "- No db reset, --include-all, seed, destructive fallback or unversioned DDL is permitted."
+            "- No db reset, historical-inclusive push, seed, destructive fallback or unversioned DDL is permitted."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
