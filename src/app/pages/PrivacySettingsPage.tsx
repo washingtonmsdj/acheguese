@@ -60,6 +60,11 @@ import { useToast } from "@/shared/hooks/use-toast";
 
 type UserConsent = UserConsentRecord;
 
+interface PrivacyLocationState {
+  accountStateUnavailable?: boolean;
+  restrictedByAccountDeletion?: boolean;
+}
+
 const CONSENT_LABELS: Readonly<Record<string, string>> = {
   analytics: "Medição de uso",
   marketing: "Ofertas e novidades",
@@ -252,6 +257,9 @@ export default function PrivacySettingsPage() {
   const appUrls = useAppUrls();
   const location = useLocation();
   const navigate = useNavigate();
+  const routeState = location.state as PrivacyLocationState | null;
+  const accountStateUnavailable =
+    routeState?.accountStateUnavailable === true;
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -476,6 +484,33 @@ export default function PrivacySettingsPage() {
         desktopDescription={scheduled ? "Consulte o andamento e as opções disponíveis." : "Você no controle da sua privacidade."}
         hideMobileHeading={scheduled}
       >
+        {accountStateUnavailable ? (
+          <div
+            className="mb-4 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning-foreground"
+            role="alert"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold">
+                  Não foi possível confirmar o estado da sua conta
+                </p>
+                <p className="mt-1 leading-5">
+                  Por segurança, as demais áreas ficaram temporariamente bloqueadas.
+                  Tente novamente quando a conexão com o serviço da conta estiver estável.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 min-h-10 border-warning/40 bg-transparent"
+                  onClick={() => navigate(ACCOUNT_PATHS.home, { replace: true })}
+                >
+                  Tentar voltar para Minha conta
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
         {deletionStatusLoading ? (
           <div className="mb-4 flex items-center gap-3 rounded-2xl border border-territory-border bg-territory-surface p-4 text-sm text-territory-muted" role="status">
             <Loader2 className="h-5 w-5 shrink-0 animate-spin text-territory-brand" aria-hidden="true" />
