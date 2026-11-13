@@ -45,7 +45,6 @@ jobs:
     timeout-minutes: 15
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     outputs:
       target_sha: ${{ steps.target.outputs.sha }}
       phase: ${{ steps.phase.outputs.value }}
@@ -123,41 +122,35 @@ jobs:
             echo "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing." >&2
             exit 1
           fi
-          if [ -z "${SUPABASE_DB_PASSWORD:-}" ]; then
-            echo "GitHub Actions secret SUPABASE_DB_PASSWORD is missing." >&2
-            exit 1
-          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: "24"
 
-      - name: Pin Supabase CLI and link exact project
-        shell: bash
-        working-directory: gate
-        run: |
-          set -euo pipefail
-          version="$(npx --yes "supabase@$SUPABASE_CLI_VERSION" --version | tr -d '\r' | xargs)"
-          if [ "$version" != "$SUPABASE_CLI_VERSION" ]; then
-            echo "Unexpected Supabase CLI version: $version" >&2
-            exit 1
-          fi
-          npx --yes "supabase@$SUPABASE_CLI_VERSION" link --project-ref "$SUPABASE_PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
-          linked_ref="$(tr -d '\r\n ' < supabase/.temp/project-ref)"
-          if [ "$linked_ref" != "$SUPABASE_PROJECT_REF" ]; then
-            echo "Linked Supabase project mismatch: $linked_ref" >&2
-            exit 1
-          fi
-
-      - name: Capture migration history read-only
+      - name: Capture migration history through Management API
         id: before_list
         shell: bash
         working-directory: gate
         run: |
           set -euo pipefail
-          path="$RUNNER_TEMP/acheguese-migration-list-before.txt"
-          npx --yes "supabase@$SUPABASE_CLI_VERSION" migration list --linked --password "$SUPABASE_DB_PASSWORD" 2>&1 | tee "$path"
+          path="$RUNNER_TEMP/acheguese-migration-history-before.json"
+          status="$(
+            curl --silent --show-error \
+              --output "$path" \
+              --write-out "%{http_code}" \
+              --header "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              --header "Accept: application/json" \
+              "https://api.supabase.com/v1/projects/$SUPABASE_PROJECT_REF/database/migrations"
+          )"
+          if [ "$status" != "200" ]; then
+            echo "Supabase Management API migration history request failed with HTTP $status." >&2
+            if [ "$status" = "403" ]; then
+              echo "SUPABASE_ACCESS_TOKEN requires Migrations: Read for project $SUPABASE_PROJECT_REF." >&2
+            fi
+            exit 1
+          fi
+          node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const rows=Array.isArray(value)?value:value?.migrations; if(!Array.isArray(rows)) process.exit(2); console.log("Management API migration entries:", rows.length);' "$path"
           echo "path=$path" >> "$GITHUB_OUTPUT"
 
       - name: Detect exact reconciliation phase
@@ -165,13 +158,13 @@ jobs:
         shell: bash
         working-directory: gate
         env:
-          LIST_PATH: ${{ steps.before_list.outputs.path }}
+          REMOTE_JSON_PATH: ${{ steps.before_list.outputs.path }}
         run: |
           set -euo pipefail
           matched=""
           for candidate in after-push after-repair before; do
             if node tools/ci/verify-supabase-lineage-reconciliation.mjs \
-              --list "$LIST_PATH" \
+              --remote-json "$REMOTE_JSON_PATH" \
               --directory supabase/migrations \
               --manifest supabase/migration-lineage-reconciliation.json \
               --phase "$candidate"; then
@@ -197,10 +190,10 @@ jobs:
             echo "## Supabase read-only migration diagnostic"
             echo "- Target SHA: $TARGET_SHA"
             echo "- Project ref: $SUPABASE_PROJECT_REF"
-            echo "- Supabase CLI: $SUPABASE_CLI_VERSION"
+            echo "- Read source: Supabase Management API migration history (Migrations: Read)"
             echo "- Authorized phase: $PHASE"
             echo "- Runner: GitHub-hosted ubuntu-latest"
-            echo "- This job performs no migration repair, SQL push, seed, reset, or Edge Function deploy."
+            echo "- This job performs no Postgres connection, migration repair, SQL push, seed, reset, or Edge Function deploy."
             echo "- Any production mutation requires an explicit apply dispatch and the restricted mutation runner."
           } >> "$GITHUB_STEP_SUMMARY"
 
