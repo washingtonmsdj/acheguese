@@ -8,11 +8,8 @@ import { z } from "zod/v3";
  * output, while @hookform/resolvers correctly exposes the wider input type.
  * This adapter keeps that one compatibility cast at the integration boundary.
  */
-export function zodV3FormResolver<
-  TValues extends FieldValues,
-  TInput = unknown,
->(
-  schema: z.ZodType<TValues, z.ZodTypeDef, TInput>,
+export function zodV3FormResolver<TValues extends FieldValues>(
+  schema: z.ZodTypeAny,
 ): Resolver<TValues> {
   return zodResolver(schema) as unknown as Resolver<TValues>;
 }
