@@ -1,0 +1,6 @@
+-- Historical remote lineage tombstone.
+-- Production recorded version 20260926100452 for SQL represented canonically by:
+--   20260926025000_repair_postgres_function_default_privileges.sql
+-- This file is intentionally no-op. The canonical SQL remains at its original
+-- local version to preserve fresh-database execution order.
+-- Authority: supabase/migration-lineage-reconciliation.json

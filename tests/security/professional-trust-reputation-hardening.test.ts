@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const HARDENING_MIGRATION =
-  "20261002175500_harden_professional_trust_reputation_search_path.sql";
+  "20261113091000_harden_professional_trust_reputation_search_path.sql";
 const SOURCE_MIGRATION = "20260715109000_consolidate_trust_commands.sql";
 
 function migration(name: string): string {

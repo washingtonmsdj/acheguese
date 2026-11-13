@@ -1,0 +1,6 @@
+-- Historical remote lineage tombstone.
+-- Production recorded version 20260926020539 for SQL represented canonically by:
+--   20260926020500_close_direct_profile_delete_authority.sql
+-- This file is intentionally no-op. The canonical SQL remains at its original
+-- local version to preserve fresh-database execution order.
+-- Authority: supabase/migration-lineage-reconciliation.json

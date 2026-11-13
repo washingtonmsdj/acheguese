@@ -1,0 +1,6 @@
+-- Historical remote lineage tombstone.
+-- Production recorded version 20260926110547 for SQL represented canonically by:
+--   20260926104500_remove_superseded_rls_paths.sql
+-- This file is intentionally no-op. The canonical SQL remains at its original
+-- local version to preserve fresh-database execution order.
+-- Authority: supabase/migration-lineage-reconciliation.json

@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/supabase-main-db-push.yml"
+      - "supabase/migration-lineage-reconciliation.json"
+      - "supabase/migrations/**"
+      - "tools/ci/verify-supabase-migration-lineage.mjs"
+      - "tools/ci/verify-supabase-lineage-reconciliation.mjs"
   workflow_dispatch:
     inputs:
       sha:
@@ -12,12 +16,12 @@ on:
         required: true
         type: string
       apply:
-        description: "Apply the five approved LGPD migrations and deploy privacy-rpc"
+        description: "Apply the exact reconciled pending migration set"
         required: true
         default: false
         type: boolean
       confirmation:
-        description: "For apply=true, type APPLY_5_LGPD_MIGRATIONS"
+        description: "For apply=true, type APPLY_RECONCILED_MAIN_MIGRATIONS"
         required: false
         default: ""
         type: string
@@ -26,8 +30,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: supabase-main-db-push-production-v3
-  cancel-in-progress: true
+  group: supabase-main-db-push-production-v4
+  cancel-in-progress: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
@@ -43,7 +47,7 @@ jobs:
       - x64
       - acheguese-heavy-windows
       - remote-only
-    timeout-minutes: 30
+    timeout-minutes: 40
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -56,44 +60,20 @@ jobs:
           EVENT_REF: ${{ github.ref }}
           EVENT_SHA: ${{ github.sha }}
           TARGET_SHA: ${{ github.event_name == 'workflow_dispatch' && inputs.sha || github.sha }}
-          APPLY_REQUESTED: ${{ github.event_name == 'workflow_dispatch' && inputs.apply || false }}
+          DISPATCH_APPLY: ${{ github.event_name == 'workflow_dispatch' && inputs.apply || false }}
           CONFIRMATION: ${{ github.event_name == 'workflow_dispatch' && inputs.confirmation || '' }}
         run: |
           $ErrorActionPreference = "Stop"
-
-          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
-            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
-          }
-          if ($env:EVENT_REF -ne "refs/heads/main") {
-            throw "Only refs/heads/main is authorized. Received $env:EVENT_REF"
-          }
-          if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
-            throw "Unsupported event: $env:GITHUB_EVENT_NAME"
-          }
-
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") { throw "Unexpected repository: $env:GITHUB_REPOSITORY" }
+          if ($env:EVENT_REF -ne "refs/heads/main") { throw "Only refs/heads/main is authorized. Received $env:EVENT_REF" }
+          if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") { throw "Unsupported event: $env:GITHUB_EVENT_NAME" }
           $targetSha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
           $eventSha = ([string]$env:EVENT_SHA).Trim().ToLowerInvariant()
-          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
-            throw "Target SHA must be exactly 40 hex characters."
-          }
-          if ($eventSha -notmatch '^[0-9a-f]{40}$') {
-            throw "Actions event SHA is invalid."
-          }
-          if ($targetSha -ne $eventSha) {
-            throw "Requested SHA must equal the exact main SHA selected by Actions. selected=$eventSha requested=$targetSha"
-          }
-
-          if ($env:GITHUB_EVENT_NAME -eq "push" -and $env:APPLY_REQUESTED -eq "true") {
-            throw "Push-triggered runs are dry-run only."
-          }
-          if ($env:APPLY_REQUESTED -eq "true" -and $env:CONFIRMATION -ne "APPLY_5_LGPD_MIGRATIONS") {
-            throw "Apply mode requires exact confirmation APPLY_5_LGPD_MIGRATIONS."
-          }
-
+          if ($targetSha -notmatch '^[0-9a-f]{40}$' -or $eventSha -notmatch '^[0-9a-f]{40}$') { throw "Target and event SHA must be exactly 40 hex characters." }
+          if ($targetSha -ne $eventSha) { throw "Requested SHA must equal the exact main SHA selected by Actions. selected=$eventSha requested=$targetSha" }
+          if ($env:DISPATCH_APPLY -eq "true" -and $env:CONFIRMATION -ne "APPLY_RECONCILED_MAIN_MIGRATIONS") { throw "Apply mode requires exact confirmation APPLY_RECONCILED_MAIN_MIGRATIONS." }
           Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "apply=$($env:APPLY_REQUESTED.ToLowerInvariant())" -Encoding UTF8
-          Write-Host "Exact main SHA accepted: $targetSha"
-          Write-Host "Apply requested: $env:APPLY_REQUESTED"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "dispatch_apply=$($env:DISPATCH_APPLY.ToLowerInvariant())" -Encoding UTF8
 
       - name: Checkout isolated Supabase source at exact SHA
         uses: actions/checkout@v6
@@ -117,24 +97,31 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
-          if ($actual -ne $env:EXPECTED_SHA) {
-            throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual"
-          }
-          if (git status --porcelain) {
-            throw "Isolated worktree must be clean before production DB operations."
-          }
+          if ($actual -ne $env:EXPECTED_SHA) { throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual" }
+          if (git status --porcelain) { throw "Isolated worktree must be clean before production DB operations." }
+
+      - name: Resolve exact apply policy
+        id: policy
+        shell: powershell
+        working-directory: gate
+        env:
+          DISPATCH_APPLY: ${{ steps.target.outputs.dispatch_apply }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $manifest = Get-Content "supabase/migration-lineage-reconciliation.json" -Raw | ConvertFrom-Json
+          $autoApply = [bool]$manifest.applyOnMainPush
+          $apply = ($env:GITHUB_EVENT_NAME -eq "push" -and $autoApply) -or ($env:GITHUB_EVENT_NAME -eq "workflow_dispatch" -and $env:DISPATCH_APPLY -eq "true")
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "auto_apply=$($autoApply.ToString().ToLowerInvariant())" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "apply=$($apply.ToString().ToLowerInvariant())" -Encoding UTF8
+          Write-Host "Manifest auto-apply: $autoApply"
+          Write-Host "Apply this run: $apply"
 
       - name: Validate required Supabase credentials
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
-          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
-            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
-          }
-          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_DB_PASSWORD)) {
-            throw "GitHub Actions secret SUPABASE_DB_PASSWORD is missing."
-          }
-          Write-Host "Required Supabase credentials are present."
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) { throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing." }
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_DB_PASSWORD)) { throw "GitHub Actions secret SUPABASE_DB_PASSWORD is missing." }
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -148,55 +135,74 @@ jobs:
           $ErrorActionPreference = "Stop"
           $version = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" --version).Trim()
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          if ($version -ne $env:SUPABASE_CLI_VERSION) {
-            throw "Unexpected Supabase CLI version: $version"
-          }
-
+          if ($version -ne $env:SUPABASE_CLI_VERSION) { throw "Unexpected Supabase CLI version: $version" }
           & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" link --project-ref $env:SUPABASE_PROJECT_REF --password $env:SUPABASE_DB_PASSWORD
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
           $linkedRef = (Get-Content "supabase/.temp/project-ref" -Raw).Trim()
-          if ($linkedRef -ne $env:SUPABASE_PROJECT_REF) {
-            throw "Linked Supabase project mismatch: $linkedRef"
-          }
+          if ($linkedRef -ne $env:SUPABASE_PROJECT_REF) { throw "Linked Supabase project mismatch: $linkedRef" }
 
-      - name: Prove migration history delta is exactly approved
-        id: migrations
+      - name: Capture migration history before changes
+        id: before_list
         shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
+          $output = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
+          if ($LASTEXITCODE -ne 0) { $output | ForEach-Object { Write-Host $_ }; throw "supabase migration list failed." }
+          $path = Join-Path $env:RUNNER_TEMP "acheguese-migration-list-before.txt"
+          Set-Content -Path $path -Value ($output -join [Environment]::NewLine) -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "path=$path" -Encoding UTF8
 
-          # This legacy batch remains intentionally locked to five reviewed
-          # LGPD migrations. Address #658/#657 must NOT be included before
-          # independent staging certification and explicit release approval.
-          $expected = @(
-            "20260821001800",
-            "20260821002600",
-            "20260821011000",
-            "20260821022500",
-            "20260821024000"
-          )
-
-          $migrationOutput = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
-          if ($LASTEXITCODE -ne 0) {
-            $migrationOutput | ForEach-Object { Write-Host $_ }
-            throw "supabase migration list failed."
+      - name: Detect exact reconciliation phase
+        id: phase
+        shell: powershell
+        working-directory: gate
+        env:
+          LIST_PATH: ${{ steps.before_list.outputs.path }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $matched = $null
+          foreach ($candidate in @("after-push", "after-repair", "before")) {
+            & node "tools/ci/verify-supabase-lineage-reconciliation.mjs" --list $env:LIST_PATH --directory "supabase/migrations" --manifest "supabase/migration-lineage-reconciliation.json" --phase $candidate
+            if ($LASTEXITCODE -eq 0) { $matched = $candidate; break }
           }
+          if ([string]::IsNullOrWhiteSpace($matched)) { throw "Remote/local history matches no authorized reconciliation phase." }
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "value=$matched" -Encoding UTF8
+          Write-Host "Authorized reconciliation phase: $matched"
 
-          $listPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-migration-list.txt"
-          Set-Content -Path $listPath -Value ($migrationOutput -join [Environment]::NewLine) -Encoding UTF8
-          & node "tools/ci/verify-supabase-migration-lineage.mjs" `
-            --list $listPath `
-            --directory "supabase/migrations" `
-            --expected ($expected -join ",")
-          if ($LASTEXITCODE -ne 0) {
-            throw "Remote/local migration history diverges from exact approved batch. No automatic repair, no db push."
-          }
+      - name: Record read-only incomplete reconciliation state
+        if: ${{ steps.phase.outputs.value != 'after-push' && steps.policy.outputs.apply != 'true' }}
+        shell: powershell
+        run: |
+          Write-Host "Reconciliation phase is ${{ steps.phase.outputs.value }}. Apply authority is disabled; no remote mutation will run."
 
-          Write-Host "Approved exact pending versions: $($expected -join ', ')"
+      - name: Repair tracking for proven historical aliases and retired no-op slots
+        if: ${{ steps.phase.outputs.value == 'before' && steps.policy.outputs.apply == 'true' }}
+        shell: powershell
+        working-directory: gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $manifest = Get-Content "supabase/migration-lineage-reconciliation.json" -Raw | ConvertFrom-Json
+          $versions = @($manifest.repairAppliedVersions)
+          if ($versions.Count -ne 26) { throw "Expected exactly 26 tracking versions to repair, received $($versions.Count)." }
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration repair @versions --status applied --linked --password $env:SUPABASE_DB_PASSWORD
+          if ($LASTEXITCODE -ne 0) { throw "Migration tracking repair failed. No SQL push attempted." }
 
-      - name: Dry-run production DB push
+      - name: Verify exact post-repair state
+        if: ${{ steps.phase.outputs.value != 'after-push' && steps.policy.outputs.apply == 'true' }}
+        shell: powershell
+        working-directory: gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $output = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
+          if ($LASTEXITCODE -ne 0) { throw "Post-repair migration list failed." }
+          $path = Join-Path $env:RUNNER_TEMP "acheguese-migration-list-after-repair.txt"
+          Set-Content -Path $path -Value ($output -join [Environment]::NewLine) -Encoding UTF8
+          & node "tools/ci/verify-supabase-lineage-reconciliation.mjs" --list $path --directory "supabase/migrations" --manifest "supabase/migration-lineage-reconciliation.json" --phase "after-repair"
+          if ($LASTEXITCODE -ne 0) { throw "Tracking repair produced an unexpected history. No SQL push attempted." }
+
+      - name: Dry-run exact forward migration set
+        if: ${{ steps.phase.outputs.value != 'after-push' && steps.policy.outputs.apply == 'true' }}
         shell: powershell
         working-directory: gate
         run: |
@@ -204,8 +210,8 @@ jobs:
           & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db push --linked --dry-run --password $env:SUPABASE_DB_PASSWORD
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Apply approved migrations
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
+      - name: Apply exact forward migration set
+        if: ${{ steps.phase.outputs.value != 'after-push' && steps.policy.outputs.apply == 'true' }}
         shell: powershell
         working-directory: gate
         run: |
@@ -214,31 +220,22 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify migration history fully synchronized
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
+        if: ${{ steps.phase.outputs.value == 'after-push' || steps.policy.outputs.apply == 'true' }}
         shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
-          $migrationOutput = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
-          if ($LASTEXITCODE -ne 0) {
-            $migrationOutput | ForEach-Object { Write-Host $_ }
-            throw "Post-push migration list failed."
-          }
-
-          $listPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-migration-list-after.txt"
-          Set-Content -Path $listPath -Value ($migrationOutput -join [Environment]::NewLine) -Encoding UTF8
-          & node "tools/ci/verify-supabase-migration-lineage.mjs" `
-            --list $listPath `
-            --directory "supabase/migrations" `
-            --expected "none"
-          if ($LASTEXITCODE -ne 0) {
-            throw "Migration history is not fully synchronized after push. Do not attempt repair or a second push."
-          }
-
-          Write-Host "Local and remote migration histories are synchronized."
+          $output = @(& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" migration list --linked --password $env:SUPABASE_DB_PASSWORD 2>&1)
+          if ($LASTEXITCODE -ne 0) { throw "Final migration list failed." }
+          $path = Join-Path $env:RUNNER_TEMP "acheguese-migration-list-final.txt"
+          Set-Content -Path $path -Value ($output -join [Environment]::NewLine) -Encoding UTF8
+          & node "tools/ci/verify-supabase-lineage-reconciliation.mjs" --list $path --directory "supabase/migrations" --manifest "supabase/migration-lineage-reconciliation.json" --phase "after-push"
+          if ($LASTEXITCODE -ne 0) { throw "Reconciliation did not finish synchronized." }
+          & node "tools/ci/verify-supabase-migration-lineage.mjs" --list $path --directory "supabase/migrations" --expected "none"
+          if ($LASTEXITCODE -ne 0) { throw "Canonical lineage gate disagrees after reconciliation." }
 
       - name: Lint remote database
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
+        if: ${{ steps.phase.outputs.value == 'after-push' || steps.policy.outputs.apply == 'true' }}
         shell: powershell
         working-directory: gate
         run: |
@@ -246,34 +243,49 @@ jobs:
           & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" db lint --linked --level error --password $env:SUPABASE_DB_PASSWORD
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Deploy privacy-rpc from exact SHA
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
+      - name: Deploy profile-rpc from exact reconciled SHA
+        if: ${{ steps.policy.outputs.apply == 'true' }}
         shell: powershell
         working-directory: gate
         run: |
           $ErrorActionPreference = "Stop"
-          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy privacy-rpc --project-ref $env:SUPABASE_PROJECT_REF --use-api
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy profile-rpc --project-ref $env:SUPABASE_PROJECT_REF --use-api
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify deployed profile-rpc authority
+        if: ${{ steps.policy.outputs.apply == 'true' }}
+        shell: powershell
+        working-directory: gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $raw = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list --project-ref $env:SUPABASE_PROJECT_REF --output json) -join [Environment]::NewLine
+          if ($LASTEXITCODE -ne 0) { throw "Supabase functions list failed." }
+          $entries = $raw | ConvertFrom-Json
+          $profileRpc = @($entries | Where-Object { $_.slug -eq "profile-rpc" -or $_.name -eq "profile-rpc" })
+          if ($profileRpc.Count -ne 1) { throw "Expected exactly one deployed profile-rpc, found $($profileRpc.Count)." }
+          $entry = $profileRpc[0]
+          if ([string]$entry.status -ne "ACTIVE") { throw "profile-rpc is not ACTIVE: $($entry.status)" }
+          $verifyJwt = if ($null -ne $entry.verify_jwt) { [bool]$entry.verify_jwt } else { [bool]$entry.verifyJwt }
+          if (-not $verifyJwt) { throw "profile-rpc must remain verify_jwt=true." }
+          Write-Host "profile-rpc ACTIVE with verify_jwt=true; version=$($entry.version)"
 
       - name: Record gate summary
         if: always()
         shell: powershell
         env:
           TARGET_SHA: ${{ steps.target.outputs.sha }}
-          APPLY_REQUESTED: ${{ steps.target.outputs.apply }}
+          APPLY: ${{ steps.policy.outputs.apply }}
+          PHASE: ${{ steps.phase.outputs.value }}
         run: |
           @(
             "## Supabase production migration gate",
-            "- Repository: washingtonmsdj/acheguese",
-            "- Event: $env:GITHUB_EVENT_NAME",
             "- Target SHA: $env:TARGET_SHA",
-            "- Branch authority: main only",
             "- Project ref: $env:SUPABASE_PROJECT_REF",
             "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
-            "- Apply requested: $env:APPLY_REQUESTED",
-            "- Approved versions: 20260821001800, 20260821002600, 20260821011000, 20260821022500, 20260821024000",
-            "- Push-triggered executions are always dry-run only.",
-            "- Checkout is isolated under gate/ to avoid shared self-hosted workspace cleanup locks.",
-            "- Any local/remote version mismatch or unknown migration-list format blocks db push, without automatic migration repair.",
-            "- No seed, reset, repair, branch creation, or destructive fallback is permitted by this workflow."
+            "- Initial authorized phase: $env:PHASE",
+            "- Apply authority: $env:APPLY",
+            "- Remote historical versions are preserved; none are reverted.",
+            "- Tracking repair may only mark the 26 manifest versions applied.",
+            "- SQL apply is allowed only after exact after-repair verification and dry-run.",
+            "- Destructive database recreation, historical-inclusive push, seed, fallback mutation or unversioned DDL is not permitted."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
