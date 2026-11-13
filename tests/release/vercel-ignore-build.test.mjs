@@ -69,6 +69,12 @@ describe("Vercel ignored build step", () => {
       ".github/workflows/ssot-tests.yml",
       "tests/security/example.test.ts",
       "tests/release/run-messaging-authenticated.mjs",
+      "tools/release/preflight-authenticated-e2e-broker.ts",
+      "tools/release/preflight-production-territorial-data-plane.ts",
+      "tools/release/run-business-lifecycle-authenticated.mjs",
+      "tools/release/run-education-lifecycle-authenticated.mjs",
+      "tools/release/run-mvp-regression-tests.mjs",
+      "tools/release/run-mvp-unit-tests.mjs",
       "e2e/example.spec.ts",
     ];
 
@@ -87,6 +93,10 @@ describe("Vercel ignored build step", () => {
       "tools/release/release-identity.mjs",
       "tools/release/wait-for-production-release.mjs",
       "tools/release/vercel-ignore-build.mjs",
+      "tools/release/generate-release-identity.mjs",
+      "tools/release/generate-sitemap.ts",
+      "tools/release/validate-production-sitemap.mjs",
+      "tools/release/validate-vercel-build-inputs.mjs",
       "supabase/migrations/20260831040000_example.sql",
       "supabase/functions/health-check/index.ts",
       "supabase/config.toml",
