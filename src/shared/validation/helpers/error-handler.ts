@@ -5,7 +5,7 @@
  * Data: 2026-03-19
  */
 
-import { ZodError } from "zod";
+import { ZodError } from "zod/v3";
 
 /**
  * Formata erros do Zod para mensagens user-friendly
