@@ -8,18 +8,6 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/catalogo-api/:path*",
-      "destination": "https://tonecos-catalogo-api.tonecosstudio.workers.dev/:path*"
-    },
-    {
-      "source": "/tonecosstudios/",
-      "destination": "https://washingtonmsdj.github.io/catalogo/"
-    },
-    {
-      "source": "/tonecosstudios/:path*",
-      "destination": "https://washingtonmsdj.github.io/catalogo/:path*"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -169,36 +157,5 @@
       "main": true
     }
   },
-  "redirects": [
-    {
-      "source": "/tonecosstudios",
-      "destination": "/tonecosstudios/",
-      "permanent": false
-    },
-    {
-      "source": "/catalogo",
-      "destination": "/tonecosstudios/",
-      "permanent": false
-    },
-    {
-      "source": "/catalogo/",
-      "destination": "/tonecosstudios/",
-      "permanent": false
-    },
-    {
-      "source": "/catalogo/:path*",
-      "destination": "/tonecosstudios/",
-      "permanent": false
-    },
-    {
-      "source": "/",
-      "destination": "/tonecosstudios/",
-      "permanent": false
-    },
-    {
-      "source": "/((?!tonecosstudios(?:/|$)|catalogo-api(?:/|$)|release\\.json$).*)",
-      "destination": "/tonecosstudios/",
-      "permanent": false
-    }
-  ]
+  "redirects": []
 }

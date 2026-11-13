@@ -1,7 +1,7 @@
 # Achegue-se — Execução main-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Atualizado:** 2026-10-08  
+**Atualizado:** 2026-11-13  
 **Linha de integração:** `main`
 
 Este documento contém somente o estado operacional vigente, a ordem de execução e o Definition of Done do MVP. Histórico de PRs, SHAs e investigações encerradas pertence a `docs/08-roadmap/checkpoints/`, `docs/10-archive/` ou ao histórico do Git.
@@ -100,7 +100,7 @@ Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentai
 
 ## Blockers ativos de infraestrutura
 
-**O release permanece bloqueado por #305 (Supabase/PostgREST) e #445 (Vercel/identidade).** As certificações de snapshots anteriores não substituem verificação do Data API nem deployment e smoke do mesmo conteúdo. A PR #621 está desatualizada em relação à `main` e precisa ser reconciliada sem sobrescrever melhorias dos outros chats.
+**O release permanece bloqueado por #305 (Supabase/PostgREST) e #660 (lineage de migrations).** O gate Vercel #445 foi fechado em 13/11/2026 depois de um Production deployment `READY` do `main` exato; a PR #621 foi encerrada sem merge porque a `main` atual a supersedeu. Todo novo delta deployável ainda exige deployment/smoke do próprio conteúdo, mas quota Vercel não é mais blocker ativo.
 
 ### #305 — Supabase / PostgREST territorial
 
@@ -108,19 +108,21 @@ Qualquer regressão nessas regras deve falhar nos gates arquiteturais/documentai
 
 O gate #305 só fecha após leituras reais e sustentadas de PostgREST, certificação das rotas territoriais e smoke do candidato. Não compensar com retry ilimitado, timeout artificialmente maior, fallback de login, bypass OIDC, fixture alternativa ou relaxamento de RLS.
 
+### #660 — Supabase / lineage de migrations
+
+**ABERTO.** O gate fail-closed de lineage já está integrado à `main`, mas o histórico remoto e os arquivos versionados ainda divergem. Enquanto #660 estiver aberto, nenhuma migration nova — inclusive a transação Business/Address da #662 e os hardenings Address — deve ser aplicada por `migration repair`, `db push --include-all`, SQL manual ou allowlist ampliada para forçar sucesso.
+
+A resolução exige reconciliar o histórico aplicado como evidência imutável, provar a ordem/dependências em replay isolado e só então liberar o lote canônico. O bloqueio é de rollout do banco, não justificativa para criar um segundo writer ou um backend paralelo.
+
 ### #445 — Vercel / identidade de release
 
-**ABERTO.** A última rejeição registrada do deployment canônico foi HTTP `402 payment_required` (quota Vercel), com reset histórico informado em 07/10/2026; a capacidade atual e a identidade do deployment do novo conteúdo ainda **não foram comprovadas**. A política **`exact/equivalent`** continua canônica: equivalência só vale com fingerprint demonstrado, nunca por presunção ou reaproveitamento de CI antigo.
-
-A política `tools/release/vercel-ignore-build.mjs` continua válida: somente paths classificados como **skippable** ficam fora do fingerprint deployável e podem receber `Ignored Build Step`. Testes e documentação comum normalmente entram nessa classe, mas documentos críticos de governança consumidos pela autoridade de release — incluindo este `EXECUCAO_MAIN_ONLY.md` — são deliberadamente deploy-relevant e alteram o fingerprint. Não contornar isso com commit vazio, alteração artificial de runtime, ampliação indevida da allowlist ou relaxamento de `vercel.json`.
-
-Todo novo delta deployável — inclusive mudança em input crítico de governança que participa do fingerprint — exige nova prova: deployment `READY` + smoke, ou equivalência de fingerprint aceita pelo gate canônico. Qualquer regressão de infraestrutura reabre o gate correspondente.
+**FECHADO em 13/11/2026.** A limitação histórica de quota deixou de ser atual: houve Production deployment `READY` do `main` exato e os aliases públicos do Achegue-se convergiram. A política `exact/equivalent` permanece: cada novo delta deployável precisa da sua própria prova de deployment e smoke, mas #445 não deve ser usado como blocker legado quando não houver nova regressão de provider.
 
 ## P0 de integridade do domínio ativo
 
 ### #649 — Business / Endereço e idempotência
 
-**ABERTO.** As PRs #646, #648, #650, #651 e #652 foram integradas para evitar compensações destrutivas, impedir edição antecipada do endereço existente e validar o CEP. Entretanto, a operação Address/Business continua sem transação conjunta comprovada, recibo de idempotência persistente ou reconciliação de órfãos no servidor. Não tratar copy-on-write e CI verde como certificação do fluxo empresarial de criação/edição. A correção deve nascer versionada no owner SQL/broker, sem escritor paralelo nem dashboard drift, e passar testes negativos autenticados.
+**ABERTO para rollout/certificação.** A PR #662 foi integrada à `main` e implementa no owner canônico a transação Address + Business, `operationId` durável, idempotência e recibo de reconciliação, removendo o browser como writer de Address nesse fluxo. O P0 ainda não fecha porque a migration e a Edge correspondente não podem ser promovidas enquanto #660 bloquear o lineage; depois do rollout, backend + edge + web precisam ser certificados no mesmo conteúdo com smoke autenticado real.
 
 ## Dívidas abertas que não são blocker genérico do MVP
 
@@ -158,9 +160,9 @@ Todo novo delta deployável — inclusive mudança em input crítico de governan
 
 4. **Resolver os blockers atuais**
    - #305: validar saúde sustentada das consultas territoriais do Data API;
-   - #445: comprovar capacidade, deployment e identidade de release do novo conteúdo;
-   - #649: resolver a atomicidade/idempotência no broker SQL e certificar os cenários negativos;
-   - reconciliar #621 com a `main` sem perder os commits já incorporados.
+   - #660: reconciliar o lineage remoto/local antes de qualquer DB push;
+   - #649: implantar a correção já integrada e certificar criação/edição Business com cenários negativos e resposta perdida;
+   - certificar deployment/smoke do `main` resultante, sem reabrir #445 por histórico.
 
 5. **Promover**
    - somente com os blockers acima efetivamente resolvidos e todas as provas aplicáveis ao mesmo conteúdo de runtime verdes;
@@ -186,9 +188,9 @@ O MVP recebe **READY** quando o conteúdo candidato comprovar:
 - deployment `READY` + smoke para qualquer novo delta deployável;
 - `Ignored Build Step` apenas quando a política canônica provar que não houve delta deployável;
 - nenhum erro crítico recorrente;
-- #305 e #445 fechados com provas atuais, e #649 resolvido e certificado na autoridade persistente.
+- #305 e #660 fechados com provas atuais, #649 implantado e certificado na autoridade persistente, e deployment/smoke do conteúdo final `READY`.
 
-**MVP NÃO HOMOLOGADO.** O candidato #621 precisa ser reconciliado com a `main` e recertificado no novo HEAD. #305, #445 e #649 continuam abertos; acabamento/higiene não substitui correção dos bloqueios de operação.
+**MVP NÃO HOMOLOGADO.** #621 foi encerrada como candidata obsoleta e #445 foi resolvido. Os bloqueios operacionais atuais são #305, #660 e a certificação/rollout de #649; acabamento/higiene não substitui essas provas.
 
 ## Onde fica o histórico
 

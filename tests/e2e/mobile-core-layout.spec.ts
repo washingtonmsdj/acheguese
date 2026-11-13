@@ -1,13 +1,18 @@
 import { expect, test } from "@playwright/test";
 import { expectNoSeriousA11yViolations } from "./support/axeAssertions";
-import { expectMobilePublicSurface } from "./support/publicRouteAssertions";
-import { E2E_BUSINESS, installBusinessRouteFixtures } from "./support/businessRouteFixtures";
+import {
+  expectMobilePublicSurface,
+  expectNotFoundPublicRoute,
+} from "./support/publicRouteAssertions";
+import {
+  E2E_BUSINESS,
+  installBusinessRouteFixtures,
+} from "./support/businessRouteFixtures";
 
 const MOBILE_PUBLIC_ROUTES = [
   {
     path: "/",
-    readyPattern:
-      /Achegue-se|Entrar no Meu Bairro|O Achegue-se começa pelo Complexo/i,
+    readyPattern: /Tudo que importa|Empresas, mapa, busca|Achegue-se/i,
   },
   {
     path: "/login",
@@ -30,21 +35,8 @@ const MOBILE_PUBLIC_ROUTES = [
     mainSelector: "main#main-content",
   },
   {
-    path: "/servicos/ba/salvador/complexo-do-nordeste-de-amaralina",
-    readyPattern:
-      /Serviços|Servicos|Complexo do Nordeste de Amaralina|Profissional/i,
-  },
-  {
     path: E2E_BUSINESS.publicPath,
     readyPattern: /Oficina Horizonte E2E|Empresa|Comercio|Comércio|Detalhes/i,
-  },
-  {
-    path: "/comunidade/ba/salvador/feed",
-    readyPattern: /Feed|Comunidade|Salvador/i,
-  },
-  {
-    path: "/gastronomia/ba/salvador",
-    readyPattern: /Gastronomia|Restaurantes|Cardapio|Cardápio|Pizza|Açaí|Acai/i,
   },
   {
     path: "/termos",
@@ -67,39 +59,66 @@ const MOBILE_PUBLIC_ROUTES = [
 
 const TABLET_PUBLIC_ROUTES = [
   MOBILE_PUBLIC_ROUTES[0],
-  MOBILE_PUBLIC_ROUTES[5],
-  MOBILE_PUBLIC_ROUTES[8],
+  MOBILE_PUBLIC_ROUTES[1],
+  MOBILE_PUBLIC_ROUTES[3],
+] as const;
+
+const PAUSED_PRODUCT_ROUTES = [
+  "/servicos/ba/salvador/complexo-do-nordeste-de-amaralina",
+  "/comunidade/ba/salvador/feed",
+  "/gastronomia/ba/salvador",
+  "/classificados/ba/salvador",
 ] as const;
 
 test.setTimeout(120_000);
 
 test.describe("Mobile core public layout", () => {
-  test("header e bottom nav publicos seguem o contrato mobile em 320px", async ({
+  test("raiz em 320px expõe apenas os caminhos ativos do MVP", async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 320, height: 800 });
-    await page.goto("/");
-
-    const header = page.locator(".home-header");
-    const menuTrigger = page.getByRole("button", {
-      name: "Abrir menu principal",
-    });
-    const bottomNav = page.getByRole("navigation", {
-      name: "Navegacao principal mobile",
+    await expectMobilePublicSurface(page, {
+      path: "/",
+      readyPattern: /Tudo que importa|Empresas, mapa, busca|Achegue-se/i,
+      viewport: { width: 320, height: 800 },
     });
 
-    await expect(header).toBeVisible({ timeout: 45_000 });
-    await expect(menuTrigger).toBeVisible();
-    await expect(page.locator(".home-nav")).toBeHidden();
-    await expect(bottomNav).toBeVisible();
-    await expect(header).not.toContainText(/\d{1,2}\s*°C/);
+    const header = page.locator(".ag-header");
+    const brand = page.locator(".ag-brand").first();
+
+    await expect(header).toBeVisible();
+    await expect(brand).toBeVisible();
+    await expect(page.locator(".ag-nav")).toBeHidden();
+    await expect(page.locator(".ag-account-link")).toBeVisible();
+    await expect(page.locator(".ag-module-card")).toHaveCount(4);
+
+    await expect(
+      page.getByRole("link", { name: /Explorar empresas:/i }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("link", { name: /Abrir o mapa:/i }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("link", { name: /Ver perto de mim:/i }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole("link", { name: /Buscar no território:/i }),
+    ).toHaveCount(1);
+
+    for (const pausedLabel of [
+      "Comunidades",
+      "Gastronomia",
+      "Serviços",
+      "Classificados",
+      "Eventos",
+    ]) {
+      await expect(
+        page.getByRole("link", { name: pausedLabel, exact: true }),
+      ).toHaveCount(0);
+    }
 
     const layout = await page.evaluate(() => {
-      const brandText = document.querySelector(".home-brand > span:last-child");
-      const headerElement = document.querySelector(".home-header");
-      const bottomLabel = document.querySelector(
-        'nav[aria-label="Navegacao principal mobile"] button span:last-child',
-      );
+      const brandText = document.querySelector(".ag-brand > span");
+      const headerElement = document.querySelector(".ag-header");
 
       return {
         overflow: document.documentElement.scrollWidth - window.innerWidth,
@@ -110,9 +129,6 @@ test.describe("Mobile core public layout", () => {
         headerFont: headerElement
           ? getComputedStyle(headerElement).fontFamily
           : null,
-        bottomFont: bottomLabel
-          ? getComputedStyle(bottomLabel).fontFamily
-          : null,
       };
     });
 
@@ -120,36 +136,6 @@ test.describe("Mobile core public layout", () => {
     expect(layout.brandWhiteSpace).toBe("nowrap");
     expect(layout.brandFont).toContain("Plus Jakarta Sans");
     expect(layout.headerFont).toContain("Plus Jakarta Sans");
-    expect(layout.bottomFont).toContain("Plus Jakarta Sans");
-
-    await menuTrigger.click();
-    const mobileMenu = page.getByRole("navigation", {
-      name: "Menu principal mobile",
-    });
-    await expect(mobileMenu).toBeVisible();
-    await expect(
-      mobileMenu.getByRole("link", { name: "Comunidades" }),
-    ).toBeVisible();
-    await expect(
-      mobileMenu.getByRole("link", { name: "Empresas" }),
-    ).toBeVisible();
-    await expect(
-      mobileMenu.getByRole("link", { name: "Gastronomia" }),
-    ).toBeVisible();
-    await expect(
-      mobileMenu.getByRole("link", { name: "Serviços" }),
-    ).toBeVisible();
-    await expect(
-      mobileMenu.getByRole("link", { name: "Classificados" }),
-    ).toBeVisible();
-    await expect(mobileMenu.getByRole("link", { name: "Mapa" })).toBeVisible();
-    await expect(mobileMenu.getByRole("link", { name: "Busca" })).toBeVisible();
-    await expect(
-      mobileMenu.locator("[data-public-header-nav-item]"),
-    ).toHaveCount(8);
-    await expect(mobileMenu.getByRole("link", { name: "Eventos" })).toHaveCount(
-      0,
-    );
   });
 
   for (const route of MOBILE_PUBLIC_ROUTES) {
@@ -178,14 +164,20 @@ test.describe("Mobile core public layout", () => {
     });
   }
 
-  test("/gastronomia/ba/salvador nao tem violacoes axe serias em 360px", async ({
+  test("domínios pausados permanecem fora do grafo público mobile", async ({
     page,
   }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+
+    for (const path of PAUSED_PRODUCT_ROUTES) {
+      await expectNotFoundPublicRoute(page, path);
+    }
+  });
+
+  test("raiz ativa não tem violações axe sérias em 360px", async ({ page }) => {
     await expectMobilePublicSurface(page, {
-      path: "/gastronomia/ba/salvador",
-      expectedUrlPart: "/gastronomia/ba/salvador",
-      readyPattern:
-        /Gastronomia|Restaurantes|Cardapio|CardÃ¡pio|Pizza|AÃ§aÃ­|Acai/i,
+      path: "/",
+      readyPattern: /Tudo que importa|Empresas, mapa, busca|Achegue-se/i,
     });
 
     await expectNoSeriousA11yViolations(page);
