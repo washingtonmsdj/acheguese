@@ -373,7 +373,7 @@ export function TerritoryBusinessDetail({
             ) : null}
 
             <section className="bd-card bd-reviews" id="avaliacoes">
-              <SectionTitle icon={Star} action={<button type="button">Avaliar</button>}>Avaliações</SectionTitle>
+              <SectionTitle icon={Star}>Avaliações</SectionTitle>
               {reviewCount > 0 ? (
                 <div className="bd-review-summary">
                   <div><strong>{rating.toFixed(1)}</strong><span>{Array.from({ length: 5 }).map((_, index) => <Star key={index} className={index < Math.round(rating) ? "is-filled" : ""} />)}</span><small>{reviewCount} avaliações</small></div>
