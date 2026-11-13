@@ -2,7 +2,7 @@
 
 Plataforma hiperlocal, territory-first e modular, construída para conectar moradores às empresas e serviços do próprio território.
 
-> **MVP atual — 2026-10-08**
+> **MVP atual — 2026-11-13**
 >
 > **Domínio de produto ativo:** Business / Empresas.
 >
@@ -14,13 +14,13 @@ Plataforma hiperlocal, territory-first e modular, construída para conectar mora
 
 ## Estado de entrega
 
-O núcleo funcional do MVP foi construído e houve certificações anteriores de arquitetura, segurança, build, E2E público e smoke autenticado. **O lançamento não está homologado:** os gates #305 (Data API/PostgREST) e #445 (deploy/identidade Vercel) estão abertos; o P0 Business #649 exige correção transacional e testes. A PR #621 requer reconciliação com a `main` atual e nova certificação do HEAD exato.
+O núcleo funcional do MVP está concentrado em Business e nas capabilities horizontais ativas. **O lançamento ainda não está homologado:** #305 continua governando a saúde do Data API/PostgREST; #660 bloqueia qualquer novo DB push até reconciliar o lineage das migrations; e #649 só fecha após a correção transacional de Business, já integrada pela #662, ser implantada e certificada no backend real.
 
-As provas históricas de fechamento de `#305` e `#445` permanecem registradas, mas **não certificam o cenário atual**: houve nova degradação do PostgREST e a identidade do deployment do release presente não foi confirmada. Não ampliar timeout, afrouxar RLS, forçar build ou presumir `READY` por CI verde. A política canônica de release permanece `exact/equivalent`.
+O antigo blocker Vercel #445 foi fechado em 13/11/2026 após um deployment Production `READY` do `main` exato, com os domínios públicos apontando para o projeto Achegue-se. A PR #621 foi encerrada sem merge porque a `main` a supersedeu. Todo novo delta deployável continua exigindo sua própria prova `READY`/smoke; CI verde sozinho não equivale a produção homologada. Não ampliar timeout, afrouxar RLS ou criar fallback para esconder indisponibilidade.
 
 A certificação vigente cobre Auth/Conta, Business lifecycle e Business Messaging no runtime aceito. Notificações permanecem capability horizontal ativa e com boundary live de RLS/RPC auditado; não se deve transformar ausência de um cenário específico no smoke agregado em afirmação de cobertura que o teste não executou.
 
-O frontend ativo está em fase final de acabamento visual. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP; qualquer pendência visual restante deve preservar os contratos funcionais e o lifecycle vigente.
+O frontend ativo está em fase final de fechamento. Empresas, Central, Perto de mim e fluxos de criação/edição já receberam o acabamento do MVP. A aplicação pública deve ser servida diretamente nos domínios do Achegue-se; mounts, redirects ou anúncios de produtos externos não fazem parte do release.
 
 ## Stack
 
