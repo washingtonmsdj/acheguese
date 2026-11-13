@@ -64,7 +64,7 @@ export default function AdminTouristPointFormPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TouristPointFormInput>({
-    resolver: zodV3FormResolver(TouristPointFormSchema),
+    resolver: zodV3FormResolver<TouristPointFormInput>(TouristPointFormSchema),
     mode: 'onBlur',
     defaultValues: {
       location_id: '',
