@@ -232,17 +232,24 @@ describe("business_data grants security", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260909232757_broker_owned_business_lifecycle_g36.sql",
     );
+    const transactionalMigration = readProjectFile(
+      "supabase/migrations/20261113080000_business_transactional_address_idempotency.sql",
+    );
 
     expect(mutation).toContain("ProfileRpcService.createBusiness");
     expect(mutation).toContain("ProfileRpcService.updateBusiness");
     expect(mutation).toContain("ProfileRpcService.deactivateBusiness");
-    expect(mutation).toContain("owner_user_id: actorUserId");
+    expect(mutation).toContain("addressPatch: address.addressPatch ?? null");
+    expect(mutation).not.toContain("createAddress({");
     expect(mutation).not.toContain('from<BusinessDataWithProfiles>("business_data")');
     expect(mutation).not.toContain('from<BusinessStatsInsertRow>("business_stats")');
 
     expect(edge).toContain('supabaseAdmin.rpc("profile_rpc_create_business"');
     expect(edge).toContain('supabaseAdmin.rpc("profile_rpc_update_business"');
     expect(edge).toContain('"profile_rpc_deactivate_business"');
+    expect(edge).toContain('"profile_rpc_get_business_operation"');
+    expect(edge).toContain("__operation_id");
+    expect(edge).toContain("__address_patch");
 
     expect(migration).toContain(
       "REVOKE ALL ON FUNCTION public.profile_rpc_create_business",
@@ -256,6 +263,18 @@ describe("business_data grants security", () => {
     expect(migration).toContain("FROM PUBLIC, anon, authenticated");
     expect(migration).toContain("TO service_role");
     expect(migration).toContain("business_data_ensure_stats");
+
+    expect(transactionalMigration).toContain(
+      "REVOKE ALL ON TABLE private.business_operation_receipts",
+    );
+    expect(transactionalMigration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(transactionalMigration).toContain(
+      "GRANT EXECUTE ON FUNCTION public.profile_rpc_get_business_operation",
+    );
+    expect(transactionalMigration).toContain("TO service_role");
+    expect(transactionalMigration).not.toContain(
+      "GRANT SELECT ON TABLE private.business_operation_receipts TO authenticated",
+    );
   });
 
 });
