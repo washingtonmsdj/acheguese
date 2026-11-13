@@ -64,6 +64,41 @@ export default function CentralEmpresasPage({
     );
   }
 
+  if (profileHub.error) {
+    return (
+      <div className="central-business-page">
+        <header className="central-business-heading">
+          <div>
+            <span className="central-business-eyebrow">Sua central</span>
+            <h1>Minhas empresas</h1>
+            <p>Cuide da presença do seu negócio no território.</p>
+          </div>
+        </header>
+        <Card className="central-business-empty" role="alert">
+          <CardContent className="space-y-4 p-6 text-center">
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold">
+                Não foi possível carregar suas empresas
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                A leitura da sua Central não terminou corretamente. Tente novamente para confirmar o estado atual.
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={() => {
+                void profileHub.refreshWorkspace();
+              }}
+              className="w-full sm:w-auto"
+            >
+              Tentar novamente
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!profileHub.loading && profileHub.businessModules.length === 0) {
     return (
       <div className="central-business-page">
