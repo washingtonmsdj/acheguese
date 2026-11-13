@@ -152,6 +152,10 @@ describe("Supabase lineage reconciliation contract", () => {
     expect(applyStart).toBeGreaterThan(inspectStart);
     const inspectJob = workflow.slice(inspectStart, applyStart);
     expect(inspectJob).toContain("/database/migrations");
+    expect(inspectJob).toContain("/database/query/read-only");
+    expect(inspectJob).toContain(
+      "SELECT version::text AS version FROM supabase_migrations.schema_migrations ORDER BY version",
+    );
     expect(inspectJob).toContain("--remote-json");
     expect(inspectJob).not.toContain("SUPABASE_DB_PASSWORD");
     expect(inspectJob).not.toContain("migration list --linked");
