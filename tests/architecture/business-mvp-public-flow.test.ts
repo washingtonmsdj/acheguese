@@ -185,6 +185,15 @@ describe("MVP Business public flow", () => {
     expect(territoryBusinessDetail).not.toContain('<a href={whatsappHref}');
   });
 
+  it("does not render an inert review action on the public Business detail", () => {
+    expect(territoryBusinessDetail).toContain(
+      '<SectionTitle icon={Star}>Avaliações</SectionTitle>',
+    );
+    expect(territoryBusinessDetail).not.toContain(
+      '<button type="button">Avaliar</button>',
+    );
+  });
+
   it("keeps Business CTAs inside the active MVP module set", () => {
     expect(page).not.toContain('"/recomendacoes/nova"');
     expect(page).not.toContain('secondaryLabel="Indicar negocio"');
