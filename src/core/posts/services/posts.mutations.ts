@@ -8,7 +8,7 @@ import { EntityStatus, LocationType } from "@/shared/types/enums";
 import { trackError } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { ZodError } from "zod";
+import { ZodError } from "zod/v3";
 import type { CreatePostData, Post, UpdatePostData } from "../types";
 import { PostError } from "../types";
 import * as queries from "./posts.queries";
