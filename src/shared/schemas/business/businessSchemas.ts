@@ -4,7 +4,7 @@
  * Schema canonico compartilhado para formulario, hooks e services.
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { BUSINESS_CATEGORIES } from "@/shared/taxonomy/businessCategories";
 import { normalizeMediaAssetReference } from "@/shared/media/mediaAssetReference";
 
