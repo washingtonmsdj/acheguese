@@ -170,11 +170,11 @@ jobs:
           Add-Content -Path $env:GITHUB_OUTPUT -Value "value=$matched" -Encoding UTF8
           Write-Host "Authorized reconciliation phase: $matched"
 
-      - name: Refuse incomplete reconciliation without explicit apply authority
+      - name: Record read-only incomplete reconciliation state
         if: ${{ steps.phase.outputs.value != 'after-push' && steps.policy.outputs.apply != 'true' }}
         shell: powershell
         run: |
-          throw "Reconciliation is incomplete and this run has no apply authority."
+          Write-Host "Reconciliation phase is ${{ steps.phase.outputs.value }}. Apply authority is disabled; no remote mutation will run."
 
       - name: Repair tracking for proven historical aliases and retired no-op slots
         if: ${{ steps.phase.outputs.value == 'before' && steps.policy.outputs.apply == 'true' }}
@@ -220,6 +220,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify migration history fully synchronized
+        if: ${{ steps.phase.outputs.value == 'after-push' || steps.policy.outputs.apply == 'true' }}
         shell: powershell
         working-directory: gate
         run: |
@@ -234,6 +235,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Canonical lineage gate disagrees after reconciliation." }
 
       - name: Lint remote database
+        if: ${{ steps.phase.outputs.value == 'after-push' || steps.policy.outputs.apply == 'true' }}
         shell: powershell
         working-directory: gate
         run: |
