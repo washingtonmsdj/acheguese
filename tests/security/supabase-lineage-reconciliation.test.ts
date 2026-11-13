@@ -107,17 +107,38 @@ describe("Supabase lineage reconciliation contract", () => {
       expect(executable, entry.remoteTombstoneFile).toEqual([]);
     }
   });
-  it("keeps the production workflow on the exact non-destructive reconciliation path", () => {
+  it("keeps read-only lineage inspection independent from the restricted mutation runner", () => {
     const workflow = readFileSync(
       resolve(ROOT, ".github/workflows/supabase-main-db-push.yml"),
       "utf8",
     );
 
+    expect(workflow).toContain("inspect_production_db:");
+    expect(workflow).toContain("name: Read-only migration lineage diagnostic");
+    expect(workflow).toContain("runs-on: ubuntu-latest");
+    expect(workflow).toContain("apply_production_db:");
+    expect(workflow).toContain("needs: inspect_production_db");
+    expect(workflow).toContain(
+      "github.event_name == 'workflow_dispatch' && inputs.apply == true",
+    );
+    expect(workflow).toContain("acheguese-heavy-windows");
     expect(workflow).toContain("verify-supabase-lineage-reconciliation.mjs");
     expect(workflow).toContain("migration repair @versions --status applied");
     expect(workflow).toContain("db push --linked --dry-run");
     expect(workflow).toContain("functions deploy profile-rpc");
     expect(workflow).toContain("profile-rpc must remain verify_jwt=true");
+
+    const inspectStart = workflow.indexOf("  inspect_production_db:");
+    const applyStart = workflow.indexOf("  apply_production_db:");
+    expect(inspectStart).toBeGreaterThanOrEqual(0);
+    expect(applyStart).toBeGreaterThan(inspectStart);
+    const inspectJob = workflow.slice(inspectStart, applyStart);
+    expect(inspectJob).toContain("migration list --linked");
+    expect(inspectJob).not.toContain("migration repair ");
+    expect(inspectJob).not.toContain("db push ");
+    expect(inspectJob).not.toContain("functions deploy ");
+
+    expect(workflow).not.toContain("applyOnMainPush");
     expect(workflow).not.toContain("APPLY_5_LGPD_MIGRATIONS");
     expect(workflow).not.toContain("--include-all");
     expect(workflow).not.toContain("--status reverted");
