@@ -203,28 +203,29 @@ function assertGeneralLifecycleStructure(
   }
 }
 
-async function syncAddress(
+async function prepareAddressMutation(
   input: CreateBusinessInput | UpdateBusinessInput,
-  actorUserId: string,
   existingAddressId: string | null | undefined,
   resolution: BusinessAddressResolution | null,
-): Promise<{ addressId?: string; created: boolean }> {
+): Promise<{
+  addressId?: string;
+  addressPatch?: Omit<CreateAddressInput, "owner_user_id">;
+}> {
   if (input.address_id !== undefined) {
-    return { addressId: input.address_id ?? undefined, created: false };
+    return { addressId: input.address_id ?? undefined };
   }
 
   if (!resolution) {
-    return { addressId: existingAddressId ?? undefined, created: false };
+    return { addressId: existingAddressId ?? undefined };
   }
 
-  const addressService = new AddressService();
-  const payload = {
+  const payload: Omit<CreateAddressInput, "owner_user_id"> = {
     location_id: resolution.locationId,
     postal_code: resolution.postalCode,
     street: resolution.street,
     number: resolution.number,
     complement: resolution.complement,
-    address_type: "exact" as const,
+    address_type: "exact",
     ...(resolution.latitude !== undefined
       ? { latitude: resolution.latitude }
       : {}),
@@ -245,12 +246,9 @@ async function syncAddress(
       : {}),
   };
 
-  // Physical address changes are staged as a new Address; modifying the
-  // old row here could affect a different Business (or survive a rejected
-  // Business update). The broker alone switches the Business reference.
-  //
-  // A complement-only edit can reuse the *existing geocoding evidence*, but
-  // never reuses the old ID or copies its verification/ownership flags.
+  // Physical address changes are represented as an Address patch, but the
+  // browser never persists that row. The profile-rpc creates the Address and
+  // switches the Business reference inside the same PostgreSQL transaction.
   let retainedGeocoding: Pick<
     CreateAddressInput,
     | "latitude"
@@ -261,7 +259,7 @@ async function syncAddress(
     | "geocoded_at"
   > = {};
   if (existingAddressId && resolution.latitude === undefined) {
-    const previous = await addressService.getAddressById(existingAddressId);
+    const previous = await new AddressService().getAddressById(existingAddressId);
     if (!previous) {
       throw new Error("Endereco atual nao encontrado para gerar uma nova versao");
     }
@@ -288,12 +286,12 @@ async function syncAddress(
     }
   }
 
-  const address = await addressService.createAddress({
-    ...payload,
-    ...retainedGeocoding,
-    owner_user_id: actorUserId,
-  });
-  return { addressId: address.id, created: true };
+  return {
+    addressPatch: {
+      ...payload,
+      ...retainedGeocoding,
+    },
+  };
 }
 
 function toBusinessHoursRows(hours: unknown): Array<{
@@ -370,30 +368,46 @@ function buildContactChannels(
   }));
 }
 
-async function cleanupUnattachedAddress(addressId?: string): Promise<void> {
-  if (!addressId) return;
-  try {
-    await new AddressService().deleteAddress(addressId);
-  } catch (error) {
-    logger.error("[business.mutations] address compensation incomplete", {
-      addressId,
-      message: error instanceof Error ? error.message : String(error),
-    });
-  }
-}
-
 export interface BusinessCreationReceipt {
   profile_id: string;
   business_data_id: string | null;
 }
 
+interface BusinessOperationReceipt {
+  found: boolean;
+  status?: "pending" | "committed" | "rejected";
+  result?: BusinessBrokerResult | null;
+}
+
+async function reconcileBusinessOperation(
+  operationId: string,
+): Promise<BusinessBrokerResult | null> {
+  try {
+    const receipt =
+      await ProfileRpcService.getBusinessOperation<BusinessOperationReceipt>(
+        operationId,
+      );
+    if (
+      !receipt?.found ||
+      (receipt.status !== "committed" && receipt.status !== "rejected")
+    ) {
+      return null;
+    }
+    return receipt.result ?? null;
+  } catch (error) {
+    logger.error("[business.mutations] operation reconciliation failed", {
+      operationId,
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
 export async function createBusiness(
   input: CreateBusinessInput,
 ): Promise<BusinessCreationReceipt> {
-  let createdAddressId: string | undefined;
-  let businessWriteCompleted = false;
-  // A dispatched broker command may have committed despite a lost response.
-  let safeToCompensateAddress = true;
+  let operationId: string | undefined;
+  let brokerDispatched = false;
 
   try {
     const user = await SessionService.getCurrentUser();
@@ -440,13 +454,11 @@ export async function createBusiness(
 
     const addressResolution =
       await resolveBusinessAddressForPersistence(validatedInput);
-    const address = await syncAddress(
+    const address = await prepareAddressMutation(
       validatedInput,
-      user.id,
       undefined,
       addressResolution,
     );
-    if (address.created) createdAddressId = address.addressId;
 
     const businessPatch = buildBusinessBrokerPatch(
       validatedInput,
@@ -460,40 +472,51 @@ export async function createBusiness(
         ? toBusinessHoursRows(validatedInput.horario_funcionamento)
         : null;
 
-    safeToCompensateAddress = false;
+    operationId = crypto.randomUUID();
+    brokerDispatched = true;
     const result = await ProfileRpcService.createBusiness<BusinessBrokerResult>({
+      operationId,
       businessPatch,
+      addressPatch: address.addressPatch ?? null,
       contactChannels,
       businessHours,
     });
+
     if (!result.success) {
-      // Only a server-confirmed rejection is safe to compensate.
-      safeToCompensateAddress = true;
+      brokerDispatched = false;
       throw new Error(result.error || "Broker rejeitou a criacao da empresa");
     }
     if (!result.data?.profile_id) {
       throw new Error("Broker nao retornou a empresa criada");
     }
 
-    businessWriteCompleted = true;
-    // The broker is the authority for committed creation. A separate read
-    // must not turn a successful transaction into an apparent failure.
     return {
       profile_id: result.data.profile_id,
       business_data_id: result.data.business_data_id ?? null,
     };
   } catch (error) {
-    if (createdAddressId && !businessWriteCompleted && safeToCompensateAddress) {
-      await cleanupUnattachedAddress(createdAddressId);
-    }
-    if (!businessWriteCompleted && !safeToCompensateAddress) {
-      logger.error("[business.mutations] broker outcome unconfirmed; address preserved", {
+    if (brokerDispatched && operationId) {
+      const reconciled = await reconcileBusinessOperation(operationId);
+      if (reconciled?.success && reconciled.data?.profile_id) {
+        return {
+          profile_id: reconciled.data.profile_id,
+          business_data_id: reconciled.data.business_data_id ?? null,
+        };
+      }
+      if (reconciled && !reconciled.success) {
+        throw new Error(
+          `Erro ao criar empresa: ${reconciled.error || "Broker rejeitou a criacao da empresa"}`,
+        );
+      }
+
+      logger.error("[business.mutations] broker outcome unconfirmed", {
         operation: "create",
-        addressId: createdAddressId ?? null,
+        operationId,
         message: error instanceof Error ? error.message : String(error),
       });
-      throw new BusinessBrokerOutcomeUnknownError("create");
+      throw new BusinessBrokerOutcomeUnknownError("create", operationId);
     }
+
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao criar empresa: ${message}`);
   }
@@ -511,10 +534,8 @@ export async function updateBusiness(
   id: string,
   input: UpdateBusinessInput,
 ): Promise<BusinessUpdateReceipt> {
-  let createdAddressId: string | undefined;
-  let businessWriteCompleted = false;
-  // A dispatched broker command may have committed despite a lost response.
-  let safeToCompensateAddress = true;
+  let operationId: string | undefined;
+  let brokerDispatched = false;
 
   try {
     const user = await SessionService.getCurrentUser();
@@ -581,17 +602,15 @@ export async function updateBusiness(
         validatedInput,
         currentBusiness,
       );
-    const address = await syncAddress(
+    const address = await prepareAddressMutation(
       validatedInput,
-      user.id,
       currentBusiness.address_id,
       addressResolution,
     );
-    if (address.created) createdAddressId = address.addressId;
 
     const addressTouched =
       validatedInput.address_id !== undefined ||
-      addressResolution !== null;
+      address.addressPatch !== undefined;
     const businessPatch = buildBusinessBrokerPatch(
       validatedInput,
       addressTouched ? address.addressId : undefined,
@@ -611,41 +630,48 @@ export async function updateBusiness(
         ? toBusinessHoursRows(validatedInput.horario_funcionamento)
         : null;
 
-    safeToCompensateAddress = false;
+    operationId = crypto.randomUUID();
+    brokerDispatched = true;
     const result = await ProfileRpcService.updateBusiness<BusinessBrokerResult>(
       id,
       {
+        operationId,
         businessPatch,
+        addressPatch: address.addressPatch ?? null,
         contactChannels: contactPatch.length > 0 ? contactPatch : null,
         businessHours,
       },
     );
+
     if (!result.success) {
-      safeToCompensateAddress = true;
+      brokerDispatched = false;
       throw new Error(result.error || "Broker rejeitou atualizacao da empresa");
     }
-    // A success flag without the matching transaction receipt does not prove
-    // that this target profile was updated. Never manufacture a commit.
     if (result.data?.profile_id !== id) {
       throw new Error("Broker nao retornou recibo valido da empresa atualizada");
     }
 
-    businessWriteCompleted = true;
-    // A successful broker response is the commit acknowledgement. A later
-    // read-model outage must not turn this mutation into a false failure.
     return { profile_id: id };
   } catch (error) {
-    if (createdAddressId && !businessWriteCompleted && safeToCompensateAddress) {
-      await cleanupUnattachedAddress(createdAddressId);
-    }
-    if (!businessWriteCompleted && !safeToCompensateAddress) {
-      logger.error("[business.mutations] broker outcome unconfirmed; address preserved", {
+    if (brokerDispatched && operationId) {
+      const reconciled = await reconcileBusinessOperation(operationId);
+      if (reconciled?.success && reconciled.data?.profile_id === id) {
+        return { profile_id: id };
+      }
+      if (reconciled && !reconciled.success) {
+        throw new Error(
+          `Erro ao atualizar empresa: ${reconciled.error || "Broker rejeitou atualizacao da empresa"}`,
+        );
+      }
+
+      logger.error("[business.mutations] broker outcome unconfirmed", {
         operation: "update",
-        addressId: createdAddressId ?? null,
+        operationId,
         message: error instanceof Error ? error.message : String(error),
       });
-      throw new BusinessBrokerOutcomeUnknownError("update");
+      throw new BusinessBrokerOutcomeUnknownError("update", operationId);
     }
+
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Erro ao atualizar empresa: ${message}`);
   }
