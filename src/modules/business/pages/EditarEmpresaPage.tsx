@@ -118,7 +118,7 @@ export default function EditarEmpresaPage() {
   });
 
   const form = useForm<UpdateBusinessInput>({
-    resolver: zodV3FormResolver(updateBusinessSchema),
+    resolver: zodV3FormResolver<UpdateBusinessInput>(updateBusinessSchema),
     defaultValues: {
       name: "",
       description: "",
