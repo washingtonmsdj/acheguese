@@ -534,22 +534,15 @@ export function useResidenceManager() {
           return;
         }
 
-        const updatePayload: UpdateAddressInput = {
-          ...addressPayload,
-          verification_status: "pending",
-          verified_reason: "residence_address_updated",
-          is_verified: false,
-          verified_at: null,
-          verified_by: null,
-        };
+        // A transição de verificação do Address ocorre no gatilho SQL
+        // transacional; o frontend não possui autoridade sobre o comprovante.
+        const updatePayload: UpdateAddressInput = addressPayload;
 
         await addressService.updateAddress(addressId, updatePayload);
         await residenceService.updateResidence(residence.id, {
           address_id: addressId,
           location_id: resolvedLocationId,
           country: "Brasil",
-          is_verified: false,
-          verification_requested_at: null,
         });
 
         toast.success("Residencia atualizada");

@@ -63,16 +63,12 @@ export interface UpdateAddressInput {
   complement?: string | null;
   address_type?: AddressType;
   precision?: AddressPrecision;
-  verification_status?: AddressVerificationStatus;
-  verified_reason?: string | null;
+  // Estado de verificação só pode ser alterado no servidor/Verification.
   latitude?: number | null;
   longitude?: number | null;
   geocoded_at?: string | null;
   geocoding_source?: GeocodingSource | null;
   geocoding_confidence?: number | null;
-  is_verified?: boolean;
-  verified_at?: string | null;
-  verified_by?: string | null;
 }
 
 /**

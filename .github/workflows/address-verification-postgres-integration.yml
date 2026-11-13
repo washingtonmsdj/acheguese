@@ -1,0 +1,65 @@
+name: Address Verification PostgreSQL Integration
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261008215900_restrict_address_verification_mutations.sql"
+      - "tests/security/address-verification-authenticated-probe.sql"
+      - "tests/security/fixtures/address-verification-db-*.sql"
+      - ".github/workflows/address-verification-postgres-integration.yml"
+  push:
+    branches: [main]
+    paths:
+      - "supabase/migrations/20261008215900_restrict_address_verification_mutations.sql"
+      - "tests/security/address-verification-authenticated-probe.sql"
+      - "tests/security/fixtures/address-verification-db-*.sql"
+      - ".github/workflows/address-verification-postgres-integration.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: address-verification-postgres-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  real-postgres-migration-and-rls:
+    name: PostgreSQL 17 isolated migration and JWT/RLS assertions
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGDATABASE: postgres
+      PGPASSWORD: postgres
+    steps:
+      - name: Checkout exact PR commit
+        uses: actions/checkout@v6
+
+      - name: Ensure PostgreSQL CLI is available
+        run: psql --version
+
+      - name: Create synthetic schema, roles, RLS and verified fixtures
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-verification-db-setup.sql
+
+      - name: Apply the exact source migration (no Supabase production)
+        run: psql -X -v ON_ERROR_STOP=1 -f supabase/migrations/20261008215900_restrict_address_verification_mutations.sql
+
+      - name: Test owner edits, cross-owner denial, proof revocation, RPC abuse and service role
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/security/fixtures/address-verification-db-assert.sql
