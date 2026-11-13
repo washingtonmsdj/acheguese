@@ -2,7 +2,7 @@
  * Community Issues - Schemas de validacao Zod
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { ISSUE_RULES } from "../config/issueConfig";
 
 const VALID_CATEGORIES = [

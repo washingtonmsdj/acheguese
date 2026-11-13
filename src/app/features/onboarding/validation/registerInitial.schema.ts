@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 import { validationMessages } from "@/shared/validation/messages/pt-BR";
 import { strongPasswordValidator } from "@/shared/validation/validators/custom.validators";

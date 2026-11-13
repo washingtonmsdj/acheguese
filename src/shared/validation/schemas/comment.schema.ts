@@ -5,7 +5,7 @@
  * Data: 2026-03-19
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { COMMENT_LIMITS } from "@/shared/constants/socialContent";
 import { validationMessages } from "../messages/pt-BR";
 

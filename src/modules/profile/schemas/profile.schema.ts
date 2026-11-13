@@ -5,7 +5,7 @@
  * Data: 2026-03-19
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { validationMessages } from "@/shared/validation/messages/pt-BR";
 import {
   usernameValidator,

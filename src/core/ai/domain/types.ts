@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import type { Coordinates } from "@/core/geospatial";
 import type { TerritoryFilter } from "@/core/location/types";
 

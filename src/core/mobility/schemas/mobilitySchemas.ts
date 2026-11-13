@@ -7,7 +7,7 @@
  * @version 1.0.0
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { RIDE_STATUS } from "@/core/mobility/constants";
 import {
   ALERT_STATUS,

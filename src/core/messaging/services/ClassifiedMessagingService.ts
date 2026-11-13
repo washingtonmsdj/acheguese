@@ -6,7 +6,7 @@ import {
   getClassifiedById,
 } from "@/core/classifieds/services";
 import { profileService } from "@/core/profiles/services";
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   TrustIncidentService,
   type ClassifiedIncidentReason,

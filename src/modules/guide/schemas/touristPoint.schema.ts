@@ -4,7 +4,7 @@
  * Schema para formulário de criação/edição de pontos turísticos.
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import {
   PRICE_TYPE,
   TOURIST_POINT_STATUS,

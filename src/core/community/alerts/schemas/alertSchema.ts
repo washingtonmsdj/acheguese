@@ -2,7 +2,7 @@
  * Community Alerts - Schemas de validação Zod
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { ALERT_RULES, ALERT_BLOCKED_TERMS_FRONTEND } from "../config/alertConfig";
 
 const VALID_CATEGORIES = [

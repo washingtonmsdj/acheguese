@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 
 export const DPO_REQUEST_TYPES = [
   "access",

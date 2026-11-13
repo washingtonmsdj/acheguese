@@ -9,7 +9,7 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { zodV3FormResolver } from '@/shared/validation/zodV3FormResolver';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
@@ -64,7 +64,7 @@ export default function AdminTouristPointFormPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<TouristPointFormInput>({
-    resolver: zodResolver(TouristPointFormSchema),
+    resolver: zodV3FormResolver<TouristPointFormInput>(TouristPointFormSchema),
     mode: 'onBlur',
     defaultValues: {
       location_id: '',

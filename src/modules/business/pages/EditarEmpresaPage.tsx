@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodV3FormResolver } from "@/shared/validation/zodV3FormResolver";
 import { Building2, Eye, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
@@ -118,7 +118,7 @@ export default function EditarEmpresaPage() {
   });
 
   const form = useForm<UpdateBusinessInput>({
-    resolver: zodResolver(updateBusinessSchema),
+    resolver: zodV3FormResolver<UpdateBusinessInput>(updateBusinessSchema),
     defaultValues: {
       name: "",
       description: "",

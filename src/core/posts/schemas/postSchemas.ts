@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v3";
 import { CANONICAL_POST_TYPES, type PostType } from "@/core/posts/postTypes";
 import { COMMENT_LIMITS, POST_LIMITS } from "@/shared/constants/socialContent";
 import { isMediaAssetReferenceForPreset } from "@/core/media";

@@ -32,7 +32,7 @@ export type {
 } from '../schemas/mobilitySchemas';
 
 // ── Enums / union types inferidos do Zod ─────────────────────────────────
-import type { z } from 'zod';
+import type { z } from 'zod/v3';
 import type {
   RideStatusSchema,
   RideTypeSchema,

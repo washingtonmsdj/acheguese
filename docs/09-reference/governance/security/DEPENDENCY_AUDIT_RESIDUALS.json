@@ -2,48 +2,78 @@
   "schemaVersion": "dependency-audit-residuals/v2",
   "authority": "security-dependency-audit",
   "expectedVulnerabilitySeverities": {
+    "@sentry/bundler-plugins": "moderate",
+    "@sentry/vite-plugin": "moderate",
     "@tailwindcss/typography": "moderate",
-    "braces": "high",
-    "chokidar": "high",
-    "fast-glob": "high",
-    "lovable-tagger": "moderate",
-    "micromatch": "high",
-    "postcss-nested": "moderate",
+    "@typescript-eslint/eslint-plugin": "moderate",
+    "@typescript-eslint/parser": "moderate",
+    "@typescript-eslint/type-utils": "moderate",
+    "@typescript-eslint/typescript-estree": "moderate",
+    "@typescript-eslint/utils": "moderate",
+    "glob": "moderate",
+    "minimatch": "moderate",
     "postcss-selector-parser": "moderate",
-    "tailwindcss": "high"
+    "typescript-eslint": "moderate"
   },
   "residuals": [
     {
-      "id": "EXC-2026-10-02-BRACES-TAILWIND3-DEV-ONLY",
-      "package": "braces",
+      "id": "EXC-2026-11-13-SENTRY-GLOB-DEV-ONLY",
+      "package": "glob",
       "installedVersions": [
-        "3.0.3"
+        "13.0.6"
       ],
-      "advisory": "GHSA-vfj7-8cjw-p6xm",
-      "severity": "high",
+      "advisory": "GHSA-3g3m-2fjr-6pw4",
+      "severity": "moderate",
       "scope": "development-only",
-      "validUntil": "2026-10-17",
+      "validUntil": "2026-11-27",
       "productionAuditMustPass": true,
       "breakingFixRequired": true,
       "affectedPackages": [
-        "braces",
-        "chokidar",
-        "fast-glob",
-        "lovable-tagger",
-        "micromatch",
-        "tailwindcss"
+        "@sentry/bundler-plugins",
+        "@sentry/vite-plugin",
+        "glob"
       ],
       "removalTriggers": [
-        "a non-breaking fix becomes available anywhere in this residualized dependency path",
-        "a patched braces 3.x release becomes available to the Tailwind 3 dependency graph",
-        "the project completes its Tailwind 4 migration",
+        "a non-breaking fix becomes available in the Sentry Vite build-plugin dependency path",
+        "the project can upgrade the Sentry Vite plugin to the audit-fixed line without a breaking build-tool migration",
         "any affected package becomes production-reachable",
         "the advisory id, severity, installed version set or dependency path changes"
       ],
-      "rationale": "The advisory is reachable only through Tailwind 3 build tooling. npm currently offers Tailwind 4.3.3 as the fix, which is a breaking migration. Production npm audit must remain clean."
+      "rationale": "The remaining Sentry finding is confined to development/build tooling. The current audit requires a semver-major @sentry/vite-plugin change to clear this path; production npm audit is clean."
     },
     {
-      "id": "EXC-2026-10-06-POSTCSS-SELECTOR-TAILWIND3-DEV-ONLY",
+      "id": "EXC-2026-11-13-TYPESCRIPT-ESLINT-MINIMATCH-DEV-ONLY",
+      "package": "minimatch",
+      "installedVersions": [
+        "10.2.4",
+        "10.2.6",
+        "3.1.5"
+      ],
+      "advisory": "GHSA-g3hv-75wg-m249",
+      "severity": "moderate",
+      "scope": "development-only",
+      "validUntil": "2026-11-27",
+      "productionAuditMustPass": true,
+      "breakingFixRequired": true,
+      "affectedPackages": [
+        "@typescript-eslint/eslint-plugin",
+        "@typescript-eslint/parser",
+        "@typescript-eslint/type-utils",
+        "@typescript-eslint/typescript-estree",
+        "@typescript-eslint/utils",
+        "minimatch",
+        "typescript-eslint"
+      ],
+      "removalTriggers": [
+        "a stable compatible typescript-eslint dependency graph resolves minimatch outside the vulnerable range",
+        "npm audit reports a non-breaking fix for this chain",
+        "any affected package becomes production-reachable",
+        "the advisory id, severity, installed version set or dependency path changes"
+      ],
+      "rationale": "The affected minimatch nodes are reachable only through development lint tooling. The current audit exposes only a breaking/root-replacement fix path for typescript-eslint; production npm audit is clean."
+    },
+    {
+      "id": "EXC-2026-11-13-POSTCSS-SELECTOR-TAILWIND3-DEV-ONLY",
       "package": "postcss-selector-parser",
       "installedVersions": [
         "6.0.10",
@@ -52,24 +82,20 @@
       "advisory": "GHSA-rj75-hqrm-r3gf",
       "severity": "moderate",
       "scope": "development-only",
-      "validUntil": "2026-10-17",
+      "validUntil": "2026-11-27",
       "productionAuditMustPass": true,
       "breakingFixRequired": true,
       "affectedPackages": [
         "@tailwindcss/typography",
-        "lovable-tagger",
-        "postcss-nested",
-        "postcss-selector-parser",
-        "tailwindcss"
+        "postcss-selector-parser"
       ],
       "removalTriggers": [
-        "a non-breaking fix becomes available anywhere in this residualized dependency path",
-        "the project can consume postcss-selector-parser 7.1.6 or newer without a breaking Tailwind migration",
-        "the project completes its Tailwind 4 migration",
+        "a non-breaking Tailwind 3 or typography update resolves postcss-selector-parser to a patched version",
+        "the project completes a deliberate Tailwind major migration",
         "any affected package becomes production-reachable",
         "the advisory id, severity, installed version set or dependency path changes"
       ],
-      "rationale": "The advisory is reachable only through development tooling. npm currently proposes a breaking typography downgrade or the Tailwind major migration rather than a compatible repair. Production npm audit must remain clean."
+      "rationale": "The remaining PostCSS selector parser finding is confined to Tailwind development tooling. npm currently offers a breaking/downgrade-style typography fix rather than a compatible repair; production npm audit is clean."
     }
   ]
 }
