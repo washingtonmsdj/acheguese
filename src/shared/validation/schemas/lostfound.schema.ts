@@ -4,7 +4,7 @@
  * Schema para formulários de achados e perdidos.
  */
 
-import { z } from "zod";
+import { z } from "zod/v3";
 import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
 
 export const CATEGORIAS_LOSTFOUND = [
