@@ -181,9 +181,12 @@ export function verifyReconciliation({ output, directory, manifest, phase }) {
     missingExpectedLocalOnly: expectedLocalOnly.filter((version) => !localOnly.has(version)),
     unexpectedLocalOnly: [...localOnly].filter((version) => !expectedLocalOnly.includes(version)).sort(),
     missingRemoteAliases: aliasRemote.filter((version) => !remote.has(version)).sort(),
-    forwardNotActuallyForward: forward.filter(
-      (version) => latestRemoteVersion !== null && version <= latestRemoteVersion,
-    ),
+    forwardNotActuallyForward:
+      phase === "after-push"
+        ? []
+        : forward.filter(
+            (version) => latestRemoteVersion !== null && version <= latestRemoteVersion,
+          ),
   };
 
   state.ok =
