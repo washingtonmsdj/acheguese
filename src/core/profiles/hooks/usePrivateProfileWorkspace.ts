@@ -48,6 +48,39 @@ const EMPTY_WORKSPACE: ProfilePrivateWorkspace = {
   verificationStatus: "not_requested",
 };
 
+export const PRIVATE_WORKSPACE_QUERY_TIMEOUT_MS = 10_000;
+export const PRIVATE_WORKSPACE_QUERY_RETRY_DELAY_MS = 500;
+
+export async function loadPrivateWorkspaceWithDeadline(
+  userId: string,
+  read: (targetUserId: string) => Promise<ProfilePrivateWorkspace> = (targetUserId) =>
+    profileService.getPrivateWorkspace(targetUserId),
+  timeoutMs = PRIVATE_WORKSPACE_QUERY_TIMEOUT_MS,
+): Promise<ProfilePrivateWorkspace> {
+  if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
+    throw new Error("Private workspace timeout must be a positive finite number");
+  }
+
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutHandle = setTimeout(() => {
+      reject(
+        new Error(
+          `Private profile workspace read timed out after ${timeoutMs}ms`,
+        ),
+      );
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([read(userId), timeout]);
+  } finally {
+    if (timeoutHandle !== undefined) {
+      clearTimeout(timeoutHandle);
+    }
+  }
+}
+
 export function usePrivateProfileWorkspace() {
   const userId = useSessionUserId();
 
@@ -58,10 +91,12 @@ export function usePrivateProfileWorkspace() {
         return EMPTY_WORKSPACE;
       }
 
-      return profileService.getPrivateWorkspace(userId);
+      return loadPrivateWorkspaceWithDeadline(userId);
     },
     enabled: Boolean(userId),
     staleTime: 30 * 1000,
+    retry: 1,
+    retryDelay: PRIVATE_WORKSPACE_QUERY_RETRY_DELAY_MS,
   });
 
   return {
