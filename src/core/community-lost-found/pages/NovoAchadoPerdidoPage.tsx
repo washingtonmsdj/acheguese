@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodV3FormResolver } from "@/shared/validation/zodV3FormResolver";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import {
   ArrowLeft,
@@ -114,7 +114,7 @@ export default function NovoAchadoPerdidoPage() {
     setValue,
     formState: { errors },
   } = useForm<NovoAchadoPerdidoInput>({
-    resolver: zodResolver(NovoAchadoPerdidoSchema),
+    resolver: zodV3FormResolver(NovoAchadoPerdidoSchema),
     mode: "onBlur",
     defaultValues: {
       tipo: undefined,
