@@ -13,7 +13,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useOptionalBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, CheckCircle2, UtensilsCrossed } from "lucide-react";
-import { z } from "zod";
+import { z } from "zod/v3";
 import { getCuisineSuggestionFromCategory } from "@/core/verticals";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { Badge } from "@/shared/components/ui/badge";
