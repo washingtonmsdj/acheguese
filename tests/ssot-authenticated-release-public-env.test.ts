@@ -22,6 +22,10 @@ describe("authenticated release public Supabase env", () => {
     expect(job).toContain(
       "VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk",
     );
+    expect(job).toContain("Probe production territorial Data API");
+    expect(job).toContain(
+      "npx tsx tools/release/preflight-production-territorial-data-plane.ts",
+    );
     expect(job).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
     expect(job).not.toContain("SUPABASE_SECRET_KEY");
   });
