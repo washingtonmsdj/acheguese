@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from 'zod/v3';
 import type { MenuCategory, MenuItem } from '@/core/business/services/MenuService';
 import { isMediaAssetReference } from '@/core/media';
 
