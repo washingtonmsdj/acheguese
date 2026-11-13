@@ -22,7 +22,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
 - especificações antigas de Feed/Post retiradas da UX ativa porque Community permanece pausado;
 - `docs/README.md` e `docs/08-roadmap/README.md` separam SSOT vivo, planos futuros e histórico;
 - **#305 — Supabase:** o fechamento e o smoke anteriores são evidência histórica; o gate foi reaberto após nova degradação do Data API/PostgREST e continua aberto;
-- **#445 — Vercel:** a equivalência de fingerprint foi comprovada apenas no candidato histórico; o gate atual continua aberto até validar a identidade do novo deployment sem forçar build;
+- **#445 — Vercel:** fechado em 13/11/2026 após Production `READY` do `main` exato; novos deltas continuam exigindo sua própria prova de deployment/smoke;
 - Account passou nos três viewports do smoke autenticado;
 - Business lifecycle e Business Messaging passaram no mesmo gate de release;
 - o build canônico confirmou `npm audit --omit=dev` com zero vulnerabilidades de produção.
@@ -42,19 +42,19 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - manter histórico em checkpoints/archive/Git;
    - não apagar módulos pós-MVP apenas por estarem `paused`;
 
-3. preservar a prontidão do candidato:
-   - **#305 e #445 estão abertos** e impedem promoção do release;
-   - o P0 Business **#649** exige idempotência e transação Address/Business no backend;
-   - a PR #621 deve ser reconciliada com a `main` antes da recertificação;
+3. preservar a prontidão do `main`:
+   - **#305 e #660 estão abertos** e impedem a homologação final;
+   - o P0 Business **#649** já tem a correção transacional integrada pela #662, mas ainda exige rollout e certificação no backend real;
+   - #621 foi encerrada sem merge e não é mais autoridade de release;
    - regressão de Supabase/Auth, release identity ou runtime mantém ou reabre o gate correspondente;
    - todo delta deployável novo exige nova prova de Production `READY` ou equivalência de fingerprint aceita pela política canônica;
    - somente paths explicitamente classificados como skippable podem receber `Ignored Build Step`; documentos críticos de governança que participam do fingerprint, como `EXECUCAO_MAIN_ONLY.md`, exigem nova prova de release mesmo sem alterar bytes de aplicação;
 
 4. resolver os P0 e gates ativos com prova atual:
    - conferir rotas reais de `locations`/`territorial_groups` e estabilidade PostgREST (#305);
-   - comprovar Production `READY`, identidade `exact/equivalent` e smoke do conteúdo atual (#445);
-   - entregar atomicidade e idempotência no broker SQL/Address com testes negativos (#649);
-   - reconciliar #621 e só promover após recertificação no HEAD exato;
+   - reconciliar o lineage de migrations antes de qualquer DB push (#660);
+   - implantar e certificar a atomicidade/idempotência já integrada no broker SQL/Address (#649);
+   - comprovar Production `READY` e smoke do conteúdo final do `main`;
 
 5. manter as dívidas corretamente fail-closed:
    - #68 continua como dívida LGPD avançada, sem habilitar exportação/purge antes de certificação;
@@ -63,7 +63,7 @@ Todos os demais domínios permanecem `paused` até certificação individual. Pa
    - #447/#448 continuam condicionadas à autoridade OrdaX e não bloqueiam Business/Mapa/Nearby/Busca/Mensagens do Achegue-se;
    - #50/#118 continuam pós-MVP;
 
-6. promover o primeiro release somente após fechar #305, #445 e #649, mantendo verdes os owners ativos:
+6. promover o primeiro release somente após fechar #305 e #660, certificar #649 e comprovar o deployment final, mantendo verdes os owners ativos:
    - Business;
    - Mapa;
    - Perto de mim;
